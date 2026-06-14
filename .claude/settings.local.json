@@ -401,7 +401,17 @@
       "Bash(awk '{print $NF}')",
       "Bash(sed -i '' 's|^import Subscription from \"@\\\\/models\\\\/subscriptionModel\";$|import Subscription from \"@/models/subscriptionModel\";\\\\nimport \"@/models/subscriptionPlanModel\";|' /Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/api/subscription/status/route.js /Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/api/merchant/managers/route.js)",
       "Bash(sed -i '' 's|^import Subscription from '\\\\''@/models/subscriptionModel'\\\\'';$|import Subscription from '\\\\''@/models/subscriptionModel'\\\\'';\\\\nimport '\\\\''@/models/subscriptionPlanModel'\\\\'';|' /Users/abhishekpratapsingh/Desktop/coupon_campaigns/lib/subscriptionGuard.js /Users/abhishekpratapsingh/Desktop/coupon_campaigns/lib/services/platformAccessService.js)",
-      "Bash(sed -i '' 's|^import Subscription from \"@\\\\/models\\\\/subscriptionModel\";$|import Subscription from \"@/models/subscriptionModel\";\\\\nimport \"@/models/subscriptionPlanModel\";|' /Users/abhishekpratapsingh/Desktop/coupon_campaigns/lib/dashboardService.js)"
+      "Bash(sed -i '' 's|^import Subscription from \"@\\\\/models\\\\/subscriptionModel\";$|import Subscription from \"@/models/subscriptionModel\";\\\\nimport \"@/models/subscriptionPlanModel\";|' /Users/abhishekpratapsingh/Desktop/coupon_campaigns/lib/dashboardService.js)",
+      "Bash(kill 3122)",
+      "Bash(chmod 755 \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/analytics/\")",
+      "Bash(chmod 666 \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/analytics/page.module.css\")",
+      "Bash(chmod 755 \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/notifications/\")",
+      "Bash(chmod 666 \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/notifications/page.module.css\")",
+      "Bash(node --input-type=module)",
+      "Bash(chmod 644 /Users/abhishekpratapsingh/Desktop/coupon_campaigns/components/settings/DangerZoneCard.js)",
+      "Bash(sed -i '' 's/background: #f5f6ff;//g' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/settings/settings.module.css' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/subscription/subscription.module.css')",
+      "Bash(sed -i '' 's/background: var\\(--color-page-bg, #fcfdff\\);//g' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/campaign/[id]/edit/EditCampaign.module.css' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/billing/plans/plans.module.css')",
+      "Bash(sed -i '' 's/background: var\\(--color-page-bg\\);//g' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/campaign/[id]/live/page.module.css')"
     ]
   }
 }

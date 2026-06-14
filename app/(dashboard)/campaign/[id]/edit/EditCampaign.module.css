@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 120px);
-  background: var(--color-page-bg, #fcfdff);
   font-family: var(--font-afacad), system-ui, sans-serif;
   max-width: 600px;
   margin: 0 auto;
@@ -108,7 +107,6 @@
   left: 0;
   right: 0;
   padding: 20px 0;
-  background: var(--color-page-bg, #fcfdff);
   margin-top: auto;
 }
 

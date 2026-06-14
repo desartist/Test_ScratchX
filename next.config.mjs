@@ -2,6 +2,7 @@
 const nextConfig = {
   // Optional OTP providers (dynamic import in lib/otpProvider.js) — not always installed
   serverExternalPackages: ["twilio", "aws-sdk"],
+  turbopack: {},
   async redirects() {
     return [
       { source: "/login", destination: "/auth/login", permanent: false },

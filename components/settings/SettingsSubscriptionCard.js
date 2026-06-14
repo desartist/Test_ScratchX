@@ -1,9 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Zap, Gift, ArrowRight } from "lucide-react";
 import styles from "./SettingsSubscriptionCard.module.css";
 
 export default function SettingsSubscriptionCard() {
+  const router = useRouter();
   const [subData, setSubData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,7 +53,7 @@ export default function SettingsSubscriptionCard() {
               <span className={styles.benefitText}>Priority Support</span>
             </div>
           </div>
-          <button className={styles.buySubscriptionBtn} onClick={() => window.location.href = '/subscription/plans'}>
+          <button className={styles.buySubscriptionBtn} onClick={() => router.push('/subscription')}>
             <Gift size={18} />
             Buy Subscription Now
             <ArrowRight size={16} />
@@ -97,7 +99,7 @@ export default function SettingsSubscriptionCard() {
       {!isTopTier && (
         <button
           className={styles.upgradeBtn}
-          onClick={() => window.location.href = '/billing/plans'}
+          onClick={() => router.push('/subscription')}
         >
           <Zap size={18} /> Upgrade Plan
         </button>

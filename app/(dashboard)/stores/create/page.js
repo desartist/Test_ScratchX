@@ -19,6 +19,7 @@ export default function CreateStorePage() {
   // Geolocation state
   const [locationStatus, setLocationStatus] = useState('idle'); // idle, requesting, detected, denied
   const [geoError, setGeoError] = useState(null);
+  const [locationInfo, setLocationInfo] = useState(null); // { landmark, area, city, display }
 
   // Form data across all steps
   const [formData, setFormData] = useState({
@@ -57,15 +58,42 @@ export default function CreateStorePage() {
 
     setLocationStatus('requesting');
     setGeoError(null);
+    setLocationInfo(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
-        setFormData((prev) => ({
-          ...prev,
-          latitude: parseFloat(latitude.toFixed(6)),
-          longitude: parseFloat(longitude.toFixed(6)),
-        }));
+        const lat = parseFloat(latitude.toFixed(6));
+        const lng = parseFloat(longitude.toFixed(6));
+        setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+
+        // Reverse geocode via Nominatim
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const geo = await res.json();
+          const a = geo.address || {};
+          const landmark =
+            a.amenity || a.shop || a.tourism || a.building ||
+            a.road || a.pedestrian || a.suburb || null;
+          const area = a.suburb || a.neighbourhood || a.village || a.town || null;
+          const city = a.city || a.town || a.village || a.county || null;
+          const state = a.state || null;
+          setLocationInfo({
+            landmark,
+            area,
+            city,
+            state,
+            display: geo.display_name
+              ? geo.display_name.split(',').slice(0, 3).join(',')
+              : null,
+          });
+        } catch {
+          setLocationInfo(null);
+        }
+
         setLocationStatus('detected');
       },
       (error) => {
@@ -125,8 +153,8 @@ export default function CreateStorePage() {
 
     if (!formData.contact_number.trim()) {
       newErrors.contact_number = 'Contact number is required';
-    } else if (!/^\d{10,}$/.test(formData.contact_number.replace(/\D/g, ''))) {
-      newErrors.contact_number = 'Contact number must be at least 10 digits';
+    } else if (!/^\d{10}$/.test(formData.contact_number.replace(/\D/g, ''))) {
+      newErrors.contact_number = 'Contact number must be exactly 10 digits';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -356,10 +384,15 @@ export default function CreateStorePage() {
                 id="contact_number"
                 name="contact_number"
                 value={formData.contact_number}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  handleChange({ target: { name: 'contact_number', value: digitsOnly } });
+                }}
                 onBlur={() => handleFieldBlur('contact_number')}
-                placeholder="E.g. 98765 43210"
+                placeholder="E.g. 9876543210"
                 className={styles.input}
+                maxLength={10}
+                inputMode="numeric"
                 required
                 disabled={submitting}
               />
@@ -425,23 +458,39 @@ export default function CreateStorePage() {
                 <div className={styles.locationDetected}>
                   <div className={styles.locationCheckmark}>✓</div>
                   <div className={styles.locationDetails}>
-                    <p className={styles.locationLabel}>Location Verified</p>
-                    <p className={styles.coordinates}>
-                      Latitude: <span className={styles.value}>{formData.latitude}</span>
-                    </p>
-                    <p className={styles.coordinates}>
-                      Longitude: <span className={styles.value}>{formData.longitude}</span>
-                    </p>
-                    <button
-                      type="button"
-                      className={styles.useCurrentButton}
-                      onClick={requestGeolocation}
-                      disabled={submitting || locationStatus === 'requesting'}
-                    >
-                      Update Location
-                    </button>
+                    <p className={styles.locationLabel}>Location Captured</p>
+                    {locationInfo?.landmark && (
+                      <p className={styles.locationLandmark}>
+                        <span className={styles.landmarkIcon}>📍</span>
+                        {locationInfo.landmark}
+                      </p>
+                    )}
+                    {(locationInfo?.area || locationInfo?.city) && (
+                      <p className={styles.locationArea}>
+                        {[locationInfo.area, locationInfo.city, locationInfo.state]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                    )}
+                    {!locationInfo?.landmark && locationInfo?.display && (
+                      <p className={styles.locationArea}>{locationInfo.display}</p>
+                    )}
                   </div>
                 </div>
+              )}
+              {locationStatus === 'detected' && formData.latitude && formData.longitude && (
+                <button
+                  type="button"
+                  className={styles.refreshLocationButton}
+                  onClick={requestGeolocation}
+                  disabled={submitting || locationStatus === 'requesting'}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                  </svg>
+                  Retake Location
+                </button>
               )}
 
               {locationStatus === 'idle' && !formData.latitude && (
@@ -622,10 +671,16 @@ export default function CreateStorePage() {
                   <span className={styles.summaryLabel}>Pincode:</span>
                   <span>{formData.pincode}</span>
                 </div>
-                <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>Coordinates:</span>
-                  <span>{formData.latitude}, {formData.longitude}</span>
-                </div>
+                {(locationInfo?.landmark || locationInfo?.area || locationInfo?.city) && (
+                  <div className={styles.summaryItem}>
+                    <span className={styles.summaryLabel}>Nearest Location:</span>
+                    <span>
+                      {[locationInfo.landmark, locationInfo.area, locationInfo.city]
+                        .filter(Boolean)
+                        .join(', ')}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

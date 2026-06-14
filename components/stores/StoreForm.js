@@ -34,13 +34,33 @@ export default function StoreForm({
   const [locationError, setLocationError] = useState(null);
   const [locationStatus, setLocationStatus] = useState('idle'); // idle, requesting, detected, denied
   const [geoError, setGeoError] = useState(null);
+  const [locationInfo, setLocationInfo] = useState(null);
 
-  // Request geolocation on mount (only in create mode)
+  // On mount: auto-request in create mode; reverse-geocode existing coords in edit mode
   useEffect(() => {
     if (!isEditMode && !formData.latitude) {
       requestGeolocation();
+    } else if (isEditMode && formData.latitude && formData.longitude && !locationInfo) {
+      // Reverse-geocode the stored coordinates so edit mode shows the landmark too
+      setLocationStatus('detected');
+      fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${formData.latitude}&lon=${formData.longitude}&zoom=16&addressdetails=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      )
+        .then((r) => r.json())
+        .then((geo) => {
+          const a = geo.address || {};
+          setLocationInfo({
+            landmark: a.amenity || a.shop || a.tourism || a.building || a.road || a.pedestrian || null,
+            area: a.suburb || a.neighbourhood || a.village || a.town || null,
+            city: a.city || a.town || a.village || a.county || null,
+            state: a.state || null,
+          });
+        })
+        .catch(() => setLocationInfo(null));
     }
-  }, [isEditMode, formData.latitude]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const requestGeolocation = () => {
     if (!navigator.geolocation) {
@@ -53,15 +73,28 @@ export default function StoreForm({
     setGeoError(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
-        setFormData((prev) => ({
-          ...prev,
-          latitude: parseFloat(latitude.toFixed(6)),
-          longitude: parseFloat(longitude.toFixed(6)),
-        }));
+        const lat = parseFloat(latitude.toFixed(6));
+        const lng = parseFloat(longitude.toFixed(6));
+        setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }));
         setLocationStatus('detected');
         setLocationError(null);
+
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const geo = await res.json();
+          const a = geo.address || {};
+          setLocationInfo({
+            landmark: a.amenity || a.shop || a.tourism || a.building || a.road || a.pedestrian || null,
+            area: a.suburb || a.neighbourhood || a.village || a.town || null,
+            city: a.city || a.town || a.village || a.county || null,
+            state: a.state || null,
+          });
+        } catch { setLocationInfo(null); }
       },
       (error) => {
         console.error('Geolocation error:', error);
@@ -268,23 +301,27 @@ export default function StoreForm({
             <div className={styles.locationDetected}>
               <div className={styles.locationCheckmark}>✓</div>
               <div className={styles.locationDetails}>
-                <p className={styles.locationLabel}>Current Location Detected</p>
-                <p className={styles.coordinates}>
-                  Latitude: <span className={styles.value}>{formData.latitude}</span>
-                </p>
-                <p className={styles.coordinates}>
-                  Longitude: <span className={styles.value}>{formData.longitude}</span>
-                </p>
-                <button
-                  type="button"
-                  className={styles.retryButton}
-                  onClick={requestGeolocation}
-                  disabled={loading}
-                >
-                  Refresh Location
-                </button>
+                <p className={styles.locationLabel}>Location Captured</p>
+                {locationInfo?.landmark && (
+                  <p className={styles.locationLandmark}>📍 {locationInfo.landmark}</p>
+                )}
+                {(locationInfo?.area || locationInfo?.city) && (
+                  <p className={styles.locationArea}>
+                    {[locationInfo.area, locationInfo.city, locationInfo.state].filter(Boolean).join(', ')}
+                  </p>
+                )}
               </div>
             </div>
+          )}
+          {locationStatus === 'detected' && formData.latitude && formData.longitude && (
+            <button
+              type="button"
+              className={styles.retryButton}
+              onClick={() => { setLocationInfo(null); requestGeolocation(); }}
+              disabled={loading}
+            >
+              Retake Location
+            </button>
           )}
 
           {locationStatus === 'idle' && !formData.latitude && (

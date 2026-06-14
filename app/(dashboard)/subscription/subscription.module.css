@@ -3,17 +3,16 @@
 .page {
   width: 100%;
   min-height: 100vh;
-  background: #fcfdff;
   font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 28px 20px 80px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
 }
 
 
@@ -21,95 +20,125 @@
 
 .header {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.backButton {
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: white;
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
-  padding: 7px 14px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #637080;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s, color 0.2s;
-  font-family: inherit;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1.5px solid #e8eaff;
+  border-radius: 20px;
+  box-shadow: 0 2px 12px rgba(1, 15, 68, 0.04);
+}
+
+.headerIcon {
+  width: 50px;
+  height: 50px;
   flex-shrink: 0;
-  width: fit-content;
+  background: linear-gradient(135deg, #010f44 0%, #0a1f6e 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef9e1b;
+  box-shadow: 0 4px 14px rgba(1, 15, 68, 0.2);
 }
 
-.backButton:hover {
-  border-color: #ef9e1b;
-  color: #010f44;
-  background: #fffbf2;
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
 }
-
 
 .title {
-  font-size: 28px;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #010f44;
   margin: 0;
   line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  font-size: 0.86rem;
+  color: #637080;
+  margin: 0;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+.headerBadge {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  background: #f0f2ff;
+  border: 1px solid #e0e4ff;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #010f44;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 
 /* ── CURRENT PLAN CARD ─────────────────────────────────────────── */
 
 .currentSubscriptionCard {
-  background: white;
-  border: 1px solid #e8e8e8;
-  border-left: 4px solid #ef9e1b;
-  border-radius: 12px;
-  padding: 20px 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, #010f44 0%, #0a1f6e 100%);
+  border-radius: 20px;
+  padding: 24px 28px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+  box-shadow: 0 8px 32px rgba(1, 15, 68, 0.18);
+  position: relative;
+  overflow: hidden;
 }
 
+.currentSubscriptionCard::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  background: rgba(239, 158, 27, 0.08);
+  border-radius: 50%;
+}
 
 .subscriptionHeader {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .lifetimeAccessBadge {
   display: inline-flex;
   align-items: center;
-  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  background: linear-gradient(135deg, #ef9e1b 0%, #ffa726 100%);
   color: white;
-  padding: 4px 12px;
+  padding: 5px 13px;
   border-radius: 20px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.5px;
   white-space: nowrap;
 }
 
 .planNameDisplay {
-  font-size: 22px;
+  font-size: 1.5rem;
   font-weight: 800;
-  color: #010f44;
+  color: #fff;
   margin: 0;
 }
 
-
 .platformAccessSection {
-  background: #f7f9ff;
-  border: 1px solid #e0e4ff;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
   padding: 12px 16px;
 }
-
 
 .platformAccessItem {
   display: flex;
@@ -120,20 +149,19 @@
 .platformAccessLabel {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #637080;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .platformAccessValue {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: #010f44;
+  color: #fff;
 }
-
 
 .checkIcon {
   display: flex;
   align-items: center;
-  color: #0a8905;
+  color: #ef9e1b;
   margin-left: auto;
 }
 
@@ -144,9 +172,9 @@
 }
 
 .entitlementTitle {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  color: #637080;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   margin: 0;
@@ -157,17 +185,17 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: #f7f9f7;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
 }
-
 
 .activeBadge {
   display: inline-block;
-  background: #0a8905;
+  background: #22c55e;
   color: white;
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: 20px;
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -177,10 +205,10 @@
 
 .expiredBadge {
   display: inline-block;
-  background: #ff6b6b;
+  background: #ef4444;
   color: white;
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: 20px;
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -197,38 +225,38 @@
 .entitlementText {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #010f44;
+  color: #fff;
   margin: 0;
 }
-
 
 .daysRemaining {
   display: inline-block;
   margin-left: 8px;
-  padding: 2px 6px;
-  background: #e8f5e9;
-  border-radius: 4px;
+  padding: 2px 8px;
+  background: rgba(34, 197, 94, 0.2);
+  border-radius: 20px;
   font-size: 0.72rem;
-  color: #2e7d32;
+  color: #86efac;
   font-weight: 600;
 }
 
 .expiryDate {
   font-size: 0.75rem;
-  color: #637080;
+  color: rgba(255, 255, 255, 0.5);
   margin: 0;
 }
 
 .purchasedCount {
   display: inline-block;
   margin-left: 8px;
-  padding: 2px 6px;
-  background: #fff3e0;
-  border-radius: 4px;
+  padding: 2px 8px;
+  background: rgba(239, 158, 27, 0.2);
+  border-radius: 20px;
   font-size: 0.72rem;
-  color: #e65100;
+  color: #fbbf24;
   font-weight: 600;
 }
+
 
 /* ── PLANS SECTION ─────────────────────────────────────────────── */
 
@@ -245,50 +273,52 @@
 }
 
 .sectionTitle {
-  font-size: 22px;
+  font-size: 1.35rem;
   font-weight: 800;
   color: #010f44;
   margin: 0;
+  letter-spacing: -0.2px;
 }
 
 .sectionSubtitle {
-  font-size: 0.875rem;
+  font-size: 0.88rem;
   color: #637080;
   margin: 0;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
-
 
 .plansGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  gap: 16px;
 }
+
 
 /* ── PLAN CARD ─────────────────────────────────────────────────── */
 
 .planCard {
-  background: white;
-  border: 1px solid #e8e8e8;
-  border-radius: 14px;
+  background: #fff;
+  border: 1.5px solid #e8eaff;
+  border-radius: 20px;
   padding: 24px;
   position: relative;
   transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 12px rgba(1, 15, 68, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .planCard:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 32px rgba(1, 15, 68, 0.1);
   border-color: #ef9e1b;
   transform: translateY(-3px);
 }
 
-
 .planCardPopular {
   border-color: #ef9e1b;
   border-width: 2px;
+  box-shadow: 0 6px 24px rgba(239, 158, 27, 0.12);
 }
 
 .currentPlanCard {
@@ -301,19 +331,20 @@
 .cardBadgeRow {
   display: flex;
   gap: 8px;
-  min-height: 20px;
+  min-height: 22px;
 }
 
 .popularBadge {
   display: inline-flex;
   align-items: center;
-  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  background: linear-gradient(135deg, #ef9e1b 0%, #ffa726 100%);
   color: white;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .currentPlanBadge {
@@ -323,9 +354,10 @@
   color: white;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 
@@ -337,119 +369,127 @@
 }
 
 .planName {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 800;
   color: #010f44;
   margin: 0;
+  letter-spacing: -0.2px;
 }
 
 .planDesc {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: #637080;
   margin: 0;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
 
 /* Pricing block */
 .pricing {
-  background: #f7f8fc;
-  border-radius: 10px;
+  background: #fafbff;
+  border: 1.5px solid #e8eaff;
+  border-radius: 14px;
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
-
 
 .priceBlock {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .priceAmount {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 800;
   color: #010f44;
   line-height: 1;
 }
 
 .pricePeriod {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: #637080;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
-
 
 .gstCalculation {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-top: 8px;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid #e8eaff;
   font-size: 0.78rem;
-  color: #637080;
+  color: #9ba8b8;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
-
 
 .gstAmount {
-  color: #010f44;
+  color: #637080;
   font-weight: 600;
 }
-
 
 .totalPrice {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: 700;
-  font-size: 0.9rem;
 }
 
-.totalLabel { color: #637080; }
+.totalLabel {
+  font-size: 0.82rem;
+  color: #637080;
+  font-weight: 600;
+}
 
 .totalAmount {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   color: #ef9e1b;
   font-weight: 800;
 }
 
-/* Store limit pill */
+
+/* Store limit chip */
 .limitsCard {
-  background: #f0f8ff;
-  border: 1px solid #c5e3ff;
-  padding: 10px 14px;
-  border-radius: 8px;
+  background: #f0f2ff;
+  border: 1px solid #e0e4ff;
+  padding: 9px 14px;
+  border-radius: 10px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
-
 .limitsLabel {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: #010f44;
 }
 
 .extraStoreInfo {
-  font-size: 0.75rem;
-  color: #4a90e2;
-  font-weight: 500;
+  font-size: 0.74rem;
+  color: #637080;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
 
 /* Features list */
 .features {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .featuresTitle {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  color: #637080;
-  margin: 0 0 10px 0;
+  color: #9ba8b8;
+  margin: 0 0 6px 0;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
 .featuresList {
@@ -458,29 +498,34 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .featureItem {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   font-size: 0.85rem;
   color: #010f44;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
 .featureItem svg {
-  color: #0a8905;
   flex-shrink: 0;
 }
+
+/* Check icon: green, Cross icon: muted */
+.featureItem:has(svg[data-type="check"]) svg { color: #22c55e; }
+.featureItem:has(svg[data-type="cross"]) { color: #9ba8b8; }
+.featureItem:has(svg[data-type="cross"]) svg { color: #d1d5db; }
 
 
 /* CTA button */
 .ctaButton {
   width: 100%;
-  padding: 12px;
+  padding: 13px;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
@@ -491,17 +536,19 @@
 }
 
 .ctaButtonPrimary {
-  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  background: #ef9e1b;
   color: white;
+  box-shadow: 0 4px 14px rgba(239, 158, 27, 0.3);
 }
 
 .ctaButtonPrimary:hover {
-  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.35);
+  background: #d98d14;
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.4);
   transform: translateY(-1px);
 }
 
 .ctaButtonSecondary {
-  background: white;
+  background: #fff;
   color: #010f44;
   border: 1.5px solid #010f44;
 }
@@ -512,10 +559,10 @@
 }
 
 .ctaButtonDisabled {
-  background: #f0f0f0;
-  color: #999;
+  background: #f0f2ff;
+  color: #9ba8b8;
   cursor: not-allowed;
-  border: 1.5px solid #e8e8e8;
+  border: 1.5px solid #e0e4ff;
 }
 
 .ctaButtonDisabled:hover {
@@ -527,17 +574,15 @@
 /* ── SCRATCHES ALERT ───────────────────────────────────────────── */
 
 .scratchesSection {
-  background: white;
-  border: 1px solid #ffe0b2;
-  border-left: 4px solid #ff9800;
-  border-radius: 12px;
+  background: #fff;
+  border: 1.5px solid #fde8ba;
+  border-radius: 16px;
   padding: 20px 24px;
   display: flex;
   align-items: center;
-  gap: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  gap: 20px;
+  box-shadow: 0 2px 12px rgba(239, 158, 27, 0.07);
 }
-
 
 .scratchesAlert {
   display: flex;
@@ -546,12 +591,20 @@
   flex: 1;
 }
 
-.scratchesAlert svg { color: #ff9800; flex-shrink: 0; margin-top: 2px; }
+.scratchesAlert svg {
+  color: #ef9e1b;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
 
-.alertContent { display: flex; flex-direction: column; gap: 4px; }
+.alertContent {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
 
 .alertTitle {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #010f44;
   margin: 0;
@@ -561,15 +614,15 @@
   font-size: 0.82rem;
   color: #637080;
   margin: 0;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
-
 .purchaseScratchButton {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  background: #ef9e1b;
   color: white;
   border: none;
-  padding: 11px 24px;
-  border-radius: 8px;
+  padding: 11px 22px;
+  border-radius: 10px;
   font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
@@ -577,20 +630,44 @@
   font-family: inherit;
   white-space: nowrap;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.28);
 }
 
 .purchaseScratchButton:hover {
-  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+  background: #d98d14;
+  box-shadow: 0 6px 18px rgba(239, 158, 27, 0.35);
   transform: translateY(-1px);
 }
+
 
 /* ── LOADING & ERROR ───────────────────────────────────────────── */
 
 .loadingState {
   text-align: center;
   padding: 80px 20px;
-  font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.loadingState p {
+  font-size: 0.95rem;
   color: #637080;
+  margin: 0;
+}
+
+.loadingSpinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e0e4ff;
+  border-top-color: #ef9e1b;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .errorAlert {
@@ -598,11 +675,10 @@
   align-items: center;
   gap: 12px;
   background: #fff5f5;
-  border: 1px solid #ffcdd2;
-  border-left: 4px solid #ff6b6b;
+  border: 1.5px solid #fecdd3;
+  border-radius: 14px;
   padding: 16px 20px;
-  border-radius: 10px;
-  color: #c62828;
+  color: #991b1b;
 }
 
 .errorAlert svg { flex-shrink: 0; }
@@ -610,35 +686,18 @@
 
 /* ── RESPONSIVE ────────────────────────────────────────────────── */
 
-@media (max-width: 768px) {
-  .container {
-    padding: 16px;
-    gap: 16px;
-  }
-
-  .title { font-size: 22px; }
-
-  .plansGrid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .scratchesSection {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-  }
-
-  .purchaseScratchButton { width: 100%; }
-
-  .currentSubscriptionCard { padding: 16px 18px; }
-  .sectionTitle { font-size: 20px; }
+@media (max-width: 720px) {
+  .container { padding: 20px 16px 60px; gap: 20px; }
+  .title { font-size: 1.4rem; }
+  .plansGrid { grid-template-columns: 1fr; gap: 14px; }
+  .scratchesSection { flex-direction: column; align-items: flex-start; }
+  .purchaseScratchButton { width: 100%; text-align: center; }
+  .currentSubscriptionCard { padding: 20px; }
+  .priceAmount { font-size: 1.8rem; }
 }
 
-@media (max-width: 480px) {
-  .container { padding: 12px; gap: 12px; }
-  .title { font-size: 22px; }
-  .planCard { padding: 16px; gap: 12px; }
-  .priceAmount { font-size: 1.6rem; }
+@media (max-width: 420px) {
+  .container { padding: 16px 12px 60px; }
+  .planCard { padding: 18px; gap: 14px; }
   .pricing { padding: 12px; }
 }

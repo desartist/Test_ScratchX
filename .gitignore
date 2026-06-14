@@ -34,8 +34,8 @@ yarn-error.log*
 .env*
 
 
-.md
-.txt
+*.md
+*.txt
 
 # vercel
 .vercel

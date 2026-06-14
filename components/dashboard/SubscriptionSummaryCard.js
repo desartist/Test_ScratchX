@@ -1,9 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { TrendingUp, AlertCircle } from "lucide-react";
 import styles from "./SubscriptionSummaryCard.module.css";
 
 export default function SubscriptionSummaryCard() {
+  const router = useRouter();
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,7 +50,7 @@ export default function SubscriptionSummaryCard() {
           <p>Upgrade to unlock more features</p>
           <button
             className={styles.upgradeBtn}
-            onClick={() => window.location.href = '/billing/plans'}
+            onClick={() => router.push('/subscription')}
           >
             View Plans
           </button>
@@ -98,7 +100,7 @@ export default function SubscriptionSummaryCard() {
       {!isTopTier && (
         <button
           className={styles.upgradeBtn}
-          onClick={() => window.location.href = '/billing/plans'}
+          onClick={() => router.push('/subscription')}
         >
           Upgrade Plan
         </button>

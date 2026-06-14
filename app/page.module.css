@@ -1,154 +1,232 @@
+/* ── Base ──────────────────────────────────────────────────── */
 .page {
   width: 100%;
   max-width: 430px;
   min-height: 100vh;
   margin: 0 auto;
-  background: #ffffff;
+  background: #f5f6ff;
   display: flex;
   flex-direction: column;
   align-items: center;
   font-family: var(--font-afacad), system-ui, sans-serif;
+  position: relative;
+  overflow: hidden;
 }
 
-/* ── Logo ── */
+/* subtle background blob */
+.page::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -100px;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(239,158,27,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.page::after {
+  content: '';
+  position: absolute;
+  bottom: 180px;
+  left: -120px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(1,15,68,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Logo ──────────────────────────────────────────────────── */
 .logoWrap {
-  margin-top: 64px;
+  margin-top: 56px;
   display: flex;
   align-items: center;
+  z-index: 1;
 }
 
 .logoText {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 800;
   color: #010f44;
   letter-spacing: -0.5px;
 }
 
 .logoX {
-  font-size: 24px;
+  font-size: 30px;
   font-weight: 900;
   color: #ef9e1b;
-  margin-left: 2px;
 }
 
-/* ── Hero ── */
+/* ── Hero ──────────────────────────────────────────────────── */
 .hero {
-  margin-top: 68px;
-  padding: 0 50px;
-  text-align: center;
-}
-
-.headline {
-  font-size: 46px;
-  font-weight: 700;
-  line-height: 1.12;
-  color: #010f44;
-  letter-spacing: -0.5px;
-}
-
-.subtitle {
-  margin-top: 28px;
-  font-size: 16px;
-  color: #637080;
-  line-height: 1.5;
-  font-family: var(--font-afacad-flux), system-ui, sans-serif;
-  font-weight: 400;
-}
-
-/* ── CTA ── */
-.ctaArea {
   margin-top: 52px;
+  padding: 0 36px;
+  text-align: center;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 0;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: #e0e4ff;
+  color: #010f44;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  margin-bottom: 24px;
+}
+
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef9e1b;
+  flex-shrink: 0;
+}
+
+.headline {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #010f44;
+  letter-spacing: -1px;
+  margin: 0 0 20px;
+}
+
+.headlineAccent {
+  color: #ef9e1b;
+}
+
+.subtitle {
+  font-size: 15.5px;
+  color: #637080;
+  line-height: 1.6;
+  margin: 0;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  font-weight: 400;
+  max-width: 320px;
+}
+
+/* ── CTA ───────────────────────────────────────────────────── */
+.ctaArea {
+  margin-top: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  z-index: 1;
+  width: 100%;
+  padding: 0 36px;
 }
 
 .ctaButton {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
+  width: 100%;
   background: #ef9e1b;
   color: #ffffff;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
-  padding: 20px 50px;
-  border-radius: 20px;
+  padding: 18px 32px;
+  border-radius: 18px;
   text-decoration: none;
-  transition: background 0.2s, transform 0.15s;
-  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.35);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 8px 24px rgba(239, 158, 27, 0.38);
   font-family: var(--font-afacad), system-ui, sans-serif;
+  letter-spacing: 0.2px;
 }
 
 .ctaButton:hover {
   background: #d98e14;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(239, 158, 27, 0.45);
 }
 
 .ctaButton:active {
   transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.3);
 }
 
 .hint {
-  font-size: 14px;
-  color: #637080;
+  font-size: 13px;
+  color: #9ba8b8;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
-/* ── Feature Cards ── */
+/* ── Feature Cards ─────────────────────────────────────────── */
 .cards {
-  margin-top: 40px;
-  padding: 0 32px;
+  margin-top: 36px;
+  padding: 0 28px;
   display: flex;
   gap: 14px;
   width: 100%;
+  z-index: 1;
 }
 
 .card {
   flex: 1;
-  background: #f8f8f8;
-  border-radius: 20px;
-  padding: 20px 16px 24px;
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 22px 18px 26px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  border: 1.5px solid #e8eaff;
+  box-shadow: 0 2px 12px rgba(1, 15, 68, 0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(1, 15, 68, 0.1);
 }
 
 .cardIconWrap {
-  width: 50px;
-  height: 50px;
+  width: 52px;
+  height: 52px;
   background: #e0e4ff;
-  border-radius: 14px;
+  border-radius: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5b66d8;
+  color: #010f44;
   flex-shrink: 0;
 }
 
 .cardLabel {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #010f44;
-  line-height: 1.3;
+  line-height: 1.35;
   font-family: var(--font-afacad), system-ui, sans-serif;
+  margin: 0;
 }
 
-/* ── Footer ── */
+/* ── Footer ────────────────────────────────────────────────── */
 .footer {
   margin-top: auto;
   width: 100%;
-  height: 62px;
+  height: 60px;
   border-top: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #ffffff;
+  z-index: 1;
 }
 
 .footer p {
-  font-size: 13px;
-  color: #636768;
+  font-size: 12.5px;
+  color: #9ba8b8;
   text-align: center;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }

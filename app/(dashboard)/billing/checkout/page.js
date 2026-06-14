@@ -1,12 +1,20 @@
 ﻿"use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import styles from "./checkout.module.css";
 
 export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, textAlign: "center" }}>Loading checkout...</div>}>
+      <CheckoutContent />
+    </Suspense>
+  );
+}
+
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refreshAccount } = useAuthContext();

@@ -35,7 +35,7 @@ export default function PlanStatusCard() {
           <AlertCircle size={14} />
           <span className={styles.pillText}>No Active Plan</span>
         </div>
-        <Link href="/billing/plans" className={styles.pillButton}>
+        <Link href="/subscription" className={styles.pillButton}>
           Browse
         </Link>
       </div>
@@ -50,7 +50,7 @@ export default function PlanStatusCard() {
         </span>
       </div>
       {!isTopTier && (
-        <Link href="/billing/plans" className={styles.pillButton}>
+        <Link href="/subscription" className={styles.pillButton}>
           Upgrade Plan
         </Link>
       )}

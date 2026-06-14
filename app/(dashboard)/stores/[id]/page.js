@@ -41,6 +41,7 @@ export default function StoreDetailPage() {
   const [showAssignCampaignsModal, setShowAssignCampaignsModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
   const [successDetails, setSuccessDetails] = useState(null);
+  const [locationInfo, setLocationInfo] = useState(null);
 
   // Silent refresh of store data (used after assign/remove). Does not toggle
   // the page-level loading state so the layout stays put.
@@ -90,6 +91,23 @@ export default function StoreDetailPage() {
         const result = await response.json();
         setStore(result.data);
         setError(null);
+
+        // Reverse geocode coordinates → landmark
+        const { latitude, longitude } = result.data || {};
+        if (latitude && longitude) {
+          try {
+            const geo = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1`,
+              { headers: { 'Accept-Language': 'en' } }
+            );
+            const geoData = await geo.json();
+            const a = geoData.address || {};
+            const landmark = a.amenity || a.shop || a.tourism || a.building || a.road || a.pedestrian || a.suburb || null;
+            const area = a.suburb || a.neighbourhood || a.village || a.town || null;
+            const city = a.city || a.town || a.village || a.county || null;
+            setLocationInfo({ landmark, area, city, state: a.state || null });
+          } catch { /* silently skip */ }
+        }
       } catch (err) {
         setError(err.message || 'Failed to load store');
         setStore(null);
@@ -264,169 +282,125 @@ export default function StoreDetailPage() {
         </div>
       </div>
 
-      {/* Main Content Layout */}
-      <div className={styles.contentLayout}>
-        {/* Left Column - Store Info Card */}
-        <div className={styles.leftColumn}>
-          <div className={styles.infoCard}>
-            {/* Store Details Section */}
-            <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>
-                  <Store size={15} />
-                </span>
-                Store Details
-              </h2>
-              <div className={styles.infoRow}>
-                <div className={styles.infoItem}>
-                  <div className={styles.label}>Store Name</div>
-                  <div className={styles.value}>{store.store_name}</div>
-                </div>
-                <div className={styles.infoItem}>
-                  <div className={styles.label}>Store Code</div>
-                  <div className={styles.value}>{store.store_code || 'N/A'}</div>
-                </div>
-              </div>
-              <div className={styles.infoItem}>
-                <div className={styles.label}>Address</div>
-                <div className={styles.value}>{store.address}</div>
-              </div>
-              <div className={styles.infoRow}>
-                <div className={styles.infoItem}>
-                  <div className={styles.label}>City</div>
-                  <div className={styles.value}>{store.city}</div>
-                </div>
-                <div className={styles.infoItem}>
-                  <div className={styles.label}>State</div>
-                  <div className={styles.value}>{store.state}</div>
-                </div>
-                <div className={styles.infoItem}>
-                  <div className={styles.label}>Pincode</div>
-                  <div className={styles.value}>{store.pincode}</div>
-                </div>
-              </div>
-            </div>
+      {/* Stats Grid */}
+      <div className={styles.statsGrid}>
+        <StatsCard value={store.active_campaigns || 0} label="Active Campaigns" icon={<Megaphone size={20} />} />
+        <StatsCard value={store.total_scans || 0} label="Total Scans" icon={<ScanLine size={20} />} />
+        <StatsCard value={store.conversions || 0} label="Conversions" icon={<TrendingUp size={20} />} />
+        <StatsCard value={store.total_customers || 0} label="Customers" icon={<Users size={20} />} />
+      </div>
 
-            {/* Manager Info Section */}
-            <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>
-                  <User size={15} />
-                </span>
-                Manager Info
-              </h2>
-              <div className={styles.managerChip}>
-                <span className={styles.managerAvatar}>
-                  {(store.contact_person || '')
-                    .split(' ')
-                    .filter(Boolean)
-                    .map((w) => w[0])
-                    .slice(0, 2)
-                    .join('')
-                    .toUpperCase() || '?'}
-                </span>
-                <div>
-                  <div className={styles.managerName}>
-                    {store.contact_person || 'N/A'}
-                  </div>
-                  <div className={styles.managerRole}>Store Manager</div>
-                </div>
-              </div>
-              <div className={styles.infoRow}>
-                <div className={styles.infoItem}>
-                  <div className={styles.label}>Phone</div>
-                  <div className={styles.value}>
-                    {store.contact_number || 'N/A'}
-                  </div>
-                </div>
-                <div className={styles.infoItem}>
-                  <div className={styles.label}>Email</div>
-                  <div className={styles.value}>{store.email || 'N/A'}</div>
-                </div>
-              </div>
-            </div>
+      {/* Info Card */}
+      <div className={styles.infoCard}>
 
-            {/* Coordinates Section */}
-            <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>
-                  <MapPin size={15} />
-                </span>
-                Coordinates
-              </h2>
-              <div className={styles.infoRow}>
-                <div className={styles.infoItem}>
-                  <div className={styles.label}>Latitude</div>
-                  <div className={`${styles.value} ${styles.readOnly}`}>{store.latitude || 'N/A'}</div>
-                </div>
-                <div className={styles.infoItem}>
-                  <div className={styles.label}>Longitude</div>
-                  <div className={`${styles.value} ${styles.readOnly}`}>{store.longitude || 'N/A'}</div>
-                </div>
-              </div>
+        {/* Store Details */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            <span className={styles.sectionIcon}><Store size={14} /></span>
+            Store Details
+          </h2>
+          <div className={styles.detailGroup}>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Store Name</span>
+              <span className={styles.detailValue}>{store.store_name}</span>
             </div>
-
+            {store.store_code && (
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Store Code</span>
+                <span className={styles.detailValue}>{store.store_code}</span>
+              </div>
+            )}
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Address</span>
+              <span className={styles.detailValue}>{store.address}</span>
+            </div>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>City</span>
+              <span className={styles.detailValue}>{store.city}</span>
+            </div>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>State</span>
+              <span className={styles.detailValue}>{store.state}</span>
+            </div>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Pincode</span>
+              <span className={styles.detailValue}>{store.pincode}</span>
+            </div>
           </div>
         </div>
 
-        {/* Right Column - Stats Grid */}
-        <div className={styles.rightColumn}>
-          <div className={styles.statsGrid}>
-            <StatsCard
-              value={store.active_campaigns || 0}
-              label="Active Campaigns"
-              icon={<Megaphone size={20} />}
-            />
-            <StatsCard
-              value={store.total_scans || 0}
-              label="Total Scans"
-              icon={<ScanLine size={20} />}
-            />
-            <StatsCard
-              value={store.conversions || 0}
-              label="Conversions"
-              icon={<TrendingUp size={20} />}
-            />
-            <StatsCard
-              value={store.total_customers || 0}
-              label="Customers"
-              icon={<Users size={20} />}
-            />
+        {/* Manager Info */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            <span className={styles.sectionIcon}><User size={14} /></span>
+            Manager Info
+          </h2>
+          <div className={styles.managerChip}>
+            <span className={styles.managerAvatar}>
+              {(store.contact_person || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?'}
+            </span>
+            <div>
+              <div className={styles.managerName}>{store.contact_person || 'N/A'}</div>
+              <div className={styles.managerRole}>Store Manager</div>
+            </div>
+          </div>
+          <div className={styles.detailGroup}>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Phone</span>
+              <span className={styles.detailValue}>{store.contact_number || 'N/A'}</span>
+            </div>
+            {store.email && (
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Email</span>
+                <span className={styles.detailValue}>{store.email}</span>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Nearest Location */}
+        {store.latitude && store.longitude && (
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>
+              <span className={styles.sectionIcon}><MapPin size={14} /></span>
+              Nearest Location
+            </h2>
+            <div className={styles.locationChip}>
+              <div className={styles.locationPinDot} />
+              <div className={styles.locationChipText}>
+                {locationInfo?.landmark && (
+                  <div className={styles.locationChipMain}>{locationInfo.landmark}</div>
+                )}
+                <div className={styles.locationChipSub}>
+                  {locationInfo
+                    ? [locationInfo.area, locationInfo.city, locationInfo.state].filter(Boolean).join(', ')
+                    : `${store.city}, ${store.state}`}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
 
-      {/* Campaigns Assigned to This Store */}
-      <div className={styles.section}>
-        <AssignedCampaignsList
-          campaigns={store.assignedCampaigns || store.storeSnapshots || store.assigned_campaigns || []}
-          storeId={id}
-          onCampaignRemoved={refreshStore}
-        />
-      </div>
+      {/* Campaigns */}
+      <AssignedCampaignsList
+        campaigns={store.assignedCampaigns || store.storeSnapshots || store.assigned_campaigns || []}
+        storeId={id}
+        onCampaignRemoved={refreshStore}
+      />
 
-      {/* Action Buttons Footer */}
+      {/* Action Footer */}
       <div className={styles.actionFooter}>
-        <div className={styles.actionButtons}>
-          <button
-            onClick={() => router.push(`/stores/${id}/edit`)}
-            className={styles.editButton}
-          >
-            Edit Store
-          </button>
-          <button
-            onClick={() => setShowAssignCampaignsModal(true)}
-            className={styles.assignButton}
-          >
-            + Assign Campaigns
-          </button>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className={styles.deleteButton}
-          >
-            Delete Store
-          </button>
-        </div>
+        <button onClick={() => router.push(`/stores/${id}/edit`)} className={styles.editButton}>
+          Edit Store
+        </button>
+        <button onClick={() => setShowAssignCampaignsModal(true)} className={styles.assignButton}>
+          + Assign Campaigns
+        </button>
+        <button onClick={() => setShowDeleteModal(true)} className={styles.deleteButton}>
+          Delete Store
+        </button>
       </div>
 
       {/* Modals */}

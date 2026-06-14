@@ -1,6 +1,8 @@
 import React from 'react';
 import DashboardLayout from '@/components/dashboards/DashboardLayout';
 import { cookies } from 'next/headers';
+
+export const dynamic = 'force-dynamic';
 import { redirect } from 'next/navigation';
 import connectDB from '@/lib/db';
 import Store from '@/models/storeModel';

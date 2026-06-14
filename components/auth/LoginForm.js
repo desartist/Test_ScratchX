@@ -164,14 +164,13 @@ export default function LoginForm() {
         {isLoading ? 'Signing in...' : 'Sign In'}
       </button>
 
-      {/* Divider */}
-      <div className={styles.divider}>
+      {/* Divider + Social Login — temporarily disabled */}
+      {/* <div className={styles.divider}>
         <div className={styles.dividerLine}></div>
         <span className={styles.dividerText}>Or continue with</span>
         <div className={styles.dividerLine}></div>
       </div>
 
-      {/* Social Login Options */}
       <div className={styles.socialOptions}>
         <button
           type="button"
@@ -187,7 +186,6 @@ export default function LoginForm() {
           className={styles.socialButton}
           disabled={isLoading}
           onClick={() => {
-            // Navigate to OTP login
             window.location.href = '/auth/otp';
           }}
           title="Sign in with OTP"
@@ -195,7 +193,7 @@ export default function LoginForm() {
           <span className={styles.socialIcon}>📱</span>
           <span>OTP</span>
         </button>
-      </div>
+      </div> */}
     </form>
   );
 }

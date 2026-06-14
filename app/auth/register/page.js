@@ -2,242 +2,256 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "./form.module.css";
 import Link from "next/link";
+import styles from "./form.module.css";
+
+const BUSINESS_TYPES = [
+  "Grocery & Kirana Stores",
+  "Jewellery & Luxury",
+  "Electronics & Gadgets",
+  "Fashion & Apparel",
+  "Bakeries & Sweet Shops",
+  "Quick Service (QSR)",
+  "Salon & Beauty",
+  "Fitness & Gyms",
+  "Supermarkets / Hypermarkets",
+  "Pharmacy / Medical",
+  "Home & Lifestyle",
+  "Other",
+];
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [yourName, setYourName] = useState("Abhishek Pratap");
-  const [storeName, setStoreName] = useState("ProCodrr");
-  const [email, setEmail] = useState("procodrr@gmail.com");
-  const [password, setPassword] = useState("123456");
-  const [storeAddress, setStoreAddress] = useState("123 Main St");
-  const [businessType, setBusinessType] = useState("Retail");
-  const [countryCode, setCountryCode] = useState("+91");
-  const [phoneNumber, setPhoneNumber] = useState("9876543210");
-  const [storeLocation, setStoreLocation] = useState("123 Main St");
+  const [form, setForm] = useState({
+    yourName: "",
+    storeName: "",
+    email: "",
+    password: "",
+    businessType: "",
+    countryCode: "+91",
+    phoneNumber: "",
+    storeAddress: "",
+  });
+  const [otherBusiness, setOtherBusiness] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const set = (field) => (e) =>
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    // API registration logic here
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: yourName,
-        storeName,
-        email,
-        password,
-        storeAddress,
-        businessType,
-        countryCode,
-        phoneNumber,
-        storeLocation,
-      }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      router.push("/auth/login");
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.yourName,
+          storeName: form.storeName,
+          email: form.email,
+          password: form.password,
+          storeAddress: form.storeAddress,
+          businessType:
+            form.businessType === "Other"
+              ? otherBusiness.trim() || "Other"
+              : form.businessType,
+          countryCode: form.countryCode,
+          phoneNumber: form.phoneNumber,
+          storeLocation: form.storeAddress,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.push("/auth/login");
+      } else {
+        setError(data.error || "Registration failed. Please try again.");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center py-8 px-4 sm:px-6">
-      <div className="w-full max-w-lg">
-        <header className="mb-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
-            ScratchX
-          </h1>
-        </header>
-        <div className={styles.headerContainer}>
+    <div className={styles.page}>
+      {/* Logo */}
+      <div className={styles.logoWrap}>
+        <span className={styles.logoText}>Scratch</span>
+        <span className={styles.logoX}>X</span>
+      </div>
+
+      <div className={styles.card}>
+        {/* Header */}
+        <div className={styles.cardHeader}>
           <h1 className={styles.title}>Tell us about your store</h1>
           <p className={styles.subtitle}>
             Set up your store to start creating campaigns.
           </p>
         </div>
-        <form
-          className={styles.form}
-          onSubmit={(e) => {
-            handleRegister(e);
-          }}
-        >
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Your Name</label>
-            <input
-              type="text"
-              className={styles.input}
-              placeholder="Your full name"
-              required
-              value={yourName}
-              onChange={(e) => setYourName(e.target.value)}
-            />
+
+        {error && <div className={styles.errorBanner}>{error}</div>}
+
+        <form className={styles.form} onSubmit={handleRegister}>
+          {/* Row: Name + Store Name */}
+          <div className={styles.row}>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Your Name</label>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Full name"
+                required
+                value={form.yourName}
+                onChange={set("yourName")}
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Store Name</label>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Your store name"
+                required
+                value={form.storeName}
+                onChange={set("storeName")}
+              />
+            </div>
           </div>
 
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Store Name</label>
-            <input
-              type="text"
-              className={styles.input}
-              placeholder="Your store name"
-              required
-              value={storeName}
-              onChange={(e) => setStoreName(e.target.value)}
-            />
-          </div>
-
+          {/* Business Type */}
           <div className={styles.inputGroup}>
             <label className={styles.label}>Business Type</label>
             <div className={styles.selectWrapper}>
               <select
                 className={styles.select}
                 required
-                value={businessType}
-                onChange={(e) => setBusinessType(e.target.value)}
+                value={form.businessType}
+                onChange={set("businessType")}
               >
-                <option>Select type</option>
-                <option>Retail</option>
-                <option>Food & Beverage</option>
-                <option>Services</option>
-                <option>Other</option>
+                <option value="">Select business type</option>
+                {BUSINESS_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
               </select>
             </div>
+            {form.businessType === "Other" && (
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Describe your business type"
+                value={otherBusiness}
+                onChange={(e) => setOtherBusiness(e.target.value)}
+                style={{ marginTop: 10 }}
+              />
+            )}
           </div>
 
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Contact Number</label>
-            <div className={styles.phoneInputContainer}>
-              <select
-                className={styles.countrySelect}
-                onChange={(e) => setCountryCode(e.target.value)}
-                value={countryCode}
-                required
-              >
-                <option>+91</option>
-                <option>+1</option>
-                <option>+44</option>
-              </select>
+          {/* Row: Email + Phone */}
+          <div className={styles.row}>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Email Address</label>
               <input
-                type="tel"
-                className={styles.phoneInput}
-                placeholder="Your phone number"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                type="email"
+                className={styles.input}
+                placeholder="you@example.com"
                 required
+                value={form.email}
+                onChange={set("email")}
               />
             </div>
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Email</label>
-            <input
-              type="email"
-              className={styles.input}
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Password</label>
-            <input
-              type="password"
-              className={styles.input}
-              placeholder="**********"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>StoreAddress</label>
-            <textarea
-              type="text"
-              className={styles.input}
-              placeholder="Current store location"
-              value={storeAddress}
-              onChange={(e) => setStoreAddress(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Store Address</label>
-            <textarea
-              className={styles.textarea}
-              placeholder="Current store location"
-              value={storeLocation}
-              onChange={(e) => setStoreLocation(e.target.value)}
-              required
-            ></textarea>
-
-            <div className={styles.locationContainer}>
-              <svg
-                className={styles.locationIcon}
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="6"
-                  stroke="#000000"
-                  strokeWidth="2"
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Contact Number</label>
+              <div className={styles.phoneWrap}>
+                <select
+                  className={styles.countrySelect}
+                  value={form.countryCode}
+                  onChange={set("countryCode")}
+                >
+                  <option value="+91">+91</option>
+                  <option value="+1">+1</option>
+                  <option value="+44">+44</option>
+                  <option value="+971">+971</option>
+                  <option value="+65">+65</option>
+                </select>
+                <input
+                  type="tel"
+                  className={styles.phoneInput}
+                  placeholder="Phone number"
+                  required
+                  value={form.phoneNumber}
+                  onChange={set("phoneNumber")}
                 />
-                <circle cx="12" cy="12" r="2" fill="#000000" />
-                <path
-                  d="M12 2V5"
-                  stroke="#000000"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M12 19V22"
-                  stroke="#000000"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M2 12H5"
-                  stroke="#000000"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M19 12H22"
-                  stroke="#000000"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className={styles.locationTextContainer}>
-                <span className={styles.locationTitle}>
-                  Use your current location
-                </span>
-                <span className={styles.locationSubtitle}>
-                  Current location name
-                </span>
               </div>
             </div>
           </div>
 
-          <button type="submit" className={styles.submitButton}>
-            Finish Setup & Continue
+          {/* Password */}
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Password</label>
+            <div className={styles.passwordWrap}>
+              <input
+                type={showPassword ? "text" : "password"}
+                className={styles.input}
+                placeholder="Create a password"
+                required
+                value={form.password}
+                onChange={set("password")}
+              />
+              <button
+                type="button"
+                className={styles.eyeBtn}
+                onClick={() => setShowPassword((v) => !v)}
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Store Address */}
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Store Address</label>
+            <textarea
+              className={styles.textarea}
+              placeholder="Enter your store address"
+              required
+              value={form.storeAddress}
+              onChange={set("storeAddress")}
+            />
+          </div>
+
+          <button type="submit" className={styles.submitBtn} disabled={loading}>
+            {loading ? (
+              <span className={styles.spinner} />
+            ) : (
+              <>
+                Finish Setup &amp; Continue
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+                </svg>
+              </>
+            )}
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+
+        <p className={styles.loginLink}>
           Already have an account?{" "}
-          <Link
-            href="/auth/login"
-            className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Login
-          </Link>
+          <Link href="/auth/login">Log in</Link>
         </p>
       </div>
     </div>

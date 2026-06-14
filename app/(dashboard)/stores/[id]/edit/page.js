@@ -126,10 +126,8 @@ export default function EditStorePage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <a href={`/stores/${id}`} className={styles.backLink}>
-          ← Back to Store
-        </a>
-        <h1 className={styles.title}>Edit Store: {store?.name}</h1>
+        <a href={`/stores/${id}`} className={styles.backLink}>‹</a>
+        <h1 className={styles.title}>Edit Store</h1>
       </div>
 
       {error && (

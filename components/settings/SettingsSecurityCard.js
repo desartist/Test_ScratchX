@@ -81,50 +81,31 @@ export default function SettingsSecurityCard() {
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <Lock size={20} /> <h3>Change Password</h3>
+        <Lock size={16} />
+        <h3>Change Password</h3>
       </div>
+      <div className={styles.body}>
+        {success && (
+          <div className={styles.successMessage}>✓ Password updated successfully</div>
+        )}
+        {error && <div className={styles.errorMessage}>✗ {error}</div>}
 
-      {success && (
-        <div className={styles.successMessage}>
-          ✓ Password updated successfully
+        <div className={styles.fieldGroup}>
+          <label>Current Password</label>
+          <input type="password" placeholder="••••••••" name="current" value={passwords.current} onChange={handleChange} className={styles.input} disabled={loading} />
         </div>
-      )}
-      {error && <div className={styles.errorMessage}>✗ {error}</div>}
-
-      <input
-        type="password"
-        placeholder="Current Password"
-        name="current"
-        value={passwords.current}
-        onChange={handleChange}
-        className={styles.input}
-        disabled={loading}
-      />
-      <input
-        type="password"
-        placeholder="New Password"
-        name="new"
-        value={passwords.new}
-        onChange={handleChange}
-        className={styles.input}
-        disabled={loading}
-      />
-      <input
-        type="password"
-        placeholder="Confirm Password"
-        name="confirm"
-        value={passwords.confirm}
-        onChange={handleChange}
-        className={styles.input}
-        disabled={loading}
-      />
-      <button
-        onClick={handleSubmit}
-        className={styles.btn}
-        disabled={loading}
-      >
-        {loading ? "Updating..." : "Update Password"}
-      </button>
+        <div className={styles.fieldGroup}>
+          <label>New Password</label>
+          <input type="password" placeholder="Min. 8 characters" name="new" value={passwords.new} onChange={handleChange} className={styles.input} disabled={loading} />
+        </div>
+        <div className={styles.fieldGroup}>
+          <label>Confirm Password</label>
+          <input type="password" placeholder="Repeat new password" name="confirm" value={passwords.confirm} onChange={handleChange} className={styles.input} disabled={loading} />
+        </div>
+        <button onClick={handleSubmit} className={styles.btn} disabled={loading}>
+          {loading ? "Updating..." : "Update Password"}
+        </button>
+      </div>
     </div>
   );
 }

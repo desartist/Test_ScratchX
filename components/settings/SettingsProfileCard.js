@@ -58,14 +58,16 @@ export default function SettingsProfileCard({ merchant }) {
   }, []);
 
   useEffect(() => {
-    if (merchant) {
+    if (merchant && !formData.name && !formData.phone) {
       setFormData({
         name: merchant?.name || "",
         phone: merchant?.phone || "",
         businessType: merchant?.profile?.businessType || "",
       });
     }
-  }, [merchant]);
+  // Only run when merchant first becomes available, not on every object reference change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [merchant?.name, merchant?.phone, merchant?.profile?.businessType]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

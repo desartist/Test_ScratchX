@@ -34,7 +34,9 @@ export default function SettingsAccountCard({ merchant }) {
 
   return (
     <div className={styles.card}>
-      <h3 className={styles.title}>Account Information</h3>
+      <div className={styles.cardHeader}>
+        <span className={styles.title}>Account Information</span>
+      </div>
       <div className={styles.infoGrid}>
         <div className={styles.infoItem}>
           <span className={styles.label}>Merchant ID</span>

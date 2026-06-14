@@ -3,16 +3,16 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./subscription.module.css";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 const CHECK = (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+  <svg data-type="check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{color:'#22c55e',flexShrink:0}}>
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
 
 const CROSS = (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+  <svg data-type="cross" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{color:'#d1d5db',flexShrink:0}}>
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
@@ -122,6 +122,7 @@ export default function SubscriptionPage() {
       <div className={styles.page}>
         <div className={styles.container}>
           <div className={styles.loadingState}>
+            <div className={styles.loadingSpinner} />
             <p>Loading subscription information...</p>
           </div>
         </div>
@@ -153,11 +154,15 @@ export default function SubscriptionPage() {
       <div className={styles.container}>
         {/* Header */}
         <div className={styles.header}>
-          <button className={styles.backButton} onClick={() => router.back()}>
-            <ArrowLeft size={20} />
-            Back
-          </button>
-          <h1 className={styles.title}>Subscription & Entitlements</h1>
+          <div className={styles.headerIcon}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+          </div>
+          <div className={styles.headerText}>
+            <h1 className={styles.title}>Subscription & Entitlements</h1>
+            <p className={styles.subtitle}>Manage your plan and unlock more features for your business</p>
+          </div>
         </div>
 
         {/* Current Subscription Card */}

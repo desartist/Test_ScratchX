@@ -56,7 +56,10 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loading}>Loading settings...</div>
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner} />
+          Loading settings...
+        </div>
       </div>
     );
   }
@@ -75,10 +78,18 @@ export default function SettingsPage() {
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Settings & Account</h1>
-        <p className={styles.subtitle}>
-          Manage your profile, subscription, security and account preferences.
-        </p>
+        <div className={styles.headerIcon}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M20 21a8 8 0 1 0-16 0"/>
+          </svg>
+        </div>
+        <div className={styles.headerText}>
+          <h1 className={styles.title}>Settings & Account</h1>
+          <p className={styles.subtitle}>
+            Manage your profile, subscription, security and account preferences.
+          </p>
+        </div>
       </div>
 
       {/* Main Content */}

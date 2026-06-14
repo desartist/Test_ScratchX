@@ -1,6 +1,5 @@
 .page {
   padding: 20px 16px 40px;
-  background: var(--color-page-bg, #fcfdff);
   min-height: 100%;
 }
 

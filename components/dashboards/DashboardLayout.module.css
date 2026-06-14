@@ -1,7 +1,7 @@
 .container {
   display: flex;
   min-height: 100vh;
-  background: var(--color-page-bg, #fcfdff);
+  background: #ffffff;
   font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
@@ -366,9 +366,9 @@
 
 .content {
   flex: 1;
-  padding: 28px 32px 40px;
+  padding: 0;
   overflow-y: auto;
-  background: var(--color-page-bg, #fcfdff);
+  background: #ffffff;
 }
 
 .backdrop {
@@ -452,7 +452,7 @@
   }
 
   .content {
-    padding: 16px 12px 32px;
+    padding: 0;
   }
 
   .userMeta {

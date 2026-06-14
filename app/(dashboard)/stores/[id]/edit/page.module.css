@@ -1,75 +1,73 @@
 .container {
-  max-width: 600px;
-  padding: 24px;
+  max-width: 680px;
+  padding: 20px 16px 80px;
   margin: 0 auto;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 32px;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid #f0f2ff;
 }
 
 .backLink {
-  color: #3b82f6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid #e0e4ff;
+  border-radius: 10px;
+  background: #fff;
+  color: #010f44;
   text-decoration: none;
-  font-size: 14px;
-  transition: text-decoration 0.2s ease;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
 }
-
-.backLink:hover {
-  text-decoration: underline;
-}
+.backLink:hover { background: #f0f2ff; border-color: #c5cbfa; }
 
 .title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0;
 }
 
 .formContainer {
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border: 1.5px solid #e8eaff;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(1, 15, 68, 0.06);
+  padding: 28px 24px;
 }
 
 .error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
   padding: 12px 16px;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  color: #dc2626;
-  font-size: 14px;
+  background: #fff0f0;
+  border: 1px solid #ffc5c5;
+  border-radius: 12px;
+  color: #c0392b;
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .loading {
   text-align: center;
-  padding: 32px;
-  color: #6b7280;
-  font-size: 16px;
+  padding: 60px 24px;
+  color: #637080;
+  font-size: 15px;
 }
 
-/* Dark mode */
-
-/* Responsive - Mobile */
-@media (max-width: 640px) {
-  .container {
-    padding: 16px;
-  }
-
-  .header {
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-
-  .title {
-    font-size: 20px;
-  }
-
-  .formContainer {
-    padding: 16px;
-  }
+@media (max-width: 480px) {
+  .container { padding: 14px 12px 80px; }
+  .title { font-size: 1.2rem; }
+  .formContainer { padding: 20px 16px; border-radius: 16px; }
 }
