@@ -1,0 +1,585 @@
+/* ── Page shell ── */
+.page {
+  min-height: 100dvh;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-afacad, 'Segoe UI', sans-serif);
+  max-width: 520px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+  box-sizing: border-box;
+}
+
+.pageWarm {
+  background: linear-gradient(175deg, #fffdf5 0%, #fff 60%);
+}
+
+.pageDark {
+  background: #000;
+}
+
+/* Dark-mode overrides for all text/borders on the revealed screen */
+.pageDark .storeHeader {
+  border-bottom-color: #222;
+}
+
+.pageDark .storeName {
+  color: #fff;
+}
+
+.pageDark .campaignTag {
+  color: #666;
+}
+
+.pageDark .celebSub {
+  color: #555;
+}
+
+.pageDark .claimHint {
+  color: #444;
+}
+
+.pageDark .scratchTitle {
+  color: #fff;
+}
+
+.pageDark .scratchHint {
+  color: #555;
+}
+
+@media (min-width: 540px) {
+  .page {
+    border-left: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* ── Store / Campaign header ── */
+.storeHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f2f2f2;
+  box-sizing: border-box;
+}
+
+.storeAvatar {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef9e1b, #ff9500);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.storeText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.storeName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #010f44;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.campaignTag {
+  font-size: 11px;
+  color: #aaa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ──────────────────────────────────────────
+   SELECT PHASE
+────────────────────────────────────────── */
+
+.titleBlock {
+  width: 100%;
+  text-align: center;
+  padding: 22px 20px 8px;
+}
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+
+.pageSubtitle {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+
+.pageSubtitle em {
+  font-style: normal;
+  color: #ef9e1b;
+  font-weight: 700;
+}
+
+/* 2-column mystery card grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  padding: 10px 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 480px) {
+  .grid { gap: 18px; padding: 12px 28px; }
+}
+
+/* Mystery coupon card */
+.card {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 20px;
+  background: linear-gradient(150deg, #ffc107 0%, #ff9800 100%);
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 22px rgba(255, 152, 0, 0.36);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  height: 55%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 100%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.card:hover { transform: scale(1.05) translateY(-3px); box-shadow: 0 12px 32px rgba(255,152,0,0.52); }
+.card:active { transform: scale(0.96); }
+
+/* Card inner content wrapper */
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  gap: 0;
+}
+
+/* Gift circle — breathes to invite tap */
+.giftCircle {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.08); }
+}
+
+/* Confetti dots */
+.dot { position: absolute; border-radius: 50%; pointer-events: none; opacity: 0.75; }
+.dot1 { width: 7px;  height: 7px;  top: 13%;    left: 14%;   background: #ff4757; }
+.dot2 { width: 5px;  height: 5px;  top: 18%;    right: 17%;  background: #2ed573; }
+.dot3 { width: 6px;  height: 6px;  bottom: 22%; left: 11%;   background: #1e90ff; }
+.dot4 { width: 5px;  height: 5px;  bottom: 14%; right: 19%;  background: #ffa502; }
+.dot5 { width: 4px;  height: 4px;  top: 42%;    left: 8%;    background: #ff6b81; }
+
+.countHint {
+  font-size: 12px;
+  color: #bbb;
+  margin: 4px 0 0;
+  text-align: center;
+}
+
+/* ──────────────────────────────────────────
+   SCRATCH PHASE
+────────────────────────────────────────── */
+
+.scratchBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 20px 4px;
+  width: 100%;
+  box-sizing: border-box;
+  flex: 1;
+}
+
+.scratchTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #010f44;
+  text-align: center;
+  margin: 0 0 16px;
+}
+
+/* The scratch card container — responsive width */
+.scratchCardWrap {
+  position: relative;
+  width: min(calc(100vw - 60px), 300px);
+  aspect-ratio: 280 / 370;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 14px 44px rgba(255, 152, 0, 0.42);
+  flex-shrink: 0;
+}
+
+@media (min-width: 540px) {
+  .scratchCardWrap { width: 300px; }
+}
+
+/* Reward card — revealed bit by bit as canvas is scratched away */
+.scratchRevealBg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #fffbf0 0%, #fff8e1 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+}
+
+.scratchRevealGiftCircle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(255, 152, 0, 0.4);
+}
+
+.scratchRevealValue {
+  font-size: 38px;
+  font-weight: 900;
+  color: #ef9e1b;
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 0 2px 8px rgba(239, 158, 27, 0.22);
+}
+
+.scratchRevealGiftImg {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+  border: 2.5px solid rgba(239, 158, 27, 0.4);
+}
+
+.scratchRevealDesc {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  max-width: 200px;
+  line-height: 1.4;
+}
+
+.scratchRevealLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* Canvas overlay */
+.scratchCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  border-radius: 24px;
+}
+
+.scratchHint {
+  font-size: 13px;
+  color: #aaa;
+  margin: 14px 0 0;
+  text-align: center;
+}
+
+/* ──────────────────────────────────────────
+   MINI STRIP (shown below scratch + revealed)
+────────────────────────────────────────── */
+
+.miniStrip {
+  display: flex;
+  gap: 8px;
+  padding: 18px 20px 0;
+  justify-content: center;
+  flex-wrap: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.miniCard {
+  flex-shrink: 0;
+  width: 54px;
+  height: 72px;
+  border-radius: 10px;
+  background: linear-gradient(150deg, #ffc107, #ff9800);
+  opacity: 0.22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.miniCardMore {
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.7);
+  opacity: 0.28;
+}
+
+/* ──────────────────────────────────────────
+   REVEALED PHASE
+────────────────────────────────────────── */
+
+.celebBlock {
+  width: 100%;
+  text-align: center;
+  padding: 22px 20px 10px;
+}
+
+.celebEmoji {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.celebTitle {
+  font-size: 34px;
+  font-weight: 900;
+  margin: 0 0 4px;
+  background: linear-gradient(135deg, #ef9e1b, #e65100);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.celebSub {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0;
+}
+
+/* Reward card — white with pop-in */
+.rewardCard {
+  width: calc(100% - 40px);
+  border-radius: 22px;
+  background: linear-gradient(150deg, #ffc107 0%, #ff9800 100%);
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(255, 152, 0, 0.38);
+  opacity: 0;
+  transform: scale(0.82) translateY(24px);
+}
+
+.rewardCardIn {
+  animation: popIn 0.52s 0.06s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes popIn {
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.rewardTop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 20px 22px;
+  text-align: center;
+}
+
+.rewardGiftCircle {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rewardValue {
+  font-size: 42px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.14);
+  line-height: 1.1;
+}
+
+.rewardGiftImg {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  border: 3px solid rgba(255, 255, 255, 0.35);
+}
+
+.rewardDesc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 240px;
+}
+
+.couponZone {
+  background: rgba(0, 0, 0, 0.12);
+  padding: 14px 20px;
+}
+
+.couponLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.couponRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.couponCode {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #fff;
+  background: rgba(255,255,255,0.14);
+  border: 1px dashed rgba(255,255,255,0.42);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: 'Courier New', monospace;
+}
+
+.copyBtn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.copyBtn:hover { background: rgba(255,255,255,0.32); }
+
+/* 5-minute countdown */
+.countdown {
+  width: calc(100% - 40px);
+  background: #111;
+  border-radius: 12px;
+  padding: 9px 16px;
+  text-align: center;
+  margin-top: 12px;
+  transition: background 0.3s;
+}
+
+.countdownWarn  { background: #1a0a00; }
+.countdownDead  { background: #1a0000; }
+
+.countdownLabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  margin-bottom: 2px;
+}
+
+.countdownTime {
+  font-size: 22px;
+  font-weight: 900;
+  color: #ef9e1b;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: 3px;
+}
+
+.countdownTimeWarn { color: #ff6b00; }
+.countdownTimeDead { color: #ef5350; }
+
+.countdownSub {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.28);
+  margin-top: 3px;
+}
+
+.claimHint {
+  font-size: 13px;
+  color: #bbb;
+  margin: 16px 20px 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Loading / Error ── */
+.centeredState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 100dvh;
+  gap: 16px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid #f0f0f0;
+  border-top-color: #ef9e1b;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.stateText { font-size: 14px; color: #999; margin: 0; max-width: 280px; }
+.errorEmoji { font-size: 42px; }
+.errorTitle { font-size: 20px; font-weight: 700; color: #010f44; margin: 0; }

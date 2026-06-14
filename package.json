@@ -1,0 +1,52 @@
+{
+  "name": "coupon_campaigns",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest __tests__/unit",
+    "test:integration": "jest __tests__/integration",
+    "migrate:subscriptions": "node scripts/migrate-subscription-ownership.js",
+    "seed:distributor-data": "node lib/seeds/seedDistributorData.mjs",
+    "seed:plans": "node scripts/seed-subscription-plans.js",
+    "seed:accounts": "node scripts/seed-test-accounts.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "canvas-confetti": "^1.9.4",
+    "dotenv": "^17.4.2",
+    "ioredis": "^5.10.1",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^1.14.0",
+    "mongoose": "^9.4.1",
+    "next": "16.2.3",
+    "nodemailer": "^8.0.7",
+    "prop-types": "^15.8.1",
+    "qrcode": "^1.5.4",
+    "razorpay": "^2.9.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-qr-code": "^2.0.18",
+    "redis": "^5.12.1",
+    "speakeasy": "^2.0.0",
+    "ua-parser-js": "^2.0.10",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-react": "^7.29.7",
+    "@testing-library/jest-dom": "^6.4.5",
+    "@testing-library/react": "^16.1.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.3",
+    "jest": "^30.4.2",
+    "mongodb-memory-server": "^10.1.0",
+    "supertest": "^7.0.0"
+  }
+}

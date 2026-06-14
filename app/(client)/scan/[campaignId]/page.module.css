@@ -1,0 +1,824 @@
+/* ===== MAIN CONTAINER ===== */
+.container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #fff;
+  font-family: var(--font-afacad, 'Afacad', sans-serif);
+  overflow-x: hidden;
+}
+
+/* Dark mode support */
+
+/* ===== LOADING SPINNER ===== */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ffa500;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 40px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.container > p {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-top: 16px;
+}
+
+/* ===== ERROR BOX ===== */
+.errorBox {
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.errorBox h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.errorBox p {
+  color: #666;
+  font-size: 14px;
+}
+
+
+/* ===== HEADER (REMOVED - NOT IN REDESIGNED SPEC) ===== */
+/* Business info header was in old design but not in new spec */
+
+/* ===== MAIN LAYOUT WRAPPER ===== */
+.layoutWrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Mobile layout */
+@media (max-width: 767px) {
+  .layoutWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-height: auto;
+  }
+}
+
+/* Tablet layout */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .layoutWrapper {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ===== QR CODE SECTION ===== */
+.qrSection {
+  background-color: #000000;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+@media (max-width: 767px) {
+  .qrSection {
+    padding: 20px;
+    min-height: auto;
+    justify-content: flex-start;
+    padding-top: 20px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .qrSection {
+    padding: 32px;
+    min-height: 100vh;
+  }
+}
+
+
+/* QR Code Title (mobile only) */
+.qrTitle {
+  display: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-align: center;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .qrTitle {
+    display: block;
+  }
+}
+
+/* QR Code Container */
+.qrContainer {
+  width: 300px;
+  height: 300px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .qrContainer {
+    width: 250px;
+    height: 250px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .qrContainer {
+    width: 280px;
+    height: 280px;
+  }
+}
+
+.qrImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Open URL Link */
+.qrLink {
+  color: #999999;
+  font-size: 12px;
+  font-weight: 400;
+  text-decoration: none;
+  cursor: pointer;
+  margin-top: 16px;
+  text-align: center;
+  display: block;
+  transition: color 0.2s ease;
+}
+
+.qrLink:hover {
+  text-decoration: underline;
+  color: #bbbbbb;
+}
+
+
+/* ===== FORM SECTION ===== */
+.formSection {
+  background-color: #ffffff;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 767px) {
+  .formSection {
+    padding: 20px;
+    min-height: auto;
+    background-color: #ffffff;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .formSection {
+    padding: 32px;
+  }
+}
+
+
+/* ===== FORM TITLE & SUBTITLE ===== */
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #010f44;
+  margin: 0 0 8px 0;
+  text-align: left;
+  font-family: 'Afacad', sans-serif;
+}
+
+@media (max-width: 767px) {
+  .title {
+    font-size: 24px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .title {
+    font-size: 25px;
+  }
+}
+
+
+.subtitle {
+  font-size: 14px;
+  font-weight: 400;
+  color: #637080;
+  margin: 0 0 24px 0;
+  line-height: 1.4;
+  text-align: left;
+  font-family: 'Afacad Flux', sans-serif;
+}
+
+
+/* ===== ALERTS ===== */
+.errorAlert,
+.warningAlert,
+.successAlert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.errorAlert {
+  background-color: #fee;
+  color: #c33;
+  border-left: 4px solid #c33;
+}
+
+.warningAlert {
+  background-color: #ffe9cc;
+  color: #b8860b;
+  border-left: 4px solid #ff9800;
+}
+
+.successAlert {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-left: 4px solid #4caf50;
+}
+
+
+/* ===== FORM ELEMENT ===== */
+.form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* ===== INPUT GROUPS ===== */
+.inputGroup {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #010f44;
+  margin-bottom: 8px;
+  font-family: 'Afacad', sans-serif;
+}
+
+
+.label .required {
+  color: #ff0000;
+  margin-left: 2px;
+}
+
+/* ===== TEXT INPUT ===== */
+.input {
+  width: 100%;
+  height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #010f44;
+  background-color: #ffffff;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: 'Afacad', sans-serif;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #ffa500;
+  box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.1);
+}
+
+.input::placeholder {
+  color: #999999;
+}
+
+.input.inputError {
+  border-color: #ff6b6b;
+  background-color: #fff5f5;
+}
+
+
+/* ===== MOBILE INPUT WRAPPER ===== */
+.mobileInputWrapper {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.phonePrefix {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background-color: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #010f44;
+  font-weight: 400;
+  font-family: 'Afacad', sans-serif;
+  flex-shrink: 0;
+}
+
+.mobileInput {
+  flex: 1;
+  height: 44px;
+}
+
+
+/* ===== RANGE SELECTION ===== */
+.rangeSection {
+  margin-bottom: 16px;
+}
+
+.rangeLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #010f44;
+  margin-bottom: 12px;
+  font-family: 'Afacad', sans-serif;
+}
+
+
+.rangeGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rangeOption {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 400;
+  color: #010f44;
+  font-family: 'Afacad', sans-serif;
+}
+
+.rangeOption:hover {
+  border-color: #d8d8d8;
+  background-color: rgba(1, 15, 68, 0.02);
+}
+
+.rangeOption.checked {
+  border-color: #c7d2e8;
+  background-color: #e0e7ff;
+  color: #010f44;
+}
+
+.rangeOption .checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #010f44;
+  border-radius: 4px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.rangeOption.checked .checkbox {
+  background-color: #010f44;
+  border-color: #010f44;
+}
+
+.rangeOption.checked .checkbox::after {
+  content: '✓';
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.rangeInput {
+  display: none;
+}
+
+
+/* ===== ERROR TEXT ===== */
+.errorText {
+  display: block;
+  color: #ff6b6b;
+  font-size: 12px;
+  margin-top: 4px;
+  font-family: 'Afacad', sans-serif;
+}
+
+/* ===== LOCATION STATUS COMPONENT ===== */
+.locationStatus {
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ===== BUTTON GROUP ===== */
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  width: 100%;
+  padding-top: 24px;
+}
+
+/* ===== VERIFY BUTTON ===== */
+.verifyBtn {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: 2px solid #ffa500;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffa500;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Afacad', sans-serif;
+  text-transform: uppercase;
+}
+
+.verifyBtn:hover:not(:disabled) {
+  background-color: rgba(255, 165, 0, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 165, 0, 0.3);
+}
+
+.verifyBtn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(255, 165, 0, 0.2);
+}
+
+.verifyBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #ccc;
+  color: #999;
+}
+
+
+/* ===== SUBMIT BUTTON ===== */
+.submitBtn {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #ffa500 0%, #f59e0b 100%);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Afacad', sans-serif;
+  text-transform: uppercase;
+}
+
+.submitBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 165, 0, 0.3);
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(255, 165, 0, 0.2);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+  .submitBtn {
+    height: 44px;
+  }
+}
+
+/* ===== GRID CONTAINER (COUPON PICK) ===== */
+.gridContainer {
+  padding: 40px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+@media (max-width: 767px) {
+  .gridContainer {
+    padding: 20px;
+    background-color: #ffffff;
+  }
+}
+
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 20px;
+  flex: 1;
+}
+
+@media (max-width: 767px) {
+  .grid {
+    gap: 12px;
+  }
+}
+
+.couponCard {
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(135deg, #ffb703 0%, #ffa500 100%);
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.1) 0%, transparent 50%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.couponCard:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.giftIcon {
+  width: 48px;
+  height: 48px;
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== REVEAL CONTAINER ===== */
+.revealContainer {
+  padding: 40px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+@media (max-width: 767px) {
+  .revealContainer {
+    padding: 20px;
+    background-color: #ffffff;
+  }
+}
+
+
+.revealCard {
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(135deg, #ffb703 0%, #ffa500 100%);
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.1) 0%, transparent 50%);
+  border-radius: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.revealCard.scratched {
+  background: linear-gradient(135deg, #f5f5f5 0%, #fff 100%);
+  cursor: default;
+}
+
+.scratchText {
+  position: absolute;
+  bottom: 30px;
+  font-weight: 700;
+  color: #fff;
+  font-size: 16px;
+  text-align: center;
+  z-index: 10;
+}
+
+.rewardContent {
+  text-align: center;
+  z-index: 2;
+}
+
+.rewardPrefix {
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-family: 'Afacad', sans-serif;
+}
+
+.rewardValue {
+  font-size: 56px;
+  font-weight: 800;
+  color: #ff9800;
+  margin-bottom: 10px;
+  line-height: 1;
+  font-family: 'Afacad', sans-serif;
+}
+
+/* ===== REDEEM BUTTON ===== */
+.redeemBtn {
+  width: 100%;
+  max-width: 300px;
+  height: 48px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Afacad', sans-serif;
+  text-transform: uppercase;
+}
+
+.redeemBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.3);
+}
+
+.redeemBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+
+/* Mobile: < 768px */
+@media (max-width: 767px) {
+  .container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .layoutWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-height: auto;
+  }
+
+  .qrSection {
+    padding: 20px;
+    min-height: auto;
+    justify-content: flex-start;
+  }
+
+  .formSection {
+    padding: 20px;
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .submitBtn,
+  .verifyBtn {
+    height: 44px;
+  }
+}
+
+/* Tablet: 768px - 1023px */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .qrContainer {
+    width: 280px;
+    height: 280px;
+  }
+
+  .title {
+    font-size: 25px;
+  }
+
+  .submitBtn,
+  .verifyBtn {
+    height: 44px;
+  }
+
+  .input {
+    height: 44px;
+  }
+
+  .rangeOption {
+    height: 44px;
+  }
+}
+
+/* Desktop: 1024px+ */
+@media (min-width: 1024px) {
+  .layoutWrapper {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .qrSection {
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  .formSection {
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  .qrContainer {
+    width: 300px;
+    height: 300px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .submitBtn,
+  .verifyBtn {
+    height: 48px;
+  }
+
+  .input {
+    height: 44px;
+  }
+
+  .rangeOption {
+    height: 44px;
+  }
+}
+
+/* Large Desktop: 1400px+ */
+@media (min-width: 1400px) {
+  .qrSection {
+    padding: 60px 40px;
+  }
+
+  .formSection {
+    padding: 60px 40px;
+  }
+}

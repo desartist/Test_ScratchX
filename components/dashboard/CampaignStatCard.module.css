@@ -1,0 +1,145 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border-radius: var(--card-radius, 10px);
+  background: #ffffff;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+  box-shadow: var(--card-shadow, 0 6px 10px 3px rgba(0, 0, 0, 0.06));
+  min-height: 140px;
+  justify-content: space-between;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 16px 4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.labelWrapper {
+  flex: 1;
+}
+
+.label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-muted, #637080);
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  line-height: 1.3;
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.05);
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.value {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  line-height: 1.1;
+}
+
+.trendContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trend {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-muted, #637080);
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  line-height: 1.3;
+}
+
+.trendUp {
+  color: var(--color-growth, #0a8905);
+}
+
+.trendDown {
+  color: #c62828;
+}
+
+.trendArrowUp::before {
+  content: '↑';
+  display: inline-block;
+  margin-right: 2px;
+}
+
+.trendArrowDown::before {
+  content: '↓';
+  display: inline-block;
+  margin-right: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .card {
+    padding: 20px;
+    min-height: 120px;
+  }
+
+  .value {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+    gap: 12px;
+    min-height: 110px;
+  }
+
+  .label {
+    font-size: 12px;
+  }
+
+  .value {
+    font-size: 28px;
+  }
+
+  .iconWrapper {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .value {
+    font-size: 24px;
+  }
+
+  .label {
+    font-size: 11px;
+  }
+}
+
+/* Dark mode support */

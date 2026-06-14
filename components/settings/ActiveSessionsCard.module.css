@@ -1,0 +1,199 @@
+.card {
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+
+.card h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+.subtitle {
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+
+.noSessions {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+
+.loadingText {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+
+.errorText {
+  text-align: center;
+  padding: 12px;
+  color: #c62828;
+  font-size: 0.9rem;
+  background: #ffebee;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+
+.retryBtn {
+  display: block;
+  margin: 16px auto 0;
+  padding: 10px 20px;
+  background: #ef9e1b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retryBtn:hover {
+  background: #ff9500;
+  box-shadow: 0 2px 8px rgba(239, 158, 27, 0.3);
+}
+
+.sessionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sessionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+
+.sessionInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.deviceIcon {
+  font-size: 1.5rem;
+  width: 40px;
+  text-align: center;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.deviceName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #010f44;
+}
+
+
+.meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+
+.metaItem {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+
+.lastActive {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+
+.currentBadge {
+  padding: 4px 10px;
+  background: #d1f4e8;
+  color: #0f7752;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: white;
+  color: #c62828;
+  border: 1px solid #c62828;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+
+.logoutBtn:hover:not(:disabled) {
+  background: #ffebee;
+  border-color: #c62828;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(198, 40, 40, 0.2);
+}
+
+
+.logoutBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .sessionItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .sessionInfo {
+    width: 100%;
+  }
+
+  .logoutBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+}

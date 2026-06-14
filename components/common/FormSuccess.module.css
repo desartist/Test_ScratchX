@@ -1,0 +1,22 @@
+.container {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 16px;
+  background-color: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  color: #16a34a;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.message {
+  font-size: 14px;
+  line-height: 1.4;
+}

@@ -1,0 +1,247 @@
+/* Card Container */
+.cardContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  transform-origin: center;
+}
+
+
+.cardContainer:not(.disabled):hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+}
+
+/* Canvas - Scratch layer */
+.scratchCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.scratchCanvas:active {
+  cursor: grabbing;
+}
+
+/* Revealed content underneath */
+.revealedContent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.couponAmount {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ef9e1b;
+  text-align: center;
+  font-family: 'Afacad', 'Afacad Flux', sans-serif;
+  line-height: 1;
+}
+
+@media (max-width: 767px) {
+  .couponAmount {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 479px) {
+  .couponAmount {
+    font-size: 20px;
+  }
+}
+
+
+.couponIcon {
+  font-size: 40px;
+  line-height: 1;
+  animation: bounce 2s infinite;
+}
+
+@media (max-width: 767px) {
+  .couponIcon {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 479px) {
+  .couponIcon {
+    font-size: 32px;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .couponIcon {
+    animation: none;
+  }
+}
+
+/* Scratch percentage indicator */
+.scratchIndicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background-color: rgba(239, 158, 27, 0.9);
+  padding: 4px 8px;
+  border-radius: 4px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.percentage {
+  font-size: 12px;
+  font-weight: 700;
+  color: #010f44;
+  font-family: 'Afacad', sans-serif;
+}
+
+
+/* Selection checkmark */
+.checkmark {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background-color: #010f44;
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.2s ease;
+  z-index: 20;
+  pointer-events: none;
+}
+
+
+.cardContainer.selected .checkmark {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Selected state */
+.cardContainer.selected {
+  border: 3px solid #010f44;
+  box-shadow: 0 8px 24px rgba(1, 15, 68, 0.2);
+}
+
+
+/* Disabled state */
+.cardContainer.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.cardContainer.disabled .scratchCanvas {
+  cursor: not-allowed;
+}
+
+/* Mobile optimization */
+@media (max-width: 767px) {
+  .cardContainer {
+    border-radius: 10px;
+  }
+
+  .checkmark {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    top: 6px;
+    right: 6px;
+  }
+
+  .scratchIndicator {
+    bottom: 6px;
+    right: 6px;
+    padding: 3px 6px;
+  }
+
+  .percentage {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 479px) {
+  .cardContainer {
+    border-radius: 8px;
+  }
+
+  .checkmark {
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+    top: 4px;
+    right: 4px;
+  }
+
+  .scratchIndicator {
+    bottom: 4px;
+    right: 4px;
+    padding: 2px 4px;
+  }
+
+  .percentage {
+    font-size: 10px;
+  }
+}
+
+/* Touch device optimization */
+@media (hover: none) and (pointer: coarse) {
+  .cardContainer:not(.disabled):hover {
+    transform: none;
+  }
+
+  .cardContainer:not(.disabled):active {
+    opacity: 0.95;
+  }
+}
+
+/* Accessibility */
+.cardContainer:focus-visible {
+  outline: 2px solid #010f44;
+  outline-offset: 2px;
+}
+
+
+/* Print styles */
+@media print {
+  .cardContainer {
+    display: none;
+  }
+}

@@ -1,0 +1,38 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-6);
+}
+
+.title {
+  font-family: var(--font-afacad);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-navy);
+  margin: 0;
+}
+
+.viewAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-afacad);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-muted);
+  transition: color var(--transition-fast);
+}
+
+.viewAll:hover {
+  color: var(--color-navy);
+}
+
+.chevron {
+  font-size: var(--font-size-md);
+  line-height: 1;
+}

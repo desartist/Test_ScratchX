@@ -1,0 +1,716 @@
+[     201ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     218ms] [LOG] [Fast Refresh] done in 115ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     375ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/auth/login:0
+[     437ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     475ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     518ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <InnerLayoutRouter url="/auth/login" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="page" pagePath="auth/login...">
+        <SegmentTrieNode>
+        <ClientPageRoot Component={function LoginPage} serverProvidedParams={{...}}>
+          <LoginPage params={Promise} searchParams={Promise}>
+            <AuthLayout>
+              <div className="AuthLayout...">
+                <div className="AuthLayout...">
+                  <div className="page-modul...">
+                    <header>
+                    <section className="page-modul...">
+                      <LoginForm>
+                        <form onSubmit={function handleSubmit} className="LoginForm-...">
+                          <FormInput label="Email" type="email" value="" onChange={function onChange} ...>
+                            <div className={"FormInpu..."}>
+                              <label
++                               htmlFor="input-5m1o9za6f"
+-                               htmlFor="input-6cswg2o32"
+                                className="FormInput-module__v-WP-W__label"
+                              >
++                               Email
+                              <input
++                               id="input-5m1o9za6f"
+-                               id="input-6cswg2o32"
+                                aria-describedby={undefined}
+                                className={"FormInput-module__v-WP-W__input "}
+                                type="email"
+                                value=""
+                                onChange={function onChange}
+                                placeholder="Enter your email"
+                                required={true}
+                              >
+                          <FormInput label="Password" type="password" value="" onChange={function onChange} ...>
+                            <div className={"FormInpu..."}>
+                              <label
++                               htmlFor="input-zh8jh52wv"
+-                               htmlFor="input-64jfn01vo"
+                                className="FormInput-module__v-WP-W__label"
+                              >
++                               Password
+                              <input
++                               id="input-zh8jh52wv"
+-                               id="input-64jfn01vo"
+                                aria-describedby={undefined}
+                                className={"FormInput-module__v-WP-W__input "}
+                                type="password"
+                                value=""
+                                onChange={function onChange}
+                                placeholder="Enter your password"
+                                required={true}
+                              >
+                          ...
+                    ...
+      ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[     584ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/auth/me:0
+[  230058ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  230256ms] [LOG] [Fast Refresh] done in 299ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  339724ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  339746ms] [LOG] [Fast Refresh] done in 132ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  356653ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  357033ms] [LOG] [Fast Refresh] done in 471ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  357166ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  358116ms] [LOG] [Fast Refresh] done in 1058ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  358233ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  358296ms] [LOG] [Fast Refresh] done in 163ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  358466ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  358549ms] [LOG] [Fast Refresh] done in 187ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  359703ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  360183ms] [LOG] [Fast Refresh] done in 591ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  360577ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  360773ms] [LOG] [Fast Refresh] done in 308ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  360889ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  360912ms] [LOG] [Fast Refresh] done in 138ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  364707ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  365122ms] [LOG] [Fast Refresh] done in 522ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  365333ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  365383ms] [LOG] [Fast Refresh] done in 164ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  365564ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  365849ms] [LOG] [Fast Refresh] done in 400ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  373493ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  373506ms] [LOG] [Fast Refresh] done in 114ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  509863ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  509939ms] [LOG] [Fast Refresh] done in 168ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  510110ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  510284ms] [LOG] [Fast Refresh] done in 287ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  514848ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  514928ms] [LOG] [Fast Refresh] done in 193ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  531559ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  531699ms] [LOG] [Fast Refresh] done in 253ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  531822ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  532027ms] [LOG] [Fast Refresh] done in 321ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  541608ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  542021ms] [ERROR] ./components/dashboards/DashboardLayout.js:198:17
+Expected '</', got 'const'
+  196 |                   pathname === item.href ||
+  197 |                   // (item.href !== '/dashboard' && pathname.startsWith(item.href));
+> 198 |                 const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+      |                 ^^^^^
+  199 |
+  200 |                 return (
+  201 |                   <Link
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/dashboards/DashboardLayout.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Server Component]
+
+  Client Component SSR:
+    ./components/dashboards/DashboardLayout.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  542198ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  543123ms] [ERROR] ./components/dashboards/DashboardLayout.js:198:17
+Expected '</', got 'const'
+  196 |                   pathname === item.href ||
+  197 |                   // (item.href !== '/dashboard' && pathname.startsWith(item.href));
+> 198 |                 const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+      |                 ^^^^^
+  199 |
+  200 |                 return (
+  201 |                   <Link
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/dashboards/DashboardLayout.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Server Component]
+
+  Client Component SSR:
+    ./components/dashboards/DashboardLayout.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  543165ms] [ERROR] ./components/dashboards/DashboardLayout.js:198:17
+Expected '</', got 'const'
+  196 |                   pathname === item.href ||
+  197 |                   // (item.href !== '/dashboard' && pathname.startsWith(item.href));
+> 198 |                 const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+      |                 ^^^^^
+  199 |
+  200 |                 return (
+  201 |                   <Link
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/dashboards/DashboardLayout.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Server Component]
+
+  Client Component SSR:
+    ./components/dashboards/DashboardLayout.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  543190ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/auth/login?_rsc=61gpq:0
+[  543273ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/auth/login?_rsc=61gpq:0
+[  543297ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  543344ms] [ERROR] ./components/dashboards/DashboardLayout.js:198:17
+Expected '</', got 'const'
+  196 |                   pathname === item.href ||
+  197 |                   // (item.href !== '/dashboard' && pathname.startsWith(item.href));
+> 198 |                 const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+      |                 ^^^^^
+  199 |
+  200 |                 return (
+  201 |                   <Link
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/dashboards/DashboardLayout.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Server Component]
+
+  Client Component SSR:
+    ./components/dashboards/DashboardLayout.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  543358ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/auth/login:0
+[  543632ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_react-dom_0bruynb._.js:15305
+[  543754ms] Error: ./components/dashboards/DashboardLayout.js:198:17
+Expected '</', got 'const'
+  196 |                   pathname === item.href ||
+  197 |                   // (item.href !== '/dashboard' && pathname.startsWith(item.href));
+> 198 |                 const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+      |                 ^^^^^
+  199 |
+  200 |                 return (
+  201 |                   <Link
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/dashboards/DashboardLayout.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Server Component]
+
+  Client Component SSR:
+    ./components/dashboards/DashboardLayout.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Server Component]
+
+
+    at <unknown> (Error: ./components/dashboards/DashboardLayout.js:198:17)
+    at Object.getCompilationErrors (file://C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\dev\next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file://C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\dev\next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:1745:26)
+[  543758ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  543762ms] [ERROR] ./components/dashboards/DashboardLayout.js:198:17
+Expected '</', got 'const'
+  196 |                   pathname === item.href ||
+  197 |                   // (item.href !== '/dashboard' && pathname.startsWith(item.href));
+> 198 |                 const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+      |                 ^^^^^
+  199 |
+  200 |                 return (
+  201 |                   <Link
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/dashboards/DashboardLayout.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Server Component]
+
+  Client Component SSR:
+    ./components/dashboards/DashboardLayout.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  543913ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  543950ms] [ERROR] ./components/dashboards/DashboardLayout.js:198:17
+Expected '</', got 'const'
+  196 |                   pathname === item.href ||
+  197 |                   // (item.href !== '/dashboard' && pathname.startsWith(item.href));
+> 198 |                 const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+      |                 ^^^^^
+  199 |
+  200 |                 return (
+  201 |                   <Link
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/dashboards/DashboardLayout.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Server Component]
+
+  Client Component SSR:
+    ./components/dashboards/DashboardLayout.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  544097ms] [ERROR] ./components/dashboards/DashboardLayout.js:198:17
+Expected '</', got 'const'
+  196 |                   pathname === item.href ||
+  197 |                   // (item.href !== '/dashboard' && pathname.startsWith(item.href));
+> 198 |                 const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+      |                 ^^^^^
+  199 |
+  200 |                 return (
+  201 |                   <Link
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/dashboards/DashboardLayout.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/page.js [Server Component]
+
+  Client Component SSR:
+    ./components/dashboards/DashboardLayout.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/page.js [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  544172ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  552956ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  553168ms] [LOG] [Fast Refresh] done in 256ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  553312ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  553572ms] [LOG] [Fast Refresh] done in 375ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  553793ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  553806ms] [LOG] [Fast Refresh] done in 126ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  554035ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/auth/login:0
+[  554250ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  554304ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  554395ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <InnerLayoutRouter url="/auth/login" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="page" pagePath="auth/login...">
+        <SegmentTrieNode>
+        <ClientPageRoot Component={function LoginPage} serverProvidedParams={{...}}>
+          <LoginPage params={Promise} searchParams={Promise}>
+            <AuthLayout>
+              <div className="AuthLayout...">
+                <div className="AuthLayout...">
+                  <div className="page-modul...">
+                    <header>
+                    <section className="page-modul...">
+                      <LoginForm>
+                        <form onSubmit={function handleSubmit} className="LoginForm-...">
+                          <FormInput label="Email" type="email" value="" onChange={function onChange} ...>
+                            <div className={"FormInpu..."}>
+                              <label
++                               htmlFor="input-2wuhqdpwt"
+-                               htmlFor="input-vx8axx69m"
+                                className="FormInput-module__v-WP-W__label"
+                              >
++                               Email
+                              <input
++                               id="input-2wuhqdpwt"
+-                               id="input-vx8axx69m"
+                                aria-describedby={undefined}
+                                className={"FormInput-module__v-WP-W__input "}
+                                type="email"
+                                value=""
+                                onChange={function onChange}
+                                placeholder="Enter your email"
+                                required={true}
+                              >
+                          <FormInput label="Password" type="password" value="" onChange={function onChange} ...>
+                            <div className={"FormInpu..."}>
+                              <label
++                               htmlFor="input-tzz2shcft"
+-                               htmlFor="input-mn70jircz"
+                                className="FormInput-module__v-WP-W__label"
+                              >
++                               Password
+                              <input
++                               id="input-tzz2shcft"
+-                               id="input-mn70jircz"
+                                aria-describedby={undefined}
+                                className={"FormInput-module__v-WP-W__input "}
+                                type="password"
+                                value=""
+                                onChange={function onChange}
+                                placeholder="Enter your password"
+                                required={true}
+                              >
+                          ...
+                    ...
+      ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  554519ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  554773ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/auth/me:0
+[  554777ms] [LOG] [Fast Refresh] done in 361ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  556212ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  556310ms] [LOG] [Fast Refresh] done in 213ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  556414ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  556503ms] [LOG] [Fast Refresh] done in 191ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  822471ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  838505ms] [LOG] [Fast Refresh] done in 16139ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  838818ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  838841ms] [LOG] [Fast Refresh] done in 123ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  839001ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  839067ms] [LOG] [Fast Refresh] done in 171ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  839173ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  839173ms] [LOG] [Fast Refresh] done in 103ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  839284ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  839349ms] [LOG] [Fast Refresh] done in 175ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  839652ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  839761ms] [LOG] [Fast Refresh] done in 214ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  840128ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  840216ms] [LOG] [Fast Refresh] done in 189ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  840502ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  840748ms] [LOG] [Fast Refresh] done in 360ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  840850ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  841080ms] [LOG] [Fast Refresh] done in 331ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  841278ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  841410ms] [LOG] [Fast Refresh] done in 236ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  841512ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  841641ms] [LOG] [Fast Refresh] done in 230ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  841745ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  842047ms] [LOG] [Fast Refresh] done in 405ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  842305ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  842334ms] [LOG] [Fast Refresh] done in 130ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  842446ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  842715ms] [LOG] [Fast Refresh] done in 378ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  843234ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  843252ms] [LOG] [Fast Refresh] done in 122ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  843368ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  843509ms] [LOG] [Fast Refresh] done in 244ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  843718ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  843771ms] [LOG] [Fast Refresh] done in 156ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  844251ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  844274ms] [LOG] [Fast Refresh] done in 124ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  844403ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  844431ms] [LOG] [Fast Refresh] done in 129ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  844569ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  844616ms] [LOG] [Fast Refresh] done in 148ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  844748ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  844787ms] [LOG] [Fast Refresh] done in 142ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  844934ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845037ms] [LOG] [Fast Refresh] done in 207ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845184ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845207ms] [LOG] [Fast Refresh] done in 135ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845340ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845378ms] [LOG] [Fast Refresh] done in 143ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845502ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845519ms] [LOG] [Fast Refresh] done in 119ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845666ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845690ms] [LOG] [Fast Refresh] done in 132ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845821ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845853ms] [LOG] [Fast Refresh] done in 133ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  845992ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846011ms] [LOG] [Fast Refresh] done in 125ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846148ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846170ms] [LOG] [Fast Refresh] done in 123ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846319ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846344ms] [LOG] [Fast Refresh] done in 139ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846476ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846507ms] [LOG] [Fast Refresh] done in 134ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846652ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846671ms] [LOG] [Fast Refresh] done in 123ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846819ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  846853ms] [LOG] [Fast Refresh] done in 144ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  847162ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  847205ms] [LOG] [Fast Refresh] done in 150ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  847500ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  847876ms] [LOG] [Fast Refresh] done in 478ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  848018ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  848036ms] [LOG] [Fast Refresh] done in 128ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  848175ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  848221ms] [LOG] [Fast Refresh] done in 149ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  848384ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  848495ms] [LOG] [Fast Refresh] done in 216ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  848748ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  848753ms] [LOG] [Fast Refresh] done in 111ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  848894ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  848898ms] [LOG] [Fast Refresh] done in 106ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1127301ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1127580ms] [LOG] [Fast Refresh] done in 393ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1127842ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1127937ms] [LOG] [Fast Refresh] done in 197ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1269926ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1270245ms] [LOG] [Fast Refresh] done in 432ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1270732ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1270845ms] [LOG] [Fast Refresh] done in 218ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1271029ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1271060ms] [LOG] [Fast Refresh] done in 141ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1275957ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1275959ms] [LOG] [Fast Refresh] done in 108ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1397088ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1404939ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1405075ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1405456ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1405499ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/auth/login?_rsc=61gpq:0
+[ 1405639ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1405726ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1405822ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/auth/login?_rsc=61gpq:0
+[ 1405828ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1405854ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1405859ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1405960ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1406176ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/auth/login:0
+[ 1406795ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_react-dom_0bruynb._.js:15305
+[ 1406828ms] Error: ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./app/(dashboard)/layout.js:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at Object.getCompilationErrors (file://C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\dev\next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file://C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\dev\next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:1745:26)
+[ 1406834ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1406835ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1406835ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1406836ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1406930ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1406953ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1407326ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1407383ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1407448ms] [ERROR] ./app/(dashboard)/layout.js:2:1
+Module not found: Can't resolve 'next-auth'
+  1 | import DashboardLayout from '@/components/dashboards/DashboardLayout';
+> 2 | import { getServerSession } from 'next-auth';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function Layout({ children }) {
+  5 |   const session = await getServerSession();
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1407500ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1416730ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1422439ms] [LOG] [Fast Refresh] done in 5825ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1422759ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1423269ms] [LOG] [Fast Refresh] done in 610ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1423402ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1423417ms] [LOG] [Fast Refresh] done in 125ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1423600ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/auth/login:0
+[ 1423871ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1423914ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1423978ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <InnerLayoutRouter url="/auth/login" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="page" pagePath="auth/login...">
+        <SegmentTrieNode>
+        <ClientPageRoot Component={function LoginPage} serverProvidedParams={{...}}>
+          <LoginPage params={Promise} searchParams={Promise}>
+            <AuthLayout>
+              <div className="AuthLayout...">
+                <div className="AuthLayout...">
+                  <div className="page-modul...">
+                    <header>
+                    <section className="page-modul...">
+                      <LoginForm>
+                        <form onSubmit={function handleSubmit} className="LoginForm-...">
+                          <FormInput label="Email" type="email" value="" onChange={function onChange} ...>
+                            <div className={"FormInpu..."}>
+                              <label
++                               htmlFor="input-glrdl7x07"
+-                               htmlFor="input-4mrhftqjy"
+                                className="FormInput-module__v-WP-W__label"
+                              >
++                               Email
+                              <input
++                               id="input-glrdl7x07"
+-                               id="input-4mrhftqjy"
+                                aria-describedby={undefined}
+                                className={"FormInput-module__v-WP-W__input "}
+                                type="email"
+                                value=""
+                                onChange={function onChange}
+                                placeholder="Enter your email"
+                                required={true}
+                              >
+                          <FormInput label="Password" type="password" value="" onChange={function onChange} ...>
+                            <div className={"FormInpu..."}>
+                              <label
++                               htmlFor="input-b5kid4qge"
+-                               htmlFor="input-4d70zo19u"
+                                className="FormInput-module__v-WP-W__label"
+                              >
++                               Password
+                              <input
++                               id="input-b5kid4qge"
+-                               id="input-4d70zo19u"
+                                aria-describedby={undefined}
+                                className={"FormInput-module__v-WP-W__input "}
+                                type="password"
+                                value=""
+                                onChange={function onChange}
+                                placeholder="Enter your password"
+                                required={true}
+                              >
+                          ...
+                    ...
+      ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1424053ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/auth/me:0
+[ 1430238ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1430302ms] [LOG] [Fast Refresh] done in 179ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1431906ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1431911ms] [LOG] [Fast Refresh] done in 117ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1432031ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1432050ms] [LOG] [Fast Refresh] done in 126ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1492053ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1492330ms] [LOG] [Fast Refresh] done in 377ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1498807ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1501378ms] [LOG] [Fast Refresh] done in 2680ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1503656ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1503679ms] [LOG] [Fast Refresh] done in 125ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1509670ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1511336ms] [LOG] [Fast Refresh] done in 1768ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431

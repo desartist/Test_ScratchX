@@ -1,0 +1,132 @@
+.card {
+  --r: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  padding: var(--spacing-10);
+  border-radius: var(--r);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-afacad);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-6);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.subRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.dot {
+  color: var(--color-border);
+}
+
+.requester {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-lavender-bg);
+  color: var(--color-navy);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.requesterName {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-navy);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-base);
+}
+
+.detailLabel {
+  color: var(--color-muted);
+}
+
+.detailValue {
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.note {
+  margin: 0;
+  padding: var(--spacing-4) var(--spacing-6);
+  border-radius: var(--radius-button);
+  background: var(--color-gray-light);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-6);
+  margin-top: var(--spacing-2);
+}
+
+.btn {
+  flex: 1;
+  padding: var(--spacing-6);
+  border-radius: var(--radius-button);
+  font-family: var(--font-afacad);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnOutline {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  color: var(--color-navy);
+}
+
+.btnOutline:not(:disabled):hover {
+  background: var(--color-gray-light);
+}
+
+.btnSolid {
+  background: var(--color-success);
+  border: 1px solid var(--color-success);
+  color: var(--color-white);
+}
+
+.btnSolid:not(:disabled):hover {
+  opacity: 0.92;
+}

@@ -1,0 +1,671 @@
+/* Store Detail Page - Redesigned Layout */
+
+/* Main Container */
+.container {
+  max-width: 1200px;
+  padding: 24px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background-color: #ffffff;
+}
+
+
+/* Loading & Error States */
+.loadingContainer,
+.errorContainer,
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px 20px;
+  text-align: center;
+  color: #010f44;
+  font-size: 16px;
+}
+
+
+/* Success Notification */
+.successNotification {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.successContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.successIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 50%;
+  background-color: #16a34a;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.successText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.successTitle {
+  margin: 0;
+  padding: 0;
+  color: #166534;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.successDescription {
+  margin: 0;
+  padding: 0;
+  color: #3f6228;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.successClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin-left: 12px;
+  border: none;
+  background: transparent;
+  color: #16a34a;
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.successClose:hover {
+  color: #166534;
+}
+
+
+/* Header Section */
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  color: #010f44;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-top: 0;
+}
+
+.backButton:hover {
+  background-color: #e0e0e0;
+  border-color: #d0d0d0;
+}
+
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  gap: 20px;
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #010f44;
+  margin: 0;
+}
+
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #637080;
+  margin: 0;
+}
+
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.statusActive {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.statusInactive {
+  background-color: #fee2e2;
+  color: #7f1d1d;
+}
+
+.statusPending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.statusDefault {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+
+/* Content Layout - Responsive Flexbox */
+.contentLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Stats Grid - Top Section */
+.statsContainer {
+  width: 100%;
+  order: -1;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* Left Column - Store Info Card */
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.infoCard {
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section:not(:last-child) {
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 16px;
+}
+
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #637080;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px;
+}
+
+.sectionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--color-lavender-bg, #e0e4ff);
+  color: var(--color-navy, #010f44);
+  flex-shrink: 0;
+}
+
+.managerChip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--color-lavender-bg, #e0e4ff);
+  border-radius: 12px;
+}
+
+.managerAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-navy, #010f44);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.managerName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-navy, #010f44);
+}
+
+.managerRole {
+  font-size: 12px;
+  color: var(--color-muted, #637080);
+}
+
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  word-break: break-word;
+}
+
+.value.readOnly {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  background-color: #f9fafb;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+}
+
+.campaignList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.campaignItem {
+  padding: 10px 12px;
+  background-color: #f3f4f6;
+  border-radius: 6px;
+  border-left: 3px solid #010f44;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+/* Right Column - Campaigns List */
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Responsive Layout */
+@media (max-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .statCard {
+    padding: 12px 10px;
+    gap: 5px;
+  }
+
+  .infoCard {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .section:not(:last-child) {
+    padding-bottom: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .statCard {
+    padding: 12px;
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .contentLayout {
+    gap: 16px;
+  }
+
+  .infoCard {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .infoCard {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .section:not(:last-child) {
+    padding-bottom: 10px;
+  }
+}
+
+.statCard {
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+
+.statLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #010f44;
+  line-height: 1.2;
+}
+
+
+/* Actions Section */
+/* Action Footer */
+.actionFooter {
+  display: flex;
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.editButton,
+.assignButton,
+.deleteButton {
+  height: 44px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.editButton {
+  background-color: #010f44;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #1a1f5f;
+  box-shadow: 0 4px 12px rgba(1, 15, 68, 0.2);
+  transform: translateY(-2px);
+}
+
+
+.assignButton {
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+}
+
+.assignButton:hover {
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.3);
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+
+.deleteButton {
+  background-color: white;
+  color: #dc2626;
+  border: 1px solid #dc2626;
+}
+
+.deleteButton:hover {
+  background-color: #fee2e2;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+  transform: translateY(-2px);
+}
+
+
+
+/* Loading and Error States */
+.loading,
+.error {
+  text-align: center;
+  padding: 40px 24px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+
+.loading {
+  color: #6b7280;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.error {
+  color: #7f1d1d;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .contentLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .titleContainer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .infoCard {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .section:not(:last-child) {
+    padding-bottom: 16px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statValue {
+    font-size: 36px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .editBtn,
+  .deleteBtn {
+    width: 100%;
+  }
+
+  .infoRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .infoCard {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .section:not(:last-child) {
+    padding-bottom: 12px;
+  }
+
+  .statCard {
+    padding: 16px;
+  }
+
+  .statValue {
+    font-size: 32px;
+  }
+
+  .editBtn,
+  .deleteBtn {
+    height: 40px;
+    font-size: 13px;
+  }
+}
+
+/* Dark Mode Support */

@@ -1,0 +1,133 @@
+.container {
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
+.title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-navy, #010f44);
+}
+
+
+.chart {
+  display: flex;
+  gap: 12px;
+  min-height: 200px;
+  position: relative;
+}
+
+.yAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 40px;
+  font-size: 11px;
+  color: var(--color-muted, #637080);
+  font-weight: 600;
+  padding-top: 10px;
+  padding-bottom: 30px;
+}
+
+.barsArea {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-left: 1px solid #e8e8e8;
+  border-bottom: 1px solid #e8e8e8;
+  padding-left: 12px;
+  padding-bottom: 10px;
+}
+
+
+.barCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 40px;
+}
+
+.barStack {
+  width: 100%;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.barNew {
+  background: #5b6fdb;
+  border-radius: 3px 3px 0 0;
+  transition: all 0.3s ease;
+}
+
+.barNew:hover {
+  opacity: 0.8;
+  box-shadow: 0 0 8px rgba(91, 111, 219, 0.3);
+}
+
+.barRepeat {
+  background: #9266cc;
+  border-radius: 0 0 3px 3px;
+  transition: all 0.3s ease;
+}
+
+.barRepeat:hover {
+  opacity: 0.8;
+  box-shadow: 0 0 8px rgba(146, 102, 204, 0.3);
+}
+
+.dayLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-muted, #637080);
+  text-align: center;
+}
+
+.legend {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-navy, #010f44);
+}
+
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.dotNew {
+  background: #5b6fdb;
+}
+
+.dotRepeat {
+  background: #9266cc;
+}

@@ -1,0 +1,22 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.name {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #010f44;
+  line-height: 1.4;
+}
+
+
+.location {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6c757d;
+  line-height: 1.4;
+}
+

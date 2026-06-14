@@ -1,0 +1,175 @@
+.container {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  padding: 40px 0;
+  margin: 0 auto;
+}
+
+.headerContainer {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #4b5563;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 15px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.input, .select, .textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.2s;
+  background-color: #ffffff;
+  font-family: inherit;
+}
+
+.input::placeholder, .textarea::placeholder {
+  color: #d1d5db;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  border-color: #000000;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.phoneInputContainer {
+  display: flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
+  transition: border-color 0.2s;
+}
+
+.phoneInputContainer:focus-within {
+  border-color: #000000;
+}
+
+.countrySelect {
+  padding: 14px 10px 14px 16px;
+  border: none;
+  background: transparent;
+  color: #4b5563;
+  font-size: 15px;
+  outline: none;
+  border-right: 1px solid #e5e7eb;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  padding-right: 32px;
+}
+
+.phoneInput {
+  flex: 1;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  color: #111827;
+  outline: none;
+}
+
+.phoneInput::placeholder {
+  color: #d1d5db;
+}
+
+.selectWrapper {
+  position: relative;
+}
+
+.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  padding-right: 48px;
+  cursor: pointer;
+}
+
+.locationContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.locationIcon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.locationTextContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.locationTitle {
+  font-size: 16px;
+  color: #000000;
+  font-weight: 500;
+}
+
+.locationSubtitle {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.submitButton {
+  width: 100%;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 18px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: opacity 0.2s;
+  font-family: inherit;
+}
+
+.submitButton:hover {
+  opacity: 0.8;
+}

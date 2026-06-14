@@ -1,0 +1,534 @@
+/* Main Container */
+.container {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  padding: 20px;
+  overflow: hidden;
+}
+
+
+/* Confetti Animation */
+.confettiContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+  animation: fall 3s ease-in forwards;
+}
+
+.confetti:nth-child(1) {
+  left: 10%;
+  background-color: #fbbf24;
+  animation-delay: 0s;
+}
+.confetti:nth-child(2) {
+  left: 20%;
+  background-color: #ec4899;
+  animation-delay: 0.1s;
+}
+.confetti:nth-child(3) {
+  left: 30%;
+  background-color: #06b6d4;
+  animation-delay: 0.2s;
+}
+.confetti:nth-child(4) {
+  left: 40%;
+  background-color: #10b981;
+  animation-delay: 0.3s;
+}
+.confetti:nth-child(5) {
+  left: 50%;
+  background-color: #f87171;
+  animation-delay: 0.4s;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Repeating confetti pattern */
+.confetti:nth-child(n + 6) {
+  animation-delay: calc((var(--index, 5) - 5) * 0.05s + 0.5s);
+}
+
+/* Loading State */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  color: white;
+  z-index: 50;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.errorState,
+.expiredState {
+  background: white;
+  border-radius: 16px;
+  padding: 40px 20px;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 50;
+}
+
+.errorState h2,
+.expiredState h2 {
+  color: #dc2626;
+  font-size: 24px;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+}
+
+.errorState p,
+.expiredState p {
+  color: #666;
+  font-size: 14px;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+  z-index: 20;
+}
+
+.celebration {
+  font-size: 48px;
+  margin: 0 0 10px 0;
+  color: white;
+  font-weight: 800;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.subheading {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Reward Card */
+.rewardCard {
+  background: white;
+  border-radius: 24px;
+  padding: 32px 24px;
+  max-width: 100%;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  margin-bottom: 30px;
+  z-index: 20;
+}
+
+
+/* Timer Section */
+.timerSection {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.timerLabel {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.timerValue {
+  margin: 8px 0 0 0;
+  padding: 0;
+  font-size: 32px;
+  font-weight: 800;
+  color: #000;
+  font-family: "Courier New", monospace;
+}
+
+/* Reward Display */
+.rewardDisplay {
+  text-align: center;
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+
+.rewardName {
+  margin: 0 0 12px 0;
+  padding: 0;
+  font-size: 32px;
+  font-weight: 800;
+  color: #000;
+  line-height: 1.2;
+}
+
+
+.rewardDescription {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+}
+
+
+/* Coupon Section */
+.couponSection {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+
+.couponLabel {
+  margin: 0 0 12px 0;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+}
+
+
+.couponCodeContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.couponCode {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #000;
+  font-family: "Courier New", monospace;
+  letter-spacing: 2px;
+  flex: 1;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+
+.couponCode:hover {
+  border-color: #7c3aed;
+  background-color: #f3f4f6;
+}
+
+.copyButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.copyButton:hover {
+  background: #6d28d9;
+  transform: scale(1.05);
+}
+
+.copyButton:active {
+  transform: scale(0.95);
+}
+
+.copiedMessage {
+  margin: 12px 0 0 0;
+  padding: 0;
+  font-size: 12px;
+  color: #10b981;
+  font-weight: 600;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Validity Section */
+.validitySection {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+
+.validityLabel {
+  margin: 0 0 8px 0;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+}
+
+
+.validityDate {
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+}
+
+
+/* Info Section */
+.infoSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.infoItem {
+  text-align: center;
+}
+
+.infoLabel {
+  margin: 0 0 6px 0;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+}
+
+
+.infoValue {
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* Action Buttons */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  z-index: 20;
+}
+
+@media (min-width: 480px) {
+  .actions {
+    flex-direction: row;
+    gap: 10px;
+  }
+}
+
+.primaryButton,
+.secondaryButton {
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.primaryButton {
+  background: white;
+  color: #7c3aed;
+  flex: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.primaryButton:active {
+  transform: translateY(0);
+}
+
+.secondaryButton {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  flex: 1;
+  backdrop-filter: blur(10px);
+}
+
+.secondaryButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.secondaryButton:active {
+  transform: translateY(0);
+}
+
+.secondaryButton.saved {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+/* Footer */
+.footer {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  text-align: center;
+  margin-top: 20px;
+  z-index: 20;
+}
+
+.footer p {
+  margin: 0;
+  padding: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .celebration {
+    font-size: 40px;
+  }
+
+  .rewardCard {
+    padding: 24px 16px;
+    margin-bottom: 20px;
+  }
+
+  .rewardName {
+    font-size: 28px;
+  }
+
+  .timerValue {
+    font-size: 28px;
+  }
+
+  .couponCode {
+    font-size: 18px;
+    padding: 10px 14px;
+  }
+
+  .copyButton {
+    width: 44px;
+    height: 44px;
+  }
+
+  .actions {
+    gap: 10px;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 320px) {
+  .celebration {
+    font-size: 32px;
+  }
+
+  .rewardCard {
+    padding: 20px 12px;
+    border-radius: 16px;
+  }
+
+  .rewardName {
+    font-size: 24px;
+  }
+
+  .timerValue {
+    font-size: 24px;
+  }
+
+  .couponCode {
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    padding: 11px 12px;
+    font-size: 12px;
+  }
+}

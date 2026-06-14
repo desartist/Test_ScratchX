@@ -1,0 +1,39 @@
+.wrap {
+  --chart-purple: #6d5df6;
+  width: 100%;
+}
+
+.svg {
+  width: 100%;
+  display: block;
+}
+
+.tickLabel {
+  font-family: var(--font-afacad);
+  font-size: 10px;
+  fill: var(--color-muted);
+  font-weight: 600;
+}
+
+.tipStem {
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  opacity: 0.5;
+}
+
+.tipText {
+  font-family: var(--font-afacad);
+  font-size: 9px;
+  fill: #ffffff;
+  font-weight: 700;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+  font-weight: 600;
+}

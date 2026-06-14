@@ -1,0 +1,102 @@
+.container {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+}
+
+.chartWrapper {
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.axis {
+  stroke: #9ca3af;
+  stroke-width: 2;
+}
+
+.gridLine {
+  stroke: #f3f4f6;
+  stroke-width: 1;
+  stroke-dasharray: 4;
+}
+
+.line {
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.area {
+  opacity: 0.1;
+}
+
+.point {
+  stroke: white;
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+.point:hover {
+  r: 6;
+}
+
+.bar {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.bar:hover {
+  opacity: 0.8;
+}
+
+.label {
+  font-size: 12px;
+  fill: #6b7280;
+  font-weight: 500;
+}
+
+.yLabel {
+  font-size: 11px;
+  fill: #6b7280;
+  font-weight: 500;
+}
+
+.noData {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 14px;
+  }
+
+  .label {
+    font-size: 10px;
+  }
+
+  .yLabel {
+    font-size: 9px;
+  }
+}

@@ -1,0 +1,44 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.inputGroup {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.input {
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  font-family: var(--font-afacad);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.1);
+}
+
+.error .input {
+  border-color: #dc2626;
+}
+
+.error .input:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.errorText {
+  font-size: 13px;
+  color: #dc2626;
+}

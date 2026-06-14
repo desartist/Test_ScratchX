@@ -1,0 +1,1104 @@
+{
+  "info": {
+    "name": "QR-Coupon-Platform",
+    "description": "Comprehensive API collection for QR Coupon/Scratch Card Platform with authentication, stores, campaigns, inventory, redemptions, and analytics endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"merchant@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate user and obtain session token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Stores",
+      "item": [
+        {
+          "name": "Create Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"store_name\": \"Mumbai Store\",\n  \"store_code\": \"STR001\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"400001\",\n  \"contact_person\": \"John Doe\",\n  \"contact_number\": \"9876543210\",\n  \"total_scratch_cards\": 500,\n  \"location\": {\n    \"type\": \"Point\",\n    \"coordinates\": [72.8479, 19.0760]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/stores",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stores"
+              ]
+            },
+            "description": "Create a new store for the merchant"
+          },
+          "response": []
+        },
+        {
+          "name": "List Stores",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/stores?page=1&limit=10&status=active&search=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stores"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve list of stores for the authenticated merchant"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Store",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/stores/{{store_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stores",
+                "{{store_id}}"
+              ]
+            },
+            "description": "Get details of a specific store"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Store",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"store_name\": \"Updated Store Name\",\n  \"city\": \"Delhi\",\n  \"address\": \"456 New Street\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/stores/{{store_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stores",
+                "{{store_id}}"
+              ]
+            },
+            "description": "Update store information"
+          },
+          "response": []
+        },
+        {
+          "name": "Adjust Inventory",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 100,\n  \"action\": \"add\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/stores/{{store_id}}/inventory",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stores",
+                "{{store_id}}",
+                "inventory"
+              ]
+            },
+            "description": "Adjust store inventory (add or remove scratch cards)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Campaigns",
+      "item": [
+        {
+          "name": "Create Campaign",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Summer Sale 2026\",\n  \"description\": \"Summer promotional campaign with discounted scratch cards\",\n  \"campaignType\": \"seasonal\",\n  \"startDate\": \"2026-06-01T00:00:00Z\",\n  \"endDate\": \"2026-06-30T23:59:59Z\",\n  \"totalQRCodes\": 1000,\n  \"discountPercentage\": 15\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/campaigns",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "campaigns"
+              ]
+            },
+            "description": "Create a new campaign"
+          },
+          "response": []
+        },
+        {
+          "name": "List Campaigns",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/campaigns?status=active&type=seasonal",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "campaigns"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "seasonal",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve list of campaigns for the authenticated merchant"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Campaign Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/campaigns/{{campaign_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "campaigns",
+                "{{campaign_id}}"
+              ]
+            },
+            "description": "Get detailed information about a specific campaign"
+          },
+          "response": []
+        },
+        {
+          "name": "Assign to Stores",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeIds\": [\"{{store_id}}\"],\n  \"allocationPerStore\": 100\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/campaigns/{{campaign_id}}/assign",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "campaigns",
+                "{{campaign_id}}",
+                "assign"
+              ]
+            },
+            "description": "Assign campaign to one or more stores with allocation quantities"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "Allocate to Campaign",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"campaign\",\n  \"campaignId\": \"{{campaign_id}}\",\n  \"quantity\": 500\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/inventory/allocate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "inventory",
+                "allocate"
+              ]
+            },
+            "description": "Allocate scratch cards from merchant inventory to a campaign"
+          },
+          "response": []
+        },
+        {
+          "name": "Allocate to Store",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"store\",\n  \"storeId\": \"{{store_id}}\",\n  \"campaignId\": \"{{campaign_id}}\",\n  \"quantity\": 100\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/inventory/allocate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "inventory",
+                "allocate"
+              ]
+            },
+            "description": "Allocate scratch cards from campaign inventory to a specific store"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Status - Campaign",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/inventory/status?type=campaign&campaignId={{campaign_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "inventory",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "campaign"
+                },
+                {
+                  "key": "campaignId",
+                  "value": "{{campaign_id}}"
+                }
+              ]
+            },
+            "description": "Get inventory status for a specific campaign"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Status - Store",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/inventory/status?type=store&storeId={{store_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "inventory",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "store"
+                },
+                {
+                  "key": "storeId",
+                  "value": "{{store_id}}"
+                }
+              ]
+            },
+            "description": "Get inventory status for a specific store"
+          },
+          "response": []
+        },
+        {
+          "name": "Get History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/inventory/history?limit=20&offset=0",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "inventory",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Get transaction history of inventory allocations"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Redemptions",
+      "item": [
+        {
+          "name": "Redeem Single",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "Store_Staff"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"redemptions\": [\n    {\n      \"campaignId\": \"{{campaign_id}}\",\n      \"storeId\": \"{{store_id}}\",\n      \"scratchCardId\": \"CARD001\",\n      \"remarks\": \"Customer redemption\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/redemptions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "redemptions"
+              ]
+            },
+            "description": "Redeem a single scratch card"
+          },
+          "response": []
+        },
+        {
+          "name": "Redeem Bulk",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "Store_Staff"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"redemptions\": [\n    {\n      \"campaignId\": \"{{campaign_id}}\",\n      \"storeId\": \"{{store_id}}\",\n      \"scratchCardId\": \"CARD001\",\n      \"remarks\": \"Batch redemption\"\n    },\n    {\n      \"campaignId\": \"{{campaign_id}}\",\n      \"storeId\": \"{{store_id}}\",\n      \"scratchCardId\": \"CARD002\",\n      \"remarks\": \"Batch redemption\"\n    },\n    {\n      \"campaignId\": \"{{campaign_id}}\",\n      \"storeId\": \"{{store_id}}\",\n      \"scratchCardId\": \"CARD003\",\n      \"remarks\": \"Batch redemption\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/redemptions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "redemptions"
+              ]
+            },
+            "description": "Redeem multiple scratch cards in bulk"
+          },
+          "response": []
+        },
+        {
+          "name": "Get History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/redemptions/history?campaignId={{campaign_id}}&storeId={{store_id}}&limit=20&offset=0",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "redemptions",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "campaignId",
+                  "value": "{{campaign_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "storeId",
+                  "value": "{{store_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Retrieve redemption history for campaigns or stores"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/redemptions/stats?campaignId={{campaign_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "redemptions",
+                "stats"
+              ],
+              "query": [
+                {
+                  "key": "campaignId",
+                  "value": "{{campaign_id}}"
+                }
+              ]
+            },
+            "description": "Get redemption statistics for a campaign"
+          },
+          "response": []
+        },
+        {
+          "name": "Reverse Redemption",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "Manager"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"redemptionId\": \"{{redemption_id}}\",\n  \"reason\": \"Customer requested reversal\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/redemptions/reverse",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "redemptions",
+                "reverse"
+              ]
+            },
+            "description": "Reverse a previously processed redemption"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Inventory Analytics - Merchant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/inventory?type=merchant",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "analytics",
+                "inventory"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "merchant"
+                }
+              ]
+            },
+            "description": "Get aggregated inventory analytics for the merchant"
+          },
+          "response": []
+        },
+        {
+          "name": "Inventory Analytics - Campaign",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/inventory?type=campaign&campaignId={{campaign_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "analytics",
+                "inventory"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "campaign"
+                },
+                {
+                  "key": "campaignId",
+                  "value": "{{campaign_id}}"
+                }
+              ]
+            },
+            "description": "Get inventory breakdown by campaign"
+          },
+          "response": []
+        },
+        {
+          "name": "Inventory Analytics - Store",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/inventory?type=store&storeId={{store_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "analytics",
+                "inventory"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "store"
+                },
+                {
+                  "key": "storeId",
+                  "value": "{{store_id}}"
+                }
+              ]
+            },
+            "description": "Get inventory breakdown by store"
+          },
+          "response": []
+        },
+        {
+          "name": "Redemption Analytics - Merchant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/redemptions?type=merchant",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "analytics",
+                "redemptions"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "merchant"
+                }
+              ]
+            },
+            "description": "Get redemption statistics for the merchant"
+          },
+          "response": []
+        },
+        {
+          "name": "Redemption Analytics - Campaign",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/redemptions?type=campaign&campaignId={{campaign_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "analytics",
+                "redemptions"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "campaign"
+                },
+                {
+                  "key": "campaignId",
+                  "value": "{{campaign_id}}"
+                }
+              ]
+            },
+            "description": "Get redemption breakdown by campaign"
+          },
+          "response": []
+        },
+        {
+          "name": "Redemption Analytics - Store",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Merchant"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/redemptions?type=store&storeId={{store_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "analytics",
+                "redemptions"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "store"
+                },
+                {
+                  "key": "storeId",
+                  "value": "{{store_id}}"
+                }
+              ]
+            },
+            "description": "Get redemption breakdown by store"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get System Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Super_Admin"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/super-admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "super-admin"
+              ]
+            },
+            "description": "Get system-wide statistics (Super Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "Admin"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "admin"
+              ]
+            },
+            "description": "Get admin dashboard analytics"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "store_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "campaign_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "redemption_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_role",
+      "value": "Merchant",
+      "type": "string"
+    }
+  ]
+}

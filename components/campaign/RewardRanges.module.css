@@ -1,0 +1,395 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #010f44;
+}
+
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: inherit;
+}
+
+.counter {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #00b0b1;
+  white-space: nowrap;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+
+.stateMsg {
+  padding: 24px;
+  text-align: center;
+  color: #999;
+  font-size: 0.9375rem;
+}
+
+.errorBox {
+  padding: 10px 14px;
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-radius: 8px;
+  color: #f43f5e;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Range cards */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.rangeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  background: rgba(0, 176, 177, 0.04);
+}
+
+
+.rangeCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rangeLabel {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+.rangeActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.rewardList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rewardRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 0.8125rem;
+  color: #555;
+}
+
+
+.rewardIcon {
+  color: #ef9e1b;
+  flex-shrink: 0;
+}
+
+.rewardName {
+  font-weight: 600;
+  color: #010f44;
+}
+
+
+.rewardValue {
+  font-weight: 600;
+  color: #00b0b1;
+}
+
+.rewardWinners {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.rewardEmpty {
+  font-size: 0.8125rem;
+  color: #999;
+}
+
+/* Icon buttons */
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.04);
+  color: #555;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+
+.iconBtnDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: rgba(198, 40, 40, 0.08);
+  color: #c62828;
+  border: 1px solid rgba(198, 40, 40, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.iconBtnDanger:hover:not(:disabled) {
+  background: rgba(198, 40, 40, 0.18);
+}
+
+.iconBtnDanger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* Add row */
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.limitNote {
+  font-size: 0.8125rem;
+  color: #b86e00;
+  font-weight: 500;
+}
+
+
+/* Buttons */
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.primaryButton:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.3);
+}
+
+.primaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: transparent;
+  color: #555;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.secondaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.015);
+}
+
+
+.formHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.formTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+.formRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #555;
+}
+
+
+.input,
+.inputSm {
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #010f44;
+  background: #fff;
+  width: 100%;
+}
+
+.inputSm {
+  max-width: 110px;
+}
+
+.input:focus,
+.inputSm:focus {
+  outline: none;
+  border-color: #ef9e1b;
+}
+
+
+.rewardsEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rewardEditRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rewardEditRow .input {
+  flex: 1;
+  min-width: 120px;
+}
+
+.addRewardBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 12px;
+  background: rgba(0, 176, 177, 0.08);
+  color: #00b0b1;
+  border: 1px solid rgba(0, 176, 177, 0.3);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addRewardBtn:hover {
+  background: rgba(0, 176, 177, 0.16);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding: 16px;
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .inputSm {
+    max-width: none;
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+  }
+
+  .formActions .primaryButton,
+  .formActions .secondaryButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

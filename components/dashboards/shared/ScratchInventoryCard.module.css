@@ -1,0 +1,96 @@
+.card {
+  background: linear-gradient(135deg, #7c58d4 0%, #5b3ab3 100%);
+  border-radius: 16px;
+  padding: 20px;
+  color: #ffffff;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  box-shadow: 0 8px 24px rgba(91, 58, 179, 0.2);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.badge {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+}
+
+.statsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.mainStat {
+  display: flex;
+  flex-direction: column;
+}
+
+.mainValue {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.mainLabel {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.subStats {
+  display: flex;
+  gap: 20px;
+  text-align: center;
+}
+
+.subStat {
+  display: flex;
+  flex-direction: column;
+}
+
+.subValue {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.subLabel {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.buyBtn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  transition: background 0.2s ease;
+}
+
+.buyBtn:hover {
+  background: rgba(0, 0, 0, 0.3);
+}

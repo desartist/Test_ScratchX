@@ -1,0 +1,154 @@
+.page {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+/* ── Logo ── */
+.logoWrap {
+  margin-top: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.logoText {
+  font-size: 28px;
+  font-weight: 800;
+  color: #010f44;
+  letter-spacing: -0.5px;
+}
+
+.logoX {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ef9e1b;
+  margin-left: 2px;
+}
+
+/* ── Hero ── */
+.hero {
+  margin-top: 68px;
+  padding: 0 50px;
+  text-align: center;
+}
+
+.headline {
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1.12;
+  color: #010f44;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  margin-top: 28px;
+  font-size: 16px;
+  color: #637080;
+  line-height: 1.5;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  font-weight: 400;
+}
+
+/* ── CTA ── */
+.ctaArea {
+  margin-top: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.ctaButton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ef9e1b;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  padding: 20px 50px;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.35);
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.ctaButton:hover {
+  background: #d98e14;
+  transform: translateY(-1px);
+}
+
+.ctaButton:active {
+  transform: translateY(0);
+}
+
+.hint {
+  font-size: 14px;
+  color: #637080;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+/* ── Feature Cards ── */
+.cards {
+  margin-top: 40px;
+  padding: 0 32px;
+  display: flex;
+  gap: 14px;
+  width: 100%;
+}
+
+.card {
+  flex: 1;
+  background: #f8f8f8;
+  border-radius: 20px;
+  padding: 20px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardIconWrap {
+  width: 50px;
+  height: 50px;
+  background: #e0e4ff;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5b66d8;
+  flex-shrink: 0;
+}
+
+.cardLabel {
+  font-size: 16px;
+  font-weight: 700;
+  color: #010f44;
+  line-height: 1.3;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+/* ── Footer ── */
+.footer {
+  margin-top: auto;
+  width: 100%;
+  height: 62px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.footer p {
+  font-size: 13px;
+  color: #636768;
+  text-align: center;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}

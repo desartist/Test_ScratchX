@@ -1,0 +1,183 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: #d1d5db;
+}
+
+/* Header with title and badge */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #010f44;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* Badge styles */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badgeActive {
+  background-color: #dbeafe;
+  color: #4a90e2;
+}
+
+.badgeInactive {
+  background-color: #f3f4f6;
+  color: #637080;
+}
+
+.badgeExpired {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+/* Details section */
+.details {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 16px;
+}
+
+.detailItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detailItem:last-child {
+  border-bottom: none;
+}
+
+.detailLabel {
+  font-size: 13px;
+  color: #637080;
+  font-weight: 500;
+}
+
+.detailValue {
+  font-size: 13px;
+  color: #010f44;
+  font-weight: 600;
+}
+
+/* Actions section */
+.actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.card:hover .actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.actionBtn:hover {
+  background-color: #e5e7eb;
+}
+
+.actionBtn:active {
+  transform: scale(0.98);
+}
+
+.actionBtnDanger {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.actionBtnDanger:hover {
+  background-color: #fecaca;
+}
+
+/* Mobile styles - always show actions */
+@media (max-width: 768px) {
+  .actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .header {
+    margin-bottom: 12px;
+  }
+
+  .title {
+    font-size: 14px;
+  }
+
+  .details {
+    margin-bottom: 12px;
+  }
+
+  .detailItem {
+    padding: 8px 0;
+  }
+
+  .detailLabel,
+  .detailValue {
+    font-size: 12px;
+  }
+
+  .actionBtn {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}
+
+/* Dark mode styles */

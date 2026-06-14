@@ -1,0 +1,101 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  opacity: 0.75;
+  position: relative;
+  overflow: hidden;
+}
+
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(239, 158, 27, 0.03) 0%, rgba(74, 144, 226, 0.03) 100%);
+  pointer-events: none;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.icon {
+  font-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lockBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(239, 158, 27, 0.15);
+  border: 1px solid rgba(239, 158, 27, 0.3);
+  border-radius: 8px;
+  color: #ef9e1b;
+}
+
+
+.title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+.description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+  line-height: 1.5;
+}
+
+
+.comingSoon {
+  display: inline-block;
+  padding: 6px 12px;
+  background: rgba(239, 158, 27, 0.1);
+  border: 1px solid rgba(239, 158, 27, 0.3);
+  border-radius: 6px;
+  color: #ef9e1b;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  width: fit-content;
+}
+
+
+@media (max-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+
+  .icon {
+    font-size: 36px;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .description {
+    font-size: 0.85rem;
+  }
+}

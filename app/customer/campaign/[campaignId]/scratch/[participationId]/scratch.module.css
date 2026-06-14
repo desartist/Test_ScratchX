@@ -1,0 +1,395 @@
+/* ── Page shell ── */
+.page {
+  min-height: 100dvh;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-afacad, 'Segoe UI', sans-serif);
+  max-width: 520px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+  box-sizing: border-box;
+}
+
+.pageWarm {
+  background: linear-gradient(175deg, #fffdf5 0%, #fff 60%);
+}
+
+@media (min-width: 540px) {
+  .page {
+    border-left: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.06);
+  }
+}
+
+@media (min-width: 640px) {
+  .cardShell {
+    width: 340px;
+    height: 440px;
+  }
+}
+
+/* ── Store header ── */
+.storeHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f2f2f2;
+  box-sizing: border-box;
+}
+
+.storeAvatar {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef9e1b, #ff9500);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.storeName {
+  font-size: 15px;
+  font-weight: 700;
+  color: #010f44;
+  line-height: 1.2;
+}
+
+.campaignTag {
+  font-size: 12px;
+  color: #999;
+}
+
+/* ── Scratch title block ── */
+.scratchTitleBlock {
+  width: 100%;
+  text-align: center;
+  padding: 24px 20px 10px;
+}
+
+.scratchTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0 0 6px;
+}
+
+.scratchSub {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+
+/* ── Scratch card shell ── */
+.cardShell {
+  position: relative;
+  width: 300px;
+  height: 400px;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 10px 36px rgba(255, 152, 0, 0.32);
+  flex-shrink: 0;
+  margin: 12px 0 0;
+}
+
+/* Background (visible as you scratch through) */
+.revealBg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(150deg, #ffc107 0%, #ff9800 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.revealBgCircle {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.revealBgText {
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Canvas sits on top */
+.scratchCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  border-radius: 22px;
+}
+
+.hint {
+  font-size: 14px;
+  color: #555;
+  margin: 16px 0 4px;
+  text-align: center;
+}
+
+.hint2 {
+  font-size: 12px;
+  color: #bbb;
+  margin: 0;
+  text-align: center;
+}
+
+/* ── Celebration hero ── */
+.celebHero {
+  width: 100%;
+  text-align: center;
+  padding: 26px 20px 14px;
+}
+
+.celebEmoji {
+  font-size: 52px;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.celebTitle {
+  font-size: 34px;
+  font-weight: 900;
+  margin: 0 0 6px;
+  background: linear-gradient(135deg, #ef9e1b, #e65100);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.celebSub {
+  font-size: 14px;
+  color: #999;
+  margin: 0;
+}
+
+/* ── Reward card ── */
+.rewardCard {
+  width: calc(100% - 40px);
+  border-radius: 22px;
+  background: linear-gradient(150deg, #ffc107 0%, #ff9800 100%);
+  overflow: hidden;
+  box-shadow: 0 10px 36px rgba(255, 152, 0, 0.38);
+  opacity: 0;
+  transform: scale(0.82) translateY(24px);
+}
+
+.rewardCardIn {
+  animation: popIn 0.52s 0.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes popIn {
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.rewardTop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 20px 22px;
+  text-align: center;
+}
+
+.rewardGiftCircle {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rewardValue {
+  font-size: 38px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+  line-height: 1.1;
+}
+
+.rewardGiftImg {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border: 3px solid rgba(255, 255, 255, 0.35);
+}
+
+.rewardName {
+  font-size: 17px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.rewardDesc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 240px;
+}
+
+/* ── Coupon code zone ── */
+.couponZone {
+  background: rgba(0, 0, 0, 0.13);
+  padding: 16px 20px;
+}
+
+.couponLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.couponRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.couponCode {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px dashed rgba(255, 255, 255, 0.42);
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-family: 'Courier New', monospace;
+}
+
+.copyBtn {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.copyBtn:hover { background: rgba(255, 255, 255, 0.32); }
+
+/* ── Store info card ── */
+.infoCard {
+  width: calc(100% - 40px);
+  background: #f8f8f8;
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.infoLbl {
+  font-size: 12px;
+  color: #aaa;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.infoVal {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+  text-align: right;
+}
+
+.claimHint {
+  font-size: 13px;
+  color: #aaa;
+  margin: 16px 20px 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Loading / Error ── */
+.centeredState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  gap: 16px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid #f0f0f0;
+  border-top-color: #ef9e1b;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.stateText {
+  font-size: 14px;
+  color: #999;
+  margin: 0;
+  max-width: 280px;
+}
+
+.errorEmoji { font-size: 44px; }
+
+.errorTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0;
+}
+
+.actionBtn {
+  padding: 13px 28px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ef9e1b, #ff9500);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(239, 158, 27, 0.35);
+}

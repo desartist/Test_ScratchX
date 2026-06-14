@@ -1,0 +1,67 @@
+.grid {
+  --r: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-8);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-10);
+  border-radius: var(--r);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-afacad);
+}
+
+.iconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--color-lavender-bg);
+  color: var(--color-navy);
+  margin-bottom: var(--spacing-4);
+}
+
+.value {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--color-navy);
+  line-height: 1.1;
+}
+
+.label {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.empty {
+  padding: var(--spacing-10);
+  text-align: center;
+  font-family: var(--font-afacad);
+  font-size: var(--font-size-base);
+  color: var(--color-muted);
+  border: 1px dashed var(--color-border);
+  border-radius: 16px;
+}
+
+@media (min-width: 600px) {
+  .grid {
+    /* Only two tiles — keep them a compact, left-aligned pair
+       rather than stretching across the full width. */
+    grid-template-columns: repeat(2, minmax(180px, 240px));
+    justify-content: start;
+  }
+}

@@ -1,0 +1,152 @@
+/* ────────────────────────────────────────────────────────────────
+  PLAN STATUS PILL - Compact Sidebar Design
+  Minimal badge-style plan display with upgrade button
+──────────────────────────────────────────────────────────────── */
+
+.pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+/* ────────────────────────────────────────────────────────────────
+  THEME: CORE (Blue)
+──────────────────────────────────────────────────────────────── */
+
+.theme-core {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border: 1px solid #c7d2fe;
+  color: #1e1b4b;
+}
+
+
+/* ────────────────────────────────────────────────────────────────
+  THEME: SMART (Orange)
+──────────────────────────────────────────────────────────────── */
+
+.theme-smart {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  color: #78350f;
+}
+
+
+/* ────────────────────────────────────────────────────────────────
+  PILL CONTENT
+──────────────────────────────────────────────────────────────── */
+
+.pillContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pillText {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-afacad);
+}
+
+.pillText strong {
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* ────────────────────────────────────────────────────────────────
+  PILL BUTTON
+──────────────────────────────────────────────────────────────── */
+
+.pillButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border: none;
+  font-family: var(--font-afacad);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.theme-core .pillButton {
+  background: #4f46e5;
+  color: white;
+}
+
+.theme-core .pillButton:hover {
+  background: #6366f1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.theme-smart .pillButton {
+  background: #ef9e1b;
+  color: white;
+}
+
+.theme-smart .pillButton:hover {
+  background: #ff9500;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 158, 27, 0.3);
+}
+
+/* ────────────────────────────────────────────────────────────────
+  LOADING STATE
+──────────────────────────────────────────────────────────────── */
+
+.pillSkeleton {
+  height: 14px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  animation: pulse 2s ease-in-out infinite;
+  width: 100px;
+}
+
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────
+  RESPONSIVE
+──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .pill {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .pillText {
+    font-size: 11px;
+  }
+
+  .pillButton {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+}

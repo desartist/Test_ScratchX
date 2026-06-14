@@ -1,0 +1,309 @@
+/* ============================================
+   DATA TABLE STYLES - PROFESSIONAL UI
+   ============================================ */
+
+.tableContainer {
+  width: 100%;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   TABLE BASE STYLES
+   ============================================ */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.table th {
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+  text-align: left;
+  font-weight: 600;
+  padding: 14px 16px;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* ============================================
+   SORTABLE COLUMNS
+   ============================================ */
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.sortable:hover {
+  color: #1f2937;
+}
+
+.sortIcon {
+  font-size: 12px;
+  color: #d1d5db;
+  transition: all 0.2s ease;
+  display: inline-block;
+  min-width: 16px;
+}
+
+.sortable.active .sortIcon {
+  color: #3b82f6;
+}
+
+/* ============================================
+   TABLE ROWS & HOVER EFFECTS
+   ============================================ */
+
+.row {
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.row:hover {
+  background: #f9fafb;
+}
+
+.row.selected {
+  background: #eff6ff;
+  border-left: 3px solid #3b82f6;
+}
+
+/* ============================================
+   ACTIONS CELL
+   ============================================ */
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.editBtn,
+.deleteBtn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.editBtn {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.editBtn:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+}
+
+.editBtn:active {
+  transform: scale(0.95);
+}
+
+.deleteBtn {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.deleteBtn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15);
+}
+
+.deleteBtn:active {
+  transform: scale(0.95);
+}
+
+.editBtn:disabled,
+.deleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   PAGINATION CONTROLS
+   ============================================ */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pageInfo {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.paginationControls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pageButton {
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f3f4f6;
+}
+
+.pageButton.active {
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.loadingSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  font-size: 14px;
+  min-height: 300px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 480px) {
+  .tableContainer {
+    border: none;
+    border-radius: 0;
+  }
+
+  .table th {
+    padding: 12px 12px;
+    font-size: 11px;
+  }
+
+  .table td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .editBtn,
+  .deleteBtn {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pageInfo {
+    width: 100%;
+    text-align: center;
+  }
+
+  .paginationControls {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+

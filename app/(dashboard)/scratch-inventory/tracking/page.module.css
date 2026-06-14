@@ -1,0 +1,61 @@
+/* app/(dashboard)/scratch-inventory/tracking/page.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.backButton {
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s;
+}
+
+.backButton:hover {
+  background-color: #e8e8e8;
+}
+
+.titleSection h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.titleSection p {
+  font-size: 14px;
+  color: #666;
+  margin: 4px 0 0 0;
+}
+
+.trackingCard {
+  padding: 20px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.error {
+  padding: 12px 16px;
+  background-color: #fce4e4;
+  color: #c33;
+  border: 1px solid #e5bfbf;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Dark mode support */

@@ -1,0 +1,94 @@
+.wrap {
+  --chart-track: rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.chartArea {
+  flex: 0 0 auto;
+  width: 140px;
+  max-width: 45%;
+}
+
+.svg {
+  width: 100%;
+  display: block;
+}
+
+.track {
+  stroke: var(--chart-track);
+}
+
+.centerLabel {
+  font-family: var(--font-afacad-flux);
+  font-size: 24px;
+  font-weight: 800;
+  fill: var(--color-navy);
+}
+
+.centerSub {
+  font-family: var(--font-afacad);
+  font-size: 9px;
+  font-weight: 600;
+  fill: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.legend {
+  flex: 1 1 140px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  min-width: 130px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  font-size: var(--font-size-sm);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legendLabel {
+  flex: 1;
+  color: var(--color-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legendPct {
+  color: var(--color-navy);
+  font-weight: 700;
+  font-family: var(--font-afacad-flux);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+
+@media (max-width: 480px) {
+  .centerLabel {
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,56 @@
+/* components/dashboard/FilterTabs.module.css */
+.tabsContainer {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 20px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--color-gray-light);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+
+.tab:hover {
+  color: var(--color-navy);
+  background: var(--color-lavender-active);
+}
+
+
+.tab.active {
+  background: var(--color-lavender-bg);
+  color: var(--color-navy);
+  border-color: var(--color-lavender-active);
+}
+
+
+/* Red count badge on the Low Scratches pill */
+.countBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-error);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+}

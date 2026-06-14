@@ -1,0 +1,29 @@
+/* components/dashboard/MetricChip.module.css */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #666;
+}
+
+
+.icon {
+  color: #999;
+  flex-shrink: 0;
+}
+
+
+.label {
+  color: inherit;
+}
+
+.value {
+  font-weight: 600;
+  color: #333;
+}
+

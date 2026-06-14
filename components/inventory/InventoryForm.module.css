@@ -1,0 +1,541 @@
+/* ============================================
+   PROFESSIONAL INVENTORY FORM STYLES
+   ALLOCATION & TRACKING FORMS
+   ============================================ */
+
+/* CSS Custom Properties - Colors */
+:root {
+  --color-primary: #3b82f6;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-darker: #1e40af;
+  --color-primary-light: #60a5fa;
+  --color-error: #ef4444;
+  --color-error-dark: #b91c1c;
+  --color-success: #10b981;
+  --color-success-dark: #059669;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #eff6ff;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-900: #1f2937;
+  --color-text: #1f2937;
+  --color-text-light: #9ca3af;
+
+  /* Dark mode colors */
+  --dm-color-primary: #60a5fa;
+  --dm-color-gray-50: #1f2937;
+  --dm-color-gray-100: #1e3a8a;
+  --dm-color-gray-200: #111827;
+  --dm-color-gray-300: #4b5563;
+  --dm-color-gray-700: #374151;
+  --dm-color-gray-800: #1f2937;
+  --dm-color-gray-900: #111827;
+  --dm-color-text: #f3f4f6;
+  --dm-color-text-light: #6b7280;
+  --dm-color-error-bg: #7f1d1d;
+  --dm-color-success-bg: #064e3b;
+
+  /* SVG Icons */
+  --svg-chevron-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  --svg-chevron-primary: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%233b82f6' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  animation: formSlideIn 0.5s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes formSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* ============================================
+   FORM FIELD GROUPS
+   ============================================ */
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ============================================
+   FORM INPUTS
+   ============================================ */
+
+.input {
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid var(--color-gray-200);
+  border-radius: 8px;
+  background: var(--color-gray-50);
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: var(--color-text);
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: var(--color-text-light);
+}
+
+.input:hover {
+  border-color: var(--color-gray-300);
+  background: #ffffff;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input.error {
+  border-color: var(--color-error);
+  background: #fef2f2;
+}
+
+.input.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input.success {
+  border-color: var(--color-success);
+  background: #f0fdf4;
+}
+
+/* ============================================
+   SELECT / DROPDOWN INPUTS
+   ============================================ */
+
+.select {
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid var(--color-gray-200);
+  border-radius: 8px;
+  background: var(--color-gray-50);
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: var(--color-text);
+  box-sizing: border-box;
+  cursor: pointer;
+  appearance: none;
+  background-image: var(--svg-chevron-default);
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.select:hover {
+  border-color: var(--color-gray-300);
+  background-color: #ffffff;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background-image: var(--svg-chevron-primary);
+}
+
+.select.error {
+  border-color: var(--color-error);
+  background-color: #fef2f2;
+}
+
+.select.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.select.success {
+  border-color: var(--color-success);
+  background-color: #f0fdf4;
+}
+
+/* ============================================
+   TEXTAREA INPUTS
+   ============================================ */
+
+.textarea {
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid var(--color-gray-200);
+  border-radius: 8px;
+  background: var(--color-gray-50);
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: var(--color-text);
+  box-sizing: border-box;
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.textarea::placeholder {
+  color: var(--color-text-light);
+}
+
+.textarea:hover {
+  border-color: var(--color-gray-300);
+  background: #ffffff;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.textarea.error {
+  border-color: var(--color-error);
+  background: #fef2f2;
+}
+
+.textarea.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.textarea.success {
+  border-color: var(--color-success);
+  background: #f0fdf4;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* ============================================
+   VALIDATION STATES
+   ============================================ */
+
+.errorMessage {
+  font-size: 12px;
+  color: var(--color-error);
+  margin-top: -4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: errorShake 0.3s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+  }
+}
+
+.successMessage {
+  font-size: 12px;
+  color: var(--color-success);
+  margin-top: -4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: scaleIn 0.3s ease;
+}
+
+.checkmark {
+  position: absolute;
+  right: 12px;
+  top: calc(12px + 15px + 12px + 5px);
+  /* Breakdown: padding-top (12px) + font-size (15px) + padding-bottom (12px) + line adjustment (5px) */
+  color: var(--color-success);
+  font-size: 18px;
+  font-weight: 600;
+  animation: scaleIn 0.3s ease 0.1s both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+
+.submitButton {
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary-darker) 100%);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.submitButton:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 0 0 5px rgba(59, 130, 246, 0.1);
+}
+
+.cancelButton {
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 2px solid var(--color-gray-200);
+  border-radius: 8px;
+  background: var(--color-gray-50);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.cancelButton:hover:not(:disabled) {
+  border-color: var(--color-gray-300);
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.cancelButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.cancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.cancelButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
+
+.loadingSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/* ============================================
+   BUTTON GROUP
+   ============================================ */
+
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.buttonGroup.fullWidth {
+  flex-wrap: wrap;
+}
+
+.buttonGroup.fullWidth .submitButton,
+.buttonGroup.fullWidth .cancelButton {
+  flex: 1;
+}
+
+/* ============================================
+   ERROR BANNER
+   ============================================ */
+
+.errorBanner {
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideDown 0.3s ease;
+  margin-bottom: 8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.errorIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   SUCCESS BANNER
+   ============================================ */
+
+.successBanner {
+  padding: 12px 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  color: #166534;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideDown 0.3s ease;
+  margin-bottom: 8px;
+}
+
+.successIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   FORM INFO MESSAGE
+   ============================================ */
+
+.infoMessage {
+  padding: 10px 12px;
+  background: var(--color-gray-100);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 4px;
+  color: #1e40af;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 480px) {
+  .form {
+    gap: 20px;
+    max-width: 100%;
+    padding: 0 16px;
+  }
+
+  .label {
+    font-size: 12px;
+  }
+
+  .input,
+  .select,
+  .textarea {
+    padding: 11px 14px;
+    font-size: 14px;
+  }
+
+  .textarea {
+    min-height: 80px;
+  }
+
+  .checkmark {
+    top: calc(11px + 14px + 11px + 5px);
+    /* Adjusted for mobile padding */
+  }
+
+  .submitButton,
+  .cancelButton {
+    padding: 11px 18px;
+    font-size: 14px;
+    width: 100%;
+  }
+
+  .buttonGroup {
+    flex-direction: column-reverse;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .buttonGroup.fullWidth {
+    justify-content: stretch;
+  }
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+

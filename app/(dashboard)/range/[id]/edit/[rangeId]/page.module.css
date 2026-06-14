@@ -1,0 +1,518 @@
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  font-family: var(--font-inter), sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 80px);
+  background-color: #fff;
+  color: #010f44;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 0;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #010f44;
+}
+
+.backButton:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #010f44;
+  margin: 0;
+}
+
+/* Content - Two Column Layout */
+.content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  flex: 1;
+  margin-bottom: 32px;
+}
+
+/* Form Section */
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 0;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #010f44;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sectionSubtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 14px;
+  color: #010f44;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.input {
+  padding: 12px 16px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  background-color: #fff;
+  color: #010f44;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.input::placeholder {
+  color: #ccc;
+}
+
+.input:focus {
+  border-color: #010f44;
+  box-shadow: 0 0 0 3px rgba(1, 15, 68, 0.1);
+}
+
+/* Select Dropdown */
+.selectWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select {
+  width: 100%;
+  padding: 12px 16px;
+  padding-right: 40px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  background-color: #fff;
+  appearance: none;
+  color: #010f44;
+  font-family: var(--font-inter), sans-serif;
+  cursor: pointer;
+}
+
+.select:focus {
+  border-color: #010f44;
+  box-shadow: 0 0 0 3px rgba(1, 15, 68, 0.1);
+}
+
+.selectIcon {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: #888;
+}
+
+/* Row - Two Column Layout for Inputs */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 0;
+}
+
+/* Reward Cards Section */
+.couponSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.couponCard {
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 20px;
+  background-color: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.couponCard:hover {
+  border-color: #d0d0d0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.couponTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #010f44;
+  margin: 0 0 16px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.removeCouponBtn {
+  background-color: transparent;
+  color: #ff4444;
+  border: 1px solid #ff4444;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.removeCouponBtn:hover {
+  background-color: #ff4444;
+  color: #fff;
+}
+
+.addCouponBtn {
+  background-color: #f5f5f5;
+  color: #010f44;
+  border: 1px dashed #010f44;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.addCouponBtn:hover {
+  background-color: #efefef;
+  border-color: #010f44;
+}
+
+/* Preview Section */
+.previewSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: sticky;
+  top: 100px;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 24px;
+  border-top: 1px solid #e8e8e8;
+  margin-top: auto;
+}
+
+.cancelButton {
+  background-color: #f5f5f5;
+  color: #010f44;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.cancelButton:hover {
+  background-color: #e8e8e8;
+  border-color: #010f44;
+}
+
+.saveButton {
+  background-color: #010f44;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.saveButton:hover {
+  background-color: #0a0d2e;
+  box-shadow: 0 4px 12px rgba(1, 15, 68, 0.15);
+}
+
+.saveButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Loading Container */
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  font-size: 16px;
+  color: #666;
+}
+
+/* Error Container */
+.errorContainer {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 16px;
+  color: #dc2626;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+/* Success Message */
+.successMessage {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 16px;
+  color: #16a34a;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+/* Dark Mode Support */
+
+/* Tablet Responsive - 1024px and below */
+@media (max-width: 1024px) {
+  .content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .previewSection {
+    position: static;
+    top: auto;
+  }
+
+  .container {
+    padding: 32px 20px;
+  }
+}
+
+/* Tablet Responsive - 768px and below */
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 16px;
+  }
+
+  .title {
+    font-size: 20px;
+    margin-bottom: 24px;
+  }
+
+  .sectionTitle {
+    font-size: 15px;
+  }
+
+  .input,
+  .select {
+    font-size: 16px;
+    padding: 12px 14px;
+  }
+
+  .label {
+    font-size: 13px;
+  }
+
+  .row {
+    gap: 12px;
+  }
+
+  .footer {
+    gap: 8px;
+    flex-direction: column-reverse;
+  }
+
+  .cancelButton,
+  .saveButton {
+    width: 100%;
+    padding: 14px 16px;
+  }
+
+  .couponCard {
+    padding: 16px;
+  }
+}
+
+/* Mobile Responsive - 480px and below */
+@media (max-width: 480px) {
+  .container {
+    padding: 20px 12px;
+    min-height: calc(100vh - 64px);
+  }
+
+  .header {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .backButton {
+    width: 36px;
+    height: 36px;
+  }
+
+  .title {
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .content {
+    gap: 16px;
+  }
+
+  .formSection {
+    gap: 24px;
+  }
+
+  .sectionTitle {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .sectionSubtitle {
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 0;
+  }
+
+  .input,
+  .select {
+    padding: 11px 12px;
+    font-size: 16px;
+  }
+
+  .label {
+    font-size: 13px;
+  }
+
+  .couponList {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .couponCard {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .couponTitle {
+    font-size: 13px;
+    margin-bottom: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .removeCouponBtn {
+    align-self: flex-start;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 16px;
+  }
+
+  .cancelButton,
+  .saveButton {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .previewSection {
+    gap: 16px;
+  }
+
+  .loadingContainer {
+    min-height: 200px;
+  }
+
+  .errorContainer,
+  .successMessage {
+    padding: 12px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+}
+
+/* Extra Small Screens - 360px and below */
+@media (max-width: 360px) {
+  .container {
+    padding: 16px 8px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .sectionTitle {
+    font-size: 13px;
+  }
+
+  .input,
+  .select {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .backButton {
+    width: 32px;
+    height: 32px;
+  }
+}

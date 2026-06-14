@@ -1,0 +1,76 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+  transition: all var(--transition-normal);
+}
+
+/* Default variant */
+.default {
+  background: var(--color-gray-light);
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
+}
+
+/* Success variant - Green/Teal */
+.success {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+  border: 1px solid #4caf50;
+  font-weight: 700;
+}
+
+/* Warning variant - Orange/Yellow */
+.warning {
+  background: rgba(255, 152, 0, 0.15);
+  color: #f59e0b;
+  border: 1px solid #f59e0b;
+  font-weight: 700;
+}
+
+/* Danger variant - Red/Pink */
+.danger {
+  background: rgba(244, 63, 94, 0.15);
+  color: #f43f5e;
+  border: 1px solid #f43f5e;
+  font-weight: 700;
+}
+
+/* Info variant - Blue */
+.info {
+  background: rgba(33, 150, 243, 0.15);
+  color: #2196f3;
+  border: 1px solid #2196f3;
+}
+
+/* Primary variant - Orange */
+.primary {
+  background: rgba(239, 158, 27, 0.15);
+  color: #ef9e1b;
+  border: 1px solid #ef9e1b;
+  font-weight: 700;
+}
+
+/* Dark mode */
+
+/* Animation */
+.badge {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

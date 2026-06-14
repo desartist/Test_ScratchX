@@ -1,0 +1,335 @@
+/* Subscription Card Component Styles */
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-color: #ef9e1b;
+}
+
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #010f44;
+  margin: 0;
+  font-family: 'Afacad', sans-serif;
+}
+
+
+.subtitle {
+  font-size: 13px;
+  color: #999;
+  margin: 4px 0 0 0;
+  font-weight: 500;
+}
+
+
+/* Status Badge */
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge.trial {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.badge.active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.badge.cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.badge.expired {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+
+/* Plan Info */
+.planInfo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+
+.value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+/* Alerts */
+.alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.alertWarning {
+  background-color: #fff3cd;
+  color: #856404;
+  border-left: 3px solid #ffc107;
+}
+
+.alertCritical {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-left: 3px solid #dc3545;
+}
+
+
+/* Quota Section */
+.quotaSection {
+  margin-bottom: 20px;
+}
+
+.quotaTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #010f44;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px 0;
+  display: block;
+}
+
+
+.quotaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.quotaItem:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+
+.quotaLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #010f44;
+}
+
+
+.quotaValue {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+
+/* Progress Bar */
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background-color: #e8e8e8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, #00b0b1, #0a8905);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress.ok {
+  background: linear-gradient(90deg, #0a8905, #66bb6a);
+}
+
+.progress.warning {
+  background: linear-gradient(90deg, #ffc107, #ff9800);
+}
+
+.progress.critical {
+  background: linear-gradient(90deg, #ff6b6b, #dc3545);
+}
+
+.percentage {
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+  text-align: right;
+}
+
+.percentage.warning {
+  color: #ff9800;
+}
+
+
+/* Trial Warning */
+.trialWarning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background-color: #fff3cd;
+  border-radius: 6px;
+  color: #856404;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.trialWarning a {
+  color: #856404;
+  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trialWarning a:hover {
+  color: #654321;
+}
+
+
+/* View Details Link */
+.viewDetails {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  color: #ef9e1b;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewDetails:hover {
+  color: #010f44;
+  gap: 4px;
+}
+
+
+/* Error State */
+.error {
+  color: #dc3545;
+  font-size: 13px;
+  margin: 0;
+  padding: 12px;
+  background-color: #f8d7da;
+  border-radius: 6px;
+}
+
+
+/* Skeleton Loading */
+.skeleton {
+  height: 300px;
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  border-radius: 8px;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+  }
+
+  .planInfo {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .quotaSection {
+    margin-bottom: 16px;
+  }
+}

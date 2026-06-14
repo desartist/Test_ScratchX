@@ -1,0 +1,86 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-navy, #010f44);
+}
+
+
+.timeRangeSelect {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.metricCard {
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+
+.metricCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: var(--color-primary, #ef9e1b);
+}
+
+
+.metricValue {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+  margin-bottom: 8px;
+}
+
+
+.metricLabel {
+  font-size: 11px;
+  color: var(--color-muted, #637080);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.loading,
+.error {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-muted, #637080);
+  font-size: 13px;
+}
+
+.error {
+  color: #ff6b6b;
+  background: #fff3f3;
+  border-radius: 6px;
+}
+

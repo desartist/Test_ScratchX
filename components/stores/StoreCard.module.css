@@ -1,0 +1,327 @@
+/* components/stores/StoreCard.module.css */
+.card {
+  padding: 20px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease,
+    transform 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+
+/* Header */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.headerMain {
+  min-width: 0;
+  flex: 1;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.name {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+.mainStoreBadge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 6px 0 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+.locationIcon {
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+/* Manager chip */
+.managerRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-navy);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+
+
+.managerName {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* Meta row */
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.metaIcon {
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+/* Scratch section */
+.scratchSection {
+  margin-bottom: 4px;
+}
+
+.scratchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.scratchLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.unlimitedLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+.unlimitedIcon {
+  flex-shrink: 0;
+}
+
+.scratchCount {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+
+.scratchRemaining {
+  margin-top: 6px;
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.viewBtn,
+.primaryBtn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.viewBtn {
+  background: white;
+  color: var(--color-navy);
+  border: 1px solid #ddd;
+}
+
+.viewBtn:hover {
+  border-color: var(--color-navy);
+  background: #f8f9fc;
+}
+
+
+.primaryBtn {
+  border: none;
+  color: #fff;
+}
+
+.primaryBtn.assign {
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+}
+
+.primaryBtn.assign:hover {
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.3);
+  transform: translateY(-1px);
+}
+
+.primaryBtn.review {
+  background: var(--color-navy-active);
+}
+
+.primaryBtn.review:hover {
+  background: #5b21b6;
+  box-shadow: 0 4px 12px rgba(1, 24, 142, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Delete */
+.deleteButtonWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.deleteBtn {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.deleteBtn:hover:not(.disabled) {
+  background: #fee;
+  border-color: #dc2626;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+.deleteBtn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #9ca3af;
+}
+
+
+.tooltip {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: #1f2937;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  margin-bottom: 8px;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  line-height: 1.4;
+}
+
+
+@media (max-width: 640px) {
+  .card {
+    padding: 14px;
+  }
+
+  .cardHeader {
+    margin-bottom: 8px;
+  }
+
+  .managerRow {
+    margin-bottom: 10px;
+  }
+
+  .metaRow {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .actions {
+    margin-top: 12px;
+    gap: 6px;
+  }
+
+  .viewBtn,
+  .primaryBtn {
+    padding: 9px 10px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .actions {
+    flex-wrap: wrap;
+  }
+  .viewBtn,
+  .primaryBtn {
+    flex: 1 1 calc(50% - 3px);
+  }
+}

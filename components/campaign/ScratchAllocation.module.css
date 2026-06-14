@@ -1,0 +1,178 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #010f44;
+}
+
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: inherit;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+
+.errorBox {
+  padding: 10px 14px;
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-radius: 8px;
+  color: #f43f5e;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Stat tiles */
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  background: rgba(0, 176, 177, 0.04);
+}
+
+
+.tileLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #888;
+}
+
+.tileValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+/* Usage */
+.usageBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.usageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.usageLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #555;
+}
+
+
+.usageCount {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+/* Allocate row */
+.allocateRow {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #010f44;
+  background: #fff;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #ef9e1b;
+}
+
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.primaryButton:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.3);
+}
+
+.primaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding: 16px;
+  }
+
+  .tileGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .allocateRow {
+    flex-direction: column;
+  }
+
+  .primaryButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

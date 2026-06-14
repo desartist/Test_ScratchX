@@ -1,0 +1,72 @@
+[    1105ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/auth/login:0
+[    1230ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    1327ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    1445ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <InnerLayoutRouter url="/auth/login" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="page" pagePath="auth/login...">
+        <SegmentTrieNode>
+        <ClientPageRoot Component={function LoginPage} serverProvidedParams={{...}}>
+          <LoginPage params={Promise} searchParams={Promise}>
+            <AuthLayout>
+              <div className="AuthLayout...">
+                <div className="AuthLayout...">
+                  <div className="page-modul...">
+                    <header>
+                    <section className="page-modul...">
+                      <LoginForm>
+                        <form onSubmit={function handleSubmit} className="LoginForm-...">
+                          <FormInput label="Email" type="email" value="" onChange={function onChange} ...>
+                            <div className={"FormInpu..."}>
+                              <label
++                               htmlFor="input-bci9no4e9"
+-                               htmlFor="input-jpxv70mfk"
+                                className="FormInput-module__v-WP-W__label"
+                              >
++                               Email
+                              <input
++                               id="input-bci9no4e9"
+-                               id="input-jpxv70mfk"
+                                aria-describedby={undefined}
+                                className={"FormInput-module__v-WP-W__input "}
+                                type="email"
+                                value=""
+                                onChange={function onChange}
+                                placeholder="Enter your email"
+                                required={true}
+                              >
+                          <FormInput label="Password" type="password" value="" onChange={function onChange} ...>
+                            <div className={"FormInpu..."}>
+                              <label
++                               htmlFor="input-squ7ehgyz"
+-                               htmlFor="input-dgckf7kze"
+                                className="FormInput-module__v-WP-W__label"
+                              >
++                               Password
+                              <input
++                               id="input-squ7ehgyz"
+-                               id="input-dgckf7kze"
+                                aria-describedby={undefined}
+                                className={"FormInput-module__v-WP-W__input "}
+                                type="password"
+                                value=""
+                                onChange={function onChange}
+                                placeholder="Enter your password"
+                                required={true}
+                              >
+                          ...
+                    ...
+      ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[    1778ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/auth/me:0

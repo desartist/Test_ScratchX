@@ -1,0 +1,581 @@
+/* ============================================
+   INVENTORY TRACKING TABLE STYLES
+   MOVEMENT HISTORY & STATUS TRACKING
+   ============================================ */
+
+/* CSS Custom Properties - Colors */
+:root {
+  --color-primary: #3b82f6;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-darker: #1e40af;
+  --color-primary-light: #60a5fa;
+  --color-error: #ef4444;
+  --color-error-dark: #b91c1c;
+  --color-success: #10b981;
+  --color-success-dark: #059669;
+  --color-warning: #f59e0b;
+  --color-warning-dark: #d97706;
+  --color-info: #0ea5e9;
+  --color-info-dark: #0284c7;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #eff6ff;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-900: #1f2937;
+  --color-text: #1f2937;
+  --color-text-light: #9ca3af;
+
+  /* Dark mode colors */
+  --dm-color-primary: #60a5fa;
+  --dm-color-gray-50: #1f2937;
+  --dm-color-gray-100: #1e3a8a;
+  --dm-color-gray-200: #111827;
+  --dm-color-gray-300: #4b5563;
+  --dm-color-gray-700: #374151;
+  --dm-color-gray-800: #1f2937;
+  --dm-color-gray-900: #111827;
+  --dm-color-text: #f3f4f6;
+  --dm-color-text-light: #6b7280;
+  --dm-color-error-bg: #7f1d1d;
+  --dm-color-success-bg: #064e3b;
+  --dm-color-warning-bg: #7c2d12;
+  --dm-color-info-bg: #0c4a6e;
+}
+
+/* ============================================
+   CONTAINER & LAYOUT
+   ============================================ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  background: var(--color-gray-50);
+  border-radius: 12px;
+  padding: 24px;
+  animation: containerFadeIn 0.4s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes containerFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* ============================================
+   HEADER & TITLE
+   ============================================ */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.3px;
+}
+
+/* ============================================
+   FILTER GROUP & SEARCH INPUT
+   ============================================ */
+
+.filterGroup {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid var(--color-gray-200);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.filterInput {
+  flex: 1;
+  min-width: 200px;
+  padding: 11px 14px;
+  font-size: 14px;
+  border: 2px solid var(--color-gray-200);
+  border-radius: 8px;
+  background: var(--color-gray-50);
+  color: var(--color-text);
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.filterInput::placeholder {
+  color: var(--color-text-light);
+}
+
+.filterInput:hover {
+  border-color: var(--color-gray-300);
+  background: #ffffff;
+}
+
+.filterInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ============================================
+   TABLE STYLES
+   ============================================ */
+
+.tableContainer {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid var(--color-gray-200);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  animation: tableSlideIn 0.5s ease 0.1s both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes tableSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table thead {
+  background: linear-gradient(to right, #f8f9fa 0%, #f3f4f6 100%);
+  border-bottom: 2px solid var(--color-gray-200);
+}
+
+.table th {
+  padding: 16px 18px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-gray-600);
+  font-family: inherit;
+}
+
+.table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-gray-100);
+  color: var(--color-text);
+  font-family: inherit;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ============================================
+   QUANTITY CELL
+   ============================================ */
+
+.quantityCell {
+  text-align: right;
+  font-weight: 500;
+}
+
+/* ============================================
+   STATUS BADGES
+   ============================================ */
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.statusAllocated {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary-dark);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.statusAllocated:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.statusRedeemed {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--color-success-dark);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.statusRedeemed:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.statusTransferred {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--color-warning-dark);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.statusTransferred:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.statusExpired {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error-dark);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.statusExpired:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.statusPending {
+  background: rgba(14, 165, 233, 0.1);
+  color: var(--color-info-dark);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.statusPending:hover {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: rgba(14, 165, 233, 0.5);
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 24px;
+  color: var(--color-text-light);
+  font-size: 15px;
+}
+
+.loadingSpinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--color-gray-200);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  color: var(--color-gray-300);
+  opacity: 0.7;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes floatIcon {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.emptySubtext {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-light);
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-top: 1px solid var(--color-gray-200);
+  background: #ffffff;
+  border-radius: 0 0 10px 10px;
+  flex-wrap: wrap;
+  animation: paginationSlideUp 0.4s ease 0.15s both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes paginationSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.paginationButton {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid var(--color-gray-200);
+  border-radius: 6px;
+  background: var(--color-gray-50);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.paginationButton:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  transform: translateY(-1px);
+}
+
+.paginationButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.15);
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.paginationButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.pageInfo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .filterGroup {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .filterInput {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .table {
+    font-size: 13px;
+  }
+
+  .table th {
+    padding: 12px 12px;
+    font-size: 11px;
+  }
+
+  .table td {
+    padding: 10px 12px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .pageInfo {
+    width: 100%;
+    text-align: center;
+  }
+
+  .paginationButton {
+    flex: 1;
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .header {
+    gap: 10px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .filterGroup {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .filterInput {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  .table th {
+    padding: 10px 10px;
+    font-size: 10px;
+  }
+
+  .table td {
+    padding: 8px 10px;
+  }
+
+  .statusBadge {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .empty {
+    padding: 40px 16px;
+  }
+
+  .emptyIcon {
+    font-size: 40px;
+  }
+
+  .emptyText {
+    font-size: 14px;
+  }
+
+  .emptySubtext {
+    font-size: 12px;
+  }
+
+  .pagination {
+    padding: 12px 10px;
+  }
+
+  .pageInfo {
+    font-size: 12px;
+  }
+
+  .paginationButton {
+    font-size: 12px;
+    padding: 7px 12px;
+  }
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+

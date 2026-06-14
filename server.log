@@ -1,0 +1,605 @@
+
+> coupon_campaigns@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.150:3000
+- Environments: .env
+✓ Ready in 2.3s
+  Using external babel configuration from C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.babelrc
+○ Compiling middleware ...
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+○ Compiling /scan/[campaignId] ...
+ GET /scan/test-id 200 in 13.8s (next.js: 13.4s, application-code: 438ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 13.6s (next.js: 13.1s, application-code: 456ms)
+MongoDB connected
+ GET /api/auth/me 200 in 437ms (next.js: 112ms, application-code: 326ms)
+ GET /api/auth/me 200 in 6.2s (next.js: 5.7s, application-code: 585ms)
+ GET /api/customer/campaign/6a1f05a5ecc560c79fd2a797 200 in 11.6s (next.js: 11.5s, application-code: 74ms)
+ GET /api/customer/campaign/6a1f05a5ecc560c79fd2a797 200 in 11.7s (next.js: 11.6s, application-code: 80ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 704ms (next.js: 502ms, application-code: 202ms)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/scan/6a1f..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
++                       hidden={true}
+-                       hidden={null}
+-                       id="heurio-app"
+-                       className="heurio-app"
+-                       version="2.5.01.13"
+                      >
+                        <__next_metadata_boundary__>
++                         <Suspense name="Next.Metadata">
+-                         <div className="heurio-overlay">
+                  ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at throwOnHydrationMismatch (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at updateSuspenseComponent (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6299:99)
+    at beginWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6762:24)
+    at runWithFiberInDEV (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at Suspense (<anonymous>)
+✓ Compiled in 857ms
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 760ms (next.js: 648ms, application-code: 112ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 870ms (next.js: 501ms, application-code: 370ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 870ms (next.js: 608ms, application-code: 262ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 873ms (next.js: 330ms, application-code: 543ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 895ms (next.js: 745ms, application-code: 150ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 874ms (next.js: 794ms, application-code: 80ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 884ms (next.js: 227ms, application-code: 656ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 882ms (next.js: 322ms, application-code: 560ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 881ms (next.js: 455ms, application-code: 426ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 878ms (next.js: 548ms, application-code: 331ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 251ms (next.js: 124ms, application-code: 128ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 899ms (next.js: 247ms, application-code: 652ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 868ms (next.js: 345ms, application-code: 523ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 867ms (next.js: 477ms, application-code: 390ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 868ms (next.js: 593ms, application-code: 275ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 187ms (next.js: 54ms, application-code: 134ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 732ms (next.js: 282ms, application-code: 449ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 730ms (next.js: 400ms, application-code: 330ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 237ms (next.js: 37ms, application-code: 200ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 119ms (next.js: 20ms, application-code: 99ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 773ms (next.js: 236ms, application-code: 537ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 771ms (next.js: 332ms, application-code: 439ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 147ms (next.js: 39ms, application-code: 108ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 687ms (next.js: 282ms, application-code: 405ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 687ms (next.js: 414ms, application-code: 273ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 169ms (next.js: 34ms, application-code: 135ms)
+ GET /scan/6a1f05a5ecc560c79fd2a797 200 in 504ms (next.js: 424ms, application-code: 80ms)
+ GET /api/auth/me 200 in 431ms (next.js: 244ms, application-code: 186ms)
+ GET /dashboard 200 in 1838ms (next.js: 291ms, proxy.ts: 335ms, application-code: 1212ms)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/dashboard" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
++                       hidden={true}
+-                       hidden={null}
+-                       id="heurio-app"
+-                       className="heurio-app"
+-                       version="2.5.01.13"
+                      >
+                        <__next_metadata_boundary__>
++                         <Suspense name="Next.Metadata">
+-                         <div className="heurio-overlay">
+                  ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at throwOnHydrationMismatch (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at updateSuspenseComponent (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6299:99)
+    at beginWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6762:24)
+    at runWithFiberInDEV (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at Suspense (<anonymous>)
+ GET /api/auth/me 200 in 131ms (next.js: 15ms, application-code: 116ms)
+ GET /api/auth/me 200 in 135ms (next.js: 28ms, application-code: 108ms)
+requireAuth null
+requireAuth null
+ GET /api/dashboard/retailer 200 in 476ms (next.js: 314ms, proxy.ts: 34ms, application-code: 127ms)
+ GET /api/dashboard/retailer 200 in 471ms (next.js: 232ms, proxy.ts: 33ms, application-code: 206ms)
+ GET /customers 200 in 412ms (next.js: 296ms, application-code: 116ms)
+ GET /campaign 200 in 373ms (next.js: 265ms, application-code: 108ms)
+(node:39000) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"store_code":1} for model "Store". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ GET /api/campaigns 200 in 589ms (next.js: 264ms, proxy.ts: 18ms, application-code: 307ms)
+ GET /api/campaigns 200 in 677ms (next.js: 235ms, proxy.ts: 14ms, application-code: 429ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2000ms (next.js: 1893ms, application-code: 107ms)
+ GET /api/campaigns/6a1f05a5ecc560c79fd2a797 200 in 7.1s (next.js: 6.9s, proxy.ts: 33ms, application-code: 177ms)
+ GET /api/campaigns/6a1f05a5ecc560c79fd2a797 200 in 7.1s (next.js: 6.9s, proxy.ts: 28ms, application-code: 186ms)
+ GET /api/campaigns/6a1f05a5ecc560c79fd2a797 200 in 7.1s (next.js: 6.8s, proxy.ts: 26ms, application-code: 194ms)
+ GET /api/campaigns/6a1f05a5ecc560c79fd2a797 200 in 7.1s (next.js: 6.8s, proxy.ts: 29ms, application-code: 200ms)
+[browser] React does not recognize the `includeMargin` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `includemargin` instead. If you accidentally passed it from a parent component, remove it from the DOM element. 
+    at validateProperty (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:2094:60)
+    at warnUnknownProperties (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:2203:26)
+    at validatePropertiesInDevelopment (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10679:66)
+    at setInitialProperties (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10969:9)
+    at completeWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6979:35)
+    at runWithFiberInDEV (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopSync (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:2094:60)
+ GET /api/auth/me 200 in 238ms (next.js: 167ms, application-code: 71ms)
+ GET /api/auth/me 200 in 133ms (next.js: 35ms, application-code: 98ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1347ms (next.js: 491ms, application-code: 856ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 580ms (next.js: 40ms, application-code: 540ms)
+ GET /api/campaigns/6a1f05a5ecc560c79fd2a797 200 in 568ms (next.js: 194ms, proxy.ts: 249ms, application-code: 125ms)
+ GET /api/campaigns/6a1f05a5ecc560c79fd2a797 200 in 573ms (next.js: 235ms, proxy.ts: 254ms, application-code: 85ms)
+ GET /api/auth/me 200 in 205ms (next.js: 145ms, application-code: 60ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 732ms (next.js: 255ms, application-code: 477ms)
+ GET /api/campaigns/6a1f05a5ecc560c79fd2a797 200 in 461ms (next.js: 180ms, proxy.ts: 82ms, application-code: 200ms)
+ GET /api/campaigns/6a1f05a5ecc560c79fd2a797 200 in 406ms (next.js: 276ms, proxy.ts: 10ms, application-code: 120ms)
+ GET /api/auth/me 200 in 304ms (next.js: 178ms, application-code: 127ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 22.4s (next.js: 965ms, application-code: 21.4s)
+ GET /api/auth/me 200 in 406ms (next.js: 171ms, application-code: 235ms)
+ GET /api/auth/me 200 in 289ms (next.js: 41ms, application-code: 248ms)
+ GET /api/auth/me 200 in 293ms (next.js: 71ms, application-code: 222ms)
+ GET /api/auth/me 200 in 300ms (next.js: 102ms, application-code: 198ms)
+ GET /api/auth/me 200 in 479ms (next.js: 133ms, application-code: 346ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.5s (next.js: 523ms, application-code: 1959ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.5s (next.js: 956ms, application-code: 1517ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.5s (next.js: 773ms, application-code: 1709ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.5s (next.js: 1102ms, application-code: 1373ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.5s (next.js: 1285ms, application-code: 1191ms)
+ GET /api/auth/me 200 in 562ms (next.js: 158ms, application-code: 404ms)
+ GET /api/auth/me 200 in 510ms (next.js: 341ms, application-code: 169ms)
+ GET /api/auth/me 200 in 365ms (next.js: 83ms, application-code: 282ms)
+ GET /api/auth/me 200 in 296ms (next.js: 66ms, application-code: 230ms)
+ GET /api/auth/me 200 in 307ms (next.js: 110ms, application-code: 197ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1544ms (next.js: 35ms, application-code: 1509ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1534ms (next.js: 73ms, application-code: 1461ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1335ms (next.js: 41ms, application-code: 1294ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1333ms (next.js: 169ms, application-code: 1165ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1065ms (next.js: 78ms, application-code: 986ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1067ms (next.js: 214ms, application-code: 852ms)
+ GET /api/auth/me 200 in 691ms (next.js: 165ms, application-code: 526ms)
+ GET /api/auth/me 200 in 743ms (next.js: 480ms, application-code: 262ms)
+ GET /api/auth/me 200 in 497ms (next.js: 194ms, application-code: 303ms)
+ GET /api/auth/me 200 in 281ms (next.js: 91ms, application-code: 191ms)
+ GET /api/auth/me 200 in 373ms (next.js: 44ms, application-code: 328ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1752ms (next.js: 38ms, application-code: 1714ms)
+ GET /api/auth/me 200 in 509ms (next.js: 168ms, application-code: 341ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1779ms (next.js: 38ms, application-code: 1741ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1787ms (next.js: 231ms, application-code: 1555ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1451ms (next.js: 42ms, application-code: 1409ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1453ms (next.js: 182ms, application-code: 1271ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1444ms (next.js: 359ms, application-code: 1085ms)
+ GET /api/auth/me 200 in 897ms (next.js: 35ms, application-code: 862ms)
+ GET /api/auth/me 200 in 253ms (next.js: 60ms, application-code: 193ms)
+ GET /api/auth/me 200 in 262ms (next.js: 92ms, application-code: 171ms)
+ GET /api/auth/me 200 in 268ms (next.js: 135ms, application-code: 133ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1648ms (next.js: 38ms, application-code: 1610ms)
+ GET /api/auth/me 200 in 405ms (next.js: 145ms, application-code: 260ms)
+ GET /api/auth/me 200 in 347ms (next.js: 58ms, application-code: 290ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1663ms (next.js: 44ms, application-code: 1619ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1665ms (next.js: 192ms, application-code: 1473ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1659ms (next.js: 537ms, application-code: 1122ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1670ms (next.js: 333ms, application-code: 1337ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1663ms (next.js: 694ms, application-code: 969ms)
+ GET /api/auth/me 200 in 1002ms (next.js: 41ms, application-code: 961ms)
+ GET /api/auth/me 200 in 289ms (next.js: 163ms, application-code: 126ms)
+ GET /api/auth/me 200 in 317ms (next.js: 62ms, application-code: 255ms)
+ GET /api/auth/me 200 in 321ms (next.js: 97ms, application-code: 224ms)
+ GET /api/auth/me 200 in 324ms (next.js: 126ms, application-code: 198ms)
+ GET /api/auth/me 200 in 362ms (next.js: 200ms, application-code: 162ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 1864ms (next.js: 33ms, application-code: 1831ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.0s (next.js: 44ms, application-code: 1994ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.0s (next.js: 182ms, application-code: 1860ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.0s (next.js: 307ms, application-code: 1739ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.0s (next.js: 635ms, application-code: 1408ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.1s (next.js: 464ms, application-code: 1587ms)
+ GET /api/auth/me 200 in 1034ms (next.js: 638ms, application-code: 396ms)
+ GET /api/auth/me 200 in 494ms (next.js: 98ms, application-code: 396ms)
+ GET /api/auth/me 200 in 520ms (next.js: 66ms, application-code: 454ms)
+ GET /api/auth/me 200 in 513ms (next.js: 153ms, application-code: 360ms)
+ GET /api/auth/me 200 in 516ms (next.js: 200ms, application-code: 316ms)
+ GET /api/auth/me 200 in 889ms (next.js: 309ms, application-code: 581ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 3.1s (next.js: 628ms, application-code: 2.5s)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.3s (next.js: 36ms, application-code: 2.2s)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.3s (next.js: 184ms, application-code: 2.1s)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.3s (next.js: 297ms, application-code: 1990ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.3s (next.js: 709ms, application-code: 1584ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 2.3s (next.js: 448ms, application-code: 1855ms)
+ GET /api/auth/me 200 in 114ms (next.js: 26ms, application-code: 89ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 510ms (next.js: 53ms, application-code: 457ms)
+ GET /api/auth/me 200 in 202ms (next.js: 53ms, application-code: 149ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 914ms (next.js: 62ms, application-code: 852ms)
+ GET /api/auth/me 200 in 185ms (next.js: 48ms, application-code: 137ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 927ms (next.js: 118ms, application-code: 809ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 417ms (next.js: 89ms, application-code: 328ms)
+ GET /api/auth/me 200 in 155ms (next.js: 30ms, application-code: 126ms)
+ GET /campaign/6a1f05a5ecc560c79fd2a797 200 in 722ms (next.js: 174ms, application-code: 548ms)
+ GET /api/campaigns/6a1f05a5ecc560c79fd2a797 200 in 426ms (next.js: 213ms, proxy.ts: 153ms, application-code: 60ms)
+ GET /api/campaigns/6a1f05a5ecc560c79fd2a797 200 in 446ms (next.js: 203ms, proxy.ts: 153ms, application-code: 90ms)
+ GET /campaign 200 in 653ms (next.js: 484ms, application-code: 169ms)
+ GET /api/campaigns 200 in 549ms (next.js: 152ms, proxy.ts: 16ms, application-code: 380ms)
+ GET /api/campaigns 200 in 561ms (next.js: 326ms, proxy.ts: 17ms, application-code: 218ms)
+ GET /campaign/new 200 in 460ms (next.js: 308ms, application-code: 152ms)
+ GET /sourceMap/assets/css/lollipop.css.map 404 in 932ms (next.js: 364ms, application-code: 568ms)
+requireAuth campaign:create
+ POST /api/campaign/create 201 in 458ms (next.js: 333ms, application-code: 125ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 159ms (next.js: 76ms, application-code: 82ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 269ms (next.js: 109ms, proxy.ts: 14ms, application-code: 146ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 265ms (next.js: 137ms, proxy.ts: 12ms, application-code: 116ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 216ms (next.js: 125ms, proxy.ts: 30ms, application-code: 61ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 232ms (next.js: 84ms, proxy.ts: 31ms, application-code: 117ms)
+ GET /api/auth/me 200 in 268ms (next.js: 208ms, application-code: 60ms)
+ GET /api/auth/me 200 in 115ms (next.js: 21ms, application-code: 94ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 855ms (next.js: 252ms, application-code: 603ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 534ms (next.js: 16ms, application-code: 519ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 298ms (next.js: 136ms, proxy.ts: 65ms, application-code: 96ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 302ms (next.js: 181ms, proxy.ts: 64ms, application-code: 57ms)
+ GET /api/auth/me 200 in 194ms (next.js: 102ms, application-code: 92ms)
+ GET /api/auth/me 200 in 122ms (next.js: 19ms, application-code: 103ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 830ms (next.js: 240ms, application-code: 590ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 833ms (next.js: 373ms, application-code: 460ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 395ms (next.js: 219ms, proxy.ts: 65ms, application-code: 111ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 394ms (next.js: 268ms, proxy.ts: 64ms, application-code: 62ms)
+ GET /api/auth/me 200 in 174ms (next.js: 92ms, application-code: 81ms)
+ GET /api/auth/me 200 in 93ms (next.js: 17ms, application-code: 76ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 576ms (next.js: 185ms, application-code: 392ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 329ms (next.js: 21ms, application-code: 308ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 230ms (next.js: 110ms, proxy.ts: 40ms, application-code: 80ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 198ms (next.js: 149ms, proxy.ts: 5ms, application-code: 44ms)
+ GET /api/auth/me 200 in 160ms (next.js: 115ms, application-code: 45ms)
+ GET /api/auth/me 200 in 144ms (next.js: 27ms, application-code: 116ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 900ms (next.js: 338ms, application-code: 562ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 468ms (next.js: 23ms, application-code: 445ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 260ms (next.js: 97ms, proxy.ts: 41ms, application-code: 122ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 266ms (next.js: 153ms, proxy.ts: 44ms, application-code: 68ms)
+ GET /api/auth/me 200 in 235ms (next.js: 146ms, application-code: 89ms)
+ GET /api/auth/me 200 in 246ms (next.js: 20ms, application-code: 227ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 1107ms (next.js: 346ms, application-code: 762ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 640ms (next.js: 27ms, application-code: 613ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 249ms (next.js: 119ms, proxy.ts: 32ms, application-code: 98ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 252ms (next.js: 166ms, proxy.ts: 6ms, application-code: 81ms)
+ GET /api/auth/me 200 in 126ms (next.js: 91ms, application-code: 35ms)
+ GET /campaign/6a1f13bdffdd6714899b373f 200 in 425ms (next.js: 194ms, application-code: 230ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 226ms (next.js: 107ms, proxy.ts: 29ms, application-code: 89ms)
+ GET /api/campaigns/6a1f13bdffdd6714899b373f 200 in 230ms (next.js: 160ms, proxy.ts: 5ms, application-code: 65ms)
+ GET /stores 200 in 299ms (next.js: 224ms, application-code: 74ms)
+ GET /api/stores 200 in 211ms (next.js: 132ms, proxy.ts: 12ms, application-code: 67ms)
+ GET /api/stores 200 in 221ms (next.js: 178ms, proxy.ts: 11ms, application-code: 32ms)
+ GET /stores/6a1dae0d43eb6398a8e64445/edit 200 in 3.9s (next.js: 3.8s, application-code: 57ms)
+ GET /api/stores/6a1dae0d43eb6398a8e64445 200 in 3.3s (next.js: 3.3s, proxy.ts: 5ms, application-code: 15ms)
+Error: Route "/api/stores/[id]" used `params.id`. `params` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at PATCH (.next\dev\server\chunks\C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\app\api\stores\[id]\route.js:67:17)
+  65 |     await connectDB();
+  66 |
+> 67 |     const { id: storeId } = params;
+     |                 ^
+  68 |
+  69 |     // Get user info from headers
+  70 |     const userRole = request.headers.get('x-user-role');
+Error updating store: Error [NotFoundError]: Store not found
+    at StoreService.getStoreById (.next\dev\server\chunks\C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\lib\storeService.js:147:13)
+    at async PATCH (.next\dev\server\chunks\C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\app\api\stores\[id]\route.js:85:19)
+  145 |     const store = await Store.findById(storeId).lean();
+  146 |     if (!store) {
+> 147 |       throw new NotFoundError('Store not found');
+      |             ^
+  148 |     }
+  149 |     return store;
+  150 |   } {
+  statusCode: 404
+}
+ PATCH /api/stores/6a1dae0d43eb6398a8e64445 404 in 467ms (next.js: 51ms, proxy.ts: 11ms, application-code: 404ms)
+ GET /api/stores 200 in 113ms (next.js: 29ms, proxy.ts: 19ms, application-code: 65ms)
+ GET /api/stores 200 in 116ms (next.js: 55ms, proxy.ts: 22ms, application-code: 39ms)
+ GET /stores/6a1abf16e0ad2c65ff5b86ed/edit 200 in 111ms (next.js: 46ms, application-code: 65ms)
+ GET /api/stores/6a1abf16e0ad2c65ff5b86ed 200 in 70ms (next.js: 40ms, proxy.ts: 8ms, application-code: 21ms)
+ GET /api/auth/me 200 in 626ms (next.js: 63ms, application-code: 563ms)
+ GET /stores/6a1abf16e0ad2c65ff5b86ed 200 in 13.6s (next.js: 10.3s, application-code: 3.4s)
+ GET /api/auth/me 200 in 83ms (next.js: 25ms, application-code: 57ms)
+ GET /api/auth/me 200 in 66ms (next.js: 18ms, application-code: 48ms)
+ GET /api/stores/6a1abf16e0ad2c65ff5b86ed 200 in 1707ms (next.js: 1672ms, proxy.ts: 10ms, application-code: 25ms)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/stores/6a..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
++                       hidden={true}
+-                       hidden={null}
+-                       id="heurio-app"
+-                       className="heurio-app"
+-                       version="2.5.01.13"
+                      >
+                        <__next_metadata_boundary__>
++                         <Suspense name="Next.Metadata">
+-                         <div className="heurio-overlay">
+                  ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at throwOnHydrationMismatch (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at updateSuspenseComponent (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6299:99)
+    at beginWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6762:24)
+    at runWithFiberInDEV (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at Suspense (<anonymous>)
+ GET /api/auth/me 200 in 56ms (next.js: 12ms, application-code: 44ms)
+ GET /stores 200 in 298ms (next.js: 47ms, application-code: 251ms)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/stores" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
++                       hidden={true}
+-                       hidden={null}
+-                       id="heurio-app"
+-                       className="heurio-app"
+-                       version="2.5.01.13"
+                      >
+                        <__next_metadata_boundary__>
++                         <Suspense name="Next.Metadata">
+-                         <div className="heurio-overlay">
+                  ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at throwOnHydrationMismatch (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at updateSuspenseComponent (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6299:99)
+    at beginWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6762:24)
+    at runWithFiberInDEV (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at Suspense (<anonymous>)
+ GET /api/auth/me 200 in 129ms (next.js: 11ms, application-code: 118ms)
+ GET /api/auth/me 200 in 63ms (next.js: 14ms, application-code: 49ms)
+ GET /api/stores 200 in 71ms (next.js: 20ms, proxy.ts: 7ms, application-code: 44ms)
+ GET /stores/create 200 in 474ms (next.js: 391ms, application-code: 83ms)
+[browser] Geolocation error: [object GeolocationPositionError] 
+    at navigator.geolocation.getCurrentPosition.timeout (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/_10nxbgz._.js:214:21) (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/_10nxbgz._.js:214:21)
+[browser] Geolocation error: [object GeolocationPositionError] 
+    at navigator.geolocation.getCurrentPosition.timeout (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/_10nxbgz._.js:214:21) (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/_10nxbgz._.js:214:21)
+ GET /api/auth/me 200 in 52ms (next.js: 12ms, application-code: 40ms)
+ GET /stores 200 in 214ms (next.js: 14ms, application-code: 200ms)
+ GET /api/auth/me 200 in 37ms (next.js: 8ms, application-code: 29ms)
+ GET /api/auth/me 200 in 51ms (next.js: 21ms, application-code: 30ms)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/stores" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
++                       hidden={true}
+-                       hidden={null}
+-                       id="heurio-app"
+-                       className="heurio-app"
+-                       version="2.5.01.13"
+                      >
+                        <__next_metadata_boundary__>
++                         <Suspense name="Next.Metadata">
+-                         <div className="heurio-overlay">
+                  ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at throwOnHydrationMismatch (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at updateSuspenseComponent (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6299:99)
+    at beginWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6762:24)
+    at runWithFiberInDEV (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/abhishek.pratap/OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED/Desktop/qrProject/coupon_campaigns/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at Suspense (<anonymous>)
+ GET /api/stores 200 in 71ms (next.js: 38ms, proxy.ts: 9ms, application-code: 24ms)
+ GET /stores/create 200 in 49ms (next.js: 11ms, application-code: 38ms)
+Error creating store: ValidationError: Store validation failed: store_code: Store code cannot exceed 20 characters
+    at model.validate (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\mongoose\lib\document.js:2864:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async StoreService.createStore (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.next\dev\server\chunks\[root-of-the-server]__0v9nlz9._.js:910:9)
+    at async POST (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.next\dev\server\chunks\[root-of-the-server]__0v9nlz9._.js:1335:23)
+    at async AppRouteRouteModule.do (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:40115)
+    at async AppRouteRouteModule.handle (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:47321)
+    at async responseGenerator (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.next\dev\server\chunks\[root-of-the-server]__03cegsv._.js:16466:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:227216)
+    at async handleResponse (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.next\dev\server\chunks\[root-of-the-server]__03cegsv._.js:16529:32)
+    at async Module.handler (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.next\dev\server\chunks\[root-of-the-server]__03cegsv._.js:16583:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:1454:9)
+    at async DevServer.renderPageComponent (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:1506:24)
+    at async DevServer.renderToResponseImpl (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:1556:32)
+    at async DevServer.pipeImpl (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:1043:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:934:17)
+    at async C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\dev\next-dev-server.js:394:20
+    at async Span.traceAsyncFn (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\dev\next-dev-server.js:390:24)
+    at async invokeRender (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\lib\router-server.js:266:21)
+    at async handleRequest (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\lib\router-server.js:465:24)
+    at async requestHandlerImpl (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\lib\router-server.js:514:13)
+    at async Server.requestListener (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\lib\start-server.js:225:13) {
+  errors: {
+    store_code: ValidatorError: Store code cannot exceed 20 characters
+        at async StoreService.createStore (.next\dev\server\chunks\C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\lib\storeService.js:76:5)
+        at async POST (.next\dev\server\chunks\C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\app\api\stores\route.js:74:19)
+      74 |     });
+      75 |
+    > 76 |     await store.validate();
+         |     ^
+      77 |     await store.save();
+      78 |
+      79 |     // Log transaction {
+      properties: [Object],
+      kind: 'maxlength',
+      path: 'store_code',
+      value: 'SC-F21B6E-1780461252745',
+      reason: undefined,
+      formatMessage: [Function: formatMessage]
+    }
+  },
+  _message: 'Store validation failed'
+}
+ POST /api/stores 500 in 534ms (next.js: 15ms, proxy.ts: 14ms, application-code: 505ms)
+Error creating store: ValidationError: Store validation failed: store_code: Store code cannot exceed 20 characters
+    at model.validate (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\mongoose\lib\document.js:2864:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async StoreService.createStore (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.next\dev\server\chunks\[root-of-the-server]__0v9nlz9._.js:910:9)
+    at async POST (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.next\dev\server\chunks\[root-of-the-server]__0v9nlz9._.js:1335:23)
+    at async AppRouteRouteModule.do (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:40115)
+    at async AppRouteRouteModule.handle (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:47321)
+    at async responseGenerator (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.next\dev\server\chunks\[root-of-the-server]__03cegsv._.js:16466:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:227216)
+    at async handleResponse (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.next\dev\server\chunks\[root-of-the-server]__03cegsv._.js:16529:32)
+    at async Module.handler (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\.next\dev\server\chunks\[root-of-the-server]__03cegsv._.js:16583:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:1454:9)
+    at async DevServer.renderPageComponent (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:1506:24)
+    at async DevServer.renderToResponseImpl (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:1556:32)
+    at async DevServer.pipeImpl (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:1043:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\base-server.js:934:17)
+    at async C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\dev\next-dev-server.js:394:20
+    at async Span.traceAsyncFn (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\dev\next-dev-server.js:390:24)
+    at async invokeRender (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\lib\router-server.js:266:21)
+    at async handleRequest (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\lib\router-server.js:465:24)
+    at async requestHandlerImpl (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\lib\router-server.js:514:13)
+    at async Server.requestListener (C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\node_modules\next\dist\server\lib\start-server.js:225:13) {
+  errors: {
+    store_code: ValidatorError: Store code cannot exceed 20 characters
+        at async StoreService.createStore (.next\dev\server\chunks\C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\lib\storeService.js:76:5)
+        at async POST (.next\dev\server\chunks\C:\Users\abhishek.pratap\OneDrive - WORLD FASHION EXCHANGE INDIA P LIMITED\Desktop\qrProject\coupon_campaigns\app\api\stores\route.js:74:19)
+      74 |     });
+      75 |
+    > 76 |     await store.validate();
+         |     ^
+      77 |     await store.save();
+      78 |
+      79 |     // Log transaction {
+      properties: [Object],
+      kind: 'maxlength',
+      path: 'store_code',
+      value: 'SC-F21B6E-1780461316404',
+      reason: undefined,
+      formatMessage: [Function: formatMessage]
+    }
+  },
+  _message: 'Store validation failed'
+}
+ POST /api/stores 500 in 178ms (next.js: 10ms, proxy.ts: 10ms, application-code: 158ms)

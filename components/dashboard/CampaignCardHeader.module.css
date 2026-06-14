@@ -1,0 +1,41 @@
+/* components/dashboard/CampaignCardHeader.module.css */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.titleSection {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0 0 6px 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #010f44;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+
+.dates {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+
+.date {
+  font-weight: 500;
+}
+
+.separator {
+  color: #ccc;
+}
+

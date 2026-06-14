@@ -1,0 +1,158 @@
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 12px;
+}
+
+.dangerIcon {
+  color: #dc2626;
+}
+
+
+.campaignName {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #010f44;
+  text-align: center;
+  word-break: break-word;
+}
+
+
+.message {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.5;
+}
+
+
+/* Warning Box */
+.warningBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+
+.warningBox svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: inherit;
+}
+
+/* Error Box */
+.errorBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+
+.errorBox svg {
+  flex-shrink: 0;
+}
+
+/* Footer with buttons */
+.footer {
+  display: flex;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+
+.cancelBtn,
+.confirmBtn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cancelBtn {
+  background: #f3f4f6;
+  color: #010f44;
+  border: 1px solid #d1d5db;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #010f44;
+}
+
+.cancelBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+.confirmBtn {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.confirmBtn:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.confirmBtn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.confirmBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dangerBtn {
+  background: #dc2626;
+}
+
+.dangerBtn:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+
+/* Responsive */
+@media (max-width: 480px) {
+  .footer {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .cancelBtn,
+  .confirmBtn {
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+}

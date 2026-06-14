@@ -1,0 +1,531 @@
+/* ============================================
+   PROFESSIONAL CAMPAIGN FORM STYLES
+   MULTI-STEP FORM WITH STEP INDICATOR
+   ============================================ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  animation: formSlideIn 0.5s ease;
+}
+
+@keyframes formSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   STEP INDICATOR
+   ============================================ */
+
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.stepCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: #6b7280;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.stepCircle.active {
+  border-color: #3b82f6;
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.stepCircle.completed {
+  border-color: #10b981;
+  background: #10b981;
+  color: white;
+}
+
+.stepLabel {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.stepLabel.active {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.stepLabel.completed {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.stepConnector {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #e5e7eb;
+  z-index: 0;
+}
+
+.stepConnector.active {
+  background: linear-gradient(90deg, #3b82f6 0%, #3b82f6 100%);
+}
+
+.stepConnector.completed {
+  background: #10b981;
+}
+
+/* ============================================
+   STEP CONTENT
+   ============================================ */
+
+.stepContent {
+  display: none;
+  padding: 24px 0;
+  animation: fadeIn 0.3s ease;
+}
+
+.stepContent.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   FORM INPUTS
+   ============================================ */
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.inputField {
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: #1f2937;
+  box-sizing: border-box;
+}
+
+.inputField::placeholder {
+  color: #9ca3af;
+}
+
+.inputField:hover {
+  border-color: #d1d5db;
+  background: #ffffff;
+}
+
+.inputField:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.inputField.error {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.inputField.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* ============================================
+   SELECT / DROPDOWN
+   ============================================ */
+
+.select {
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: #1f2937;
+  box-sizing: border-box;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.select:hover {
+  border-color: #d1d5db;
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%233b82f6' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+/* ============================================
+   TEXTAREA
+   ============================================ */
+
+.textarea {
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: #1f2937;
+  box-sizing: border-box;
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.textarea::placeholder {
+  color: #9ca3af;
+}
+
+.textarea:hover {
+  border-color: #d1d5db;
+  background: #ffffff;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.textarea.error {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.textarea.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* ============================================
+   ERROR MESSAGE
+   ============================================ */
+
+.errorMessage {
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: -4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: errorShake 0.3s ease;
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+/* ============================================
+   SUCCESS MESSAGE
+   ============================================ */
+
+.successMessage {
+  font-size: 12px;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   ERROR BANNER
+   ============================================ */
+
+.errorBanner {
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideDown 0.3s ease;
+  margin-bottom: 8px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.errorIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   BUTTON GROUP
+   ============================================ */
+
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 32px;
+}
+
+/* ============================================
+   NAVIGATION BUTTONS
+   ============================================ */
+
+.prevButton,
+.nextButton {
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.prevButton {
+  border: 2px solid #e5e7eb;
+  background: #f9fafb;
+  color: #1f2937;
+}
+
+.prevButton:hover:not(:disabled) {
+  border-color: #d1d5db;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.prevButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.prevButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.prevButton:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.nextButton {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+.nextButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+.nextButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.nextButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.nextButton:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 0 5px rgba(59, 130, 246, 0.2);
+}
+
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
+
+.loadingSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 480px) {
+  .form {
+    gap: 20px;
+    max-width: 100%;
+    padding: 0 16px;
+  }
+
+  .stepIndicator {
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .stepCircle {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+  }
+
+  .stepLabel {
+    font-size: 11px;
+  }
+
+  .stepConnector {
+    top: 18px;
+  }
+
+  .label {
+    font-size: 12px;
+  }
+
+  .inputField,
+  .select,
+  .textarea {
+    padding: 11px 14px;
+    font-size: 14px;
+  }
+
+  .textarea {
+    min-height: 80px;
+  }
+
+  .stepContent {
+    padding: 16px 0;
+  }
+
+  .buttonGroup {
+    flex-direction: column-reverse;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .prevButton,
+  .nextButton {
+    width: 100%;
+    padding: 11px 18px;
+    font-size: 14px;
+    min-width: auto;
+  }
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+

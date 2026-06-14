@@ -1,0 +1,47 @@
+.filterContainer {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 0 8px 0;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+
+.filterTab {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  color: #637080;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filterTab:hover {
+  color: #010f44;
+  border-bottom-color: #d0d0d0;
+}
+
+.filterTab.active {
+  color: #010f44;
+  border-bottom-color: #4a90e2;
+}
+
+
+@media (max-width: 768px) {
+  .filterContainer {
+    gap: 4px;
+  }
+
+  .filterTab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}

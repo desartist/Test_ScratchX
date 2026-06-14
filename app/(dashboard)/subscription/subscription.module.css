@@ -1,0 +1,644 @@
+/* ── SUBSCRIPTION PAGE ─────────────────────────────────────────── */
+
+.page {
+  width: 100%;
+  min-height: 100vh;
+  background: #fcfdff;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+
+/* ── HEADER ────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #637080;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+  font-family: inherit;
+  flex-shrink: 0;
+  width: fit-content;
+}
+
+.backButton:hover {
+  border-color: #ef9e1b;
+  color: #010f44;
+  background: #fffbf2;
+}
+
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0;
+  line-height: 1.2;
+}
+
+
+/* ── CURRENT PLAN CARD ─────────────────────────────────────────── */
+
+.currentSubscriptionCard {
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-left: 4px solid #ef9e1b;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
+.subscriptionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lifetimeAccessBadge {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.planNameDisplay {
+  font-size: 22px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0;
+}
+
+
+.platformAccessSection {
+  background: #f7f9ff;
+  border: 1px solid #e0e4ff;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+
+.platformAccessItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.platformAccessLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #637080;
+}
+
+.platformAccessValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+.checkIcon {
+  display: flex;
+  align-items: center;
+  color: #0a8905;
+  margin-left: auto;
+}
+
+.entitlementStatusSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.entitlementTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #637080;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 0;
+}
+
+.entitlementItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f7f9f7;
+  border-radius: 8px;
+}
+
+
+.activeBadge {
+  display: inline-block;
+  background: #0a8905;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.expiredBadge {
+  display: inline-block;
+  background: #ff6b6b;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.entitlementDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.entitlementText {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #010f44;
+  margin: 0;
+}
+
+
+.daysRemaining {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  background: #e8f5e9;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.expiryDate {
+  font-size: 0.75rem;
+  color: #637080;
+  margin: 0;
+}
+
+.purchasedCount {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  background: #fff3e0;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  color: #e65100;
+  font-weight: 600;
+}
+
+/* ── PLANS SECTION ─────────────────────────────────────────────── */
+
+.availablePlansSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sectionTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0;
+}
+
+.sectionSubtitle {
+  font-size: 0.875rem;
+  color: #637080;
+  margin: 0;
+}
+
+
+.plansGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* ── PLAN CARD ─────────────────────────────────────────────────── */
+
+.planCard {
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+  padding: 24px;
+  position: relative;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.planCard:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: #ef9e1b;
+  transform: translateY(-3px);
+}
+
+
+.planCardPopular {
+  border-color: #ef9e1b;
+  border-width: 2px;
+}
+
+.currentPlanCard {
+  border-color: #010f44;
+  border-width: 2px;
+}
+
+
+/* Badge row */
+.cardBadgeRow {
+  display: flex;
+  gap: 8px;
+  min-height: 20px;
+}
+
+.popularBadge {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.currentPlanBadge {
+  display: inline-flex;
+  align-items: center;
+  background: #010f44;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+
+/* Plan header */
+.planHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.planName {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #010f44;
+  margin: 0;
+}
+
+.planDesc {
+  font-size: 0.8rem;
+  color: #637080;
+  margin: 0;
+}
+
+
+/* Pricing block */
+.pricing {
+  background: #f7f8fc;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+
+.priceBlock {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.priceAmount {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #010f44;
+  line-height: 1;
+}
+
+.pricePeriod {
+  font-size: 0.78rem;
+  color: #637080;
+}
+
+
+.gstCalculation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #e8e8e8;
+  font-size: 0.78rem;
+  color: #637080;
+}
+
+
+.gstAmount {
+  color: #010f44;
+  font-weight: 600;
+}
+
+
+.totalPrice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.totalLabel { color: #637080; }
+
+.totalAmount {
+  font-size: 1.1rem;
+  color: #ef9e1b;
+  font-weight: 800;
+}
+
+/* Store limit pill */
+.limitsCard {
+  background: #f0f8ff;
+  border: 1px solid #c5e3ff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+
+.limitsLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #010f44;
+}
+
+.extraStoreInfo {
+  font-size: 0.75rem;
+  color: #4a90e2;
+  font-weight: 500;
+}
+
+
+/* Features list */
+.features {
+  flex: 1;
+}
+
+.featuresTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #637080;
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.featuresList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #010f44;
+}
+
+.featureItem svg {
+  color: #0a8905;
+  flex-shrink: 0;
+}
+
+
+/* CTA button */
+.ctaButton {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  letter-spacing: 0.3px;
+  margin-top: auto;
+}
+
+.ctaButtonPrimary {
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+}
+
+.ctaButtonPrimary:hover {
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.35);
+  transform: translateY(-1px);
+}
+
+.ctaButtonSecondary {
+  background: white;
+  color: #010f44;
+  border: 1.5px solid #010f44;
+}
+
+.ctaButtonSecondary:hover {
+  background: #010f44;
+  color: white;
+}
+
+.ctaButtonDisabled {
+  background: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
+  border: 1.5px solid #e8e8e8;
+}
+
+.ctaButtonDisabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+
+/* ── SCRATCHES ALERT ───────────────────────────────────────────── */
+
+.scratchesSection {
+  background: white;
+  border: 1px solid #ffe0b2;
+  border-left: 4px solid #ff9800;
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+
+.scratchesAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.scratchesAlert svg { color: #ff9800; flex-shrink: 0; margin-top: 2px; }
+
+.alertContent { display: flex; flex-direction: column; gap: 4px; }
+
+.alertTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #010f44;
+  margin: 0;
+}
+
+.alertMessage {
+  font-size: 0.82rem;
+  color: #637080;
+  margin: 0;
+}
+
+
+.purchaseScratchButton {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  border: none;
+  padding: 11px 24px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.purchaseScratchButton:hover {
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ── LOADING & ERROR ───────────────────────────────────────────── */
+
+.loadingState {
+  text-align: center;
+  padding: 80px 20px;
+  font-size: 1rem;
+  color: #637080;
+}
+
+.errorAlert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff5f5;
+  border: 1px solid #ffcdd2;
+  border-left: 4px solid #ff6b6b;
+  padding: 16px 20px;
+  border-radius: 10px;
+  color: #c62828;
+}
+
+.errorAlert svg { flex-shrink: 0; }
+
+
+/* ── RESPONSIVE ────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .title { font-size: 22px; }
+
+  .plansGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .scratchesSection {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .purchaseScratchButton { width: 100%; }
+
+  .currentSubscriptionCard { padding: 16px 18px; }
+  .sectionTitle { font-size: 20px; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 12px; gap: 12px; }
+  .title { font-size: 22px; }
+  .planCard { padding: 16px; gap: 12px; }
+  .priceAmount { font-size: 1.6rem; }
+  .pricing { padding: 12px; }
+}

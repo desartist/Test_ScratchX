@@ -1,0 +1,416 @@
+/* Main Container */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1400px;
+  padding: 24px;
+  margin: 0 auto;
+  background-color: #fcfdff;
+  min-height: 100vh;
+}
+
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #010f44;
+  line-height: 1.3;
+}
+
+
+.subtitle {
+  margin: 6px 0 0 0;
+  font-size: 14px;
+  color: #637080;
+  font-weight: 400;
+}
+
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 1200px) {
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+}
+
+/* Filters Section */
+.filtersSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+}
+
+
+/* Search Bar */
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+}
+
+
+.searchBar svg {
+  color: #637080;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #010f44;
+  outline: none;
+}
+
+
+.searchInput::placeholder {
+  color: #637080;
+}
+
+
+/* Filter Controls */
+.filterControls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .filterControls {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .filterControls {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.select {
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  color: #010f44;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+
+.select:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+/* Error Banner */
+.errorBanner {
+  padding: 12px 16px;
+  background: rgba(198, 40, 40, 0.1);
+  border: 1px solid rgba(198, 40, 40, 0.3);
+  border-radius: 8px;
+  color: #c62828;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #637080;
+  font-size: 16px;
+}
+
+
+/* Empty State */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #637080;
+  font-size: 16px;
+}
+
+
+/* Customers List */
+.customersList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Customer Card */
+.customerCard {
+  display: grid;
+  grid-template-columns: 250px 300px 250px 150px;
+  gap: 20px;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+
+.customerCard:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-color: #ef9e1b;
+  transform: translateY(-2px);
+}
+
+
+/* Customer Info */
+.customerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.customerName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+.customerMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+
+.mobile,
+.email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Campaign & Store */
+.campaignStore {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.campaign,
+.store {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+
+.value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #010f44;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.city {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+
+/* Reward & Status */
+.rewardStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.reward {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 2px solid;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #010f44;
+  white-space: nowrap;
+}
+
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Date */
+.date {
+  font-size: 0.85rem;
+  color: #6c757d;
+  text-align: right;
+  white-space: nowrap;
+}
+
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .customerCard {
+    grid-template-columns: 200px 250px 180px 120px;
+    gap: 16px;
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .customerCard {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .rewardStatus {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .date {
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .filtersSection {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .customersList {
+    gap: 8px;
+  }
+
+  .customerCard {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+
+  /* Compact header: name left, status badge right */
+  .customerInfo {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .customerName {
+    font-size: 0.9rem;
+  }
+
+  .customerMeta {
+    font-size: 0.78rem;
+    gap: 2px;
+  }
+
+  /* Campaign + Store side-by-side */
+  .campaignStore {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .label {
+    font-size: 0.68rem;
+  }
+
+  .value {
+    font-size: 0.82rem;
+  }
+
+  .city {
+    font-size: 0.72rem;
+  }
+
+  /* Reward + status in one row */
+  .rewardStatus {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .reward .value {
+    font-size: 0.88rem;
+  }
+
+  .statusBadge {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+
+  .date {
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+}

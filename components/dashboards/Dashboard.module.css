@@ -1,0 +1,404 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background: #fcfdff;
+  min-height: 100vh;
+}
+
+.dashboardHeader {
+  background: #ffffff;
+  padding: 24px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.dashboardTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0 0 8px 0;
+  font-family: var(--font-afacad);
+  letter-spacing: -0.5px;
+}
+
+.dashboardSubtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: #637080;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: 0.5px;
+  font-family: var(--font-afacad);
+}
+
+
+.dashboardContent {
+  padding: 0 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.analyticsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.chartItem {
+  flex: 1;
+  min-width: 300px;
+}
+
+.consumptionContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboardContent {
+    padding: 0 16px 16px 16px;
+    gap: 20px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .chartsGrid {
+    gap: 16px;
+  }
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+.statsGridTwo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.statsGridSix {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.infoBanner {
+  background: #ffffff;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+  border-radius: var(--card-radius, 10px);
+  padding: 20px 24px;
+  box-shadow: var(--card-shadow, 0 6px 10px 3px rgba(0, 0, 0, 0.06));
+}
+
+
+.infoBanner h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+
+.infoBanner p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--color-muted-2, #595858);
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+
+.infoBanner p strong {
+  color: var(--color-navy, #010f44);
+  font-weight: 600;
+}
+
+
+.loading,
+.error,
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 32px 24px;
+  text-align: center;
+  border-radius: var(--card-radius, 10px);
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+.loading {
+  color: var(--color-muted, #637080);
+  background: #ffffff;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+}
+
+
+.error {
+  color: #c62828;
+  background: rgba(198, 40, 40, 0.06);
+  border: 1px solid rgba(198, 40, 40, 0.2);
+  font-size: 15px;
+}
+
+
+.empty {
+  color: var(--color-muted, #637080);
+  background: #ffffff;
+  border: 1px dashed var(--color-border, rgba(0, 0, 0, 0.12));
+}
+
+
+/* Scratch Inventory Section */
+.scratchInventorySection {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  border-radius: 10px;
+  padding: 28px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  min-height: 180px;
+}
+
+
+.inventoryLeft {
+  flex: 0 0 auto;
+  padding-right: 32px;
+}
+
+.inventoryTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  font-family: var(--font-afacad);
+  color: white;
+}
+
+.inventoryNumber {
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  line-height: 1;
+  font-family: var(--font-afacad);
+  color: white;
+}
+
+.inventoryLabel {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.95;
+  font-family: var(--font-afacad-flux);
+  color: white;
+}
+
+.inventoryRight {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.usedCount {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  font-family: var(--font-afacad);
+  color: white;
+}
+
+.progressBar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #FCD34D 0%, #F59E0B 100%);
+  width: 70%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.percentage {
+  font-size: 18px;
+  font-weight: 600;
+  color: #FCD34D;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-afacad);
+  letter-spacing: -0.3px;
+}
+
+/* Charts Section */
+.chartsSection {
+  background: white;
+  padding: 24px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+
+/* Active Campaigns Section */
+.activeCampaignsSection {
+  width: 100%;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #010f44;
+  margin: 0 0 16px 0;
+  font-family: var(--font-afacad);
+}
+
+
+.chartPlaceholder {
+  height: 200px;
+  background: linear-gradient(90deg, #f5f5f5 0%, #f5f5f5 25%, #f0f0f0 50%, #f5f5f5 75%, #f5f5f5 100%);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 14px;
+  font-family: var(--font-afacad-flux);
+}
+
+
+/* Responsive Updates */
+@media (max-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .statsGridSix {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .scratchInventorySection {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inventoryRight {
+    width: 100%;
+    margin-top: 20px;
+    flex: 1;
+  }
+
+  .inventoryLeft {
+    padding-right: 0;
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboardContent {
+    padding: 0 20px 20px 20px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .scratchInventorySection {
+    padding: 20px;
+  }
+
+  .inventoryNumber {
+    font-size: 36px;
+  }
+
+  .chartsSection {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .statsGrid,
+  .statsGridTwo,
+  .statsGridSix {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dashboardHeader {
+    margin-bottom: 16px;
+    padding: 20px 16px;
+  }
+
+  .dashboardTitle {
+    font-size: 24px;
+  }
+
+  .dashboardContent {
+    padding: 0 16px 16px 16px;
+    gap: 20px;
+  }
+
+  .scratchInventorySection {
+    padding: 20px 16px;
+    min-height: auto;
+    flex-direction: column;
+  }
+
+  .inventoryNumber {
+    font-size: 32px;
+  }
+
+  .inventoryRight {
+    margin-top: 16px;
+    width: 100%;
+  }
+
+  .inventoryLeft {
+    padding-right: 0;
+  }
+
+  .chartPlaceholder {
+    height: 150px;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .chartsSection {
+    padding: 16px;
+  }
+}

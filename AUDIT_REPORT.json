@@ -1,0 +1,288 @@
+{
+  "accountModel": {
+    "exists": true,
+    "filePath": "models/accountModel.js",
+    "currentFields": {
+      "mainStoreId": {
+        "type": "ObjectId ref Store",
+        "default": null,
+        "sparse": true,
+        "indexed": true,
+        "status": "EXISTS - Primary store reference"
+      },
+      "activePlan": {
+        "type": "String enum [CORE, SMART, null]",
+        "default": null,
+        "status": "EXISTS - Current active plan"
+      },
+      "subscriptionId": {
+        "type": "ObjectId ref Subscription",
+        "default": null,
+        "status": "EXISTS - Links to Subscription document"
+      },
+      "planPurchaseDate": {
+        "type": "Date",
+        "default": null,
+        "status": "EXISTS - Records when plan was purchased (one-time lifetime)"
+      },
+      "subscription": {
+        "type": "nested object (LEGACY)",
+        "status": "DEPRECATED - Not used in new system",
+        "fields": {
+          "planId": "ObjectId ref SubscriptionPlan",
+          "planName": "String",
+          "maxStores": "Number",
+          "maxCampaigns": "Number",
+          "maxScratchCards": "Number",
+          "updatedAt": "Date"
+        }
+      }
+    },
+    "missing": [],
+    "recommendation": "Account model is well-structured. All critical subscription fields exist and are correctly implemented. mainStoreId, activePlan (CORE/SMART), subscriptionId, and planPurchaseDate support the one-time lifetime purchase model. Legacy subscription object should be marked as deprecated in documentation."
+  },
+  "storeModel": {
+    "exists": true,
+    "filePath": "models/storeModel.js",
+    "currentFields": {
+      "is_main_store": {
+        "type": "Boolean",
+        "default": false,
+        "status": "EXISTS"
+      },
+      "isExtraStore": {
+        "type": "Boolean",
+        "default": false,
+        "indexed": true,
+        "status": "EXISTS - Tracks if store is extra (SMART plan)"
+      },
+      "extraStoreFee": {
+        "type": "Number default 0",
+        "min": 0,
+        "description": "₹199 for SMART plan extra stores",
+        "status": "EXISTS"
+      },
+      "storeType": {
+        "type": "String enum [MAIN, BRANCH]",
+        "default": "BRANCH",
+        "indexed": true,
+        "status": "EXISTS - Store classification"
+      },
+      "isDefaultStore": {
+        "type": "Boolean",
+        "default": false,
+        "indexed": true,
+        "status": "EXISTS"
+      }
+    },
+    "missing": [],
+    "recommendation": "Store model is comprehensive. All fields for tracking main/extra stores exist. Note: Both is_main_store and storeType exist - consider consolidating for clarity. isExtraStore and extraStoreFee correctly support SMART plan's 4 extra stores feature @ ₹199 each. No expiry date needed (plan lifetime, not store-specific)."
+  },
+  "subscriptionModel": {
+    "exists": true,
+    "filePath": "models/subscriptionModel.js",
+    "currentFields": {
+      "ownerId": "ObjectId - Generic owner reference",
+      "ownerType": "String enum [merchant, distributor] - Supports multi-owner types",
+      "merchantId": "ObjectId ref Account (LEGACY) - For backward compatibility",
+      "planId": "ObjectId ref SubscriptionPlan (required)",
+      "planType": "String enum [CORE, SMART] - Quick plan reference",
+      "distributorId": "ObjectId ref Account - Which distributor sold this",
+      "status": "String enum [trial, active, past_due, cancelled, expired]",
+      "billingCycle": "String enum [one-time] - Matches lifetime purchase model",
+      "purchaseDate": "Date - When plan was purchased (ONE-TIME LIFETIME)",
+      "cancelledAt": "Date - For cancellation tracking",
+      "unlimitedScratches": {
+        "type": "nested object",
+        "description": "Quarterly (90-day) unlimited scratch allowance",
+        "fields": {
+          "isActive": "Boolean",
+          "grantedAt": "Date - When scratches were granted",
+          "validUntil": "Date - 90 days from grant (EXPIRY TRACKING FOR SCRATCHES)",
+          "scratchValidityType": "String enum [quarterly]",
+          "daysRemaining": "Number - Calculated field",
+          "lastWarningAt": "Date - Prevent warning spam"
+        }
+      },
+      "scratchPacks": {
+        "type": "Array - For post-unlimited purchases",
+        "fields": {
+          "packId": "ObjectId ref ScratchPack",
+          "quantity": "Number - 1000, 5000, 10000, 50000",
+          "purchasedAt": "Date",
+          "consumed": "Number",
+          "remaining": "Number",
+          "orderId": "ObjectId ref ScratchPackOrder"
+        }
+      }
+    },
+    "missing": [],
+    "recommendation": "EXCELLENT DESIGN. Subscription model correctly implements ONE-TIME LIFETIME plan purchases (no expiryDate needed at subscription level). unlimitedScratches.validUntil correctly tracks 90-day quarterly entitlement. scratchPacks array handles post-unlimited purchases. Generic ownerType/ownerId supports both merchant and distributor ownership. Pre-save hook maintains backward compatibility."
+  },
+  "subscriptionPlanModel": {
+    "exists": true,
+    "filePath": "models/subscriptionPlanModel.js",
+    "currentPlans": [
+      "Trial (tier 0)",
+      "Starter (tier 1)",
+      "Growth (tier 2)",
+      "Professional (tier 3)",
+      "Enterprise (tier 4)",
+      "Core (tier 1) - NEW",
+      "Smart (tier 2) - NEW"
+    ],
+    "currentFields": {
+      "name": "String enum - All plan types",
+      "displayName": "String",
+      "tier": "Number with tierMap",
+      "limits": {
+        "type": "nested object",
+        "includes": "maxStores, maxCampaigns, maxScratchCardsPerMonth, maxMonthlyScans, maxManagersPerAccount, maxRangesPerCampaign, maxQRBatches, etc."
+      },
+      "features": {
+        "type": "nested object with 25+ Boolean flags",
+        "includes": "canCreateCampaign, canAddStore, canViewAnalytics, canUseAPI, canUseSMSIntegration, canAccessPrioritySupport, canUseMultiStore, etc."
+      },
+      "price": {
+        "type": "nested object",
+        "fields": "monthly, annual, currency",
+        "note": "NOT USED for one-time CORE/SMART purchases"
+      }
+    },
+    "missing": [],
+    "recommendation": "SubscriptionPlan model is comprehensive with all necessary feature gating and quota definitions. Consider adding: lifetimePrice field, quarterlyUnlimitedScratchDays (=90), and extraStorePrice for clarity. Model supports both recurring and one-time plans well."
+  },
+  "apiActivate": {
+    "exists": true,
+    "filePath": "app/api/subscription/activate/route.js",
+    "currentImplementation": {
+      "endpoint": "POST /api/subscription/activate",
+      "authentication": "Required (requireAuth)",
+      "purpose": "Activate ONE-TIME LIFETIME plan",
+      "requestBody": {
+        "planId": "ObjectId (required)",
+        "planName": "String (required)",
+        "planType": "String CORE|SMART (required)"
+      },
+      "workflow": [
+        "1. Cancel existing subscriptions for merchant",
+        "2. Create new Subscription with status=active, billingCycle=one-time",
+        "3. Activate 90-day unlimited scratches via scratchEntitlementService",
+        "4. Update Account with activePlan, subscriptionId, planPurchaseDate",
+        "5. Send plan purchase notification (non-blocking)"
+      ]
+    },
+    "missing": [
+      "Plan validation against SubscriptionPlan model",
+      "Payment gateway integration (Razorpay) - TODO Phase 2",
+      "Store creation validation for SMART plan",
+      "Duplicate plan purchase prevention"
+    ],
+    "recommendation": "API endpoint is functional for one-time activation. IMPROVEMENTS: (1) Validate planId exists in SubscriptionPlan model. (2) Add storeLimitValidation - prevent CORE merchants from adding >1 store, SMART from >5. (3) Log all activations for audit trail. (4) Add explicit check that merchant doesn't already have active plan. (5) Return daysRemaining in response for unlimited scratches."
+  },
+  "apiCurrent": {
+    "exists": true,
+    "filePath": "app/api/subscription/current/route.js",
+    "currentImplementation": {
+      "endpoint": "GET /api/subscription/current",
+      "authentication": "Required",
+      "purpose": "Fetch merchant's current subscription + live usage",
+      "queryLogic": [
+        "1. Resolve merchantId (inherit from parentId if Manager)",
+        "2. Find active subscription",
+        "3. Calculate live usage from Campaign and Account counts",
+        "4. Extract limits from plan"
+      ]
+    },
+    "criticalBugs": [
+      "CRITICAL: References plan.features.maxCampaigns (should be plan.limits.maxCampaigns)",
+      "CRITICAL: References non-existent plan.features.maxScansPerMonth (should be plan.limits.maxMonthlyScans)",
+      "CRITICAL: References non-existent plan.features.maxManagers (should be plan.limits.maxManagersPerAccount)",
+      "BUG: Only supports merchantId field, ignores ownerType/ownerId"
+    ],
+    "missing": [
+      "Support for generic ownerType/ownerId ownership model",
+      "Unlimited scratch entitlement details (expiry date, daysRemaining)",
+      "Real usage from SubscriptionUsage model (hardcoded now)"
+    ],
+    "recommendation": "URGENT FIXES NEEDED: (1) Fix field references - use plan.limits not plan.features. (2) Add ownerType/ownerId query support. (3) Populate SubscriptionUsage for real usage metrics. (4) Add scratch entitlement details with expiry information. (5) Calculate daysRemaining for unlimited scratches. (6) Include plan lifetime status."
+  },
+  "subscriptionAccessGuard": {
+    "exists": true,
+    "filePath": "lib/subscriptionAccessGuard.js",
+    "currentFunctions": [
+      "checkPlanAccess(owner, featureName) - Feature gating",
+      "checkQuotaLimit(owner, limitName, requestAmount) - Quota enforcement",
+      "getSubscriptionDetails(owner) - Full subscription details",
+      "generateUsageAlerts(plan, usage) - Alert generation",
+      "incrementUsageMetric(merchantId, metricPath, amount) - Usage tracking",
+      "resetMonthlyUsage(merchantId) - Monthly reset",
+      "getDistributorBalance(distributorId) - Distributor balance tracking",
+      "validateDistributorAllocation(distributorId, merchantId, quantity) - Allocation validation",
+      "checkSubscriptionAccess(ownerType, ownerId) - Generic access check"
+    ],
+    "currentCapabilities": {
+      "featureGating": "Checks plan.features[featureName] with upgradeRequired flag",
+      "quotaLimiting": "Has metricMap translating limit names to usage metrics",
+      "alertGeneration": "80% warning threshold, 95% critical threshold",
+      "genericOwnership": "Supports both merchant and distributor owners"
+    },
+    "missing": [
+      "Unlimited scratch expiry tracking - doesn't validate unlimitedScratches.validUntil",
+      "Scratch pack balance validation - doesn't check remaining in packs",
+      "Scratch entitlement as feature gate - separate from plan features",
+      "Detailed warning messages for why features are disabled"
+    ],
+    "recommendation": "Guard service has good structure with generic owner support. IMPROVEMENTS: (1) Add checkScratchEntitlement() - validate unlimited scratches haven't expired. (2) Check scratchPacks remaining balance. (3) Return detailed reason WHY feature disabled (not in plan vs quota exceeded vs scratch expired). (4) Calculate daysRemaining for unlimited scratch warnings. (5) Verify usage metric references match SubscriptionUsage model field names exactly."
+  },
+  "subscriptionUsageModel": {
+    "exists": true,
+    "filePath": "models/subscriptionUsageModel.js",
+    "currentFields": {
+      "subscriptionId": "ObjectId ref Subscription (required, indexed)",
+      "merchantId": "ObjectId ref Account (required, indexed)",
+      "billingPeriod": {
+        "startDate": "Date (required, indexed)",
+        "endDate": "Date (required)"
+      },
+      "metrics": {
+        "type": "nested object with 15+ counters",
+        "includes": "totalStoresCreated, activeCampaigns, scratchCardsGenerated, scratchCardsRedeemed, totalScans, totalParticipations, uniqueCustomers, managers, totalRewardsClaimed, apiCallsUsed, etc."
+      },
+      "quotaExceeded": "Boolean flags for each limit type",
+      "alerts": "Array of alert objects",
+      "isActive": "Boolean (true for current period)",
+      "resetAt": "Date (tracking reset time)"
+    },
+    "methods": {
+      "getCurrentUsage": "Static method for fetching current usage",
+      "incrementMetric": "Instance method for metric updates",
+      "checkQuotaExceeded": "Instance method for quota validation"
+    },
+    "recommendation": "Model is comprehensive. Ensure: (1) incrementMetric is called on every subscription action (campaign creation, store addition, scratch allocation). (2) Monthly reset job properly sets resetAt timestamp. (3) Alerts array is maintained in real-time. (4) quotaExceeded flags trigger user notifications when thresholds exceeded."
+  },
+  "planPricingImplementation": {
+    "exists": false,
+    "currentLocation": "app/api/subscription/plans/route.js - HARDCODED",
+    "corePlan": {
+      "name": "ScratchX Core",
+      "basePrice": 2099,
+      "priceWithGST": 2477,
+      "duration": "90 days (ONE-TIME LIFETIME)",
+      "maxStores": 1,
+      "features": "Unlimited campaigns, unlimited scratches, 3 team members, basic analytics"
+    },
+    "smartPlan": {
+      "name": "ScratchX Smart",
+      "basePrice": 2999,
+      "priceWithGST": 3539,
+      "duration": "90 days (ONE-TIME LIFETIME)",
+      "maxStores": "5 (1 main + 4 extra)",
+      "extraStorePrice": 199,
+      "extraStoreWithGST": 235,
+      "features": "Everything in Core + multi-store, smart segmentation, WhatsApp integration, fraud protection"
+    },
+    "recommendation": "Plans are currently HARDCODED in route.js. This is acceptable for MVP but should migrate to database once payment integration is complete. Future consideration: Create ScratchPackModel for post-unlimited purchases (1000, 5000, 10000, 50000 scratches)."
+  },
+  "summary": "AUDIT COMPLETE - All core models and APIs exist for one-time lifetime subscription system.\n\nSTRENGTHS:\n✓ One-time lifetime design correctly implemented (no expiry date at subscription level)\n✓ Unlimited scratches with 90-day quarterly validity tracking (unlimitedScratches.validUntil)\n✓ Generic owner support (merchant/distributor) via ownerType/ownerId\n✓ Comprehensive feature gating (25+ flags) and quota enforcement\n✓ Detailed usage metric tracking with monthly reset capability\n✓ Store management fields support CORE (1 store) and SMART (5 stores) plans\n✓ All models have proper indexing, validation, and timestamps\n\nCRITICAL BUGS TO FIX:\n✗ apiCurrent/route.js uses wrong field references (features vs limits)\n✗ apiCurrent/route.js missing ownerType/ownerId query support\n✗ subscriptionAccessGuard missing unlimited scratch expiry validation\n✗ subscriptionAccessGuard missing scratch pack balance validation\n\nTO IMPLEMENT FOR FINAL PHASE:\n✗ Payment gateway integration (Razorpay for plan purchase)\n✗ Store quota enforcement (prevent >1 for CORE, >5 for SMART)\n✗ Unlimited scratch expiry notifications (30/7 days before expiry)\n✗ Scratch pack purchase API endpoints\n✗ Monthly usage reset scheduled job\n✗ Comprehensive audit logging\n\nCONCLUSION: Database schema is production-ready. All critical fields present. APIs need debugging before go-live."
+}

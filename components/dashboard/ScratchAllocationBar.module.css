@@ -1,0 +1,171 @@
+/* Container */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.containerCompact {
+  gap: 6px;
+}
+
+/* Label Section */
+.label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #010f44;
+  letter-spacing: 0.5px;
+}
+
+
+/* Bar Container */
+.barWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bar {
+  width: 100%;
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Orange gradient matching design inspiration */
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: 8px;
+  transition: width 0.4s ease;
+  position: relative;
+}
+
+.progress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%);
+  border-radius: 8px;
+}
+
+.progressWarning {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.progressWarning::after {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+}
+
+/* Stats Row */
+.statsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.statLabel {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+
+.statValue {
+  font-size: 13px;
+  font-weight: 700;
+  color: #010f44;
+  margin: 0;
+}
+
+
+.remaining {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+
+/* Compact variant */
+.containerCompact .bar {
+  height: 8px;
+}
+
+.containerCompact .statLabel,
+.containerCompact .statValue {
+  font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .label {
+    font-size: 12px;
+  }
+
+  .bar {
+    height: 11px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    gap: 8px;
+  }
+
+  .label {
+    font-size: 11px;
+  }
+
+  .barWrapper {
+    gap: 6px;
+  }
+
+  .bar {
+    height: 10px;
+  }
+
+  .statsRow {
+    gap: 12px;
+  }
+
+  .statLabel,
+  .statValue {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    gap: 6px;
+  }
+
+  .label {
+    font-size: 10px;
+  }
+
+  .bar {
+    height: 8px;
+  }
+
+  .statsRow {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .statLabel,
+  .statValue {
+    font-size: 11px;
+  }
+}

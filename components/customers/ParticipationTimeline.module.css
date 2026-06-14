@@ -1,0 +1,75 @@
+.timeline {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+
+.title {
+  margin: 0 0 20px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+}
+
+.stepIcon {
+  font-size: 24px;
+  min-width: 32px;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.stepLabel {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #010f44;
+}
+
+
+.step.pending .stepLabel {
+  color: #999;
+}
+
+
+.stepTime {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 4px;
+}
+
+
+.step.pending .stepTime {
+  color: #ccc;
+}
+
+.connector {
+  position: absolute;
+  left: 15px;
+  top: 40px;
+  width: 2px;
+  height: 24px;
+  background: #e8e8e8;
+}
+
+.step.completed .connector {
+  background: #10b981;
+}

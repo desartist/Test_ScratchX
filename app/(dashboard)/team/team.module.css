@@ -1,0 +1,437 @@
+/* ────────────────────────────────────────────────────────────────
+  TEAM ACCESS PAGE - Modern Design
+  Team member management with subscription plan limits
+──────────────────────────────────────────────────────────────── */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* ────────────────────────────────────────────────────────────────
+  PAGE HEADER
+──────────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  gap: 24px;
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.pageTitle {
+  font-size: 32px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0 0 8px 0;
+  font-family: var(--font-afacad);
+}
+
+.pageSubtitle {
+  font-size: 16px;
+  color: #637080;
+  margin: 0;
+  font-weight: 500;
+}
+
+
+.headerActions {
+  display: flex;
+  gap: 12px;
+}
+
+.inviteButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-afacad);
+}
+
+.inviteButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.3);
+}
+
+.inviteButton:active {
+  transform: translateY(0);
+}
+
+/* ────────────────────────────────────────────────────────────────
+  STATS CARDS
+──────────────────────────────────────────────────────────────── */
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.statCard {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e8e8e8;
+  text-align: center;
+}
+
+
+.statValue {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ef9e1b;
+  margin-bottom: 4px;
+  font-family: var(--font-afacad);
+}
+
+.statLabel {
+  font-size: 13px;
+  color: #637080;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+
+/* ────────────────────────────────────────────────────────────────
+  TEAM MEMBERS TABLE
+──────────────────────────────────────────────────────────────── */
+
+.tableSection {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+  overflow: hidden;
+}
+
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1.2fr 1fr 0.8fr;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #e8e8e8;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #637080;
+}
+
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1.2fr 1fr 0.8fr;
+  gap: 16px;
+  padding: 16px 20px;
+  align-items: center;
+  border-bottom: 1px solid #e8e8e8;
+  transition: all 0.2s ease;
+}
+
+
+.tableRow:hover {
+  background: #f9f9f9;
+}
+
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.memberInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.memberAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.memberDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.memberName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #010f44;
+}
+
+
+.memberEmail {
+  font-size: 12px;
+  color: #637080;
+}
+
+
+.roleCell {
+  font-size: 14px;
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #eef2ff;
+  color: #4f46e5;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+
+.statusCell {
+  font-size: 14px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.statusBadge.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.statusBadge.inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.statusBadge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+
+.lastLoginCell {
+  font-size: 12px;
+  color: #637080;
+}
+
+
+.actionsCell {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.actionButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+  background: white;
+  color: #637080;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.actionButton:hover {
+  background: #f9f9f9;
+  border-color: #ef9e1b;
+  color: #ef9e1b;
+}
+
+
+/* ────────────────────────────────────────────────────────────────
+  EMPTY STATE
+──────────────────────────────────────────────────────────────── */
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.emptyStateIcon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.emptyStateTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0 0 8px 0;
+  font-family: var(--font-afacad);
+}
+
+.emptyStateDescription {
+  font-size: 14px;
+  color: #637080;
+  margin: 0 0 24px 0;
+}
+
+
+.emptyStateButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-afacad);
+}
+
+.emptyStateButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.3);
+}
+
+/* ────────────────────────────────────────────────────────────────
+  LOADING STATE
+──────────────────────────────────────────────────────────────── */
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e8e8e8;
+  border-top-color: #ef9e1b;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────
+  RESPONSIVE
+──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  }
+
+  .tableHeader > :nth-child(5),
+  .tableRow > :nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 16px;
+  }
+
+  .pageTitle {
+    font-size: 24px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .tableHeader > :nth-child(3),
+  .tableHeader > :nth-child(4),
+  .tableHeader > :nth-child(5),
+  .tableRow > :nth-child(3),
+  .tableRow > :nth-child(4),
+  .tableRow > :nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 16px;
+  }
+
+  .pageTitle {
+    font-size: 20px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .headerActions {
+    width: 100%;
+  }
+
+  .inviteButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .tableHeader > :not(:first-child),
+  .tableRow > :not(:first-child) {
+    display: none;
+  }
+}

@@ -1,0 +1,327 @@
+/* Root layout compatibility */
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Dashboard Shell ── */
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #fcfdff;
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ── Mobile Header ── */
+.mobileHeader {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  height: 55px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  padding: 0 16px 0 20px;
+  gap: 8px;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #010f44;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.iconBtn:hover {
+  background: #f3f4f6;
+}
+
+.createCampaignBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #ef9e1b;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  margin-left: auto;
+  margin-right: 6px;
+  white-space: nowrap;
+  transition: background 0.15s;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.createCampaignBtn:hover {
+  background: #d98e14;
+}
+
+/* ── Drawer Overlay ── */
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(2.5px);
+  z-index: 200;
+}
+
+/* ── Nav Drawer ── */
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 88%;
+  max-width: 383px;
+  height: 100vh;
+  z-index: 300;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.drawerOpen {
+  transform: translateX(0);
+  pointer-events: all;
+}
+
+.drawerInner {
+  width: 100%;
+  height: 100%;
+  background: #f2f5fe;
+  border-radius: 0 20px 20px 0;
+  box-shadow: 10px 0 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.drawerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 20px 18px;
+  flex-shrink: 0;
+}
+
+.drawerLogo {
+  font-size: 22px;
+  font-weight: 800;
+  color: #010f44;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.drawerLogoX {
+  color: #ef9e1b;
+  margin-left: 1px;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #010f44;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.closeBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* ── Profile Card ── */
+.profileCard {
+  margin: 0 16px 14px;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.profileMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 14px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e0e4ff;
+  color: #5b66d8;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.profileName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #010f44;
+  line-height: 1.2;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.profileSince {
+  font-size: 12px;
+  color: #647083;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+.planStrip {
+  background: #f5e6bb;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #010f44;
+}
+
+.planName {
+  font-size: 13px;
+  font-weight: 700;
+  flex: 1;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.upgradePill {
+  background: #ef9e1b;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  transition: background 0.15s;
+}
+
+.upgradePill:hover {
+  background: #d98e14;
+}
+
+/* ── Nav List ── */
+.navList {
+  margin: 0 16px;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 17px 20px;
+  color: #010f44;
+  font-size: 17px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s;
+  border-bottom: 1px solid #f0f0f5;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.navItem:last-child {
+  border-bottom: none;
+}
+
+.navItem:hover {
+  background: #f0f3ff;
+}
+
+.activeNavItem {
+  background: #dce2fd;
+  color: #01188e;
+  font-weight: 600;
+}
+
+.navIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+/* ── Drawer Footer ── */
+.drawerFooter {
+  padding: 20px 16px 28px;
+  text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: 16px;
+  flex-shrink: 0;
+}
+
+.drawerLogoSmall {
+  font-size: 16px;
+  font-weight: 800;
+  color: #010f44;
+  margin-bottom: 8px;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.drawerTrusted {
+  font-size: 12px;
+  font-weight: 700;
+  color: #636f80;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+.drawerStats {
+  font-size: 20px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 4px 0 8px;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.drawerCopyright {
+  font-size: 12px;
+  color: #636f80;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+/* ── Page Content ── */
+.pageContent {
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+}

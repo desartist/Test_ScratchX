@@ -1,0 +1,133 @@
+.container {
+  background: #ffffff;
+  border-radius: var(--card-radius, 10px);
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+  box-shadow: var(--card-shadow, 0 6px 10px 3px rgba(0, 0, 0, 0.06));
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+}
+
+.title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-navy, #010f44);
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted, #637080);
+  background: var(--color-lavender-bg, #e0e4ff);
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table thead {
+  background: var(--color-card-bg, #f8f8f8);
+}
+
+.table th {
+  padding: 14px 24px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted, #637080);
+  border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+.table td {
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  color: var(--color-navy, #010f44);
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+.emailCell {
+  font-weight: 500;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover td {
+  background: rgba(224, 228, 255, 0.25);
+}
+
+.badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.active {
+  background: rgba(10, 137, 5, 0.1);
+  color: var(--color-growth, #0a8905);
+}
+
+.pending {
+  background: rgba(239, 158, 27, 0.12);
+  color: var(--color-primary, #ef9e1b);
+}
+
+.suspended {
+  background: rgba(198, 40, 40, 0.1);
+  color: #c62828;
+}
+
+.deactivated,
+.inactive {
+  background: rgba(99, 112, 128, 0.12);
+  color: var(--color-muted, #637080);
+}
+
+.emptyCell {
+  padding: 0 !important;
+}
+
+.emptyState {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-navy, #010f44);
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-muted, #637080);
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
