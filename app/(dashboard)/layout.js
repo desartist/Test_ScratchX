@@ -10,7 +10,8 @@ import Store from '@/models/storeModel';
 async function getUser() {
   try {
     const cookieStore = await cookies();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/me`, {
+    const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+    const res = await fetch(`${base}/api/auth/me`, {
       headers: {
         cookie: cookieStore.toString(),
       },
