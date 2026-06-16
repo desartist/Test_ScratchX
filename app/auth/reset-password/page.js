@@ -38,8 +38,7 @@ export default function ResetPasswordPage() {
     <div className={styles.page}>
       {/* Logo */}
       <div className={styles.logoWrap}>
-        <span className={styles.logoText}>Scratch</span>
-        <span className={styles.logoX}>X</span>
+        <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.logoImg} />
       </div>
 
       <div className={styles.card}>

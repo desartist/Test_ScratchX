@@ -222,7 +222,7 @@ export default function DashboardLayout({ children, role }) {
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : ""}`}>
         <div className={styles.sidebarHeader}>
           <Link href="/dashboard" className={styles.logo}>
-            Scractch<span className={styles.logoAccent}>X</span>
+            <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.logoImg} />
           </Link>
           <button
             className={styles.mobileCloseBtn}
@@ -258,7 +258,9 @@ export default function DashboardLayout({ children, role }) {
                 {displayName || account?.email}
               </span>
               <span className={styles.sidebarProfileMember}>
-                Member since 03.09.2024
+                Member since {account?.createdAt
+                  ? new Date(account.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.')
+                  : '—'}
               </span>
             </div>
           </div>
@@ -327,7 +329,7 @@ export default function DashboardLayout({ children, role }) {
           </button>
           <div className={styles.trustedFooter}>
             <div className={styles.trustedLogo}>
-              Scractch<span className={styles.logoAccent}>X</span>
+              <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.trustedLogoImg} />
             </div>
             <div className={styles.trustedLabel}>TRUSTED BY</div>
             <div className={styles.trustedStats}>

@@ -1,192 +1,164 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import styles from "./form.module.css";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useAuthContext } from '../../../components/auth/AuthContext';
+import styles from './form.module.css';
 
-const BUSINESS_TYPES = [
-  "Grocery & Kirana Stores",
-  "Jewellery & Luxury",
-  "Electronics & Gadgets",
-  "Fashion & Apparel",
-  "Bakeries & Sweet Shops",
-  "Quick Service (QSR)",
-  "Salon & Beauty",
-  "Fitness & Gyms",
-  "Supermarkets / Hypermarkets",
-  "Pharmacy / Medical",
-  "Home & Lifestyle",
-  "Other",
-];
+function EyeIcon({ open }) {
+  return open ? (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
+}
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const { signup, error, isLoading, clearError } = useAuthContext();
   const [form, setForm] = useState({
-    yourName: "",
-    storeName: "",
-    email: "",
-    password: "",
-    businessType: "",
-    countryCode: "+91",
-    phoneNumber: "",
-    storeAddress: "",
+    yourName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    countryCode: '+91',
+    phoneNumber: '',
   });
-  const [otherBusiness, setOtherBusiness] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
 
-  const set = (field) => (e) =>
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  const set = (field) => (e) => {
+    setForm(prev => ({ ...prev, [field]: e.target.value }));
+    if (validationErrors[field]) setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    if (error) clearError();
+  };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.yourName,
-          storeName: form.storeName,
-          email: form.email,
-          password: form.password,
-          storeAddress: form.storeAddress,
-          businessType:
-            form.businessType === "Other"
-              ? otherBusiness.trim() || "Other"
-              : form.businessType,
-          countryCode: form.countryCode,
-          phoneNumber: form.phoneNumber,
-          storeLocation: form.storeAddress,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        router.push("/auth/login");
-      } else {
-        setError(data.error || "Registration failed. Please try again.");
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+  const validate = () => {
+    const errors = {};
+    if (!form.yourName.trim()) errors.yourName = 'Full name is required';
+    if (!form.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errors.email = 'Please enter a valid email address';
     }
+    if (!form.phoneNumber.trim()) errors.phoneNumber = 'Phone number is required';
+    if (!form.password) {
+      errors.password = 'Password is required';
+    } else if (form.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
+    }
+    if (!form.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (form.password !== form.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    return errors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    clearError();
+    const errors = validate();
+    setValidationErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    const parts = form.yourName.trim().split(/\s+/);
+    const firstName = parts[0];
+    const lastName = parts.slice(1).join(' ') || '';
+
+    await signup({
+      firstName,
+      lastName,
+      email: form.email.trim().toLowerCase(),
+      phone: `${form.countryCode}${form.phoneNumber.trim()}`,
+      password: form.password,
+    });
   };
 
   return (
     <div className={styles.page}>
-      {/* Logo */}
       <div className={styles.logoWrap}>
-        <span className={styles.logoText}>Scratch</span>
-        <span className={styles.logoX}>X</span>
+        <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.logoImg} />
       </div>
 
       <div className={styles.card}>
-        {/* Header */}
         <div className={styles.cardHeader}>
-          <h1 className={styles.title}>Tell us about your store</h1>
-          <p className={styles.subtitle}>
-            Set up your store to start creating campaigns.
-          </p>
+          <h1 className={styles.title}>Create your account</h1>
+          <p className={styles.subtitle}>Join ScratchX and start rewarding your customers.</p>
         </div>
 
         {error && <div className={styles.errorBanner}>{error}</div>}
 
-        <form className={styles.form} onSubmit={handleRegister}>
-          {/* Row: Name + Store Name */}
-          <div className={styles.row}>
-            <div className={styles.inputGroup}>
-              <label className={styles.label}>Your Name</label>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="Full name"
-                required
-                value={form.yourName}
-                onChange={set("yourName")}
-              />
-            </div>
-            <div className={styles.inputGroup}>
-              <label className={styles.label}>Store Name</label>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="Your store name"
-                required
-                value={form.storeName}
-                onChange={set("storeName")}
-              />
-            </div>
-          </div>
-
-          {/* Business Type */}
+        <form className={styles.form} onSubmit={handleSubmit} noValidate>
+          {/* Full Name */}
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Business Type</label>
-            <div className={styles.selectWrapper}>
-              <select
-                className={styles.select}
-                required
-                value={form.businessType}
-                onChange={set("businessType")}
-              >
-                <option value="">Select business type</option>
-                {BUSINESS_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-            {form.businessType === "Other" && (
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="Describe your business type"
-                value={otherBusiness}
-                onChange={(e) => setOtherBusiness(e.target.value)}
-                style={{ marginTop: 10 }}
-              />
+            <label className={styles.label}>Full Name</label>
+            <input
+              type="text"
+              className={`${styles.input} ${validationErrors.yourName ? styles.inputError : ''}`}
+              placeholder="Your full name"
+              value={form.yourName}
+              onChange={set('yourName')}
+              disabled={isLoading}
+              autoComplete="name"
+            />
+            {validationErrors.yourName && (
+              <span className={styles.fieldError}>{validationErrors.yourName}</span>
             )}
           </div>
 
-          {/* Row: Email + Phone */}
-          <div className={styles.row}>
-            <div className={styles.inputGroup}>
-              <label className={styles.label}>Email Address</label>
+          {/* Email */}
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Email Address</label>
+            <input
+              type="email"
+              className={`${styles.input} ${validationErrors.email ? styles.inputError : ''}`}
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={set('email')}
+              disabled={isLoading}
+              autoComplete="email"
+            />
+            {validationErrors.email && (
+              <span className={styles.fieldError}>{validationErrors.email}</span>
+            )}
+          </div>
+
+          {/* Phone */}
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Contact Number</label>
+            <div className={`${styles.phoneWrap} ${validationErrors.phoneNumber ? styles.phoneWrapError : ''}`}>
+              <select
+                className={styles.countrySelect}
+                value={form.countryCode}
+                onChange={set('countryCode')}
+                disabled={isLoading}
+              >
+                <option value="+91">+91</option>
+                <option value="+1">+1</option>
+                <option value="+44">+44</option>
+                <option value="+971">+971</option>
+                <option value="+65">+65</option>
+              </select>
               <input
-                type="email"
-                className={styles.input}
-                placeholder="you@example.com"
-                required
-                value={form.email}
-                onChange={set("email")}
+                type="tel"
+                className={styles.phoneInput}
+                placeholder="Phone number"
+                value={form.phoneNumber}
+                onChange={set('phoneNumber')}
+                disabled={isLoading}
               />
             </div>
-            <div className={styles.inputGroup}>
-              <label className={styles.label}>Contact Number</label>
-              <div className={styles.phoneWrap}>
-                <select
-                  className={styles.countrySelect}
-                  value={form.countryCode}
-                  onChange={set("countryCode")}
-                >
-                  <option value="+91">+91</option>
-                  <option value="+1">+1</option>
-                  <option value="+44">+44</option>
-                  <option value="+971">+971</option>
-                  <option value="+65">+65</option>
-                </select>
-                <input
-                  type="tel"
-                  className={styles.phoneInput}
-                  placeholder="Phone number"
-                  required
-                  value={form.phoneNumber}
-                  onChange={set("phoneNumber")}
-                />
-              </div>
-            </div>
+            {validationErrors.phoneNumber && (
+              <span className={styles.fieldError}>{validationErrors.phoneNumber}</span>
+            )}
           </div>
 
           {/* Password */}
@@ -194,54 +166,64 @@ export default function RegisterPage() {
             <label className={styles.label}>Password</label>
             <div className={styles.passwordWrap}>
               <input
-                type={showPassword ? "text" : "password"}
-                className={styles.input}
-                placeholder="Create a password"
-                required
+                type={showPassword ? 'text' : 'password'}
+                className={`${styles.input} ${validationErrors.password ? styles.inputError : ''}`}
+                placeholder="Min 8 characters"
                 value={form.password}
-                onChange={set("password")}
+                onChange={set('password')}
+                disabled={isLoading}
+                autoComplete="new-password"
               />
               <button
                 type="button"
                 className={styles.eyeBtn}
-                onClick={() => setShowPassword((v) => !v)}
+                onClick={() => setShowPassword(v => !v)}
                 tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                )}
+                <EyeIcon open={showPassword} />
               </button>
             </div>
+            {validationErrors.password && (
+              <span className={styles.fieldError}>{validationErrors.password}</span>
+            )}
           </div>
 
-          {/* Store Address */}
+          {/* Confirm Password */}
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Store Address</label>
-            <textarea
-              className={styles.textarea}
-              placeholder="Enter your store address"
-              required
-              value={form.storeAddress}
-              onChange={set("storeAddress")}
-            />
+            <label className={styles.label}>Confirm Password</label>
+            <div className={styles.passwordWrap}>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                className={`${styles.input} ${validationErrors.confirmPassword ? styles.inputError : ''}`}
+                placeholder="Re-enter your password"
+                value={form.confirmPassword}
+                onChange={set('confirmPassword')}
+                disabled={isLoading}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className={styles.eyeBtn}
+                onClick={() => setShowConfirmPassword(v => !v)}
+                tabIndex={-1}
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                <EyeIcon open={showConfirmPassword} />
+              </button>
+            </div>
+            {validationErrors.confirmPassword && (
+              <span className={styles.fieldError}>{validationErrors.confirmPassword}</span>
+            )}
           </div>
 
-          <button type="submit" className={styles.submitBtn} disabled={loading}>
-            {loading ? (
+          <button type="submit" className={styles.submitBtn} disabled={isLoading}>
+            {isLoading ? (
               <span className={styles.spinner} />
             ) : (
               <>
-                Finish Setup &amp; Continue
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                Create Account
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
                 </svg>
               </>
@@ -250,7 +232,7 @@ export default function RegisterPage() {
         </form>
 
         <p className={styles.loginLink}>
-          Already have an account?{" "}
+          Already have an account?{' '}
           <Link href="/auth/login">Log in</Link>
         </p>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from './AuthContext';
 import { tokenService } from '@/lib/tokenService';
@@ -36,11 +36,16 @@ export function AuthProvider({ children }) {
     router.push('/auth/login');
   }, [router]);
 
+  // Keep a ref so initializeAuth (which runs once) always calls the latest forceLogout.
+  const forceLogoutRef = useRef(forceLogout);
+  forceLogoutRef.current = forceLogout;
+
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         const storedAccessToken = tokenService.getAccessToken();
         const storedRefreshToken = tokenService.getRefreshToken();
+        const hadStoredTokens = Boolean(storedAccessToken || storedRefreshToken);
 
         if (storedAccessToken && storedRefreshToken) {
           setAccessToken(storedAccessToken);
@@ -49,21 +54,24 @@ export function AuthProvider({ children }) {
 
         const profile = await authService.getMe();
         if (!profile) {
-          // Session is invalid or expired — clear everything and redirect
-          forceLogout();
+          // Only force logout if there were stored tokens that are now invalid.
+          // Fresh unauthenticated visits (login page) should do nothing.
+          if (hadStoredTokens) {
+            forceLogoutRef.current();
+          }
           return;
         }
         setAccount(profile);
       } catch (err) {
         console.error('Error initializing auth:', err);
-        forceLogout();
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
-  }, [forceLogout]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const applyAuthResult = async (userData, newAccessToken, newRefreshToken) => {
     tokenService.setAccessToken(newAccessToken);
@@ -91,7 +99,6 @@ export function AuthProvider({ children }) {
       router.push(redirectTo || '/dashboard');
     } catch (err) {
       setError(err.message);
-      throw err;
     } finally {
       setIsLoading(false);
     }

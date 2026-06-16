@@ -17,17 +17,9 @@
   margin-bottom: 28px;
 }
 
-.logoText {
-  font-size: 26px;
-  font-weight: 800;
-  color: #010f44;
-  letter-spacing: -0.5px;
-}
-
-.logoX {
-  font-size: 26px;
-  font-weight: 900;
-  color: #ef9e1b;
+.logoImg {
+  height: 36px;
+  width: auto;
 }
 
 /* ── Card ──────────────────────────────────────────────────── */
@@ -143,8 +135,8 @@
 }
 
 .inputError {
-  border-color: #e74c3c;
-  background: #fff8f8;
+  border-color: #e74c3c !important;
+  background: #fff8f8 !important;
 }
 
 .fieldError {

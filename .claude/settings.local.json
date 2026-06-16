@@ -411,7 +411,13 @@
       "Bash(chmod 644 /Users/abhishekpratapsingh/Desktop/coupon_campaigns/components/settings/DangerZoneCard.js)",
       "Bash(sed -i '' 's/background: #f5f6ff;//g' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/settings/settings.module.css' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/subscription/subscription.module.css')",
       "Bash(sed -i '' 's/background: var\\(--color-page-bg, #fcfdff\\);//g' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/campaign/[id]/edit/EditCampaign.module.css' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/billing/plans/plans.module.css')",
-      "Bash(sed -i '' 's/background: var\\(--color-page-bg\\);//g' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/campaign/[id]/live/page.module.css')"
+      "Bash(sed -i '' 's/background: var\\(--color-page-bg\\);//g' '/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/campaign/[id]/live/page.module.css')",
+      "Bash(chmod 755 /Users/abhishekpratapsingh/Desktop/coupon_campaigns/public)",
+      "Bash(cp /tmp/logo-icon.svg /Users/abhishekpratapsingh/Desktop/coupon_campaigns/public/logo-icon.svg)",
+      "Bash(cp /tmp/logo-dark.svg /Users/abhishekpratapsingh/Desktop/coupon_campaigns/public/logo-dark.svg)",
+      "Bash(cp /tmp/logo-white.svg /Users/abhishekpratapsingh/Desktop/coupon_campaigns/public/logo-white.svg)",
+      "Bash(kill 16719)",
+      "Bash(kill 17113)"
     ]
   }
 }

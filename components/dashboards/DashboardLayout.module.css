@@ -35,17 +35,19 @@
 
 .logo {
   display: inline-flex;
-  align-items: baseline;
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--color-navy, #010f44);
+  align-items: center;
   text-decoration: none;
-  letter-spacing: -0.02em;
-  font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
-.logoAccent {
-  color: var(--color-primary, #ef9e1b);
+.logoImg {
+  height: 32px;
+  width: auto;
+}
+
+.trustedLogoImg {
+  height: 22px;
+  width: auto;
+  opacity: 0.85;
 }
 
 .sidebarProfile {
@@ -169,7 +171,7 @@
 }
 
 .navDivider {
-  margin: 12px 14px 4px;
+  margin: 4px 14px 0;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -219,10 +221,8 @@
 }
 
 .trustedLogo {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--color-navy, #010f44);
-  font-family: var(--font-afacad), system-ui, sans-serif;
+  display: flex;
+  align-items: center;
 }
 
 .trustedLabel {

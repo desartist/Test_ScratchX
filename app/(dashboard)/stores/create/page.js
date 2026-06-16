@@ -6,12 +6,66 @@ import { useAuthContext } from '@/components/auth/AuthContext';
 import Link from 'next/link';
 import styles from './page.module.css';
 
+function WelcomeScreen({ onGetStarted }) {
+  return (
+    <div className={styles.welcomeScreen}>
+      <div className={styles.welcomeHero}>
+        <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.welcomeLogo} />
+        <h1 className={styles.welcomeHeadline}>
+          Set up your store<br />
+          <span className={styles.welcomeAccent}>in minutes</span>
+        </h1>
+      </div>
+
+      <div className={styles.welcomeCta}>
+        <button className={styles.welcomeBtn} onClick={onGetStarted}>
+          <span>Get Started</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+        <p className={styles.welcomeHint}>Takes less than 2 minutes</p>
+      </div>
+
+      <div className={styles.welcomeCards}>
+        <div className={styles.welcomeCard}>
+          <div className={styles.welcomeCardIcon}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="8" height="8" rx="1.5"/>
+              <rect x="13" y="3" width="8" height="8" rx="1.5"/>
+              <rect x="3" y="13" width="8" height="8" rx="1.5"/>
+              <rect x="5" y="5" width="4" height="4" fill="white"/>
+              <rect x="15" y="5" width="4" height="4" fill="white"/>
+              <rect x="5" y="15" width="4" height="4" fill="white"/>
+              <rect x="13" y="13" width="4" height="4" rx="0.5"/>
+              <rect x="18" y="13" width="3" height="3" rx="0.5"/>
+              <rect x="13" y="18" width="3" height="3" rx="0.5"/>
+              <rect x="18" y="18" width="3" height="3" rx="0.5"/>
+            </svg>
+          </div>
+          <p className={styles.welcomeCardLabel}>Smart QR<br />Coupons</p>
+        </div>
+        <div className={styles.welcomeCard}>
+          <div className={styles.welcomeCardIcon}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 9a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v2a2 2 0 0 0 0 4v2a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-2a2 2 0 0 0 0-4V9z"/>
+              <line x1="12" y1="9" x2="12" y2="10"/>
+              <line x1="12" y1="14" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p className={styles.welcomeCardLabel}>Easy Campaign<br />Creation</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CreateStorePage() {
   const router = useRouter();
   const { account } = useAuthContext();
 
-  // Step management
-  const [currentStep, setCurrentStep] = useState(1);
+  // Step management (0 = welcome screen, 1-3 = form steps)
+  const [currentStep, setCurrentStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -208,9 +262,11 @@ export default function CreateStorePage() {
     setError(null);
 
     if (currentStep === 1) {
+      setTouched({ store_name: true, contact_person: true, contact_number: true });
       if (!validateStep1()) return;
       setCurrentStep(2);
     } else if (currentStep === 2) {
+      setTouched(prev => ({ ...prev, address: true, city: true, state: true, pincode: true }));
       if (!validateStep2()) return;
       setCurrentStep(3);
     }
@@ -283,6 +339,14 @@ export default function CreateStorePage() {
     { number: 2, name: 'Location' },
     { number: 3, name: 'Review' },
   ];
+
+  if (currentStep === 0) {
+    return (
+      <div className={styles.container}>
+        <WelcomeScreen onGetStarted={() => setCurrentStep(1)} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -403,11 +467,6 @@ export default function CreateStorePage() {
 
             {/* Step 1 Navigation */}
             <div className={styles.buttonRow}>
-              <Link href="/stores">
-                <button type="button" className={styles.cancelButton} disabled={submitting}>
-                  Cancel
-                </button>
-              </Link>
               <button
                 type="button"
                 className={styles.primaryButton}
@@ -458,39 +517,31 @@ export default function CreateStorePage() {
                 <div className={styles.locationDetected}>
                   <div className={styles.locationCheckmark}>✓</div>
                   <div className={styles.locationDetails}>
-                    <p className={styles.locationLabel}>Location Captured</p>
-                    {locationInfo?.landmark && (
-                      <p className={styles.locationLandmark}>
-                        <span className={styles.landmarkIcon}>📍</span>
-                        {locationInfo.landmark}
-                      </p>
-                    )}
-                    {(locationInfo?.area || locationInfo?.city) && (
+                    {(locationInfo?.area || locationInfo?.city) ? (
                       <p className={styles.locationArea}>
                         {[locationInfo.area, locationInfo.city, locationInfo.state]
                           .filter(Boolean)
                           .join(', ')}
                       </p>
-                    )}
-                    {!locationInfo?.landmark && locationInfo?.display && (
+                    ) : locationInfo?.display ? (
                       <p className={styles.locationArea}>{locationInfo.display}</p>
+                    ) : (
+                      <p className={styles.locationArea}>Location detected</p>
                     )}
                   </div>
+                  <button
+                    type="button"
+                    className={styles.retakeBtn}
+                    onClick={requestGeolocation}
+                    disabled={submitting}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                    Retake
+                  </button>
                 </div>
-              )}
-              {locationStatus === 'detected' && formData.latitude && formData.longitude && (
-                <button
-                  type="button"
-                  className={styles.refreshLocationButton}
-                  onClick={requestGeolocation}
-                  disabled={submitting || locationStatus === 'requesting'}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                  </svg>
-                  Retake Location
-                </button>
               )}
 
               {locationStatus === 'idle' && !formData.latitude && (
@@ -614,6 +665,9 @@ export default function CreateStorePage() {
                 onClick={handlePrevStep}
                 disabled={submitting}
               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+                </svg>
                 Back
               </button>
               <button
@@ -623,6 +677,9 @@ export default function CreateStorePage() {
                 disabled={submitting}
               >
                 Next
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+                </svg>
               </button>
             </div>
           </div>
@@ -671,11 +728,11 @@ export default function CreateStorePage() {
                   <span className={styles.summaryLabel}>Pincode:</span>
                   <span>{formData.pincode}</span>
                 </div>
-                {(locationInfo?.landmark || locationInfo?.area || locationInfo?.city) && (
+                {(locationInfo?.area || locationInfo?.city) && (
                   <div className={styles.summaryItem}>
-                    <span className={styles.summaryLabel}>Nearest Location:</span>
+                    <span className={styles.summaryLabel}>Location:</span>
                     <span>
-                      {[locationInfo.landmark, locationInfo.area, locationInfo.city]
+                      {[locationInfo.area, locationInfo.city, locationInfo.state]
                         .filter(Boolean)
                         .join(', ')}
                     </span>
@@ -692,6 +749,9 @@ export default function CreateStorePage() {
                 onClick={handlePrevStep}
                 disabled={submitting}
               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+                </svg>
                 Back
               </button>
               <button
@@ -699,7 +759,14 @@ export default function CreateStorePage() {
                 className={styles.primaryButton}
                 disabled={submitting}
               >
-                {submitting ? 'Creating...' : 'Create Store'}
+                {submitting ? 'Creating...' : (
+                  <>
+                    Create Store
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </>
+                )}
               </button>
             </div>
           </div>
