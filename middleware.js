@@ -6,6 +6,18 @@ const LOGIN_PATH = "/auth/login";
 export function middleware(request) {
   const pathname = request.nextUrl.pathname;
 
+  // Redirect already-authenticated users away from auth pages
+  if (
+    pathname.startsWith('/auth/login') ||
+    pathname.startsWith('/auth/register') ||
+    pathname.startsWith('/auth/signup')
+  ) {
+    const authToken = request.cookies.get('authToken')?.value;
+    if (authToken) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+
   // Protect dashboard pages and dashboard API routes
   if (
     pathname.startsWith("/dashboard") ||
@@ -124,6 +136,12 @@ export function middleware(request) {
 
 export const config = {
   matcher: [
+    "/auth/login",
+    "/auth/login/:path*",
+    "/auth/register",
+    "/auth/register/:path*",
+    "/auth/signup",
+    "/auth/signup/:path*",
     "/dashboard/:path*",
     "/subscription/:path*",
     "/api/dashboard/:path*",

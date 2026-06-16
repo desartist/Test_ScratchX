@@ -3,6 +3,21 @@ import { cookies } from 'next/headers';
 import { createHmac } from 'crypto';
 import Session from '@/models/sessionModel';
 import { connectDB } from '@/lib/connectDB';
+
+const COOKIE_NAMES = ['authToken', 'refreshToken', 'sessionId', 'accountId', 'accountRole', 'userEmail'];
+
+// GET /api/auth/logout — clear all auth cookies and redirect to login.
+// Used by the server layout when a session is invalid (user not in DB).
+export async function GET() {
+  const response = NextResponse.redirect(
+    new URL('/auth/login', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'),
+    { status: 302 }
+  );
+  for (const name of COOKIE_NAMES) {
+    response.cookies.set(name, '', { maxAge: 0, path: '/' });
+  }
+  return response;
+}
 import tokenBlacklist from '@/lib/tokenBlacklist';
 import jwtService from '@/lib/jwtService';
 

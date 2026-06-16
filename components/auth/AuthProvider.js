@@ -28,6 +28,14 @@ export function AuthProvider({ children }) {
     return null;
   }, []);
 
+  const forceLogout = useCallback(() => {
+    tokenService.clearTokens();
+    setAccount(null);
+    setAccessToken(null);
+    setRefreshToken(null);
+    router.push('/auth/login');
+  }, [router]);
+
   useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -39,17 +47,23 @@ export function AuthProvider({ children }) {
           setRefreshToken(storedRefreshToken);
         }
 
-        await refreshAccount();
+        const profile = await authService.getMe();
+        if (!profile) {
+          // Session is invalid or expired — clear everything and redirect
+          forceLogout();
+          return;
+        }
+        setAccount(profile);
       } catch (err) {
         console.error('Error initializing auth:', err);
-        setError(err.message);
+        forceLogout();
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
-  }, [refreshAccount]);
+  }, [forceLogout]);
 
   const applyAuthResult = async (userData, newAccessToken, newRefreshToken) => {
     tokenService.setAccessToken(newAccessToken);
@@ -220,6 +234,7 @@ export function AuthProvider({ children }) {
     requestPasswordReset,
     resetPassword,
     logout,
+    forceLogout,
     clearError,
   };
 
