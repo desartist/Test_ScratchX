@@ -370,7 +370,6 @@ export default function SmartDashboard() {
         storeName={storeName}
         location={storeLocation}
         unreadCount={unreadCount}
-        onCreateCampaign={() => router.push("/campaign/new")}
         onBellClick={() => router.push("/notifications")}
       />
       <SubscriptionHero

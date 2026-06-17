@@ -320,13 +320,9 @@ export default function CreateStorePage() {
         throw new Error(errorData.message || errorData.error || 'Failed to create store');
       }
 
-      const data = await response.json();
-      setSuccessMessage('Store created successfully!');
-
-      // Redirect to stores page after 1 second
-      setTimeout(() => {
-        router.push('/stores');
-      }, 1000);
+      await response.json();
+      // Hard navigate so the merchantHasStore cookie is picked up by middleware
+      window.location.href = '/dashboard';
     } catch (err) {
       setError(err.message || 'Failed to create store');
     } finally {

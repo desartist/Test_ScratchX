@@ -1,10 +1,9 @@
-"use client";
 import React from "react";
 import "./globals.css";
 import styles from "./layout.module.css";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 
-export default function DashboardLayout({ children }) {
+export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning style={{ colorScheme: 'light' }}>
       <body suppressHydrationWarning>

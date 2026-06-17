@@ -14,10 +14,10 @@ function WelcomeOnboarding() {
   return (
     <div className={styles.onboarding}>
       <div className={styles.onboardingHero}>
-        <div className={styles.onboardingBadge}>
+        {/* <div className={styles.onboardingBadge}>
           <span className={styles.onboardingBadgeDot} />
           QR Scratch Card Platform
-        </div>
+        </div> */}
         <h1 className={styles.onboardingHeadline}>
           Set up your<br />store<br />
           <span className={styles.onboardingAccent}>in minutes</span>

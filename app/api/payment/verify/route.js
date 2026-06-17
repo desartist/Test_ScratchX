@@ -7,6 +7,7 @@ import Commission from "@/models/commissionModel";
 import scratchEntitlementService from "@/lib/scratchEntitlementService";
 import notificationService from "@/lib/services/notificationService";
 import { createHmac } from "crypto";
+import { cookies } from "next/headers";
 
 const DEFAULT_COMMISSION_RATE = parseFloat(process.env.DISTRIBUTOR_COMMISSION_RATE ?? "20");
 
@@ -151,6 +152,18 @@ export async function POST(request) {
     ).catch((error) => console.error("[Payment Verify] Notification error:", error));
 
     console.log(`✓ [Payment Verified] ${planType} plan activated for merchant ${account._id.toString()}`);
+
+    // Update merchantHasSub cookie so middleware immediately allows access
+    try {
+      const cookieStore = await cookies();
+      cookieStore.set('merchantHasSub', '1', {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      });
+    } catch (_) {}
 
     return Response.json(
       {

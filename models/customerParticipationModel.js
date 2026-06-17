@@ -135,6 +135,11 @@ const customerParticipationSchema = new mongoose.Schema(
       type: Date,
       default: null,
       index: true
+    },
+    reward_claim_expires_at: {
+      type: Date,
+      default: null,
+      index: true
     }
   },
   {

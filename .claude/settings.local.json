@@ -417,7 +417,10 @@
       "Bash(cp /tmp/logo-dark.svg /Users/abhishekpratapsingh/Desktop/coupon_campaigns/public/logo-dark.svg)",
       "Bash(cp /tmp/logo-white.svg /Users/abhishekpratapsingh/Desktop/coupon_campaigns/public/logo-white.svg)",
       "Bash(kill 16719)",
-      "Bash(kill 17113)"
+      "Bash(kill 17113)",
+      "Bash(chmod u+w /Users/abhishekpratapsingh/Desktop/coupon_campaigns/components/subscription/)",
+      "Bash(chmod u+w \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)\")",
+      "Bash(chmod u+w \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/components\")"
     ]
   }
 }

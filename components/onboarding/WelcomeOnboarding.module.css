@@ -1,110 +1,3 @@
-.container {
-  width: 100%;
-  height: 100%;
-  min-height: 100vh;
-    padding: 24px;
-}
-
-/* ========== LOADING STATE ========== */
-
-.loadingState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  gap: 16px;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #e8e8e8;
-  border-top-color: #ef9e1b;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loadingState p {
-  color: #637080;
-  font-size: 14px;
-}
-
-/* ========== ERROR STATE ========== */
-
-.errorState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  gap: 16px;
-  padding: 20px;
-  text-align: center;
-}
-
-.errorState h2 {
-  color: #ef4444;
-  font-size: 24px;
-  margin: 0;
-}
-
-.errorState p {
-  color: #637080;
-  font-size: 14px;
-  margin: 0;
-  max-width: 400px;
-}
-
-.retryButton {
-  background: #ef9e1b;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.retryButton:hover {
-  background: #ff9500;
-}
-
-/* ========== EMPTY STATE ========== */
-
-.emptyState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  gap: 12px;
-  padding: 20px;
-  text-align: center;
-}
-
-.emptyState h2 {
-  color: #010f44;
-  font-size: 20px;
-  margin: 0;
-}
-
-.emptyState p {
-  color: #637080;
-  font-size: 14px;
-  margin: 0;
-}
-
-/* ========== ONBOARDING / WELCOME ========== */
-
 .onboarding {
   width: 100%;
   max-width: 430px;
@@ -141,7 +34,7 @@
   pointer-events: none;
 }
 
-.onboardingHero {
+.hero {
   margin-top: 52px;
   padding: 0 36px;
   text-align: center;
@@ -151,7 +44,7 @@
   align-items: center;
 }
 
-.onboardingBadge {
+.badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -165,7 +58,7 @@
   margin-bottom: 24px;
 }
 
-.onboardingBadgeDot {
+.badgeDot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -173,7 +66,7 @@
   flex-shrink: 0;
 }
 
-.onboardingHeadline {
+.headline {
   font-size: 48px;
   font-weight: 800;
   line-height: 1.1;
@@ -182,11 +75,11 @@
   margin: 0 0 20px;
 }
 
-.onboardingAccent {
+.accent {
   color: #ef9e1b;
 }
 
-.onboardingSubtitle {
+.subtitle {
   font-size: 15.5px;
   color: #637080;
   line-height: 1.6;
@@ -196,7 +89,7 @@
   max-width: 320px;
 }
 
-.onboardingCta {
+.cta {
   margin-top: 44px;
   display: flex;
   flex-direction: column;
@@ -207,7 +100,7 @@
   padding: 0 36px;
 }
 
-.onboardingBtn {
+.btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -225,20 +118,20 @@
   font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
-.onboardingBtn:hover {
+.btn:hover {
   background: #d98e14;
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(239,158,27,0.45);
 }
 
-.onboardingHint {
+.hint {
   font-size: 13px;
   color: #9ba8b8;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
   margin: 0;
 }
 
-.onboardingCards {
+.cards {
   margin-top: 36px;
   padding: 0 28px;
   display: flex;
@@ -247,7 +140,7 @@
   z-index: 1;
 }
 
-.onboardingCard {
+.card {
   flex: 1;
   background: #ffffff;
   border-radius: 22px;
@@ -260,12 +153,12 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.onboardingCard:hover {
+.card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 24px rgba(1,15,68,0.1);
 }
 
-.onboardingCardIcon {
+.cardIcon {
   width: 52px;
   height: 52px;
   background: #e0e4ff;
@@ -277,7 +170,7 @@
   flex-shrink: 0;
 }
 
-.onboardingCardLabel {
+.cardLabel {
   font-size: 15px;
   font-weight: 700;
   color: #010f44;
@@ -285,7 +178,7 @@
   margin: 0;
 }
 
-.onboardingFooter {
+.footer {
   margin-top: auto;
   width: 100%;
   padding: 20px;
@@ -293,33 +186,9 @@
   z-index: 1;
 }
 
-.onboardingFooter p {
+.footer p {
   font-size: 12.5px;
   color: #9ba8b8;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
   margin: 0;
-}
-
-/* ========== DARK MODE ========== */
-
-
-/* ========== RESPONSIVE ========== */
-
-@media (max-width: 768px) {
-  .loadingState {
-    height: calc(100vh - 100px);
-  }
-
-  .errorState {
-    height: calc(100vh - 100px);
-  }
-
-  .emptyState {
-    height: calc(100vh - 100px);
-  }
-
-  .spinner {
-    width: 40px;
-    height: 40px;
-  }
 }

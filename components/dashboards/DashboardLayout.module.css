@@ -16,6 +16,9 @@
   box-shadow: 4px 0 24px rgba(1, 15, 68, 0.05);
   border-right: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
   z-index: 100;
+  height: 100vh;
+  position: sticky;
+  top: 0;
 }
 
 .sidebarHeader {
@@ -135,6 +138,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  overflow-y: auto;
 }
 
 .navItem {
@@ -314,6 +318,48 @@
   gap: 14px;
 }
 
+.createCampaignBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #ef9e1b, #f5b23a);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+  box-shadow: 0 4px 16px rgba(239,158,27,0.35);
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.createCampaignBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(239,158,27,0.45);
+  filter: brightness(1.05);
+}
+
+.notificationBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-lavender-bg, #e0e4ff);
+  color: var(--color-navy, #010f44);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.notificationBtn:hover {
+  background: #d0d4ff;
+  transform: scale(1.08);
+}
+
 .userMeta {
   display: flex;
   flex-direction: column;
@@ -444,11 +490,7 @@
   }
 
   .roleTitle {
-    font-size: 17px;
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: none;
   }
 
   .content {

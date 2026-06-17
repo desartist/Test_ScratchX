@@ -2,6 +2,11 @@
 const nextConfig = {
   // Optional OTP providers (dynamic import in lib/otpProvider.js) — not always installed
   serverExternalPackages: ["twilio", "aws-sdk"],
+  images: {
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
   turbopack: {},
   async redirects() {
     return [

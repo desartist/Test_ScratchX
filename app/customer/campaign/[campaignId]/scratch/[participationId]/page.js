@@ -137,10 +137,26 @@ export default function ScratchCardPage() {
   const [participation, setParticipation] = useState(null);
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState(null);
-  // `revealed` drives which view renders (scratch vs reward)
-  const [revealed,   setRevealed]   = useState(false);
-  // `animReady` triggers the pop-in animation class after a short delay
-  const [animReady,  setAnimReady]  = useState(false);
+  const [revealed,      setRevealed]      = useState(false);
+  const [animReady,     setAnimReady]     = useState(false);
+  const [isReturning,   setIsReturning]   = useState(false);
+  // Countdown timer (seconds remaining). null = not applicable.
+  const [secondsLeft,   setSecondsLeft]   = useState(null);
+  const timerRef = useRef(null);
+
+  // ── Start countdown from a DB expiry timestamp ──
+  const startTimer = useCallback((expiresAt) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    const tick = () => {
+      const remaining = Math.max(0, Math.floor((new Date(expiresAt) - Date.now()) / 1000));
+      setSecondsLeft(remaining);
+      if (remaining === 0) clearInterval(timerRef.current);
+    };
+    tick();
+    timerRef.current = setInterval(tick, 1000);
+  }, []);
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
   // ── Fetch participation once ──
   useEffect(() => {
@@ -156,19 +172,22 @@ export default function ScratchCardPage() {
           setError(result.error || "Failed to load scratch card");
           return;
         }
-        setParticipation(result.data);
-        const alreadyDone =
-          result.data.status === "revealed" ||
-          result.data.status === "redeemed";
+        const data = result.data;
+        setParticipation(data);
+        const alreadyDone = data.status === "revealed" || data.status === "redeemed";
         if (alreadyDone) {
+          setIsReturning(true);
           setRevealed(true);
-          // Slight delay so the page paints before the animation fires
           setTimeout(() => setAnimReady(true), 80);
+          // Restore timer from DB — only if not yet redeemed and not expired
+          if (data.status !== "redeemed" && data.rewardClaimExpiresAt) {
+            startTimer(data.rewardClaimExpiresAt);
+          }
         }
       })
       .catch((err) => setError("Failed to load: " + err.message))
       .finally(() => setLoading(false));
-  }, [participationId]);
+  }, [participationId, startTimer]);
 
   // ── Called by initScratchOverlay when threshold reached ──
   const handleThreshold = useCallback(async () => {
@@ -193,19 +212,21 @@ export default function ScratchCardPage() {
     // Animate reward card in
     setTimeout(() => setAnimReady(true), 80);
 
-    // Fire-and-forget reveal API call
+    // Reveal API call — read rewardClaimExpiresAt to start accurate timer
     try {
-      await fetch(`/api/customer/participate/${participationId}/reveal`, {
+      const res = await fetch(`/api/customer/participate/${participationId}/reveal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scratchCardId: participation?.scratchCardId,
-        }),
+        body: JSON.stringify({ scratchCardId: participation?.scratchCardId }),
       });
+      const revealData = await res.json();
+      if (revealData?.data?.rewardClaimExpiresAt) {
+        startTimer(revealData.data.rewardClaimExpiresAt);
+      }
     } catch (err) {
       console.error("Reveal API error (non-fatal):", err);
     }
-  }, [participationId, participation]);
+  }, [participationId, participation, startTimer]);
 
   // ── Mount scratch overlay ──
   useEffect(() => {
@@ -260,11 +281,17 @@ export default function ScratchCardPage() {
   if (revealed) {
     const handleCopy = () => {
       if (reward.couponCode) {
-        navigator.clipboard
-          .writeText(reward.couponCode)
-          .catch(() => {});
+        navigator.clipboard.writeText(reward.couponCode).catch(() => {});
       }
     };
+
+    const isExpiredClaim = participation?.status !== "redeemed" &&
+      participation?.rewardClaimExpiresAt &&
+      new Date(participation.rewardClaimExpiresAt) < new Date() &&
+      secondsLeft === 0;
+
+    const timerMins  = secondsLeft !== null ? String(Math.floor(secondsLeft / 60)).padStart(2, "0") : null;
+    const timerSecs  = secondsLeft !== null ? String(secondsLeft % 60).padStart(2, "0") : null;
 
     return (
       <div className={`${styles.page} ${styles.pageWarm}`}>
@@ -279,12 +306,39 @@ export default function ScratchCardPage() {
           </div>
         </div>
 
+        {/* Returning customer notice */}
+        {isReturning && (
+          <div style={{ margin: "0 20px 8px", padding: "10px 16px", background: "rgba(255,255,255,0.25)", borderRadius: 10, textAlign: "center", fontSize: "0.85rem", color: "#010f44", fontWeight: 600 }}>
+            ✔ You already revealed this reward
+          </div>
+        )}
+
         {/* Celebration hero */}
         <div className={styles.celebHero}>
           <div className={styles.celebEmoji}>🎉</div>
           <h1 className={styles.celebTitle}>You Won!</h1>
           <p className={styles.celebSub}>Congratulations on your reward</p>
         </div>
+
+        {/* Redemption countdown timer */}
+        {timerMins !== null && participation?.status !== "redeemed" && (
+          <div style={{ textAlign: "center", margin: "0 20px 12px" }}>
+            {isExpiredClaim ? (
+              <div style={{ padding: "10px 16px", background: "#fee2e2", borderRadius: 10, color: "#991b1b", fontWeight: 700, fontSize: "0.9rem" }}>
+                ⏰ Redemption window expired
+              </div>
+            ) : (
+              <div style={{ padding: "10px 16px", background: "rgba(255,255,255,0.3)", borderRadius: 10, fontWeight: 700, fontSize: "1rem", color: "#010f44" }}>
+                ⏱ Redeem within: {timerMins}:{timerSecs}
+              </div>
+            )}
+          </div>
+        )}
+        {participation?.status === "redeemed" && (
+          <div style={{ textAlign: "center", margin: "0 20px 12px", padding: "10px 16px", background: "rgba(39,174,96,0.2)", borderRadius: 10, fontWeight: 700, color: "#1a6e3c", fontSize: "0.9rem" }}>
+            ✅ Reward redeemed
+          </div>
+        )}
 
         {/* Reward card */}
         <div
@@ -346,7 +400,11 @@ export default function ScratchCardPage() {
         </div>
 
         <p className={styles.claimHint}>
-          Show this coupon at the store to claim your reward
+          {participation?.status === "redeemed"
+            ? "This reward has been redeemed. Thank you!"
+            : isExpiredClaim
+              ? "The redemption window has passed. Please contact the store."
+              : "Show this screen to the cashier within the timer to claim your reward"}
         </p>
       </div>
     );

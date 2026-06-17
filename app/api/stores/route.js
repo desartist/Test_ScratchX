@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
 import StoreService from '@/lib/storeService';
@@ -298,6 +299,19 @@ export async function POST(request) {
         );
       }
     }
+
+    // Mark that this merchant now has at least one store (used by middleware gate)
+    try {
+      const cookieStore = await cookies();
+      const sameSiteValue = process.env.NODE_ENV === 'production' ? 'strict' : 'lax';
+      cookieStore.set('merchantHasStore', '1', {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: sameSiteValue,
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      });
+    } catch (_) {}
 
     return NextResponse.json(
       {

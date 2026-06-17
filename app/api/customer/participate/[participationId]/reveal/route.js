@@ -85,9 +85,10 @@ export async function POST(request, { params }) {
       participation.reward_id = new mongoose.Types.ObjectId(scratchCardId);
     }
 
-    // Update participation status to revealed
+    // Update participation status to revealed; set reward claim expiry (5 min from now)
     participation.status = "revealed";
     participation.revealed_at = new Date();
+    participation.reward_claim_expires_at = new Date(Date.now() + 5 * 60 * 1000);
     await participation.save();
 
     console.log("✅ Participation status updated to revealed");
@@ -122,7 +123,11 @@ export async function POST(request, { params }) {
     return NextResponse.json(
       {
         success: true,
-        data: { status: "revealed", revealedAt: participation.revealed_at },
+        data: {
+          status: "revealed",
+          revealedAt: participation.revealed_at,
+          rewardClaimExpiresAt: participation.reward_claim_expires_at,
+        },
       },
       { status: 200 },
     );

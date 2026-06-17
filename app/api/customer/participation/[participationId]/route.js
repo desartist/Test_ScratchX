@@ -114,6 +114,7 @@ export async function GET(request, { params }) {
       participationId: participation._id.toString(),
       status: participation.status,
       scratchCardId: scratchCard ? scratchCard._id.toString() : null,
+      rewardClaimExpiresAt: participation.reward_claim_expires_at || null,
       participantName: participation.participant_name,
       participantPhone: participation.participant_phone,
       campaign: participation.campaign_id ? {
