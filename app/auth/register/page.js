@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthContext } from '../../../components/auth/AuthContext';
 import styles from './form.module.css';
@@ -81,7 +81,11 @@ export default function RegisterPage() {
       password: form.password,
     });
   };
-
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
   return (
     <div className={styles.page}>
       <div className={styles.logoWrap}>
