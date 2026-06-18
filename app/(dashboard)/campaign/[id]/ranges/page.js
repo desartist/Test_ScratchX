@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Tag, ChevronRight, Plus } from "lucide-react";
+import { ArrowLeft, Tag, ChevronRight, Plus, QrCode } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import RangeWizard from "@/components/campaign/RangeWizard";
 import LaunchWizardModal from "@/components/campaign/LaunchWizardModal";
@@ -30,6 +30,9 @@ export default function CampaignRangesStepPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Campaign data (scratch allocation + QR state).
+  const [campaign, setCampaign] = useState(null);
+
   // mode: 'list' | 'edit'. editRange null => create.
   const [mode, setMode] = useState("list");
   const [editRange, setEditRange] = useState(null);
@@ -42,21 +45,26 @@ export default function CampaignRangesStepPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/campaign_range?id=${campaignId}`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "x-user-id": userId,
-          "x-user-role": userRole,
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      });
-      const data = await res.json().catch(() => ({}));
-      if (data?.success && Array.isArray(data.ranges)) {
-        setRanges(data.ranges);
+      const headers = {
+        "x-user-id": userId,
+        "x-user-role": userRole,
+        Authorization: token ? `Bearer ${token}` : "",
+      };
+
+      const [rangesRes, campaignRes] = await Promise.all([
+        fetch(`/api/campaign_range?id=${campaignId}`, { method: "GET", credentials: "include", headers }),
+        fetch(`/api/campaigns/${campaignId}`, { credentials: "include", headers }),
+      ]);
+
+      const rangesData = await rangesRes.json().catch(() => ({}));
+      if (rangesData?.success && Array.isArray(rangesData.ranges)) {
+        setRanges(rangesData.ranges);
       } else {
         setRanges([]);
       }
+
+      const campaignData = await campaignRes.json().catch(() => ({}));
+      setCampaign(campaignData?.data || campaignData?.campaign || campaignData || null);
     } catch (err) {
       console.error("Failed to fetch ranges:", err);
       setError("Failed to load reward ranges");
@@ -95,6 +103,11 @@ export default function CampaignRangesStepPage() {
   );
 
   const hasRanges = ranges.length > 0;
+  const scratchesAllocated = Number(campaign?.allocated_scratch_cards) > 0;
+  const qrGenerated = !!(campaign?.qrCodeUrl || campaign?.qrGeneratedAt);
+
+  // Which step to open the wizard at
+  const wizardInitialStep = scratchesAllocated ? "stores" : "allocate";
 
   return (
     <div className={styles.page}>
@@ -158,14 +171,34 @@ export default function CampaignRangesStepPage() {
               </button>
             </div>
 
-            <button
-              type="button"
-              className={styles.launchBtn}
-              onClick={openLaunch}
-              disabled={!hasRanges}
-            >
-              Allocate Scratches
-            </button>
+            {qrGenerated ? (
+              <button
+                type="button"
+                className={styles.viewCampaignBtn}
+                onClick={() => router.push(`/campaign/${campaignId}`)}
+              >
+                View Campaign
+              </button>
+            ) : scratchesAllocated ? (
+              <button
+                type="button"
+                className={styles.generateQrBtn}
+                onClick={openLaunch}
+                disabled={!hasRanges}
+              >
+                <QrCode size={18} />
+                Generate QR
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={styles.launchBtn}
+                onClick={openLaunch}
+                disabled={!hasRanges}
+              >
+                Allocate Scratches
+              </button>
+            )}
           </>
         )}
 
@@ -175,19 +208,10 @@ export default function CampaignRangesStepPage() {
             open={launchOpen}
             onClose={closeLaunch}
             onLaunched={handleLaunched}
+            initialStep={wizardInitialStep}
           />
         )}
 
-        {/* Navigation */}
-        <div className={styles.footer}>
-          <button
-            type="button"
-            className={styles.backBtn}
-            onClick={() => router.push("/campaign")}
-          >
-            <ArrowLeft size={18} /> Back to campaigns
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -420,7 +420,8 @@
       "Bash(kill 17113)",
       "Bash(chmod u+w /Users/abhishekpratapsingh/Desktop/coupon_campaigns/components/subscription/)",
       "Bash(chmod u+w \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)\")",
-      "Bash(chmod u+w \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/components\")"
+      "Bash(chmod u+w \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/components\")",
+      "Bash(kill 27989)"
     ]
   }
 }

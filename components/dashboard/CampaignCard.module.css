@@ -1,41 +1,45 @@
-/* components/dashboard/CampaignCard.module.css */
+/* ── Card ───────────────────────────────────────────────────── */
 .card {
-  padding: 20px;
-  background: white;
-  border: 1px solid #e8e8e8;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease,
-    transform 0.25s ease;
+  background: #fff;
+  border: 1.5px solid #e8eaff;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(1, 15, 68, 0.06);
+  padding: 22px 22px 18px;
   cursor: pointer;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+  font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
 .card:hover {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(1, 15, 68, 0.11);
+  border-color: #ef9e1b;
+  transform: translateY(-3px);
 }
 
 .card:focus-visible {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.2);
+  border-color: #ef9e1b;
+  box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.18);
 }
 
-
-/* Header */
+/* ── Header ─────────────────────────────────────────────────── */
 .cardHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 10px;
 }
 
 .headerMain {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .titleRow {
@@ -47,123 +51,153 @@
 
 .name {
   margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--color-navy);
-  line-height: 1.3;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #010f44;
+  line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  flex: 1;
+  min-width: 0;
 }
-
 
 .dateRange {
-  margin: 6px 0 0 0;
-  font-size: 0.8125rem;
-  color: var(--color-muted);
+  margin: 0;
+  font-size: 0.8rem;
+  color: #637080;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.menuWrap {
-  flex-shrink: 0;
-}
+.menuWrap { flex-shrink: 0; }
 
-/* Meta row */
+/* ── Meta row ───────────────────────────────────────────────── */
 .metaRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f8f9ff;
+  border-radius: 12px;
+  border: 1px solid #eef0ff;
 }
 
 .metaItem {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #637080;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
 .metaIcon {
-  color: var(--color-muted);
+  color: #ef9e1b;
   flex-shrink: 0;
 }
 
-/* Scratch allocation */
+/* ── Scratch section ────────────────────────────────────────── */
 .scratchSection {
-  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .scratchHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
 }
 
 .scratchLabel {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #010f44;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .scratchCount {
-  font-size: 0.8125rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  color: var(--color-navy);
+  color: #010f44;
 }
 
-
 .scratchRemaining {
-  margin-top: 6px;
   text-align: right;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--color-muted);
+  color: #9ba8b8;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
-/* Low-scratch warning */
+.scratchNotSet {
+  padding: 8px 12px;
+  background: #f8f9ff;
+  border: 1px dashed #d0d5f0;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #9ba8b8;
+  text-align: center;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+/* ── Low-scratch warning ────────────────────────────────────── */
 .lowWarning {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 14px;
-  padding: 10px 12px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.35);
-  border-radius: 8px;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 107, 107, 0.07);
+  border: 1px solid rgba(255, 107, 107, 0.25);
+  border-radius: 12px;
 }
 
 .lowWarningText {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8125rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-error);
+  color: #c0392b;
 }
 
-.lowWarningIcon {
-  flex-shrink: 0;
-}
+.lowWarningIcon { flex-shrink: 0; }
 
 .addBtn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 12px;
-  background: var(--color-error);
+  padding: 6px 13px;
+  background: #c0392b;
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.15s, transform 0.15s;
+  font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
 .addBtn:hover {
-  background: #ff5252;
+  background: #a93226;
   transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+  .card { padding: 16px 16px 14px; gap: 12px; border-radius: 16px; }
+  .metaRow { gap: 8px 12px; padding: 10px 12px; border-radius: 10px; }
+  .metaItem { font-size: 0.78rem; }
+  .scratchLabel { font-size: 0.72rem; }
+  .scratchCount { font-size: 0.8rem; }
+  .scratchRemaining { font-size: 0.72rem; }
 }

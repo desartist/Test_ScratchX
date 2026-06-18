@@ -15,7 +15,6 @@ import {
 import styles from "./page.module.css";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import Badge from "@/components/dashboard/Badge";
-import ProgressBar from "@/components/dashboard/ProgressBar";
 import StoreAssignment from "@/components/campaign/StoreAssignment";
 import RewardRanges from "@/components/campaign/RewardRanges";
 import ScratchAllocation from "@/components/campaign/ScratchAllocation";
@@ -414,7 +413,7 @@ export default function CampaignDetailsPage({ params }) {
 
   return (
     <div className={styles.container}>
-      {/* Header with back button */}
+      {/* Header */}
       <div className={styles.header}>
         <button
           className={styles.backButton}
@@ -428,180 +427,169 @@ export default function CampaignDetailsPage({ params }) {
         </div>
       </div>
 
-      {/* Overview Card */}
-      <section className={styles.overviewCard}>
-        <div className={styles.overviewTop}>
-          <h2 className={styles.overviewName}>{campaignName}</h2>
-          <Badge label={status} variant={statusToVariant(status)} />
-        </div>
+      {/* 2-column layout */}
+      <div className={styles.layout}>
+        {/* ── Left / main column ── */}
+        <div className={styles.main}>
+          {/* Overview */}
+          <section className={styles.overviewCard}>
+            <div className={styles.overviewTop}>
+              <h2 className={styles.overviewName}>{campaignName}</h2>
+              <Badge label={status} variant={statusToVariant(status)} />
+            </div>
+            <div className={styles.overviewMeta}>
+              <span className={styles.metaItem}>
+                <CalendarDays size={15} />
+                {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}
+              </span>
+              <span className={styles.metaItem}>
+                <Circle size={7} className={styles.metaDot} />
+                {daysLeft} {daysLeft === 1 ? "day" : "days"} left
+              </span>
+              <span className={styles.metaItem}>
+                <StoreIcon size={15} />
+                {activeStoreCount} {activeStoreCount === 1 ? "store" : "stores"}
+              </span>
+              {priceRange && (
+                <span className={styles.metaItem}>
+                  <Tag size={15} />
+                  {priceRange}
+                </span>
+              )}
+            </div>
+          </section>
 
-        <div className={styles.overviewMeta}>
-          <span className={styles.metaItem}>
-            <CalendarDays size={16} />
-            {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}
-          </span>
-          <span className={styles.metaItem}>
-            <Circle size={8} className={styles.metaDot} />
-            {daysLeft} {daysLeft === 1 ? "day" : "days"} left
-          </span>
-          <span className={styles.metaItem}>
-            <StoreIcon size={16} />
-            {activeStoreCount} {activeStoreCount === 1 ? "store" : "stores"}
-          </span>
-          {priceRange && (
-            <span className={styles.metaItem}>
-              <Tag size={16} />
-              {priceRange}
-            </span>
-          )}
-        </div>
-
-        <div className={styles.allocationBlock}>
-          <div className={styles.allocationHeader}>
-            <span className={styles.allocationLabel}>Scratch Allocation</span>
-            <span className={styles.allocationCount}>
-              {used.toLocaleString()} / {allocated.toLocaleString()}
-            </span>
-          </div>
-          <ProgressBar current={used} total={allocated} showLabel={false} />
-          <p className={styles.allocationLeft}>
-            {remaining.toLocaleString()} left
-          </p>
-        </div>
-      </section>
-
-      {/* QR Generation: gating checklist + button / preview / upgrade */}
-      <section className={styles.qrCard}>
-        <div className={styles.qrCardHeader}>
-          <QrCode size={20} />
-          <h2 className={styles.qrCardTitle}>Campaign QR Code</h2>
-        </div>
-
-        {alreadyGenerated ? (
-          <CampaignQrStudio
-            campaignId={campaignId}
-            defaultBrandName={assignedStores?.[0]?.storeName || ""}
-          />
-        ) : (
-          <>
-            <ul className={styles.checklist}>
-              {checks.map((c) => (
-                <li
-                  key={c.key}
-                  className={`${styles.checkItem} ${c.met ? styles.checkMet : styles.checkUnmet}`}
-                >
-                  {c.met ? (
-                    <CheckCircle2 size={18} className={styles.checkIconMet} />
-                  ) : (
-                    <Circle size={18} className={styles.checkIconUnmet} />
-                  )}
-                  <span>{c.label}</span>
-                </li>
-              ))}
-            </ul>
-
-            {qrError && <p className={styles.qrError}>{qrError}</p>}
-
-            {subscriptionBlocked ? (
-              <div className={styles.upgradePrompt}>
-                <Lock size={18} />
-                <div>
-                  <p className={styles.upgradeTitle}>
-                    Purchase a plan to generate QR
-                  </p>
-                  <p className={styles.upgradeText}>
-                    An active subscription with scratch entitlement is required
-                    to generate a campaign QR code.
-                  </p>
-                </div>
-                <Link href="/subscription" className={styles.primaryButton}>
-                  View Plans
-                </Link>
+          {/* Campaign Details */}
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>Campaign Details</h2>
+            <div className={styles.detailsGrid}>
+              <div className={styles.detailItem}>
+                <label className={styles.detailLabel}>Campaign Name</label>
+                <p className={styles.detailValue}>{campaignName}</p>
               </div>
-            ) : (
-              <button
-                type="button"
-                className={styles.primaryButton}
-                disabled={!allReady || generatingQr}
-                onClick={handleGenerateQr}
-              >
-                {generatingQr ? "Generating…" : "Generate QR Code"}
-              </button>
-            )}
-          </>
-        )}
-      </section>
+              <div className={styles.detailItem}>
+                <label className={styles.detailLabel}>Status</label>
+                <StatusBadge status={campaign?.status} />
+              </div>
+              <div className={styles.detailItem}>
+                <label className={styles.detailLabel}>Start Date</label>
+                <p className={styles.detailValue}>{formatDate(campaign.startDate)}</p>
+              </div>
+              <div className={styles.detailItem}>
+                <label className={styles.detailLabel}>End Date</label>
+                <p className={styles.detailValue}>{formatDate(campaign.endDate)}</p>
+              </div>
+              {campaign.totalCouponLimit && (
+                <div className={styles.detailItem}>
+                  <label className={styles.detailLabel}>Display Coupons</label>
+                  <p className={styles.detailValue}>{campaign.totalCouponLimit}</p>
+                </div>
+              )}
+              {campaign.description && (
+                <div className={styles.detailItem}>
+                  <label className={styles.detailLabel}>Description</label>
+                  <p className={styles.detailValue}>{campaign.description}</p>
+                </div>
+              )}
+            </div>
+          </div>
 
-      {/* Campaign Details */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Campaign Details</h2>
-        <div className={styles.detailsGrid}>
-          <div className={styles.detailItem}>
-            <label className={styles.detailLabel}>Campaign Name</label>
-            <p className={styles.detailValue}>{campaignName}</p>
-          </div>
-          <div className={styles.detailItem}>
-            <label className={styles.detailLabel}>Status</label>
-            <StatusBadge status={campaign?.status} />
-          </div>
-          <div className={styles.detailItem}>
-            <label className={styles.detailLabel}>Start Date</label>
-            <p className={styles.detailValue}>
-              {formatDate(campaign.startDate)}
-            </p>
-          </div>
-          <div className={styles.detailItem}>
-            <label className={styles.detailLabel}>End Date</label>
-            <p className={styles.detailValue}>{formatDate(campaign.endDate)}</p>
-          </div>
-          {campaign.totalCouponLimit && (
-            <div className={styles.detailItem}>
-              <label className={styles.detailLabel}>Display Coupons</label>
-              <p className={styles.detailValue}>{campaign.totalCouponLimit}</p>
-            </div>
+          {/* Scratches Allocation */}
+          <ScratchAllocation
+            campaignId={campaignId}
+            allocated={allocated}
+            used={used}
+            remaining={remaining}
+            available={availableScratches}
+            onChanged={refetch}
+          />
+
+          {/* Store Assignment */}
+          <StoreAssignment
+            campaignId={campaignId}
+            assignedStores={assignedStores}
+            planType={planType}
+            storeLimit={storeLimit}
+            onChanged={handleStoresChanged}
+          />
+
+          {/* Reward Ranges */}
+          <RewardRanges
+            campaignId={campaignId}
+            onChanged={refetch}
+            manageHref={`/campaign/${campaignId}/ranges`}
+          />
+
+          {/* Action Buttons */}
+          {campaign && (
+            <CampaignStatusActions
+              campaign={campaign}
+              onStatusUpdated={handleStatusUpdated}
+            />
           )}
-          {campaign.description && (
-            <div className={styles.detailItem}>
-              <label className={styles.detailLabel}>Description</label>
-              <p className={styles.detailValue}>{campaign.description}</p>
+        </div>
+
+        {/* ── Right / sidebar column ── */}
+        <div className={styles.sidebar}>
+          <section className={styles.qrCard}>
+            <div className={styles.qrCardHeader}>
+              <QrCode size={20} />
+              <h2 className={styles.qrCardTitle}>Campaign QR Code</h2>
             </div>
-          )}
+
+            {alreadyGenerated ? (
+              <CampaignQrStudio
+                campaignId={campaignId}
+                defaultBrandName={assignedStores?.[0]?.storeName || ""}
+              />
+            ) : (
+              <>
+                <ul className={styles.checklist}>
+                  {checks.map((c) => (
+                    <li
+                      key={c.key}
+                      className={`${styles.checkItem} ${c.met ? styles.checkMet : styles.checkUnmet}`}
+                    >
+                      {c.met ? (
+                        <CheckCircle2 size={16} className={styles.checkIconMet} />
+                      ) : (
+                        <Circle size={16} className={styles.checkIconUnmet} />
+                      )}
+                      <span>{c.label}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {qrError && <p className={styles.qrError}>{qrError}</p>}
+
+                {subscriptionBlocked ? (
+                  <div className={styles.upgradePrompt}>
+                    <Lock size={18} />
+                    <div>
+                      <p className={styles.upgradeTitle}>Purchase a plan to generate QR</p>
+                      <p className={styles.upgradeText}>
+                        An active subscription with scratch entitlement is required.
+                      </p>
+                    </div>
+                    <Link href="/subscription" className={styles.primaryButton}>
+                      View Plans
+                    </Link>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    disabled={!allReady || generatingQr}
+                    onClick={handleGenerateQr}
+                  >
+                    {generatingQr ? "Generating…" : "Generate QR Code"}
+                  </button>
+                )}
+              </>
+            )}
+          </section>
         </div>
       </div>
-
-      {/* Scratches Allocation */}
-      <ScratchAllocation
-        campaignId={campaignId}
-        allocated={allocated}
-        used={used}
-        remaining={remaining}
-        available={availableScratches}
-        onChanged={refetch}
-      />
-
-      {/* Store Assignment */}
-      <StoreAssignment
-        campaignId={campaignId}
-        assignedStores={assignedStores}
-        planType={planType}
-        storeLimit={storeLimit}
-        onChanged={handleStoresChanged}
-      />
-
-      {/* Reward Ranges */}
-      <RewardRanges
-        campaignId={campaignId}
-        onChanged={refetch}
-        manageHref={`/campaign/${campaignId}/ranges`}
-      />
-
-      {/* Action Buttons */}
-      {campaign && (
-        <CampaignStatusActions
-          campaign={campaign}
-          onStatusUpdated={handleStatusUpdated}
-        />
-      )}
     </div>
   );
 }

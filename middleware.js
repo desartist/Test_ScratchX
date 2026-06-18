@@ -36,12 +36,6 @@ export function middleware(request) {
     return NextResponse.next(withHeaders);
   }
 
-  // ── Merchant store-setup gate ─────────────────────────────────────────
-  // If merchant already has a store, redirect /stores/create → /stores
-  if (pathname.startsWith('/stores/create') && authToken && merchantHasStore === '1') {
-    return NextResponse.redirect(new URL('/stores', request.url));
-  }
-
   // ── Merchant subscription + store onboarding gates ────────────────────
   // Routes that require an active subscription
   const SUBSCRIPTION_REQUIRED_ROUTES = [

@@ -60,6 +60,7 @@ export default function LaunchWizardModal({
   open,
   onClose,
   onLaunched,
+  initialStep,
 }) {
   const { account } = useAuthContext();
   const userId = account?.id || account?._id;
@@ -110,7 +111,7 @@ export default function LaunchWizardModal({
     if (!open || !campaignId || !userId) return;
     let active = true;
 
-    setStep("allocate");
+    setStep(initialStep || "allocate");
     setError(null);
     setAllocation(DEFAULT_ALLOCATION);
     setSelected([]);
@@ -175,7 +176,7 @@ export default function LaunchWizardModal({
     return () => {
       active = false;
     };
-  }, [open, campaignId, userId, readHeaders]);
+  }, [open, campaignId, userId, readHeaders, initialStep]);
 
   // Pre-select already-assigned stores (or auto-select the single store) once
   // both stores and assignment data have loaded.

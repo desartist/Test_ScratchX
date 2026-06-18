@@ -167,6 +167,15 @@ export default function StoresPage() {
   }, [account, fetchStores, fetchAuxData]);
 
   /**
+   * Redirect to store creation onboarding if merchant has no stores
+   */
+  useEffect(() => {
+    if (!loading && stores.length === 0) {
+      window.location.href = "/stores/create";
+    }
+  }, [loading, stores]);
+
+  /**
    * Number of stores that currently have a pending scratch request.
    */
   const pendingRequestCount = useMemo(

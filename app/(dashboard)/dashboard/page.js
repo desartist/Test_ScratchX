@@ -121,6 +121,12 @@ export default function DashboardPage() {
           "[FETCH] Setting data with metrics.totalStores:",
           json.data?.metrics?.totalStores,
         );
+        const totalStores = json.data?.metrics?.totalStores || 0;
+        if (totalStores === 0 && json.role === "Merchant") {
+          router.replace("/stores/create");
+          return;
+        }
+
         setUserRole(json.role);
         setDashboardData(json.data);
       } catch (err) {
@@ -189,11 +195,6 @@ export default function DashboardPage() {
     dashboardData?.subscription?.status,
   );
   const totalStores = dashboardData?.metrics?.totalStores || 0;
-
-  // Fresh account with no stores → show onboarding
-  if (totalStores === 0 && userRole === "Merchant") {
-    return <WelcomeOnboarding />;
-  }
 
   // Pre-subscription: has stores but no plan purchased yet
   const shouldShowPreSubscriptionDashboard = !hasSubscription && totalStores > 0;

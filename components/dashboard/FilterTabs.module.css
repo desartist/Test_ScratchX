@@ -1,45 +1,44 @@
-/* components/dashboard/FilterTabs.module.css */
 .tabsContainer {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
-  margin-bottom: 20px;
+  padding-bottom: 2px;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+  scrollbar-width: none;
 }
+
+.tabsContainer::-webkit-scrollbar { display: none; }
 
 .tab {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 8px 16px;
-  background: var(--color-gray-light);
-  border: 1px solid transparent;
+  background: #f5f6ff;
+  border: 1.5px solid transparent;
   border-radius: 999px;
-  color: var(--color-muted);
-  font-size: 0.9375rem;
+  color: #637080;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--font-afacad), system-ui, sans-serif;
 }
-
 
 .tab:hover {
-  color: var(--color-navy);
-  background: var(--color-lavender-active);
+  color: #010f44;
+  background: #eaecff;
 }
-
 
 .tab.active {
-  background: var(--color-lavender-bg);
-  color: var(--color-navy);
-  border-color: var(--color-lavender-active);
+  background: #e0e4ff;
+  color: #010f44;
+  border-color: #c5cbfa;
 }
 
-
-/* Red count badge on the Low Scratches pill */
 .countBadge {
   display: inline-flex;
   align-items: center;
@@ -48,9 +47,23 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  background: var(--color-error);
+  background: var(--color-error, #e74c3c);
   color: #fff;
-  font-size: 0.6875rem;
+  font-size: 0.65rem;
   font-weight: 700;
   line-height: 1;
+}
+
+@media (max-width: 600px) {
+  .tab {
+    padding: 7px 12px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab {
+    padding: 6px 11px;
+    font-size: 0.8rem;
+  }
 }

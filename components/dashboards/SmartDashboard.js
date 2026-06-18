@@ -383,182 +383,181 @@ export default function SmartDashboard() {
       />
       <KpiTileGrid kpi={kpi} />
 
-      {/* Top Campaigns */}
-      <SectionHeader title="Top Campaigns" viewAllHref="/campaign" />
-      {topCampaigns.length > 0 ? (
-        <div className={styles.cardList}>
-          {topCampaigns.map((c) => (
-            <TopCampaignCard
-              key={c._id}
-              name={c.name}
-              status={c.status}
-              startDate={c.startDate}
-              endDate={c.endDate}
-              daysLeft={daysUntil(c.endDate)}
-              storeCount={stores.length}
-              priceRange={
-                c.billingRange && c.billingRange !== "₹0"
-                  ? c.billingRange
-                  : undefined
-              }
-              scratchAllocated={
-                (c.allocatedCards || 0) - (c.remainingCards || 0)
-              }
-              scratchTotal={c.allocatedCards || 0}
-              onView={() => router.push(`/campaign/${c._id}`)}
-              onAssign={() => router.push(`/campaign/${c._id}/assign`)}
-            />
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          icon="📣"
-          title="No campaigns yet"
-          description="Your campaigns will appear here once created."
-        />
-      )}
-
-      {/* Store Performance */}
-      <SectionHeader title="Store Performance" viewAllHref="/stores" />
-      {storePerformance.length > 0 ? (
-        <div className={styles.cardList}>
-          {storePerformance.map((s, i) => {
-            const stats = storePerf.perStore?.[String(s._id)] || {};
-            return (
-              <StorePerformanceCard
-                key={s._id}
-                storeName={s.name}
-                isMainStore={i === 0}
-                location={s.address || s.city}
-                scans={Number(stats.scans) || 0}
-                campaignCount={Number(s.campaignCount) || 0}
-                entitlementLabel={
-                  Number.isFinite(s.scratchAllocated)
-                    ? `${s.scratchAllocated} allocated`
+      {/* Top Campaigns — only when data exists */}
+      {topCampaigns.length > 0 && (
+        <>
+          <SectionHeader title="Top Campaigns" viewAllHref="/campaign" />
+          <div className={styles.cardList}>
+            {topCampaigns.map((c) => (
+              <TopCampaignCard
+                key={c._id}
+                name={c.name}
+                status={c.status}
+                startDate={c.startDate}
+                endDate={c.endDate}
+                daysLeft={daysUntil(c.endDate)}
+                storeCount={stores.length}
+                priceRange={
+                  c.billingRange && c.billingRange !== "₹0"
+                    ? c.billingRange
                     : undefined
                 }
-                used={
-                  Number.isFinite(s.scratchAllocated) &&
-                  Number.isFinite(s.scratchRemaining)
-                    ? s.scratchAllocated - s.scratchRemaining
-                    : 0
+                scratchAllocated={
+                  (c.allocatedCards || 0) - (c.remainingCards || 0)
                 }
-                onViewStore={() => router.push(`/stores/${s._id}`)}
-                onReview={() => router.push(`/stores/${s._id}`)}
+                scratchTotal={c.allocatedCards || 0}
+                onView={() => router.push(`/campaign/${c._id}`)}
+                onAssign={() => router.push(`/campaign/${c._id}/assign`)}
               />
-            );
-          })}
-        </div>
-      ) : (
-        <EmptyState
-          icon="🏪"
-          title="No stores yet"
-          description="Create a store to start tracking performance."
-        />
+            ))}
+          </div>
+        </>
       )}
 
-      {/* Pending Requests */}
-      <SectionHeader title="Pending Requests" />
-      {pendingRequests.length > 0 ? (
-        <div className={styles.cardList}>
-          {pendingRequests.map((req) => (
-            <PendingRequestCard
-              key={req._id}
-              title="Scratch Allocation Request"
-              priority={req.priority}
-              storeName={req.storeName}
-              timeAgo={formatDateLabel(req.createdAt) || undefined}
-              requesterName={req.requestedByName}
-              requestedQty={req.quantity}
-              campaignName={req.campaignName}
-              note={req.reason}
-              busy={busyRequestId === String(req._id)}
-              onApprove={() => handleApprove(req)}
-              onReview={() => router.push(`/campaign/${req.campaignId}`)}
-            />
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          size="sm"
-          icon="✅"
-          title="No pending requests"
-          description="Allocation requests awaiting your review will show here."
-        />
+      {/* Store Performance — only when stores exist */}
+      {storePerformance.length > 0 && (
+        <>
+          <SectionHeader title="Store Performance" viewAllHref="/stores" />
+          <div className={styles.cardList}>
+            {storePerformance.map((s, i) => {
+              const stats = storePerf.perStore?.[String(s._id)] || {};
+              return (
+                <StorePerformanceCard
+                  key={s._id}
+                  storeName={s.name}
+                  isMainStore={i === 0}
+                  location={s.address || s.city}
+                  scans={Number(stats.scans) || 0}
+                  campaignCount={Number(s.campaignCount) || 0}
+                  entitlementLabel={
+                    Number.isFinite(s.scratchAllocated)
+                      ? `${s.scratchAllocated} allocated`
+                      : undefined
+                  }
+                  used={
+                    Number.isFinite(s.scratchAllocated) &&
+                    Number.isFinite(s.scratchRemaining)
+                      ? s.scratchAllocated - s.scratchRemaining
+                      : 0
+                  }
+                  onViewStore={() => router.push(`/stores/${s._id}`)}
+                  onReview={() => router.push(`/stores/${s._id}`)}
+                />
+              );
+            })}
+          </div>
+        </>
       )}
 
-      <div className={styles.chartsGrid}>
-        <div className={styles.chartBlock}>
-      {/* Customer Insights */}
-      <SectionHeader title="Customer Insights" />
-      {hasCustomerGrowth && (
-        <div className={styles.statRow}>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>{newCustomers}</span>
-            <span className={styles.statLabel}>New Customers</span>
+      {/* Pending Requests — only when there are pending items */}
+      {pendingRequests.length > 0 && (
+        <>
+          <SectionHeader title="Pending Requests" />
+          <div className={styles.cardList}>
+            {pendingRequests.map((req) => (
+              <PendingRequestCard
+                key={req._id}
+                title="Scratch Allocation Request"
+                priority={req.priority}
+                storeName={req.storeName}
+                timeAgo={formatDateLabel(req.createdAt) || undefined}
+                requesterName={req.requestedByName}
+                requestedQty={req.quantity}
+                campaignName={req.campaignName}
+                note={req.reason}
+                busy={busyRequestId === String(req._id)}
+                onApprove={() => handleApprove(req)}
+                onReview={() => router.push(`/campaign/${req.campaignId}`)}
+              />
+            ))}
           </div>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>{repeatCustomers}</span>
-            <span className={styles.statLabel}>Repeat Customers</span>
-          </div>
+        </>
+      )}
+
+      {/* Charts — only render blocks that have data */}
+      {(hasCustomerGrowth || scratchUsage?.length > 0 || campaignConsumption?.length > 0 || storeWiseItems.length > 0) && (
+        <div className={styles.chartsGrid}>
+          {(hasCustomerGrowth || customerGrowth?.length > 0) && (
+            <div className={styles.chartBlock}>
+              <SectionHeader title="Customer Insights" />
+              {hasCustomerGrowth && (
+                <div className={styles.statRow}>
+                  <div className={styles.stat}>
+                    <span className={styles.statValue}>{newCustomers}</span>
+                    <span className={styles.statLabel}>New Customers</span>
+                  </div>
+                  <div className={styles.stat}>
+                    <span className={styles.statValue}>{repeatCustomers}</span>
+                    <span className={styles.statLabel}>Repeat Customers</span>
+                  </div>
+                </div>
+              )}
+              <div className={styles.chartCard}>
+                <BarChart data={customerGrowth} />
+              </div>
+            </div>
+          )}
+
+          {scratchUsage?.length > 0 && (
+            <div className={styles.chartBlock}>
+              <SectionHeader title="Scratch Consumption" />
+              <div className={styles.chartCard}>
+                <LineAreaChart data={scratchUsage} />
+              </div>
+            </div>
+          )}
+
+          {campaignConsumption?.length > 0 && (
+            <div className={styles.chartBlock}>
+              <SectionHeader title="Campaign-wise Consumption" />
+              <div className={styles.chartCard}>
+                <DonutChart
+                  segments={campaignConsumption}
+                  centerLabel={consumptionTotal}
+                  centerSubLabel="Used"
+                />
+              </div>
+            </div>
+          )}
+
+          {storeWiseItems.length > 0 && (
+            <div className={styles.chartBlock}>
+              <SectionHeader title="Store-wise Performance" />
+              <div className={styles.statRow}>
+                <div className={styles.stat}>
+                  <span className={styles.statValue}>
+                    {storeWiseTotal.toLocaleString()}
+                  </span>
+                  <span className={styles.statLabel}>Total Scratches Used</span>
+                </div>
+                <div className={styles.stat}>
+                  <span className={styles.statValue}>{storeWiseItems.length}</span>
+                  <span className={styles.statLabel}>Active Stores</span>
+                </div>
+              </div>
+              <div className={styles.chartCard}>
+                <HBarList items={storeWiseItems} />
+              </div>
+            </div>
+          )}
         </div>
       )}
-      <div className={styles.chartCard}>
-        <BarChart data={customerGrowth} />
-      </div>
-        </div>
-
-        <div className={styles.chartBlock}>
-      {/* Scratch Consumption */}
-      <SectionHeader title="Scratch Consumption" />
-      <div className={styles.chartCard}>
-        <LineAreaChart data={scratchUsage} />
-      </div>
-        </div>
-
-        <div className={styles.chartBlock}>
-      {/* Campaign-wise Consumption */}
-      <SectionHeader title="Campaign-wise Consumption" />
-      <div className={styles.chartCard}>
-        <DonutChart
-          segments={campaignConsumption}
-          centerLabel={consumptionTotal}
-          centerSubLabel="Used"
-        />
-      </div>
-        </div>
-
-        <div className={styles.chartBlock}>
-      {/* Store-wise Performance */}
-      <SectionHeader title="Store-wise Performance" />
-      {storeWiseItems.length > 0 && (
-        <div className={styles.statRow}>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>
-              {storeWiseTotal.toLocaleString()}
-            </span>
-            <span className={styles.statLabel}>Total Scratches Used</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>{storeWiseItems.length}</span>
-            <span className={styles.statLabel}>Active Stores</span>
-          </div>
-        </div>
-      )}
-      <div className={styles.chartCard}>
-        <HBarList items={storeWiseItems} />
-      </div>
-        </div>
-      </div>
-      {/* end chartsGrid */}
 
       {/* Quick Actions */}
-      <SectionHeader title="Quick Actions" />
-      <QuickActions actions={quickActions} />
+      {quickActions?.length > 0 && (
+        <>
+          <SectionHeader title="Quick Actions" />
+          <QuickActions actions={quickActions} />
+        </>
+      )}
 
       {/* Recent Activity */}
-      <SectionHeader title="Recent Activity" />
-      <RecentActivity items={notifications} />
+      {notifications?.length > 0 && (
+        <>
+          <SectionHeader title="Recent Activity" />
+          <RecentActivity items={notifications} />
+        </>
+      )}
     </div>
   );
 }

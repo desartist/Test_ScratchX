@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import CampaignCard from "@/components/dashboard/CampaignCard";
 import FilterTabs from "@/components/dashboard/FilterTabs";
@@ -102,6 +101,26 @@ export default function CampaignPage() {
     [account, fetchCampaigns, router],
   );
 
+  const deleteCampaign = useCallback(
+    async (campaignId) => {
+      const res = await fetch(`/api/campaigns/${campaignId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "x-user-id": account?.id,
+          "x-user-role": account?.role || "Merchant",
+        },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.success === false) {
+        return { error: data?.error || data?.message || "Failed to delete campaign." };
+      }
+      await fetchCampaigns();
+      return { success: true };
+    },
+    [account, fetchCampaigns],
+  );
+
   // Central action handler for card menu + inline buttons.
   const handleAction = useCallback(
     (action, campaignId) => {
@@ -109,17 +128,8 @@ export default function CampaignPage() {
         case "scratches":
           router.push(`/campaign/${campaignId}/ranges`);
           break;
-        case "assign":
-          router.push(`/campaign/${campaignId}`);
-          break;
         case "edit":
           router.push(`/campaign/${campaignId}`);
-          break;
-        case "extend":
-          router.push(`/campaign/${campaignId}`);
-          break;
-        case "stats":
-          router.push(`/campaign/${campaignId}/live`);
           break;
         case "pause":
           togglePause(campaignId, "paused");
@@ -127,14 +137,13 @@ export default function CampaignPage() {
         case "resume":
           togglePause(campaignId, "active");
           break;
-        case "clone":
-          alert("Clone coming soon");
-          break;
+        case "delete":
+          return deleteCampaign(campaignId);
         default:
           break;
       }
     },
-    [router, togglePause],
+    [router, togglePause, deleteCampaign],
   );
 
   const handleView = useCallback(
@@ -227,13 +236,6 @@ export default function CampaignPage() {
             Manage your campaigns and track performance
           </p>
         </div>
-        <button
-          className={styles.createBtn}
-          onClick={() => router.push("/campaign/new")}
-        >
-          <Plus size={20} />
-          <span>Create Campaign</span>
-        </button>
       </div>
 
       {/* Search and Filter */}
