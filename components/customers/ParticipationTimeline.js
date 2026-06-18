@@ -54,13 +54,14 @@ export default function ParticipationTimeline({ participation }) {
         participation.status === "expired",
       icon: "🏆",
     },
-    {
-      key: "reward_claimed",
-      label: "Reward Claimed",
-      timestamp: participation.redeemed_at,
-      completed: participation.status === "redeemed",
-      icon: "💳",
-    },
+    // TODO: Reward Claimed step — enable when cashier integration is live
+    // {
+    //   key: "reward_claimed",
+    //   label: "Reward Claimed",
+    //   timestamp: participation.redeemed_at,
+    //   completed: participation.status === "redeemed",
+    //   icon: "💳",
+    // },
   ];
 
   return (

@@ -151,6 +151,7 @@ export default function CustomersPage() {
           label="Rewards Awarded"
           value={stats.rewardsAwarded || 0}
         />
+        {/* TODO: Rewards Claimed & Active Participants — enable when cashier integration is live
         <CustomerStatsCard
           icon="✅"
           label="Rewards Claimed"
@@ -161,6 +162,7 @@ export default function CustomersPage() {
           label="Active Participants"
           value={stats.activeParticipants || 0}
         />
+        */}
       </div>
 
       {/* Filters Section */}

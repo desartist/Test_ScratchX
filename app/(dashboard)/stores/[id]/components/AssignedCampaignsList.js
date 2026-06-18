@@ -521,9 +521,13 @@ export default function AssignedCampaignsList({
             campaign.scratchUsed || campaign.used_scratch_cards || 0;
           const scratchTotal =
             campaign.scratchTotal || campaign.allocated_scratch_cards || 0;
-          const scratchRemaining = scratchTotal - scratchUsed;
+          const scratchRemaining = Math.max(0, scratchTotal - scratchUsed);
+          // Round used% first, then derive remaining as its complement so they
+          // always sum to exactly 100 (avoids 0.1% used + 100.0% remaining).
           const usagePercent =
             scratchTotal > 0 ? (scratchUsed / scratchTotal) * 100 : 0;
+          const usedDisplayPct = parseFloat(usagePercent.toFixed(1));
+          const remainingDisplayPct = parseFloat((100 - usedDisplayPct).toFixed(1));
 
           return (
             <div key={campaign._id} className={styles.campaignCard}>
@@ -623,11 +627,8 @@ export default function AssignedCampaignsList({
                     />
                   </div>
                   <div className={styles.progressStats}>
-                    <span>{usagePercent.toFixed(1)}% used</span>
-                    <span>
-                      {((scratchRemaining / scratchTotal) * 100).toFixed(1)}%
-                      remaining
-                    </span>
+                    <span>{usedDisplayPct}% used</span>
+                    <span>{remainingDisplayPct}% remaining</span>
                   </div>
                 </div>
               )}

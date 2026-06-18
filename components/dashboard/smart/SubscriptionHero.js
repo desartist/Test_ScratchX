@@ -36,7 +36,7 @@ export default function SubscriptionHero({
         )}
       </div>
 
-      <h2 className={styles.bigLabel}>Unlimited Scratches</h2>
+      <h2 className={styles.bigLabel}>Unlimited scratch cards / quarter</h2>
       <p className={styles.validUntil}>Valid until {fallback(validUntil)}</p>
 
       <div className={styles.stats}>
@@ -52,7 +52,7 @@ export default function SubscriptionHero({
 
       {expiringSoon && (
         <div className={styles.warning}>
-          <span aria-hidden="true">⚠</span> Unlimited Scratches expire in{" "}
+          <span aria-hidden="true">⚠</span> Unlimited scratch cards / quarter expire in{" "}
           {daysRemaining} days.
         </div>
       )}

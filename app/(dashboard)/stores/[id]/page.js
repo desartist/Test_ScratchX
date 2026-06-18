@@ -11,21 +11,20 @@ import {
   Users,
   Store,
   User,
+  Phone,
+  Mail,
+  Hash,
+  Pencil,
+  Trash2,
+  PlusCircle,
 } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthContext';
-import Badge from '@/components/dashboard/Badge';
-import StatsCard from '@/components/stores/StatsCard';
 import StoreDeleteModal from '@/components/stores/StoreDeleteModal';
 import AssignCampaignsModal from './components/AssignCampaignsModal';
 import AssignedCampaignsList from './components/AssignedCampaignsList';
 import styles from './page.module.css';
 
-// Map store status → Badge variant.
-const STATUS_VARIANT = {
-  active: 'success',
-  inactive: 'danger',
-  suspended: 'warning',
-};
+const STATUS_VARIANT = { active: 'active', inactive: 'inactive', suspended: 'suspended' };
 
 export default function StoreDetailPage() {
   const router = useRouter();
@@ -43,56 +42,36 @@ export default function StoreDetailPage() {
   const [successDetails, setSuccessDetails] = useState(null);
   const [locationInfo, setLocationInfo] = useState(null);
 
-  // Silent refresh of store data (used after assign/remove). Does not toggle
-  // the page-level loading state so the layout stays put.
   const refreshStore = useCallback(async () => {
     if (!id || !account?.id) return;
     try {
-      const response = await fetch(`/api/stores/${id}`, {
-        headers: {
-          'x-user-id': account.id,
-          'x-user-role': account.role
-        }
+      const res = await fetch(`/api/stores/${id}`, {
+        headers: { 'x-user-id': account.id, 'x-user-role': account.role },
       });
-      if (response.ok) {
-        const result = await response.json();
+      if (res.ok) {
+        const result = await res.json();
         setStore(result.data);
       }
-    } catch (err) {
-      console.error('Failed to refresh store:', err);
-    }
+    } catch { /* silent */ }
   }, [id, account]);
 
-  // Initial fetch (with loading + error states).
   useEffect(() => {
     const fetchStore = async () => {
       try {
         setLoading(true);
+        if (!account?.id) { setError('No account information available'); setLoading(false); return; }
 
-        if (!account || !account.id) {
-          setError('No account information available');
-          setStore(null);
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(`/api/stores/${id}`, {
-          headers: {
-            'x-user-id': account.id,
-            'x-user-role': account.role
-          }
+        const res = await fetch(`/api/stores/${id}`, {
+          headers: { 'x-user-id': account.id, 'x-user-role': account.role },
         });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to load store');
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to load store');
         }
-
-        const result = await response.json();
+        const result = await res.json();
         setStore(result.data);
         setError(null);
 
-        // Reverse geocode coordinates → landmark
         const { latitude, longitude } = result.data || {};
         if (latitude && longitude) {
           try {
@@ -102,11 +81,13 @@ export default function StoreDetailPage() {
             );
             const geoData = await geo.json();
             const a = geoData.address || {};
-            const landmark = a.amenity || a.shop || a.tourism || a.building || a.road || a.pedestrian || a.suburb || null;
-            const area = a.suburb || a.neighbourhood || a.village || a.town || null;
-            const city = a.city || a.town || a.village || a.county || null;
-            setLocationInfo({ landmark, area, city, state: a.state || null });
-          } catch { /* silently skip */ }
+            setLocationInfo({
+              landmark: a.amenity || a.shop || a.tourism || a.building || a.road || a.suburb || null,
+              area: a.suburb || a.neighbourhood || a.village || a.town || null,
+              city: a.city || a.town || a.village || a.county || null,
+              state: a.state || null,
+            });
+          } catch { /* silent */ }
         }
       } catch (err) {
         setError(err.message || 'Failed to load store');
@@ -115,37 +96,21 @@ export default function StoreDetailPage() {
         setLoading(false);
       }
     };
-
-    if (id && account) {
-      fetchStore();
-    }
+    if (id && account) fetchStore();
   }, [id, account]);
 
-  // Delete store
   const handleDelete = useCallback(async () => {
     try {
       setDeleteLoading(true);
-
-      if (!account || !account.id) {
-        setError('No account information available');
-        setShowDeleteModal(false);
-        setDeleteLoading(false);
-        return;
-      }
-
-      const response = await fetch(`/api/stores/${id}`, {
+      if (!account?.id) { setError('No account information available'); setShowDeleteModal(false); setDeleteLoading(false); return; }
+      const res = await fetch(`/api/stores/${id}`, {
         method: 'DELETE',
-        headers: {
-          'x-user-id': account.id,
-          'x-user-role': account.role
-        }
+        headers: { 'x-user-id': account.id, 'x-user-role': account.role },
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete store');
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to delete store');
       }
-
       router.push('/stores');
     } catch (err) {
       setError(err.message || 'Failed to delete store');
@@ -155,66 +120,44 @@ export default function StoreDetailPage() {
     }
   }, [id, account, router]);
 
-  // Handle campaigns assigned
-  const handleCampaignsAssigned = useCallback(
-    (data) => {
-      setShowAssignCampaignsModal(false);
+  const handleCampaignsAssigned = useCallback((data) => {
+    setShowAssignCampaignsModal(false);
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      setSuccessDetails({ assignedCount: data.assignedCount || 0, skippedCount: data.skippedCount || 0 });
+      setSuccessMessage(data.message || 'Campaigns assigned successfully');
+      setTimeout(() => { setSuccessMessage(null); setSuccessDetails(null); }, 5000);
+    }
+    refreshStore();
+  }, [refreshStore]);
 
-      if (data && typeof data === 'object' && !Array.isArray(data)) {
-        setSuccessDetails({
-          assignedCount: data.assignedCount || 0,
-          skippedCount: data.skippedCount || 0
-        });
-        setSuccessMessage(data.message || 'Campaigns assigned successfully');
-
-        // Auto-dismiss success message after 5 seconds
-        setTimeout(() => {
-          setSuccessMessage(null);
-          setSuccessDetails(null);
-        }, 5000);
-      }
-
-      // Refresh store details
-      refreshStore();
-    },
-    [refreshStore]
+  if (loading) return <div className={styles.container}><div className={styles.loadingContainer}>Loading store details…</div></div>;
+  if (error) return (
+    <div className={styles.container}>
+      <button className={styles.backButton} onClick={() => router.back()}><ChevronLeft size={20} /></button>
+      <div className={styles.errorContainer}>{error}</div>
+    </div>
+  );
+  if (!store) return (
+    <div className={styles.container}>
+      <button className={styles.backButton} onClick={() => router.back()}><ChevronLeft size={20} /></button>
+      <div className={styles.emptyState}>Store not found</div>
+    </div>
   );
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loadingContainer}>Loading store details...</div>
-      </div>
-    );
-  }
+  const isMainStore = !!store.is_main_store;
 
-  // Error state
-  if (error) {
-    return (
-      <div className={styles.container}>
-        <button className={styles.backButton} onClick={() => router.back()}>
-          <ChevronLeft size={20} />
-        </button>
-        <div className={styles.errorContainer}>{error}</div>
-      </div>
-    );
-  }
+  const statusKey = store.status || 'active';
+  const statusLabel = statusKey.charAt(0).toUpperCase() + statusKey.slice(1);
+  const statusClass = styles[`statusBadge${statusKey.charAt(0).toUpperCase() + statusKey.slice(1)}`] || styles.statusBadgeActive;
 
-  // Not found state
-  if (!store) {
-    return (
-      <div className={styles.container}>
-        <button className={styles.backButton} onClick={() => router.back()}>
-          <ChevronLeft size={20} />
-        </button>
-        <div className={styles.emptyState}>Store not found</div>
-      </div>
-    );
-  }
+  const initials = (store.contact_person || '')
+    .split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+
+  const campaigns = store.assignedCampaigns || store.storeSnapshots || store.assigned_campaigns || [];
 
   return (
     <div className={styles.container}>
+
       {/* Success Notification */}
       {successMessage && (
         <div className={styles.successNotification}>
@@ -224,183 +167,202 @@ export default function StoreDetailPage() {
               <p className={styles.successTitle}>Campaigns assigned successfully</p>
               {successDetails && (
                 <p className={styles.successDescription}>
-                  {successDetails.assignedCount > 0 && (
-                    <>
-                      {successDetails.assignedCount} campaign{successDetails.assignedCount !== 1 ? 's' : ''} assigned
-                    </>
-                  )}
-                  {successDetails.assignedCount > 0 && successDetails.skippedCount > 0 && ' • '}
-                  {successDetails.skippedCount > 0 && (
-                    <>
-                      {successDetails.skippedCount} already assigned
-                    </>
-                  )}
+                  {successDetails.assignedCount > 0 && `${successDetails.assignedCount} campaign${successDetails.assignedCount !== 1 ? 's' : ''} assigned`}
+                  {successDetails.assignedCount > 0 && successDetails.skippedCount > 0 && ' · '}
+                  {successDetails.skippedCount > 0 && `${successDetails.skippedCount} already assigned`}
                 </p>
               )}
             </div>
           </div>
-          <button
-            className={styles.successClose}
-            onClick={() => {
-              setSuccessMessage(null);
-              setSuccessDetails(null);
-            }}
-            title="Dismiss"
-          >
-            ×
-          </button>
+          <button className={styles.successClose} onClick={() => { setSuccessMessage(null); setSuccessDetails(null); }}>×</button>
         </div>
       )}
 
-      {/* Header Section */}
+      {/* Page Header */}
       <div className={styles.header}>
-        <button
-          className={styles.backButton}
-          onClick={() => router.back()}
-          title="Go back"
-        >
+        <button className={styles.backButton} onClick={() => router.back()} title="Go back">
           <ChevronLeft size={20} />
         </button>
         <div className={styles.headerContent}>
-          <div className={styles.titleSection}>
-            <h1 className={styles.title}>{store.store_name}</h1>
-            <p className={styles.location}>
-              <MapPin size={16} />
+          <h1 className={styles.title}>{store.store_name}</h1>
+        </div>
+      </div>
+
+      {/* Hero Overview Card */}
+      <div className={styles.overviewCard}>
+        <div className={styles.overviewTop}>
+          <div className={styles.storeMeta}>
+            <h2 className={styles.overviewName}>{store.store_name}</h2>
+            <p className={styles.overviewLocation}>
+              <MapPin size={14} />
               {store.city}, {store.state}
             </p>
+            {isMainStore && (
+              <span className={styles.mainStoreBadge}>⭐ Main Store</span>
+            )}
           </div>
-          <div className={styles.headerActions}>
-            <Badge
-              label={
-                store.status
-                  ? store.status.charAt(0).toUpperCase() + store.status.slice(1)
-                  : 'Active'
-              }
-              variant={STATUS_VARIANT[store.status] || 'default'}
-            />
+          <span className={statusClass}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+            {statusLabel}
+          </span>
+        </div>
+
+        {/* Stats */}
+        <div className={styles.statsRow}>
+          <div className={styles.statTile}>
+            <div className={styles.statIcon}><Megaphone size={16} /></div>
+            <p className={styles.statValue}>{store.active_campaigns || 0}</p>
+            <span className={styles.statLabel}>Active Campaigns</span>
+          </div>
+          <div className={styles.statTile}>
+            <div className={styles.statIcon}><ScanLine size={16} /></div>
+            <p className={styles.statValue}>{store.total_scans || 0}</p>
+            <span className={styles.statLabel}>Total Scans</span>
+          </div>
+          <div className={styles.statTile}>
+            <div className={styles.statIcon}><TrendingUp size={16} /></div>
+            <p className={styles.statValue}>{store.conversions || 0}</p>
+            <span className={styles.statLabel}>Conversions</span>
+          </div>
+          <div className={styles.statTile}>
+            <div className={styles.statIcon}><Users size={16} /></div>
+            <p className={styles.statValue}>{store.total_customers || 0}</p>
+            <span className={styles.statLabel}>Customers</span>
           </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className={styles.statsGrid}>
-        <StatsCard value={store.active_campaigns || 0} label="Active Campaigns" icon={<Megaphone size={20} />} />
-        <StatsCard value={store.total_scans || 0} label="Total Scans" icon={<ScanLine size={20} />} />
-        <StatsCard value={store.conversions || 0} label="Conversions" icon={<TrendingUp size={20} />} />
-        <StatsCard value={store.total_customers || 0} label="Customers" icon={<Users size={20} />} />
-      </div>
+      {/* Two-column layout */}
+      <div className={styles.layout}>
 
-      {/* Info Card */}
-      <div className={styles.infoCard}>
+        {/* ── Left: Main ── */}
+        <div className={styles.main}>
 
-        {/* Store Details */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionIcon}><Store size={14} /></span>
-            Store Details
-          </h2>
-          <div className={styles.detailGroup}>
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Store Name</span>
-              <span className={styles.detailValue}>{store.store_name}</span>
-            </div>
-            {store.store_code && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Store Code</span>
-                <span className={styles.detailValue}>{store.store_code}</span>
-              </div>
-            )}
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Address</span>
-              <span className={styles.detailValue}>{store.address}</span>
-            </div>
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>City</span>
-              <span className={styles.detailValue}>{store.city}</span>
-            </div>
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>State</span>
-              <span className={styles.detailValue}>{store.state}</span>
-            </div>
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Pincode</span>
-              <span className={styles.detailValue}>{store.pincode}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Manager Info */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionIcon}><User size={14} /></span>
-            Manager Info
-          </h2>
-          <div className={styles.managerChip}>
-            <span className={styles.managerAvatar}>
-              {(store.contact_person || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?'}
-            </span>
-            <div>
-              <div className={styles.managerName}>{store.contact_person || 'N/A'}</div>
-              <div className={styles.managerRole}>Store Manager</div>
-            </div>
-          </div>
-          <div className={styles.detailGroup}>
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Phone</span>
-              <span className={styles.detailValue}>{store.contact_number || 'N/A'}</span>
-            </div>
-            {store.email && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Email</span>
-                <span className={styles.detailValue}>{store.email}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Nearest Location */}
-        {store.latitude && store.longitude && (
+          {/* Store Details */}
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>
-              <span className={styles.sectionIcon}><MapPin size={14} /></span>
-              Nearest Location
+              <span className={styles.sectionIcon}><Store size={14} /></span>
+              Store Details
             </h2>
-            <div className={styles.locationChip}>
-              <div className={styles.locationPinDot} />
-              <div className={styles.locationChipText}>
-                {locationInfo?.landmark && (
-                  <div className={styles.locationChipMain}>{locationInfo.landmark}</div>
-                )}
-                <div className={styles.locationChipSub}>
-                  {locationInfo
-                    ? [locationInfo.area, locationInfo.city, locationInfo.state].filter(Boolean).join(', ')
-                    : `${store.city}, ${store.state}`}
+            <div className={styles.detailsGrid}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Store Name</span>
+                <p className={styles.detailValue}>{store.store_name}</p>
+              </div>
+              {store.store_code && (
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Store Code</span>
+                  <p className={styles.detailValue}>{store.store_code}</p>
+                </div>
+              )}
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Address</span>
+                <p className={styles.detailValue}>{store.address}</p>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>City</span>
+                <p className={styles.detailValue}>{store.city}</p>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>State</span>
+                <p className={styles.detailValue}>{store.state}</p>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Pincode</span>
+                <p className={styles.detailValue}>{store.pincode}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Assigned Campaigns */}
+          <AssignedCampaignsList
+            campaigns={campaigns}
+            storeId={id}
+            onCampaignRemoved={refreshStore}
+          />
+
+        </div>
+
+        {/* ── Right: Sidebar ── */}
+        <div className={styles.sidebar}>
+
+          {/* Manager Info */}
+          <div className={styles.sidebarCard}>
+            <h2 className={styles.sectionTitle}>
+              <span className={styles.sectionIcon}><User size={14} /></span>
+              Manager Info
+            </h2>
+            <div className={styles.managerChip}>
+              <div className={styles.managerAvatar}>{initials}</div>
+              <div>
+                <div className={styles.managerName}>{store.contact_person || 'N/A'}</div>
+                <div className={styles.managerRole}>Store Manager</div>
+              </div>
+            </div>
+            <div className={styles.detailGroup}>
+              <div className={styles.detailRow}>
+                <span className={styles.detailRowLabel}>Phone</span>
+                <span className={styles.detailRowValue}>{store.contact_number || 'N/A'}</span>
+              </div>
+              {store.email && (
+                <div className={styles.detailRow}>
+                  <span className={styles.detailRowLabel}>Email</span>
+                  <span className={styles.detailRowValue}>{store.email}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Nearest Location */}
+          {store.latitude && store.longitude && (
+            <div className={styles.sidebarCard}>
+              <h2 className={styles.sectionTitle}>
+                <span className={styles.sectionIcon}><MapPin size={14} /></span>
+                Nearest Location
+              </h2>
+              <div className={styles.locationChip}>
+                <div className={styles.locationPinDot} />
+                <div className={styles.locationChipText}>
+                  {locationInfo?.landmark && (
+                    <div className={styles.locationChipMain}>{locationInfo.landmark}</div>
+                  )}
+                  <div className={styles.locationChipSub}>
+                    {locationInfo
+                      ? [locationInfo.area, locationInfo.city, locationInfo.state].filter(Boolean).join(', ')
+                      : `${store.city}, ${store.state}`}
+                  </div>
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Actions */}
+          <div className={styles.sidebarCard}>
+            <h2 className={styles.sectionTitle}>
+              <span className={styles.sectionIcon}><Pencil size={14} /></span>
+              Actions
+            </h2>
+            <div className={styles.actionGroup}>
+              <button onClick={() => setShowAssignCampaignsModal(true)} className={styles.assignButton}>
+                <PlusCircle size={16} /> Assign Campaigns
+              </button>
+              <button onClick={() => router.push(`/stores/${id}/edit`)} className={styles.editButton}>
+                <Pencil size={16} /> Edit Store
+              </button>
+              <div className={isMainStore ? styles.deleteWrapper : undefined} title={isMainStore ? 'Main store cannot be deleted' : undefined}>
+                <button
+                  onClick={() => !isMainStore && setShowDeleteModal(true)}
+                  className={`${styles.deleteButton} ${isMainStore ? styles.deleteButtonDisabled : ''}`}
+                  disabled={isMainStore}
+                >
+                  <Trash2 size={15} />
+                  {isMainStore ? 'Main Store — Cannot Delete' : 'Delete Store'}
+                </button>
+              </div>
+            </div>
           </div>
-        )}
 
-      </div>
-
-      {/* Campaigns */}
-      <AssignedCampaignsList
-        campaigns={store.assignedCampaigns || store.storeSnapshots || store.assigned_campaigns || []}
-        storeId={id}
-        onCampaignRemoved={refreshStore}
-      />
-
-      {/* Action Footer */}
-      <div className={styles.actionFooter}>
-        <button onClick={() => router.push(`/stores/${id}/edit`)} className={styles.editButton}>
-          Edit Store
-        </button>
-        <button onClick={() => setShowAssignCampaignsModal(true)} className={styles.assignButton}>
-          + Assign Campaigns
-        </button>
-        <button onClick={() => setShowDeleteModal(true)} className={styles.deleteButton}>
-          Delete Store
-        </button>
+        </div>
       </div>
 
       {/* Modals */}

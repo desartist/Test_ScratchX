@@ -27,7 +27,7 @@ function FeatureList({ features, limits }) {
       </li>
       <li className={styles.featureItem}>
         {features.unlimitedScratches ? CHECK : CROSS}
-        <span>Unlimited Scratches</span>
+        <span>Unlimited scratch cards / quarter</span>
       </li>
       <li className={styles.featureItem}>
         {features.rewardManagement ? CHECK : CROSS}
@@ -190,7 +190,7 @@ export default function SubscriptionPage() {
                   <span className={styles.activeBadge}>ACTIVE</span>
                   <div className={styles.entitlementDetails}>
                     <p className={styles.entitlementText}>
-                      Unlimited Scratches
+                      Unlimited scratch cards / quarter
                       {subscriptionStatus?.remainingDays && (
                         <span className={styles.daysRemaining}>
                           {subscriptionStatus.remainingDays} days remaining
@@ -209,7 +209,7 @@ export default function SubscriptionPage() {
                   <span className={styles.expiredBadge}>EXPIRED</span>
                   <div className={styles.entitlementDetails}>
                     <p className={styles.entitlementText}>
-                      Unlimited Scratches
+                      Unlimited scratch cards / quarter
                       {subscriptionStatus?.scratchPurchased > 0 && (
                         <span className={styles.purchasedCount}>
                           {subscriptionStatus.scratchPurchased} purchased
@@ -318,7 +318,7 @@ export default function SubscriptionPage() {
             <div className={styles.scratchesAlert}>
               <AlertCircle size={24} />
               <div className={styles.alertContent}>
-                <h3 className={styles.alertTitle}>Out of Unlimited Scratches?</h3>
+                <h3 className={styles.alertTitle}>Need more scratch cards?</h3>
                 <p className={styles.alertMessage}>
                   Purchase additional scratches to continue creating campaigns.
                 </p>
