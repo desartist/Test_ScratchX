@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import styles from "./checkout.module.css";
 
@@ -230,7 +230,7 @@ function CheckoutContent() {
             {/* Header */}
             <div className={styles.header}>
               <button onClick={() => router.back()} className={styles.backBtn}>
-                <ArrowLeft size={20} /> Back
+                <ArrowLeft size={18} /> Back
               </button>
               <h1>Review Your Purchase</h1>
             </div>
@@ -238,92 +238,86 @@ function CheckoutContent() {
             {/* Error Alert */}
             {error && (
               <div className={styles.errorAlert}>
-                <AlertCircle size={20} />
+                <AlertCircle size={18} />
                 <span>{error}</span>
               </div>
             )}
 
-            {/* Plan Summary */}
+            {/* Plan Hero */}
             <div className={styles.planCard}>
-              <h2 className={styles.planName}>
-                ScratchX {plan.name} Plan
-              </h2>
-              <p className={styles.planDuration}>One-time purchase • Lifetime access</p>
+              <div className={styles.planBadge}>
+                ✦ One-time · Lifetime Access
+              </div>
+              <h2 className={styles.planName}>ScratchX {plan.name} Plan</h2>
+              <p className={styles.planDuration}>No recurring charges. Pay once, use forever.</p>
             </div>
 
             {/* Features */}
             <div className={styles.featuresCard}>
-              <h3>What's Included:</h3>
-              <ul>
-                <li>✓ Unlimited Campaigns</li>
-                <li>✓ Unlimited Scratches</li>
-                <li>✓ Reward Management</li>
-                <li>✓ Customer Database</li>
-                <li>✓ Analytics Dashboard</li>
-                <li>✓ Custom Branding</li>
-                <li>✓ Priority Support</li>
-                {plan.name === "Smart" && (
-                  <>
-                    <li>✓ Multi-Store (Up to 5 Stores)</li>
-                    <li>✓ WhatsApp Integration</li>
-                    <li>✓ Advanced Analytics</li>
-                    <li>✓ Fraud Protection</li>
-                  </>
-                )}
-                {plan.name === "Core" && (
-                  <li>Single Store License</li>
-                )}
+              <p className={styles.featuresTitle}>What's Included</p>
+              <ul className={styles.featuresList}>
+                {[
+                  "Unlimited Campaigns",
+                  "Unlimited Scratches",
+                  "Reward Management",
+                  "Customer Database",
+                  "Analytics Dashboard",
+                  "Custom Branding",
+                  "Priority Support",
+                  ...(plan.name === "Smart"
+                    ? ["Multi-Store (Up to 5)", "WhatsApp Integration", "Advanced Analytics", "Fraud Protection"]
+                    : []),
+                  ...(plan.name === "Core" ? ["Single Store License"] : []),
+                ].map((f) => (
+                  <li key={f} className={styles.featureItem}>
+                    <span className={styles.featureCheck}>
+                      <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6l3 3 5-5" stroke="#010f44" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </span>
+                    {f}
+                  </li>
+                ))}
               </ul>
             </div>
 
             {/* Pricing Breakdown */}
             <div className={styles.pricingCard}>
+              <p className={styles.pricingTitle}>Price Breakdown</p>
               <div className={styles.pricingRow}>
-                <span>Plan Price:</span>
+                <span>Plan Price</span>
                 <span className={styles.amount}>₹{plan.basePrice.toLocaleString("en-IN")}</span>
               </div>
               <div className={styles.pricingRow}>
-                <span>GST (18%):</span>
+                <span>GST (18%)</span>
                 <span className={styles.amount}>₹{plan.gstAmount.toLocaleString("en-IN")}</span>
               </div>
               <div className={`${styles.pricingRow} ${styles.totalRow}`}>
-                <span className={styles.totalLabel}>Total Amount:</span>
+                <span className={styles.totalLabel}>Total Amount</span>
                 <span className={styles.totalAmount}>₹{plan.totalPrice.toLocaleString("en-IN")}</span>
               </div>
             </div>
 
-            {/* Confirmation */}
-            <div className={styles.confirmationText}>
+            {/* Trust note */}
+            <div className={styles.trustNote}>
+              <ShieldCheck size={18} />
               <p>
-                By confirming, you authorize ScratchX to charge ₹{plan.totalPrice.toLocaleString("en-IN")} to your account.
-                Your plan will be active for lifetime with no renewal needed.
+                By confirming, you authorise ScratchX to charge{" "}
+                <strong>₹{plan.totalPrice.toLocaleString("en-IN")}</strong> via Razorpay.
+                Your plan activates instantly with lifetime access — no renewal needed.
               </p>
             </div>
 
             {/* Actions */}
             <div className={styles.actions}>
-              <button
-                onClick={() => router.back()}
-                className={styles.cancelBtn}
-                disabled={submitting}
-              >
+              <button onClick={() => router.back()} className={styles.cancelBtn} disabled={submitting}>
                 Cancel
               </button>
-              <button
-                onClick={handleConfirmPurchase}
-                className={styles.confirmBtn}
-                disabled={submitting}
-              >
+              <button onClick={handleConfirmPurchase} className={styles.confirmBtn} disabled={submitting}>
                 {submitting ? (
-                  <>
-                    <Loader2 size={18} className={styles.spinner} />
-                    Processing...
-                  </>
+                  <><Loader2 size={18} className={styles.spinner} /> Processing…</>
                 ) : (
-                  <>
-                    <CheckCircle2 size={18} />
-                    Confirm & Activate
-                  </>
+                  <><CheckCircle2 size={18} /> Confirm &amp; Pay ₹{plan.totalPrice.toLocaleString("en-IN")}</>
                 )}
               </button>
             </div>

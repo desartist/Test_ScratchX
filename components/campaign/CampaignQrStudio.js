@@ -63,7 +63,7 @@ export default function CampaignQrStudio({
   const [bgColor, setBgColor] = useState(
     () => initialStyle?.bgColor || "#ffffff",
   );
-  const [logoSrc, setLogoSrc] = useState(() => initialStyle?.logoUrl || "");
+  const [logoSrc, setLogoSrc] = useState(() => initialStyle?.logoUrl || "/Logo.webp");
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -219,12 +219,11 @@ export default function CampaignQrStudio({
         return;
       }
 
-      const name = brandName.trim();
-      const headerH = name ? 64 : 0;
+      const LOGO_HEADER_H = 48;
       const padding = 24;
       const out = document.createElement("canvas");
       out.width = src.width + padding * 2;
-      out.height = src.height + headerH + padding * 2;
+      out.height = src.height + LOGO_HEADER_H + padding * 2;
 
       const ctx = out.getContext("2d");
       if (!ctx) {
@@ -235,20 +234,23 @@ export default function CampaignQrStudio({
       ctx.fillStyle = bgColor || "#ffffff";
       ctx.fillRect(0, 0, out.width, out.height);
 
-      if (name) {
-        ctx.fillStyle = fgColor || "#010f44";
-        ctx.font =
-          "700 26px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(name, out.width / 2, padding + headerH / 2);
-      }
-
-      const qrY = padding + headerH;
+      const qrY = padding + LOGO_HEADER_H;
       ctx.drawImage(src, padding, qrY);
-      resolve(out);
+
+      // Draw ScratchX horizontal logo above the QR.
+      const logoImg = new Image();
+      logoImg.onload = () => {
+        const logoH = 28;
+        const logoW = (logoImg.naturalWidth / logoImg.naturalHeight) * logoH;
+        const logoX = (out.width - logoW) / 2;
+        const logoY = padding + (LOGO_HEADER_H - logoH) / 2;
+        ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+        resolve(out);
+      };
+      logoImg.onerror = () => resolve(out);
+      logoImg.src = "/horizontal_logo.webp";
     });
-  }, [brandName, bgColor, fgColor]);
+  }, [bgColor]);
 
   const triggerDownload = useCallback((href, filename, revoke) => {
     const a = document.createElement("a");
@@ -289,13 +291,12 @@ export default function CampaignQrStudio({
       return;
     }
 
-    const name = brandName.trim();
-    const headerH = name ? 64 : 0;
+    const LOGO_HEADER_H = 48;
     const padding = 24;
     const qrBox = QR_SIZE;
     const outW = qrBox + padding * 2;
-    const outH = qrBox + headerH + padding * 2;
-    const qrY = padding + headerH;
+    const outH = qrBox + LOGO_HEADER_H + padding * 2;
+    const qrY = padding + LOGO_HEADER_H;
 
     // Re-scale the inner QR svg to QR_SIZE via a nested viewport.
     const inner = qrSvg
@@ -316,17 +317,20 @@ export default function CampaignQrStudio({
         `width="${lSize}" height="${lSize}"/>`;
     }
 
-    const nameMarkup = name
-      ? `<text x="${outW / 2}" y="${padding + headerH / 2}" text-anchor="middle" ` +
-        `dominant-baseline="central" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" ` +
-        `font-size="26" font-weight="700" fill="${escapeXml(fgColor || "#010f44")}">${escapeXml(name)}</text>`
-      : "";
+    // ScratchX horizontal logo above the QR.
+    const headerLogoH = 28;
+    const headerLogoW = 120;
+    const headerLogoX = (outW - headerLogoW) / 2;
+    const headerLogoY = padding + (LOGO_HEADER_H - headerLogoH) / 2;
+    const headerMarkup =
+      `<image href="/horizontal_logo.webp" x="${headerLogoX}" y="${headerLogoY}" ` +
+      `width="${headerLogoW}" height="${headerLogoH}"/>`;
 
     const svgString =
       `<svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${outH}" ` +
       `viewBox="0 0 ${outW} ${outH}">` +
       `<rect width="${outW}" height="${outH}" fill="${escapeXml(bgColor || "#ffffff")}"/>` +
-      nameMarkup +
+      headerMarkup +
       `<svg x="${padding}" y="${qrY}" width="${qrBox}" height="${qrBox}" ` +
       `viewBox="0 0 ${qrBox} ${qrBox}" preserveAspectRatio="xMidYMid meet">${inner}</svg>` +
       logoMarkup +
@@ -335,18 +339,18 @@ export default function CampaignQrStudio({
     const blob = new Blob([svgString], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
     triggerDownload(url, `${fileBase}-qr.svg`, true);
-  }, [scanUrl, brandName, fgColor, bgColor, logoSrc, triggerDownload, fileBase]);
-
-  const trimmedName = brandName.trim();
+  }, [scanUrl, bgColor, fgColor, logoSrc, triggerDownload, fileBase]);
 
   return (
     <div className={styles.studio}>
       {/* Preview */}
       <div className={styles.previewCol}>
         <div className={styles.previewCard}>
-          {trimmedName && (
-            <h3 className={styles.brandHeading}>{trimmedName}</h3>
-          )}
+          <img
+            src="/horizontal_logo.webp"
+            alt="ScratchX"
+            className={styles.brandLogo}
+          />
           <canvas
             ref={canvasRef}
             width={QR_SIZE}

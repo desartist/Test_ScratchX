@@ -1,33 +1,58 @@
+/* ── Full-page shell ────────────────────────────────────────── */
+.pageShell {
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(145deg, #f5f6ff 0%, #fafbff 60%, #fff8ee 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px 60px;
+}
+
+/* ── Top bar with logo ──────────────────────────────────────── */
+.topBar {
+  width: 100%;
+  max-width: 800px;
+  padding: 28px 0 0;
+  display: flex;
+  justify-content: center;
+}
+
+.topLogo {
+  height: 36px;
+  width: auto;
+}
+
 /* ── Container ─────────────────────────────────────────────── */
 .container {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 32px 24px 64px;
+  width: 100%;
+  max-width: 560px;
+  padding: 40px 0 0;
   display: flex;
   flex-direction: column;
   gap: 28px;
   font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
-
 /* ── Header ────────────────────────────────────────────────── */
 .headerSection {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  text-align: center;
 }
 
 .title {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 800;
   color: #010f44;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
 }
 
 .headerSubtitle {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #637080;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
@@ -43,7 +68,6 @@
   position: relative;
 }
 
-/* connecting line between circles */
 .stepCircles::before {
   content: '';
   position: absolute;
@@ -133,10 +157,10 @@
 /* ── Form Card ─────────────────────────────────────────────── */
 .form {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 24px;
   border: 1.5px solid #e8eaff;
-  box-shadow: 0 4px 24px rgba(1, 15, 68, 0.07);
-  padding: 32px 32px 28px;
+  box-shadow: 0 8px 40px rgba(1, 15, 68, 0.09);
+  padding: 36px 36px 32px;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -157,7 +181,7 @@
 
 .subtitle {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: #637080;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
   line-height: 1.5;
@@ -190,7 +214,7 @@
 .textarea,
 .select {
   width: 100%;
-  padding: 13px 16px;
+  padding: 14px 18px;
   border: 1.5px solid #e0e4ff;
   border-radius: 12px;
   font-size: 0.95rem;
@@ -397,7 +421,7 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 11px 20px;
+  padding: 12px 20px;
   background: #ef9e1b;
   color: #fff;
   border: none;
@@ -419,7 +443,6 @@
   cursor: not-allowed;
 }
 
-
 /* ── Button Row ────────────────────────────────────────────── */
 .buttonRow {
   display: flex;
@@ -431,12 +454,12 @@
 }
 
 .cancelButton {
-  padding: 10px 20px;
+  padding: 12px 22px;
   border: 1.5px solid #e0e4ff;
   background: transparent;
   color: #637080;
-  border-radius: 10px;
-  font-size: 0.875rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
@@ -459,16 +482,16 @@
 }
 
 .primaryButton {
-  padding: 10px 28px;
-  background: #ef9e1b;
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #ef9e1b, #f5b23a);
   color: #fff;
   border: none;
-  border-radius: 10px;
-  font-size: 0.875rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.3);
+  transition: transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(239, 158, 27, 0.35);
   font-family: var(--font-afacad), system-ui, sans-serif;
   display: flex;
   align-items: center;
@@ -478,9 +501,8 @@
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: #d98e14;
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(239, 158, 27, 0.4);
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.45);
 }
 
 .primaryButton:active:not(:disabled) {
@@ -533,22 +555,6 @@
   color: #637080;
   flex-shrink: 0;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
-}
-
-/* ── Responsive ────────────────────────────────────────────── */
-@media (max-width: 640px) {
-  .form {
-    padding: 24px 18px 20px;
-  }
-
-  .twoColumnRow {
-    grid-template-columns: 1fr;
-  }
-
-  .stepCircles::before {
-    left: calc(16.66% + 20px);
-    right: calc(16.66% + 20px);
-  }
 }
 
 /* ── Welcome / Onboarding Screen ─────────────────────────────── */
@@ -675,4 +681,21 @@
   color: #010f44;
   line-height: 1.35;
   margin: 0;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .pageShell { padding: 0 16px 48px; }
+  .container { padding-top: 28px; gap: 20px; }
+  .title { font-size: 1.6rem; }
+  .form { padding: 24px 20px 22px; border-radius: 18px; }
+
+  .twoColumnRow {
+    grid-template-columns: 1fr;
+  }
+
+  .stepCircles::before {
+    left: calc(16.66% + 20px);
+    right: calc(16.66% + 20px);
+  }
 }

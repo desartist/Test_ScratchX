@@ -23,7 +23,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 0px;
   padding: 20px;
   width: 100%;
   max-width: 380px;
@@ -44,12 +44,19 @@
   word-break: break-word;
 }
 
+.brandLogo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
 
 .canvas {
   width: 100%;
   max-width: 320px;
   height: auto;
   border-radius: 12px;
+  padding: 22px;
 }
 
 /* ===== Controls ===== */

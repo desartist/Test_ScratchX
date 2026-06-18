@@ -1,6 +1,5 @@
 "use client";
-import React from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthContext } from "@/components/auth/AuthContext";
@@ -39,10 +38,41 @@ const NAV_ICONS = {
   support: IconUsers,
 };
 
+function readMerchantHasStoreCookie() {
+  if (typeof document === "undefined") return null; // SSR — unknown
+  const match = document.cookie.match(/(?:^|;\s*)merchantHasStore=([^;]*)/);
+  if (!match) return null; // cookie not set yet
+  return match[1] === "1";
+}
+
 export default function DashboardLayout({ children, role }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Read cookie synchronously before first paint — no flash for cookie-bearing sessions.
+  const [hasStore, setHasStore] = useState(() =>
+    role !== "Merchant" ? true : readMerchantHasStoreCookie()
+  );
   const pathname = usePathname();
   const { account, logout } = useAuthContext();
+
+  // Only needed for old sessions where the cookie was never written (rare).
+  useEffect(() => {
+    if (hasStore !== null || role !== "Merchant" || !account?.id) return;
+    fetch("/api/stores", {
+      credentials: "include",
+      headers: { "x-user-id": account.id, "x-user-role": "Merchant" },
+    })
+      .then((r) => r.json())
+      .catch(() => ({}))
+      .then((data) => {
+        const stores = data?.data || data?.stores || [];
+        setHasStore(Array.isArray(stores) && stores.length > 0);
+      });
+  }, [hasStore, role, account?.id]);
+
+  // Cookie says no store OR API confirmed no store → bare page, no chrome.
+  if (hasStore === false) return <>{children}</>;
+  // Still checking (null) → render nothing briefly to avoid wrong chrome flash.
+  if (hasStore === null) return null;
 
   const getNavItems = () => {
     const baseItems = [
@@ -209,6 +239,7 @@ export default function DashboardLayout({ children, role }) {
   const navItems = getNavItems();
   const displayName = account ? getAccountDisplayName(account) : "";
   const initials = account ? getAccountInitials(account) : "?";
+
 
   return (
     <div className={styles.container}>

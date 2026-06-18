@@ -60,18 +60,21 @@ export function middleware(request) {
   );
 
   if (isMerchant && !isOnboardingBypass) {
+    // Store gate runs first — a merchant must have at least one store before
+    // anything else (subscription, campaigns, etc.) makes sense.
+    const needsStore = STORE_REQUIRED_ROUTES.some(
+      (p) => pathname === p || pathname.startsWith(p + '/'),
+    );
+    if (needsStore && merchantHasStore === '0') {
+      return NextResponse.redirect(new URL('/stores/create', request.url));
+    }
+
+    // Subscription gate — only after the merchant has a store.
     const needsSub = SUBSCRIPTION_REQUIRED_ROUTES.some(
       (p) => pathname === p || pathname.startsWith(p + '/'),
     );
     if (needsSub && merchantHasSub === '0') {
       return NextResponse.redirect(new URL('/subscription-required', request.url));
-    }
-
-    const needsStore = STORE_REQUIRED_ROUTES.some(
-      (p) => pathname === p || pathname.startsWith(p + '/'),
-    );
-    if (needsStore && merchantHasSub === '1' && merchantHasStore === '0') {
-      return NextResponse.redirect(new URL('/stores/create', request.url));
     }
   }
 

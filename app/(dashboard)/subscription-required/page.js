@@ -1,3 +1,4 @@
+import React from 'react';
 import SubscriptionRequired from '@/components/subscription/SubscriptionRequired';
 
 export const metadata = { title: 'Subscription Required – ScratchX' };

@@ -338,13 +338,20 @@ export default function CreateStorePage() {
 
   if (currentStep === 0) {
     return (
-      <div className={styles.container}>
+      <div className={styles.pageShell}>
+        <div className={styles.topBar}>
+          <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.topLogo} />
+        </div>
         <WelcomeScreen onGetStarted={() => setCurrentStep(1)} />
       </div>
     );
   }
 
   return (
+    <div className={styles.pageShell}>
+      <div className={styles.topBar}>
+        <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.topLogo} />
+      </div>
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.headerSection}>
@@ -768,6 +775,7 @@ export default function CreateStorePage() {
           </div>
         )}
       </form>
+    </div>
     </div>
   );
 }
