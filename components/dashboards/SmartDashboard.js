@@ -302,6 +302,12 @@ export default function SmartDashboard() {
     ? subStatus.scratchConsumed
     : dashboard?.scratch?.distributed;
 
+  // Day counter: "Day X of 30"
+  const PLAN_TOTAL_DAYS = 30;
+  const heroDayOf = Number.isFinite(heroDaysRemaining)
+    ? Math.max(1, PLAN_TOTAL_DAYS - heroDaysRemaining)
+    : null;
+
   // Customer-insight headline numbers (only when present).
   const newCustomers = customerGrowth.reduce(
     (sum, d) => sum + (d.series?.new || 0),
@@ -375,6 +381,8 @@ export default function SmartDashboard() {
       <SubscriptionHero
         planName={planName}
         status={subscription?.status}
+        dayOf={heroDayOf}
+        totalDays={PLAN_TOTAL_DAYS}
         validUntil={heroValidUntil}
         used={heroUsed}
         daysRemaining={heroDaysRemaining}

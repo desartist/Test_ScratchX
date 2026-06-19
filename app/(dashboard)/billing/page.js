@@ -27,7 +27,7 @@ function FeatureList({ features, limits }) {
       </li>
       <li className={styles.featureItem}>
         {features.unlimitedScratches ? CHECK : CROSS}
-        <span>Unlimited scratch cards / quarter</span>
+        <span>Unlimited scratch cards / month</span>
       </li>
       <li className={styles.featureItem}>
         {features.rewardManagement ? CHECK : CROSS}

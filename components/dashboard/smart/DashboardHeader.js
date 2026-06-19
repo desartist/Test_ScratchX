@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import PropTypes from "prop-types";
-import { MapPin, Bell, Plus } from "lucide-react";
+import { Bell, Plus } from "lucide-react";
 import styles from "./DashboardHeader.module.css";
 
 function getInitials(name) {
@@ -27,8 +27,19 @@ export default function DashboardHeader({
   return (
     <header className={styles.header}>
       <div className={styles.topRow}>
-        <div />
+        <div className={styles.titleBlock}>
+          <h1 className={styles.pageTitle}>Dashboard</h1>
+          <p className={styles.pageSubtitle}>Manage your stores and campaigns</p>
+        </div>
         <div className={styles.topRowRight}>
+          {/* {onBellClick && (
+            <button type="button" className={styles.bell} onClick={onBellClick} aria-label="Notifications">
+              <Bell size={18} />
+              {safeUnread > 0 && (
+                <span className={styles.badge}>{safeUnread > 99 ? "99+" : safeUnread}</span>
+              )}
+            </button>
+          )} */}
           {onCreateCampaign && (
             <button
               type="button"

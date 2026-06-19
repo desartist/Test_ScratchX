@@ -144,16 +144,18 @@ export default function CampaignCard({
       {/* Meta row */}
       <div className={styles.metaRow}>
         <span className={styles.metaItem}>
-          <Clock size={15} className={styles.metaIcon} />
-          {daysDisplay}
+          <Clock size={16} className={styles.metaIcon} />
+          <span className={styles.metaItemBold}>{daysDisplay.replace(" left", "")}</span>
+          {daysDisplay.includes(" left") && <span> left</span>}
         </span>
         <span className={styles.metaItem}>
-          <Store size={15} className={styles.metaIcon} />
-          {storesCount} Store{storesCount !== 1 ? "s" : ""}
+          <Store size={16} className={styles.metaIcon} />
+          <span className={styles.metaItemBold}>{storesCount}</span>
+          <span> Store{storesCount !== 1 ? "s" : ""}</span>
         </span>
         {priceRange && (
           <span className={styles.metaItem}>
-            <IndianRupee size={15} className={styles.metaIcon} />
+            <IndianRupee size={16} className={styles.metaIcon} />
             {priceRange}
           </span>
         )}
@@ -177,7 +179,7 @@ export default function CampaignCard({
               showLabel={false}
               status={isLow ? "critical" : "normal"}
             />
-            <div className={styles.scratchRemaining}>
+            <div className={`${styles.scratchRemaining} ${isLow ? styles.scratchRemainingLow : ""}`}>
               {remaining.toLocaleString()} left
             </div>
           </>

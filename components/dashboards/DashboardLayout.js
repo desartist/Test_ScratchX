@@ -348,16 +348,6 @@ export default function DashboardLayout({ children, role }) {
         </nav>
 
         <div className={styles.sidebarFooter}>
-          <button
-            onClick={logout}
-            className={styles.logoutBtn}
-            aria-label="Logout"
-          >
-            <span className={styles.navIcon}>
-              <IconLogout />
-            </span>
-            Logout
-          </button>
           <div className={styles.trustedFooter}>
             <div className={styles.trustedLogo}>
               <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.trustedLogoImg} />

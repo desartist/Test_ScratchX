@@ -349,7 +349,7 @@ export default function LaunchWizardModal({
               <div className={styles.unlimitedCard}>
                 <span className={styles.pill}>First Quarter Access</span>
                 <span className={styles.unlimitedTitle}>
-                  <Sparkles size={20} /> Unlimited scratch cards / quarter
+                  <Sparkles size={20} /> Unlimited scratch cards / month
                 </span>
                 <span className={styles.unlimitedMeta}>
                   {subscription?.scratchConsumed || 0} used · Valid until{" "}

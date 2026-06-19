@@ -39,7 +39,7 @@ const FAQS = [
     a: "Go to Campaigns → New Campaign. Fill in the campaign name, billing ranges, reward tiers and assign stores. Your campaign goes live instantly once you save.",
   },
   {
-    q: "What happens after my 90-day unlimited scratch cards / quarter period?",
+    q: "What happens after my 30-day unlimited scratch cards / month period?",
     a: "After the 90-day unlimited period expires, you can purchase scratch packs from the Billing section. Packs come in sizes of 1 000, 5 000, 10 000 and 50 000 scratches.",
   },
   {

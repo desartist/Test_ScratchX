@@ -16,6 +16,7 @@ export default function SubscriptionHero({
   validUntil,
   used,
   daysRemaining,
+  trend,
   onViewUsage,
   onChoosePlans,
 }) {
@@ -27,16 +28,23 @@ export default function SubscriptionHero({
 
   return (
     <section className={styles.hero}>
+      {/* Top row: day counter + trend */}
       <div className={styles.topRow}>
-        <span className={styles.planName}>{fallback(planName)}</span>
-        {showDayPill && (
+        {showDayPill ? (
           <span className={styles.dayPill}>
             Day {dayOf} of {totalDays}
+          </span>
+        ) : (
+          <span className={styles.dayPill}>{fallback(planName)}</span>
+        )}
+        {trend && (
+          <span className={styles.trendPill}>
+            ↑ {trend}
           </span>
         )}
       </div>
 
-      <h2 className={styles.bigLabel}>Unlimited scratch cards / quarter</h2>
+      <h2 className={styles.bigLabel}>Unlimited Scratches</h2>
       <p className={styles.validUntil}>Valid until {fallback(validUntil)}</p>
 
       <div className={styles.stats}>
@@ -44,6 +52,7 @@ export default function SubscriptionHero({
           <span className={styles.statValue}>{fallback(used)}</span>
           <span className={styles.statLabel}>Used</span>
         </div>
+        <div className={styles.statDivider} />
         <div className={styles.statCol}>
           <span className={styles.statValue}>{fallback(daysRemaining)}</span>
           <span className={styles.statLabel}>Days Access left</span>
@@ -52,8 +61,7 @@ export default function SubscriptionHero({
 
       {expiringSoon && (
         <div className={styles.warning}>
-          <span aria-hidden="true">⚠</span> Unlimited scratch cards / quarter expire in{" "}
-          {daysRemaining} days.
+          ⚠ Unlimited scratch cards / month expire in {daysRemaining} days.
         </div>
       )}
 
@@ -87,6 +95,7 @@ SubscriptionHero.propTypes = {
   validUntil: PropTypes.string,
   used: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   daysRemaining: PropTypes.number,
+  trend: PropTypes.string,
   onViewUsage: PropTypes.func,
   onChoosePlans: PropTypes.func,
 };

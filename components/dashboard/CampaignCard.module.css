@@ -1,29 +1,29 @@
 /* ── Card ───────────────────────────────────────────────────── */
 .card {
   background: #fff;
-  border: 1.5px solid #e8eaff;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(1, 15, 68, 0.06);
-  padding: 22px 22px 18px;
+  border: 1.5px solid #ebebf0;
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(1, 15, 68, 0.05);
+  padding: 24px 24px 20px;
   cursor: pointer;
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+  gap: 16px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
 .card:hover {
-  box-shadow: 0 10px 28px rgba(1, 15, 68, 0.11);
-  border-color: #ef9e1b;
-  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(1, 15, 68, 0.10);
+  border-color: #c8caff;
+  transform: translateY(-2px);
 }
 
 .card:focus-visible {
   outline: none;
-  border-color: #ef9e1b;
-  box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.18);
+  border-color: #6c5ce7;
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
 }
 
 /* ── Header ─────────────────────────────────────────────────── */
@@ -39,7 +39,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .titleRow {
@@ -51,26 +51,23 @@
 
 .name {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 20px;
   font-weight: 800;
   color: #010f44;
-  line-height: 1.25;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
   flex: 1;
   min-width: 0;
 }
 
 .dateRange {
   margin: 0;
-  font-size: 0.8rem;
-  color: #637080;
-  font-family: var(--font-afacad-flux), system-ui, sans-serif;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  font-size: 14px;
+  color: #9ba8b8;
+  font-weight: 500;
+  letter-spacing: 0.1px;
 }
 
 .menuWrap { flex-shrink: 0; }
@@ -79,25 +76,29 @@
 .metaRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 12px 14px;
-  background: #f8f9ff;
-  border-radius: 12px;
-  border: 1px solid #eef0ff;
+  align-items: center;
+  gap: 6px 20px;
+  padding: 14px 16px;
+  background: #f6f7fc;
+  border-radius: 14px;
 }
 
 .metaItem {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #637080;
-  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  gap: 7px;
+  font-size: 15px;
+  color: #5a6478;
+  font-weight: 500;
+}
+
+.metaItemBold {
+  font-weight: 800;
+  color: #010f44;
 }
 
 .metaIcon {
-  color: #ef9e1b;
+  color: #9ba8b8;
   flex-shrink: 0;
 }
 
@@ -105,7 +106,7 @@
 .scratchSection {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .scratchHeader {
@@ -115,37 +116,39 @@
 }
 
 .scratchLabel {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #010f44;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #9ba8b8;
+  letter-spacing: 0.1px;
 }
 
 .scratchCount {
-  font-size: 0.82rem;
+  font-size: 17px;
   font-weight: 700;
   color: #010f44;
+  letter-spacing: -0.3px;
 }
 
 .scratchRemaining {
   text-align: right;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #9ba8b8;
-  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #010f44;
+}
+
+.scratchRemainingLow {
+  color: #e84040;
 }
 
 .scratchNotSet {
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: #f8f9ff;
-  border: 1px dashed #d0d5f0;
-  border-radius: 8px;
-  font-size: 0.78rem;
+  border: 1.5px dashed #d0d5f0;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 500;
   color: #9ba8b8;
   text-align: center;
-  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
 /* ── Low-scratch warning ────────────────────────────────────── */
@@ -154,50 +157,50 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 14px;
-  background: rgba(255, 107, 107, 0.07);
-  border: 1px solid rgba(255, 107, 107, 0.25);
-  border-radius: 12px;
 }
 
 .lowWarningText {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #c0392b;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #637080;
 }
 
-.lowWarningIcon { flex-shrink: 0; }
+.lowWarningIcon {
+  flex-shrink: 0;
+  color: #f59e0b;
+}
 
 .addBtn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 13px;
-  background: #c0392b;
+  gap: 5px;
+  padding: 10px 20px;
+  background: #e84040;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  border-radius: 12px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s, transform 0.15s;
   font-family: var(--font-afacad), system-ui, sans-serif;
+  flex-shrink: 0;
 }
 
 .addBtn:hover {
-  background: #a93226;
+  background: #c0392b;
   transform: translateY(-1px);
 }
 
 @media (max-width: 480px) {
-  .card { padding: 16px 16px 14px; gap: 12px; border-radius: 16px; }
-  .metaRow { gap: 8px 12px; padding: 10px 12px; border-radius: 10px; }
-  .metaItem { font-size: 0.78rem; }
-  .scratchLabel { font-size: 0.72rem; }
-  .scratchCount { font-size: 0.8rem; }
-  .scratchRemaining { font-size: 0.72rem; }
+  .card { padding: 18px 18px 16px; gap: 14px; border-radius: 20px; }
+  .name { font-size: 18px; }
+  .metaRow { gap: 6px 14px; padding: 12px 14px; }
+  .metaItem { font-size: 14px; }
+  .scratchCount { font-size: 15px; }
+  .scratchRemaining { font-size: 14px; }
 }

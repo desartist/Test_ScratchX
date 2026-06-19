@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { LogOut } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import SettingsProfileCard from "@/components/settings/SettingsProfileCard";
 import SettingsAccountCard from "@/components/settings/SettingsAccountCard";
@@ -13,7 +14,7 @@ import ActiveSessionsCard from "@/components/settings/ActiveSessionsCard";
 import styles from "./settings.module.css";
 
 export default function SettingsPage() {
-  const { account } = useAuthContext();
+  const { account, logout } = useAuthContext();
   const [merchant, setMerchant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -124,6 +125,12 @@ export default function SettingsPage() {
 
       {/* Danger Zone */}
       <DangerZoneCard merchant={merchant} />
+
+      {/* Logout */}
+      <button onClick={logout} className={styles.logoutBtn}>
+        <LogOut size={18} />
+        Log Out
+      </button>
     </div>
   );
 }

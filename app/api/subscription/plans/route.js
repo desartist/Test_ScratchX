@@ -10,7 +10,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request) {
   try {
-    // Approved plan definitions (90-day duration)
+    // Approved plan definitions (30-day duration)
     // These are hardcoded per approved business rules - NO database lookup
     const approvedPlans = [
       {
@@ -21,7 +21,7 @@ export async function GET(request) {
         description: 'Perfect for single store operations',
         tier: 1,
         recommended: false,
-        duration: 90, // days
+        duration: 30, // days
         price: {
           base: 2099, // Base price
           withGST: Math.ceil(2099 * 1.18) // ₹2,477 with 18% GST
@@ -64,7 +64,7 @@ export async function GET(request) {
         description: 'Ideal for growing businesses with multiple stores',
         tier: 2,
         recommended: true,
-        duration: 90, // days
+        duration: 30, // days
         price: {
           base: 2999,
           withGST: Math.ceil(2999 * 1.18), // ₹3,539 with 18% GST

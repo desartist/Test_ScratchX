@@ -27,7 +27,7 @@ function FeatureList({ features, limits }) {
       </li>
       <li className={styles.featureItem}>
         {features.unlimitedScratches ? CHECK : CROSS}
-        <span>Unlimited scratch cards / quarter</span>
+        <span>Unlimited scratch cards / month</span>
       </li>
       <li className={styles.featureItem}>
         {features.rewardManagement ? CHECK : CROSS}
@@ -190,7 +190,7 @@ export default function SubscriptionPage() {
                   <span className={styles.activeBadge}>ACTIVE</span>
                   <div className={styles.entitlementDetails}>
                     <p className={styles.entitlementText}>
-                      Unlimited scratch cards / quarter
+                      Unlimited scratch cards / month
                       {subscriptionStatus?.remainingDays && (
                         <span className={styles.daysRemaining}>
                           {subscriptionStatus.remainingDays} days remaining
@@ -209,7 +209,7 @@ export default function SubscriptionPage() {
                   <span className={styles.expiredBadge}>EXPIRED</span>
                   <div className={styles.entitlementDetails}>
                     <p className={styles.entitlementText}>
-                      Unlimited scratch cards / quarter
+                      Unlimited scratch cards / month
                       {subscriptionStatus?.scratchPurchased > 0 && (
                         <span className={styles.purchasedCount}>
                           {subscriptionStatus.scratchPurchased} purchased
