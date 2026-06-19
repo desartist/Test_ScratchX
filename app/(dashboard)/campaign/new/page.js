@@ -1,31 +1,48 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import Link from "next/link";
+import { Calendar, AlertCircle } from "lucide-react";
 import styles from "./page.module.css";
+
+// Inline field error component
+function FieldError({ message }) {
+  if (!message) return null;
+  return (
+    <p className={styles.fieldError}>
+      <AlertCircle size={13} />
+      {message}
+    </p>
+  );
+}
 
 export default function CreateCampaignPage() {
   const router = useRouter();
   const { account } = useAuthContext();
 
-  // Step management
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [submitError, setSubmitError] = useState(null);
 
-  // Form data across all steps
+  // Refs for scroll-to-error
+  const refs = {
+    campaignName: useRef(null),
+    startDate: useRef(null),
+    endDate: useRef(null),
+    billingRanges: useRef(null),
+    rewardCards: useRef(null),
+  };
+
   const [formData, setFormData] = useState({
-    // Step 1: Campaign Details
     campaignName: "",
     description: "",
     startDate: "",
     endDate: "",
     displayCoupons: "6",
-
-    // Step 2: Billing Ranges & Rewards
     billingRanges: [
       { id: 1, minAmount: "", maxAmount: "" },
       { id: 2, minAmount: "", maxAmount: "" },
@@ -41,137 +58,133 @@ export default function CreateCampaignPage() {
     ],
   });
 
-  // Handle form field changes
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const scrollToRef = (ref) => {
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      ref.current.focus?.();
+    }
   };
 
-  // Handle range field changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear field error on change
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
   const handleRangeChange = (rangeId, field, value) => {
     setFormData((prev) => ({
       ...prev,
-      billingRanges: prev.billingRanges.map((range) =>
-        range.id === rangeId ? { ...range, [field]: value } : range,
+      billingRanges: prev.billingRanges.map((r) =>
+        r.id === rangeId ? { ...r, [field]: value } : r,
       ),
     }));
   };
 
-  // Handle reward card field changes
   const handleRewardCardChange = (cardId, field, value) => {
     setFormData((prev) => ({
       ...prev,
-      rewardCards: prev.rewardCards.map((card) =>
-        card.id === cardId ? { ...card, [field]: value } : card,
+      rewardCards: prev.rewardCards.map((c) =>
+        c.id === cardId ? { ...c, [field]: value } : c,
       ),
     }));
   };
 
-  // Add new billing range
   const handleAddRange = () => {
     const newId = Math.max(...formData.billingRanges.map((r) => r.id), 0) + 1;
     setFormData((prev) => ({
       ...prev,
-      billingRanges: [
-        ...prev.billingRanges,
-        { id: newId, minAmount: "", maxAmount: "" },
-      ],
+      billingRanges: [...prev.billingRanges, { id: newId, minAmount: "", maxAmount: "" }],
     }));
   };
 
-  // Add new reward card
   const handleAddRewardCard = () => {
     const newId = Math.max(...formData.rewardCards.map((c) => c.id), 0) + 1;
     setFormData((prev) => ({
       ...prev,
       rewardCards: [
         ...prev.rewardCards,
-        {
-          id: newId,
-          rangeId: 1,
-          couponName: "",
-          rewardType: "fixed_amount",
-          rewardAmount: "",
-        },
+        { id: newId, rangeId: 1, couponName: "", rewardType: "fixed_amount", rewardAmount: "" },
       ],
     }));
   };
 
-  // Validate step 1
-  const validateStep1 = () => {
-    if (!formData.campaignName.trim()) {
-      setError("Campaign name is required");
-      return false;
-    }
+  const validateStep1 = useCallback(() => {
+    const errors = {};
 
-    if (formData.campaignName.trim().length < 3) {
-      setError("Campaign name must be at least 3 characters");
-      return false;
+    if (!formData.campaignName.trim()) {
+      errors.campaignName = "Campaign name is required";
+    } else if (formData.campaignName.trim().length < 3) {
+      errors.campaignName = "Campaign name must be at least 3 characters";
     }
 
     if (!formData.startDate) {
-      setError("Start date is required");
-      return false;
+      errors.startDate = "Start date is required";
     }
 
     if (!formData.endDate) {
-      setError("End date is required");
-      return false;
+      errors.endDate = "End date is required";
+    } else if (formData.startDate && new Date(formData.startDate) >= new Date(formData.endDate)) {
+      errors.endDate = "End date must be after start date";
     }
 
-    const startDateObj = new Date(formData.startDate);
-    const endDateObj = new Date(formData.endDate);
+    setFieldErrors(errors);
 
-    if (startDateObj >= endDateObj) {
-      setError("End date must be after start date");
+    if (Object.keys(errors).length > 0) {
+      // Scroll to first error field
+      const firstKey = Object.keys(errors)[0];
+      scrollToRef(refs[firstKey]);
       return false;
     }
 
     return true;
-  };
+  }, [formData]);
 
-  // Validate step 2
-  const validateStep2 = () => {
+  const validateStep2 = useCallback(() => {
+    const errors = {};
+
     if (formData.billingRanges.length === 0) {
-      setError("At least one billing range is required");
-      return false;
-    }
-
-    for (const range of formData.billingRanges) {
-      if (!range.minAmount) {
-        setError("Minimum amount is required for all ranges");
-        return false;
-      }
-      if (
-        range.maxAmount &&
-        parseFloat(range.minAmount) >= parseFloat(range.maxAmount)
-      ) {
-        setError("Maximum amount must be greater than minimum amount");
-        return false;
+      errors.billingRanges = "At least one billing range is required";
+    } else {
+      for (const range of formData.billingRanges) {
+        if (!range.minAmount) {
+          errors.billingRanges = "Minimum amount is required for all ranges";
+          break;
+        }
+        if (range.maxAmount && parseFloat(range.minAmount) >= parseFloat(range.maxAmount)) {
+          errors.billingRanges = "Maximum amount must be greater than minimum amount";
+          break;
+        }
       }
     }
 
     if (formData.rewardCards.length === 0) {
-      setError("At least one reward card is required");
-      return false;
-    }
-
-    for (const card of formData.rewardCards) {
-      if (!card.rewardAmount) {
-        setError("Reward amount is required for all cards");
-        return false;
+      errors.rewardCards = "At least one reward card is required";
+    } else {
+      for (const card of formData.rewardCards) {
+        if (!card.rewardAmount) {
+          errors.rewardCards = "Reward amount is required for all cards";
+          break;
+        }
       }
     }
 
-    return true;
-  };
+    setFieldErrors(errors);
 
-  // Navigate to next step
+    if (Object.keys(errors).length > 0) {
+      const firstKey = Object.keys(errors)[0];
+      scrollToRef(refs[firstKey]);
+      return false;
+    }
+
+    return true;
+  }, [formData]);
+
   const handleNextStep = async () => {
-    setError(null);
+    setFieldErrors({});
+    setSubmitError(null);
 
     if (currentStep === 1) {
       if (!validateStep1()) return;
@@ -182,29 +195,25 @@ export default function CreateCampaignPage() {
     }
   };
 
-  // Navigate to previous step
   const handlePrevStep = () => {
-    setError(null);
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    setFieldErrors({});
+    setSubmitError(null);
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  // Handle final form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setError(null);
+    setSubmitError(null);
     setSuccessMessage(null);
 
     try {
-      if (!account || !account.id) {
-        setError("No account information available");
+      if (!account?.id) {
+        setSubmitError("No account information available");
         setSubmitting(false);
         return;
       }
 
-      // Create campaign with all data
       const response = await fetch("/api/campaign/create", {
         method: "POST",
         headers: {
@@ -229,12 +238,11 @@ export default function CreateCampaignPage() {
       const data = await response.json();
       setSuccessMessage("Campaign created! Now set up your reward ranges.");
 
-      // Basic info saved as draft → go straight to the reward-ranges step.
       setTimeout(() => {
         router.push(`/campaign/${data.campaign._id}/ranges`);
       }, 500);
     } catch (err) {
-      setError(err.message || "Failed to create campaign");
+      setSubmitError(err.message || "Failed to create campaign");
     } finally {
       setSubmitting(false);
     }
@@ -247,15 +255,11 @@ export default function CreateCampaignPage() {
 
   return (
     <div className={styles.container}>
-      {/* Header */}
       <div className={styles.headerSection}>
         <h1 className={styles.title}>Create Campaign</h1>
-        <p className={styles.headerSubtitle}>
-          Set up your campaign step by step
-        </p>
+        <p className={styles.headerSubtitle}>Set up your campaign step by step</p>
       </div>
 
-      {/* Step Indicator */}
       <div className={styles.stepIndicatorContainer}>
         <div className={styles.stepCircles}>
           {steps.map((step) => (
@@ -265,8 +269,8 @@ export default function CreateCampaignPage() {
                   step.number === currentStep
                     ? styles.active
                     : step.number < currentStep
-                      ? styles.completed
-                      : styles.upcoming
+                    ? styles.completed
+                    : styles.upcoming
                 }`}
               >
                 {step.number < currentStep ? "✓" : step.number}
@@ -277,21 +281,25 @@ export default function CreateCampaignPage() {
         </div>
       </div>
 
-      {/* Messages */}
-      {error && <div className={styles.errorMessage}>{error}</div>}
+      {/* Submit-level error (API failure) */}
+      {submitError && (
+        <div className={styles.submitError}>
+          <AlertCircle size={16} />
+          {submitError}
+        </div>
+      )}
       {successMessage && (
         <div className={styles.successMessage}>{successMessage}</div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className={styles.form}>
-        {/* STEP 1: Campaign Details */}
+        {/* STEP 1 */}
         {currentStep === 1 && (
           <div className={styles.stepContent}>
             <p className={styles.subtitle}>Set up your campaign details</p>
 
             {/* Campaign Name */}
-            <div className={styles.formGroup}>
+            <div className={styles.formGroup} ref={refs.campaignName}>
               <label htmlFor="campaignName" className={styles.label}>
                 Campaign Name <span className={styles.required}>*</span>
               </label>
@@ -302,10 +310,10 @@ export default function CreateCampaignPage() {
                 value={formData.campaignName}
                 onChange={handleChange}
                 placeholder="E.g. Summer Special"
-                className={styles.input}
-                required
+                className={`${styles.input} ${fieldErrors.campaignName ? styles.inputError : ""}`}
                 disabled={submitting}
               />
+              <FieldError message={fieldErrors.campaignName} />
             </div>
 
             {/* Campaign Description */}
@@ -330,36 +338,42 @@ export default function CreateCampaignPage() {
             <div className={styles.formGroup}>
               <label className={styles.label}>Campaign Duration</label>
               <div className={styles.dateRow}>
-                <div className={styles.formGroup}>
+                <div className={styles.formGroup} ref={refs.startDate}>
                   <label htmlFor="startDate" className={styles.label}>
                     Start Date <span className={styles.required}>*</span>
                   </label>
-                  <input
-                    type="date"
-                    id="startDate"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    className={styles.input}
-                    required
-                    disabled={submitting}
-                  />
+                  <div className={styles.dateInputWrapper}>
+                    <Calendar size={16} className={styles.dateIcon} />
+                    <input
+                      type="date"
+                      id="startDate"
+                      name="startDate"
+                      value={formData.startDate}
+                      onChange={handleChange}
+                      className={`${styles.dateInput} ${fieldErrors.startDate ? styles.inputError : ""}`}
+                      disabled={submitting}
+                    />
+                  </div>
+                  <FieldError message={fieldErrors.startDate} />
                 </div>
 
-                <div className={styles.formGroup}>
+                <div className={styles.formGroup} ref={refs.endDate}>
                   <label htmlFor="endDate" className={styles.label}>
                     End Date <span className={styles.required}>*</span>
                   </label>
-                  <input
-                    type="date"
-                    id="endDate"
-                    name="endDate"
-                    value={formData.endDate}
-                    onChange={handleChange}
-                    className={styles.input}
-                    required
-                    disabled={submitting}
-                  />
+                  <div className={styles.dateInputWrapper}>
+                    <Calendar size={16} className={styles.dateIcon} />
+                    <input
+                      type="date"
+                      id="endDate"
+                      name="endDate"
+                      value={formData.endDate}
+                      onChange={handleChange}
+                      className={`${styles.dateInput} ${fieldErrors.endDate ? styles.inputError : ""}`}
+                      disabled={submitting}
+                    />
+                  </div>
+                  <FieldError message={fieldErrors.endDate} />
                 </div>
               </div>
             </div>
@@ -367,8 +381,7 @@ export default function CreateCampaignPage() {
             {/* Number of Display Coupons */}
             <div className={styles.formGroup}>
               <label htmlFor="displayCoupons" className={styles.label}>
-                Number of Display Coupons{" "}
-                <span className={styles.required}>*</span>
+                Number of Display Coupons <span className={styles.required}>*</span>
               </label>
               <select
                 id="displayCoupons"
@@ -385,14 +398,9 @@ export default function CreateCampaignPage() {
               </select>
             </div>
 
-            {/* Step 1 Navigation */}
             <div className={styles.buttonRow}>
               <Link href="/campaign">
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  disabled={submitting}
-                >
+                <button type="button" className={styles.cancelButton} disabled={submitting}>
                   Cancel
                 </button>
               </Link>
@@ -408,14 +416,11 @@ export default function CreateCampaignPage() {
           </div>
         )}
 
-        {/* STEP 3: Campaign Preview */}
+        {/* STEP 2: Review */}
         {currentStep === 2 && (
           <div className={styles.stepContent}>
-            <p className={styles.subtitle}>
-              Review your campaign details before saving as a draft
-            </p>
+            <p className={styles.subtitle}>Review your campaign details before saving as a draft</p>
 
-            {/* Summary */}
             <div className={styles.summary}>
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Campaign Name:</span>
@@ -429,9 +434,7 @@ export default function CreateCampaignPage() {
               )}
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Duration:</span>
-                <span>
-                  {formData.startDate} to {formData.endDate}
-                </span>
+                <span>{formData.startDate} to {formData.endDate}</span>
               </div>
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Coupons:</span>
@@ -439,7 +442,6 @@ export default function CreateCampaignPage() {
               </div>
             </div>
 
-            {/* Step 3 Navigation */}
             <div className={styles.buttonRow}>
               <button
                 type="button"

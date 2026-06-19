@@ -4,6 +4,7 @@ import Campaign from "@/models/campaignModel";
 import Store from "@/models/storeModel";
 import Account from "@/models/accountModel";
 import Range from "@/models/rangeModel";
+import "@/models/scratchCardRecordModel";
 
 export async function GET(request) {
   try {

@@ -275,93 +275,89 @@ export default function DashboardLayout({ children, role }) {
           </button>
         </div>
 
-        <div className={styles.sidebarProfile}>
-          <div className={styles.sidebarProfileHeader}>
-            <div className={styles.sidebarProfileAvatar}>
-          {account?.profileImage ? (
-            <img src={account.profileImage} alt="Profile" className={styles.sidebarProfileAvatarImg} />
-          ) : (
-            initials
-          )}
-        </div>
-            <div className={styles.sidebarProfileInfo}>
-              <span className={styles.sidebarProfileName}>
-                {displayName || account?.email}
-              </span>
-              <span className={styles.sidebarProfileMember}>
-                Member since {account?.createdAt
-                  ? new Date(account.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.')
-                  : '—'}
-              </span>
-            </div>
-          </div>
-          <PlanStatusCard />
-        </div>
-
-        <nav className={styles.nav} aria-label="Main navigation">
-          {navItems.primary.map((item) => {
-            const isActive = pathname === item.href;
-            const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-                aria-current={isActive ? "page" : undefined}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <span className={styles.navIcon}>
-                  <Icon />
+        {/* Scrollable middle: profile + nav */}
+        <div className={styles.sidebarScrollArea}>
+          <div className={styles.sidebarProfile}>
+            <div className={styles.sidebarProfileHeader}>
+              <div className={styles.sidebarProfileAvatar}>
+                {account?.profileImage ? (
+                  <img src={account.profileImage} alt="Profile" className={styles.sidebarProfileAvatarImg} />
+                ) : (
+                  initials
+                )}
+              </div>
+              <div className={styles.sidebarProfileInfo}>
+                <span className={styles.sidebarProfileName}>
+                  {displayName || account?.email}
                 </span>
-                {item.label}
-              </Link>
-            );
-          })}
-
-          {navItems.secondary && navItems.secondary.length > 0 && (
-            <>
-              <div className={styles.navDivider}></div>
-              {navItems.secondary.map((item) => {
-                const isActive = pathname === item.href;
-                // ||
-                // (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-                    aria-current={isActive ? "page" : undefined}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <span className={styles.navIcon}>
-                      <Icon />
-                    </span>
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </>
-          )}
-        </nav>
-
-        <div className={styles.sidebarFooter}>
-          <div className={styles.trustedFooter}>
-            <div className={styles.trustedLogo}>
-              <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.trustedLogoImg} />
+                <span className={styles.sidebarProfileMember}>
+                  Member since {account?.createdAt
+                    ? new Date(account.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.')
+                    : '—'}
+                </span>
+              </div>
             </div>
-            <div className={styles.trustedLabel}>TRUSTED BY</div>
-            <div className={styles.trustedStats}>
-              300+ Stores <span className={styles.trustedDivider}>|</span> 7+
-              Cities
-            </div>
-            <div className={styles.copyright}>
-              © Copyright 2024 | Powered by Desartist
+            <PlanStatusCard />
+          </div>
+
+          <nav className={styles.nav} aria-label="Main navigation">
+            {navItems.primary.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+                  aria-current={isActive ? "page" : undefined}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <span className={styles.navIcon}><Icon /></span>
+                  {item.label}
+                </Link>
+              );
+            })}
+
+            {navItems.secondary && navItems.secondary.length > 0 && (
+              <>
+                <div className={styles.navDivider}></div>
+                {navItems.secondary.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <span className={styles.navIcon}><Icon /></span>
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+          </nav>
+
+          {/* Footer scrolls with nav */}
+          <div className={styles.sidebarFooter}>
+            <div className={styles.trustedFooter}>
+              <div className={styles.trustedLogo}>
+                <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.trustedLogoImg} />
+              </div>
+              <div className={styles.trustedLabel}>TRUSTED BY</div>
+              <div className={styles.trustedStats}>
+                300+ Stores <span className={styles.trustedDivider}>|</span> 7+ Cities
+              </div>
+              <div className={styles.copyright}>
+                © Copyright 2024 | Powered by Desartist
+              </div>
             </div>
           </div>
         </div>
+        {/* End scrollable middle */}
       </aside>
 
       <main className={styles.main}>

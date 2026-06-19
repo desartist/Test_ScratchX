@@ -1,86 +1,177 @@
-import React from 'react';
-import styles from './page.module.css';
+"use client";
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuthContext } from "@/components/auth/AuthContext";
+import { QrCode, Users, Gift, ShoppingBag, TrendingUp, Store } from "lucide-react";
+import styles from "./page.module.css";
 
 export default function AnalyticsPage() {
+  const router = useRouter();
+  const { account, loading: authLoading } = useAuthContext();
+
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (authLoading || !account?.id) return;
+
+    async function fetchCampaigns() {
+      try {
+        const res = await fetch("/api/campaigns", {
+          headers: {
+            "x-user-id": account.id,
+            "x-user-role": account.role || "merchant",
+            "x-user-email": account.email || "",
+          },
+        });
+        if (!res.ok) throw new Error("Failed");
+        const result = await res.json();
+        setCampaigns(result.data || []);
+      } catch {
+        setCampaigns([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCampaigns();
+  }, [account, authLoading]);
+
+  // Aggregate stats across all campaigns
+  const stats = campaigns.reduce(
+    (acc, c) => {
+      const t = c.tracking || {};
+      acc.qrScanned += Number(t.qrCodesScanned || 0);
+      acc.uniqueCustomers += Number(t.uniqueCustomers || 0);
+      acc.scratchesUsed += Number(c.scratchCardsUsed || c.used_scratch_cards || 0);
+      acc.redeemed += Number(c.redeemed_scratch_cards || 0);
+      acc.stores += Number(c.storeCount || 0);
+      return acc;
+    },
+    { qrScanned: 0, uniqueCustomers: 0, scratchesUsed: 0, redeemed: 0, stores: 0 },
+  );
+
+  const activeCampaigns = campaigns.filter(
+    (c) => String(c.status || "").toLowerCase() === "active",
+  ).length;
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Analytics</h1>
-        <p className={styles.subtitle}>Track your campaigns, scans, and customer insights</p>
       </div>
 
-      {/* KPI skeletons */}
-      <div className={styles.kpiGrid}>
-        {['Total Scans', 'Redemptions', 'Customers', 'Conversion Rate'].map((label) => (
-          <div key={label} className={styles.kpiCard}>
-            <div className={styles.kpiIcon} />
-            <div className={styles.kpiValue} />
-            <div className={styles.kpiLabel}>{label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Chart placeholders */}
-      <div className={styles.chartsRow}>
-        <div className={styles.chartCard}>
-          <div className={styles.chartHeader}>
-            <div className={styles.chartTitle}>Scans Over Time</div>
-            <div className={styles.chartBadge}>Coming Soon</div>
-          </div>
-          <div className={styles.chartBody}>
-            <div className={styles.chartBars}>
-              {[40, 65, 45, 80, 55, 70, 90, 60, 75, 50, 85, 65].map((h, i) => (
-                <div key={i} className={styles.bar} style={{ '--h': `${h}%` }} />
-              ))}
-            </div>
-            <div className={styles.chartOverlay}>
-              <div className={styles.comingSoonIcon}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-                  <line x1="6" y1="20" x2="6" y2="14"/>
-                </svg>
-              </div>
-              <p className={styles.comingSoonText}>Analytics charts coming soon</p>
-            </div>
-          </div>
+      {loading ? (
+        <div className={styles.loadingGrid}>
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className={styles.skeletonCard} />
+          ))}
         </div>
-
-        <div className={styles.chartCard}>
-          <div className={styles.chartHeader}>
-            <div className={styles.chartTitle}>Top Campaigns</div>
-            <div className={styles.chartBadge}>Coming Soon</div>
+      ) : campaigns.length === 0 ? (
+        /* ── No campaigns → empty state ── */
+        <div className={styles.emptyState}>
+          <div className={styles.illustration}>
+            <Image
+              src="/ScratchXCampaign.svg"
+              alt="Analytics illustration"
+              width={320}
+              height={280}
+              priority
+            />
           </div>
-          <div className={styles.listBody}>
-            {[85, 60, 45, 30, 20].map((w, i) => (
-              <div key={i} className={styles.listRow}>
-                <div className={styles.listDot} />
-                <div className={styles.listBar} style={{ '--w': `${w}%` }} />
+          <h2 className={styles.emptyTitle}>
+            Analytics are ready to<br />track your campaign
+          </h2>
+          <p className={styles.emptyDesc}>
+            Once customers scan your QR and play a ScratchX campaign, your scans,
+            rewards, redemptions, and repeat customer insights will appear here.
+          </p>
+          <p className={styles.emptyHint}>
+            No activity yet. Launch a campaign to start collecting data.
+          </p>
+          <button className={styles.ctaBtn} onClick={() => router.push("/campaign")}>
+            Go to Campaigns
+          </button>
+        </div>
+      ) : (
+        /* ── Campaigns exist → show analytics ── */
+        <>
+          <div className={styles.kpiGrid}>
+            <KpiCard icon={<QrCode size={22} />} label="QR Scans" value={stats.qrScanned} color="#6c5ce7" />
+            <KpiCard icon={<Users size={22} />} label="Unique Customers" value={stats.uniqueCustomers} color="#0984e3" />
+            <KpiCard icon={<Gift size={22} />} label="Scratches Used" value={stats.scratchesUsed} color="#ef9e1b" />
+            <KpiCard icon={<ShoppingBag size={22} />} label="Redeemed" value={stats.redeemed} color="#00b894" />
+          </div>
+
+          <div className={styles.summaryRow}>
+            <div className={styles.summaryCard}>
+              <TrendingUp size={18} className={styles.summaryIcon} />
+              <div>
+                <p className={styles.summaryVal}>{activeCampaigns}</p>
+                <p className={styles.summaryLbl}>Active Campaign{activeCampaigns !== 1 ? "s" : ""}</p>
               </div>
-            ))}
-            <div className={styles.chartOverlay}>
-              <div className={styles.comingSoonIcon}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                </svg>
+            </div>
+            <div className={styles.summaryCard}>
+              <Store size={18} className={styles.summaryIcon} />
+              <div>
+                <p className={styles.summaryVal}>{stats.stores}</p>
+                <p className={styles.summaryLbl}>Store{stats.stores !== 1 ? "s" : ""} Covered</p>
               </div>
-              <p className={styles.comingSoonText}>Campaign breakdown coming soon</p>
+            </div>
+            <div className={styles.summaryCard}>
+              <Gift size={18} className={styles.summaryIcon} />
+              <div>
+                <p className={styles.summaryVal}>{campaigns.length}</p>
+                <p className={styles.summaryLbl}>Total Campaigns</p>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Bottom notice */}
-      <div className={styles.notice}>
-        <div className={styles.noticeIcon}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-        </div>
-        <p className={styles.noticeText}>
-          Detailed analytics will be available once your campaigns start collecting scan data.
-          Run your first campaign to unlock insights.
-        </p>
+          <div className={styles.campaignList}>
+            <h2 className={styles.listTitle}>Campaign Breakdown</h2>
+            {campaigns.map((c) => {
+              const t = c.tracking || {};
+              const allocated = Number(c.allocated_scratch_cards || c.scratchCardsLimit || 0);
+              const used = Number(c.scratchCardsUsed || c.used_scratch_cards || 0);
+              const pct = allocated > 0 ? Math.round((used / allocated) * 100) : 0;
+              return (
+                <div key={c._id} className={styles.campaignRow}>
+                  <div className={styles.campaignRowLeft}>
+                    <p className={styles.campaignRowName}>{c.campaignName || c.name}</p>
+                    <span className={`${styles.statusPill} ${styles["status_" + String(c.status || "draft").toLowerCase().replace(/\s+/g, "_")]}`}>
+                      {c.status || "Draft"}
+                    </span>
+                  </div>
+                  <div className={styles.campaignRowStats}>
+                    <span className={styles.rowStat}><QrCode size={13} /> {t.qrCodesScanned || 0} scans</span>
+                    <span className={styles.rowStat}><Users size={13} /> {t.uniqueCustomers || 0} customers</span>
+                    <span className={styles.rowStat}><Gift size={13} /> {c.redeemed_scratch_cards || 0} redeemed</span>
+                  </div>
+                  <div className={styles.campaignRowBar}>
+                    <div className={styles.barBg}>
+                      <div className={styles.barFill} style={{ width: `${Math.min(pct, 100)}%` }} />
+                    </div>
+                    <span className={styles.barPct}>{pct}% used</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function KpiCard({ icon, label, value, color }) {
+  return (
+    <div className={styles.kpiCard}>
+      <div className={styles.kpiIcon} style={{ background: color + "1a", color }}>
+        {icon}
       </div>
+      <p className={styles.kpiValue}>{Number(value).toLocaleString()}</p>
+      <p className={styles.kpiLabel}>{label}</p>
     </div>
   );
 }

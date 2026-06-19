@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/components/auth/AuthContext';
 import Link from 'next/link';
+import { AlertCircle } from 'lucide-react';
 import styles from './page.module.css';
 
 function WelcomeScreen({ onGetStarted }) {
@@ -94,6 +95,14 @@ export default function CreateStorePage() {
   // Form validation errors
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const formRef = useRef(null);
+
+  // Scroll to first error field whenever errors change
+  useEffect(() => {
+    if (Object.keys(errors).length === 0) return;
+    const el = formRef.current?.querySelector('[data-error="true"]');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [errors]);
 
   // Request geolocation on mount (only for step 2)
   useEffect(() => {
@@ -382,13 +391,18 @@ export default function CreateStorePage() {
       </div>
 
       {/* Messages */}
-      {error && <div className={styles.errorMessage}>{error}</div>}
+      {error && (
+        <div className={styles.errorMessage}>
+          <AlertCircle size={16} />
+          {error}
+        </div>
+      )}
       {successMessage && (
         <div className={styles.successMessage}>{successMessage}</div>
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.form} ref={formRef}>
 
         {/* STEP 1: Store Info */}
         {currentStep === 1 && (
@@ -415,7 +429,7 @@ export default function CreateStorePage() {
                 disabled={submitting}
               />
               {touched.store_name && errors.store_name && (
-                <span className={styles.errorText}>{errors.store_name}</span>
+                <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.store_name}</span>
               )}
             </div>
 
@@ -437,7 +451,7 @@ export default function CreateStorePage() {
                 disabled={submitting}
               />
               {touched.contact_person && errors.contact_person && (
-                <span className={styles.errorText}>{errors.contact_person}</span>
+                <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.contact_person}</span>
               )}
             </div>
 
@@ -464,7 +478,7 @@ export default function CreateStorePage() {
                 disabled={submitting}
               />
               {touched.contact_number && errors.contact_number && (
-                <span className={styles.errorText}>{errors.contact_number}</span>
+                <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.contact_number}</span>
               )}
             </div>
 
@@ -588,7 +602,7 @@ export default function CreateStorePage() {
                 disabled={submitting}
               />
               {touched.address && errors.address && (
-                <span className={styles.errorText}>{errors.address}</span>
+                <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.address}</span>
               )}
             </div>
 
@@ -611,7 +625,7 @@ export default function CreateStorePage() {
                   disabled={submitting}
                 />
                 {touched.city && errors.city && (
-                  <span className={styles.errorText}>{errors.city}</span>
+                  <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.city}</span>
                 )}
               </div>
 
@@ -632,7 +646,7 @@ export default function CreateStorePage() {
                   disabled={submitting}
                 />
                 {touched.state && errors.state && (
-                  <span className={styles.errorText}>{errors.state}</span>
+                  <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.state}</span>
                 )}
               </div>
             </div>
@@ -656,7 +670,7 @@ export default function CreateStorePage() {
                 disabled={submitting}
               />
               {touched.pincode && errors.pincode && (
-                <span className={styles.errorText}>{errors.pincode}</span>
+                <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.pincode}</span>
               )}
             </div>
 
