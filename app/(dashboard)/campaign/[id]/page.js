@@ -413,20 +413,6 @@ export default function CampaignDetailsPage({ params }) {
 
   return (
     <div className={styles.container}>
-      {/* Header */}
-      <div className={styles.header}>
-        <button
-          className={styles.backButton}
-          onClick={() => router.back()}
-          title="Go back"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <div className={styles.headerContent}>
-          <h1 className={styles.title}>{campaignName}</h1>
-        </div>
-      </div>
-
       {/* 2-column layout */}
       <div className={styles.layout}>
         {/* ── Left / main column ── */}
@@ -438,24 +424,28 @@ export default function CampaignDetailsPage({ params }) {
               <Badge label={status} variant={statusToVariant(status)} />
             </div>
             <div className={styles.overviewMeta}>
-              <span className={styles.metaItem}>
-                <CalendarDays size={15} />
-                {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}
-              </span>
-              <span className={styles.metaItem}>
-                <Circle size={7} className={styles.metaDot} />
-                {daysLeft} {daysLeft === 1 ? "day" : "days"} left
-              </span>
-              <span className={styles.metaItem}>
-                <StoreIcon size={15} />
-                {activeStoreCount} {activeStoreCount === 1 ? "store" : "stores"}
-              </span>
-              {priceRange && (
+              <div className={styles.metaRow}>
                 <span className={styles.metaItem}>
-                  <Tag size={15} />
-                  {priceRange}
+                  <CalendarDays size={14} />
+                  {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}
                 </span>
-              )}
+              </div>
+              <div className={styles.metaRow}>
+                <span className={styles.metaItem}>
+                  <Circle size={7} className={styles.metaDot} />
+                  {daysLeft} {daysLeft === 1 ? "day" : "days"} left
+                </span>
+                <span className={styles.metaItem}>
+                  <StoreIcon size={14} />
+                  {activeStoreCount} {activeStoreCount === 1 ? "store" : "stores"}
+                </span>
+                {priceRange && (
+                  <span className={styles.metaItem}>
+                    <Tag size={14} />
+                    {priceRange}
+                  </span>
+                )}
+              </div>
             </div>
           </section>
 

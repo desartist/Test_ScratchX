@@ -78,9 +78,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 20px;
-  padding: 14px 16px;
-  background: #f6f7fc;
-  border-radius: 14px;
+  padding: 4px 0;
 }
 
 .metaItem {
@@ -107,6 +105,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: #f6f7fc;
+  border-radius: 14px;
+  padding: 14px 16px;
 }
 
 .scratchHeader {

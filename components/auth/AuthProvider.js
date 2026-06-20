@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AuthContext } from './AuthContext';
 import { tokenService } from '@/lib/tokenService';
 import { authService } from '@/lib/authService';
+import { dashboardCache } from '@/lib/dashboardCache';
 
 export function AuthProvider({ children }) {
   const router = useRouter();
@@ -28,11 +29,22 @@ export function AuthProvider({ children }) {
     return null;
   }, []);
 
-  const forceLogout = useCallback(() => {
+  const forceLogout = useCallback(async () => {
     tokenService.clearTokens();
     setAccount(null);
     setAccessToken(null);
     setRefreshToken(null);
+    // Clear the authToken cookie (set by Google OAuth) to prevent middleware redirect loops
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+    } catch {
+      // Ignore — clearing the cookie is best-effort; we still redirect
+    }
     router.push('/auth/login');
   }, [router]);
 
@@ -196,25 +208,30 @@ export function AuthProvider({ children }) {
     setError(null);
 
     try {
-      if (accessToken && refreshToken) {
-        await authService.logout(accessToken, refreshToken);
-      } else {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
-        });
-      }
+      // Always call logout with credentials:include so the authToken cookie
+      // (set by Google OAuth) is sent and cleared server-side regardless of
+      // which login method was used.
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken, refreshToken }),
+      });
 
+      dashboardCache.clear();
       tokenService.clearTokens();
       setAccount(null);
       setAccessToken(null);
       setRefreshToken(null);
       router.push('/auth/login');
     } catch (err) {
-      setError(err.message);
-      throw err;
+      // Even if the API call fails, clear client-side state and redirect
+      dashboardCache.clear();
+      tokenService.clearTokens();
+      setAccount(null);
+      setAccessToken(null);
+      setRefreshToken(null);
+      router.push('/auth/login');
     } finally {
       setIsLoading(false);
     }

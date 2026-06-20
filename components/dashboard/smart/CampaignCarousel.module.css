@@ -1,0 +1,371 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Section header ── */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #010f44;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.sectionCount {
+  color: #6c5ce7;
+  font-weight: 800;
+}
+
+.viewAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6c5ce7;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.viewAll:hover { opacity: 0.7; }
+
+/* ── Stack area ── */
+.stackArea {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+/* Shadow cards behind the front card */
+.shadowCard2,
+.shadowCard3 {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 16px);
+  background: #fff;
+  border: 1.5px solid #e8eaff;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+.shadowCard2 {
+  height: 90px;
+  bottom: -4px;
+  box-shadow: 0 4px 20px rgba(1,15,68,0.07);
+  opacity: 0.7;
+  z-index: 1;
+  transform: translateX(-50%) scale(0.96) translateY(8px);
+  transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s;
+}
+
+.shadowCard3 {
+  height: 90px;
+  bottom: -10px;
+  box-shadow: 0 4px 20px rgba(1,15,68,0.04);
+  opacity: 0.4;
+  z-index: 0;
+  transform: translateX(-50%) scale(0.92) translateY(16px);
+  transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s;
+}
+
+.shadowExitLeft {
+  animation: shadowPop 0.3s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+.shadowExitRight {
+  animation: shadowPop 0.3s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+@keyframes shadowPop {
+  0%   { opacity: var(--shadow-opacity, 0.7); transform: translateX(-50%) scale(var(--shadow-scale, 0.96)) translateY(var(--shadow-y, 8px)); }
+  50%  { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+  100% { opacity: var(--shadow-opacity, 0.7); transform: translateX(-50%) scale(var(--shadow-scale, 0.96)) translateY(var(--shadow-y, 8px)); }
+}
+
+/* ── Front card (animated) ── */
+.frontCard {
+  position: relative;
+  z-index: 10;
+  animation: enterCenter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes enterCenter {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.exitLeft {
+  animation: exitLeft 0.3s cubic-bezier(0.4, 0, 1, 1) both !important;
+}
+
+.exitRight {
+  animation: exitRight 0.3s cubic-bezier(0.4, 0, 1, 1) both !important;
+}
+
+@keyframes exitLeft {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(-60px) scale(0.94); }
+}
+
+@keyframes exitRight {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(60px) scale(0.94); }
+}
+
+/* ── Card itself ── */
+.card {
+  background: #fff;
+  border: 1.5px solid #e8eaff;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 6px 28px rgba(1,15,68,0.09);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+  user-select: none;
+}
+
+.card:active { transform: scale(0.99); box-shadow: 0 3px 14px rgba(1,15,68,0.06); }
+
+/* Header */
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cardLeft { flex: 1; min-width: 0; }
+
+.cardName {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #010f44;
+  letter-spacing: -0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardDates {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #9ba8b8;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+/* Days ring */
+.daysRing {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.ringsvg { width: 100%; height: 100%; }
+
+.ringInner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ringDays {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #6c5ce7;
+  line-height: 1;
+}
+
+.ringLabel {
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: #9ba8b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Status row */
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.priceRange {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #010f44;
+  letter-spacing: -0.3px;
+}
+
+/* Scratch allocation */
+.allocation {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: #f8f9ff;
+  border-radius: 12px;
+  border: 1px solid #eef0ff;
+}
+
+.allocHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.allocLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9ba8b8;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+.allocCount {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+.bar {
+  height: 7px;
+  background: #e8eaff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+
+.allocFooter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lowWarn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #ef4444;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+.leftCount {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* Footer */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+  border-top: 1px solid #f0f2ff;
+}
+
+.storeCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #637080;
+}
+
+.viewHint {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6c5ce7;
+}
+
+/* ── Controls ── */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid #e0e4ff;
+  border-radius: 50%;
+  background: #fff;
+  color: #637080;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.navBtn:hover { background: #f0f2ff; border-color: #c5cbfa; color: #010f44; }
+
+.dots { display: flex; align-items: center; gap: 6px; }
+
+.dotBtn {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: #e0e4ff;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.dotActive {
+  background: #6c5ce7;
+  transform: scale(1.3);
+}
+
+/* ── Mobile: hide arrows + dots, keep swipe ── */
+@media (max-width: 768px) {
+  .controls {
+    display: none;
+  }
+}

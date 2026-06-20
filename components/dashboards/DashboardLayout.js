@@ -352,7 +352,7 @@ export default function DashboardLayout({ children, role }) {
                 300+ Stores <span className={styles.trustedDivider}>|</span> 7+ Cities
               </div>
               <div className={styles.copyright}>
-                © Copyright 2024 | Powered by Desartist
+                © Copyright 2026 | Powered by Desartist
               </div>
             </div>
           </div>

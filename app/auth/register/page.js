@@ -73,13 +73,25 @@ export default function RegisterPage() {
     const firstName = parts[0];
     const lastName = parts.slice(1).join(' ') || '';
 
-    await signup({
-      firstName,
-      lastName,
-      email: form.email.trim().toLowerCase(),
-      phone: `${form.countryCode}${form.phoneNumber.trim()}`,
-      password: form.password,
-    });
+    try {
+      await signup({
+        firstName,
+        lastName,
+        email: form.email.trim().toLowerCase(),
+        phone: `${form.countryCode}${form.phoneNumber.trim()}`,
+        password: form.password,
+      });
+    } catch (err) {
+      const msg = (err?.message || '').toLowerCase();
+      if (msg.includes('phone') || msg.includes('mobile')) {
+        setValidationErrors(prev => ({ ...prev, phoneNumber: err.message }));
+      } else if (msg.includes('email')) {
+        setValidationErrors(prev => ({ ...prev, email: err.message }));
+      } else if (msg.includes('password')) {
+        setValidationErrors(prev => ({ ...prev, password: err.message }));
+      }
+      // leave other errors in the global `error` state as fallback
+    }
   };
   useEffect(() => {
     return () => {
@@ -98,7 +110,9 @@ export default function RegisterPage() {
           <p className={styles.subtitle}>Join ScratchX and start rewarding your customers.</p>
         </div>
 
-        {error && <div className={styles.errorBanner}>{error}</div>}
+        {error && !/(phone|mobile|email|password)/i.test(error) && (
+          <div className={styles.errorBanner}>{error}</div>
+        )}
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           {/* Full Name */}
@@ -158,6 +172,7 @@ export default function RegisterPage() {
                 value={form.phoneNumber}
                 onChange={set('phoneNumber')}
                 disabled={isLoading}
+                maxLength={10}
               />
             </div>
             {validationErrors.phoneNumber && (

@@ -1,11 +1,11 @@
 .dashboard {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 40px;
   width: 100%;
   max-width: 520px;
   margin: 0 auto;
-  /* padding: 16px 0 48px; */
+  padding: 8px 0 48px;
 }
 
 /* Charts grouped — single column on mobile (unchanged feel) */
@@ -46,7 +46,7 @@
 @media (min-width: 1024px) {
   .dashboard {
     max-width: 100%;
-    gap: 24px;
+    gap: 36px;
     padding: 24px 0 64px;
   }
   .chartsGrid {

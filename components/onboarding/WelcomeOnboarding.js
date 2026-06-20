@@ -62,7 +62,8 @@ export default function WelcomeOnboarding() {
       </div>
 
       <footer className={styles.footer}>
-        <p>© Copyright 2026 | Powered by Desartist</p>
+        <div className={styles.footerDivider} />
+        <p>© Copyright 2026 | Powered by <span>Desartist</span></p>
       </footer>
     </div>
   );

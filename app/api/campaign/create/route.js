@@ -104,5 +104,21 @@ export async function POST(request) {
     merchantId: account._id,
   });
 
+  // Create in-app notification
+  try {
+    const Notification = (await import('@/models/notificationModel')).default;
+    await Notification.create({
+      ownerId: account._id,
+      ownerType: 'merchant',
+      type: 'campaign_created',
+      title: '🎯 Campaign created',
+      message: `"${campaignData.campaignName}" has been created. Add reward ranges and assign stores to activate it.`,
+      actionUrl: `/campaign/${campaign._id}`,
+      actionText: 'Set Up Campaign',
+      severity: 'info',
+      read: false,
+    });
+  } catch (_) {}
+
   return NextResponse.json({ success: true, campaign }, { status: 201 });
 }

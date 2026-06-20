@@ -3,6 +3,10 @@
   min-height: 100vh;
   background: #ffffff;
   font-family: var(--font-afacad), system-ui, sans-serif;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
 }
 
 /* ── Sidebar (Figma: white mobile nav) ── */
@@ -423,7 +427,11 @@
   flex: 1;
   padding: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   background: #ffffff;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .backdrop {

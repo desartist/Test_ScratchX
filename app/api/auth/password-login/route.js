@@ -148,6 +148,20 @@ export async function POST(req) {
       cookieStore.set('merchantHasSub', subscription ? '1' : '0', cookieOpts);
     }
 
+    // Login notification (fire-and-forget)
+    try {
+      const Notification = (await import('@/models/notificationModel')).default;
+      await Notification.create({
+        ownerId: account._id,
+        ownerType: account.role?.toLowerCase().includes('distributor') ? 'distributor' : 'merchant',
+        type: 'system_alert',
+        title: '👋 New login detected',
+        message: `You signed in on ${new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}.`,
+        severity: 'low',
+        read: false,
+      });
+    } catch (_) {}
+
     return Response.json(
       {
         success: true,

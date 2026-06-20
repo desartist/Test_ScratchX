@@ -12,10 +12,13 @@ import {
 } from "lucide-react";
 
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { dashboardCache } from "@/lib/dashboardCache";
 import DashboardHeader from "@/components/dashboard/smart/DashboardHeader";
 import SubscriptionHero from "@/components/dashboard/smart/SubscriptionHero";
 import KpiTileGrid from "@/components/dashboard/smart/KpiTileGrid";
 import TopCampaignCard from "@/components/dashboard/smart/TopCampaignCard";
+import CampaignCarousel from "@/components/dashboard/smart/CampaignCarousel";
+import StoreCarousel from "@/components/dashboard/smart/StoreCarousel";
 import StorePerformanceCard from "@/components/dashboard/smart/StorePerformanceCard";
 import PendingRequestCard from "@/components/dashboard/smart/PendingRequestCard";
 import QuickActions from "@/components/dashboard/smart/QuickActions";
@@ -133,13 +136,75 @@ export default function SmartDashboard() {
     if (res.ok && res.data) setKpi(res.data);
   }, [buildFetcher]);
 
+  // Apply parsed API results to state
+  const applyResults = useCallback((results) => {
+    const [
+      rDashboard, rSub, rKpi, rGrowth,
+      rUsage, rConsumption, rStorePerf, rPending, rNotifications,
+    ] = results;
+
+    if (rDashboard?.ok && rDashboard.data) setDashboard(rDashboard.data);
+    if (rSub?.ok) setSubStatus(rSub.raw || null);
+    if (rKpi?.ok && rKpi.data) setKpi(rKpi.data);
+
+    if (rGrowth?.ok && rGrowth.data?.weeklyTrend) {
+      setCustomerGrowth(
+        rGrowth.data.weeklyTrend.map((row) => ({
+          label: row.day,
+          series: { new: Number(row.new) || 0, repeat: Number(row.repeat) || 0 },
+        })),
+      );
+    }
+
+    if (rUsage?.ok && Array.isArray(rUsage.data)) {
+      setScratchUsage(
+        rUsage.data.map((row) => ({
+          label: weekdayShort(row.date),
+          value: Number(row.used) || 0,
+        })),
+      );
+    }
+
+    if (rConsumption?.ok && Array.isArray(rConsumption.data)) {
+      setCampaignConsumption(
+        rConsumption.data.map((row, i) => ({
+          label: row.name || "Campaign",
+          value: Number(row.used) || 0,
+          color: DONUT_PALETTE[i % DONUT_PALETTE.length],
+        })),
+      );
+    }
+
+    if (rStorePerf?.ok && rStorePerf.data) {
+      setStorePerf({
+        storeWise: Array.isArray(rStorePerf.data.storeWise) ? rStorePerf.data.storeWise : [],
+        perStore: rStorePerf.data.perStore || {},
+      });
+    }
+
+    if (rPending?.ok && Array.isArray(rPending.data)) setPendingRequests(rPending.data);
+    if (rNotifications?.ok && Array.isArray(rNotifications.data)) setNotifications(rNotifications.data);
+  }, []);
+
   useEffect(() => {
     if (!account) return;
     let cancelled = false;
-    const fetcher = buildFetcher();
+    const CACHE_KEY = `dashboard_${account?.id || account?._id}`;
 
+    // ── Step 1: Show cached data instantly (zero wait) ────────────
+    const cached = dashboardCache.get(CACHE_KEY);
+    if (cached) {
+      applyResults(cached.data);
+      setLoading(false);
+    }
+
+    // ── Step 2: Skip network fetch if cache is fresh (< 60s) ─────
+    if (cached && !dashboardCache.isStale(CACHE_KEY)) return;
+
+    // ── Step 3: Fetch in background (silently if cached, shown if not) ─
+    const fetcher = buildFetcher();
     (async () => {
-      const results = await Promise.allSettled([
+      const raw = await Promise.allSettled([
         fetcher("/api/dashboard"),
         fetcher("/api/subscription/status"),
         fetcher("/api/analytics/kpi-summary"),
@@ -153,84 +218,14 @@ export default function SmartDashboard() {
 
       if (cancelled) return;
 
-      const [
-        rDashboard,
-        rSub,
-        rKpi,
-        rGrowth,
-        rUsage,
-        rConsumption,
-        rStorePerf,
-        rPending,
-        rNotifications,
-      ] = await Promise.all(results.map(settle));
-
-      // /api/dashboard returns the merchant payload under `data`.
-      if (rDashboard.ok && rDashboard.data) setDashboard(rDashboard.data);
-
-      // /api/subscription/status returns flat fields on the JSON body.
-      if (rSub.ok) setSubStatus(rSub.raw || null);
-
-      if (rKpi.ok && rKpi.data) setKpi(rKpi.data);
-
-      // customer-growth -> [{ label, series:{ new, repeat } }]
-      if (rGrowth.ok && rGrowth.data?.weeklyTrend) {
-        setCustomerGrowth(
-          rGrowth.data.weeklyTrend.map((row) => ({
-            label: row.day,
-            series: {
-              new: Number(row.new) || 0,
-              repeat: Number(row.repeat) || 0,
-            },
-          })),
-        );
-      }
-
-      // scratch-usage -> [{ label (weekday), value }]
-      if (rUsage.ok && Array.isArray(rUsage.data)) {
-        setScratchUsage(
-          rUsage.data.map((row) => ({
-            label: weekdayShort(row.date),
-            value: Number(row.used) || 0,
-          })),
-        );
-      }
-
-      // campaign-consumption -> donut segments
-      if (rConsumption.ok && Array.isArray(rConsumption.data)) {
-        setCampaignConsumption(
-          rConsumption.data.map((row, i) => ({
-            label: row.name || "Campaign",
-            value: Number(row.used) || 0,
-            color: DONUT_PALETTE[i % DONUT_PALETTE.length],
-          })),
-        );
-      }
-
-      if (rStorePerf.ok && rStorePerf.data) {
-        setStorePerf({
-          storeWise: Array.isArray(rStorePerf.data.storeWise)
-            ? rStorePerf.data.storeWise
-            : [],
-          perStore: rStorePerf.data.perStore || {},
-        });
-      }
-
-      if (rPending.ok && Array.isArray(rPending.data)) {
-        setPendingRequests(rPending.data);
-      }
-
-      if (rNotifications.ok && Array.isArray(rNotifications.data)) {
-        setNotifications(rNotifications.data);
-      }
-
+      const results = await Promise.all(raw.map(settle));
+      dashboardCache.set(CACHE_KEY, results);
+      applyResults(results);
       setLoading(false);
     })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [account, buildFetcher]);
+    return () => { cancelled = true; };
+  }, [account, buildFetcher, applyResults]);
 
   const handleApprove = useCallback(
     async (request) => {
@@ -391,70 +386,22 @@ export default function SmartDashboard() {
       />
       <KpiTileGrid kpi={kpi} />
 
-      {/* Top Campaigns — only when data exists */}
-      {topCampaigns.length > 0 && (
-        <>
-          <SectionHeader title="Top Campaigns" viewAllHref="/campaign" />
-          <div className={styles.cardList}>
-            {topCampaigns.map((c) => (
-              <TopCampaignCard
-                key={c._id}
-                name={c.name}
-                status={c.status}
-                startDate={c.startDate}
-                endDate={c.endDate}
-                daysLeft={daysUntil(c.endDate)}
-                storeCount={stores.length}
-                priceRange={
-                  c.billingRange && c.billingRange !== "₹0"
-                    ? c.billingRange
-                    : undefined
-                }
-                scratchAllocated={
-                  (c.allocatedCards || 0) - (c.remainingCards || 0)
-                }
-                scratchTotal={c.allocatedCards || 0}
-                onView={() => router.push(`/campaign/${c._id}`)}
-                onAssign={() => router.push(`/campaign/${c._id}/assign`)}
-              />
-            ))}
-          </div>
-        </>
+      {/* Top Campaigns — stacked carousel */}
+      {campaigns.length > 0 && (
+        <CampaignCarousel
+          campaigns={campaigns}
+          storeCount={stores.length}
+          viewAllHref="/campaign"
+        />
       )}
 
-      {/* Store Performance — only when stores exist */}
+      {/* Store Performance — stacked carousel */}
       {storePerformance.length > 0 && (
-        <>
-          <SectionHeader title="Store Performance" viewAllHref="/stores" />
-          <div className={styles.cardList}>
-            {storePerformance.map((s, i) => {
-              const stats = storePerf.perStore?.[String(s._id)] || {};
-              return (
-                <StorePerformanceCard
-                  key={s._id}
-                  storeName={s.name}
-                  isMainStore={i === 0}
-                  location={s.address || s.city}
-                  scans={Number(stats.scans) || 0}
-                  campaignCount={Number(s.campaignCount) || 0}
-                  entitlementLabel={
-                    Number.isFinite(s.scratchAllocated)
-                      ? `${s.scratchAllocated} allocated`
-                      : undefined
-                  }
-                  used={
-                    Number.isFinite(s.scratchAllocated) &&
-                    Number.isFinite(s.scratchRemaining)
-                      ? s.scratchAllocated - s.scratchRemaining
-                      : 0
-                  }
-                  onViewStore={() => router.push(`/stores/${s._id}`)}
-                  onReview={() => router.push(`/stores/${s._id}`)}
-                />
-              );
-            })}
-          </div>
-        </>
+        <StoreCarousel
+          stores={storePerformance}
+          storePerf={storePerf}
+          viewAllHref="/stores"
+        />
       )}
 
       {/* Pending Requests — only when there are pending items */}

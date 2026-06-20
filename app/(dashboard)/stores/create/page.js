@@ -128,7 +128,7 @@ export default function CreateStorePage() {
         const { latitude, longitude } = position.coords;
         const lat = parseFloat(latitude.toFixed(6));
         const lng = parseFloat(longitude.toFixed(6));
-        setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+        setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng, _geoSource: 'gps' }));
 
         // Reverse geocode via Nominatim
         try {
@@ -174,8 +174,53 @@ export default function CreateStorePage() {
 
         setGeoError(errorMsg);
       },
-      { timeout: 10000, enableHighAccuracy: true }
+      { timeout: 15000, enableHighAccuracy: false, maximumAge: 60000 }
     );
+  };
+
+  // Forward geocode address → lat/lng when GPS is unavailable
+  // Tries progressively simpler queries to maximise chances of a hit
+  const geocodeAddress = async () => {
+    const { address, city, state, pincode } = formData;
+    if (!city && !pincode) return;
+
+    setLocationStatus('requesting');
+    setGeoError(null);
+
+    // Queries from most specific to least — first match wins
+    const queries = [
+      [address, city, state, pincode],
+      [city, state, pincode],
+      [pincode, 'India'],
+      [city, state, 'India'],
+    ].map(parts => parts.filter(Boolean).join(', ')).filter(Boolean);
+
+    const nominatim = async (q) => {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=in`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      return res.json();
+    };
+
+    try {
+      for (const q of queries) {
+        const results = await nominatim(q);
+        if (results && results[0]) {
+          const lat = parseFloat(parseFloat(results[0].lat).toFixed(6));
+          const lng = parseFloat(parseFloat(results[0].lon).toFixed(6));
+          setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng, _geoSource: 'address' }));
+          setLocationStatus('detected');
+          setLocationInfo({ display: results[0].display_name?.split(',').slice(0, 3).join(',') });
+          return;
+        }
+      }
+      setLocationStatus('denied');
+      setGeoError('Could not find this location. Please check your city/pincode and try again.');
+    } catch {
+      setLocationStatus('denied');
+      setGeoError('Failed to look up address. Please check your internet connection and try again.');
+    }
   };
 
   // Handle form field changes
@@ -234,7 +279,7 @@ export default function CreateStorePage() {
     const newErrors = {};
 
     if (formData.latitude === null || formData.longitude === null) {
-      newErrors.location = 'Store location is required. Please enable location services.';
+      newErrors.location = 'Store location is required. Use GPS or fill in your address and click "Use Address Location".';
     }
 
     if (!formData.address.trim()) {
@@ -348,9 +393,9 @@ export default function CreateStorePage() {
   if (currentStep === 0) {
     return (
       <div className={styles.pageShell}>
-        <div className={styles.topBar}>
+        {/* <div className={styles.topBar}>
           <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.topLogo} />
-        </div>
+        </div> */}
         <WelcomeScreen onGetStarted={() => setCurrentStep(1)} />
       </div>
     );
@@ -573,14 +618,25 @@ export default function CreateStorePage() {
               )}
 
               {locationStatus === 'denied' && (
-                <button
-                  type="button"
-                  className={styles.useCurrentButton}
-                  onClick={requestGeolocation}
-                  disabled={submitting || locationStatus === 'requesting'}
-                >
-                  Use Current Location
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button
+                    type="button"
+                    className={styles.useCurrentButton}
+                    onClick={requestGeolocation}
+                    disabled={submitting}
+                  >
+                    Retry GPS Location
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.useCurrentButton}
+                    onClick={geocodeAddress}
+                    disabled={submitting || (!formData.address && !formData.city)}
+                    style={{ background: '#010f44' }}
+                  >
+                    Use Address Location
+                  </button>
+                </div>
               )}
             </div>
 
