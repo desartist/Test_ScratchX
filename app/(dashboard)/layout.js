@@ -35,10 +35,10 @@ export default async function Layout({ children }) {
   const role = user?.role || 'Merchant';
   const merchantHasStore = cookieStore.get('merchantHasStore')?.value;
 
-  // No store yet (cookie is '0' or not set) — check via API to be sure
+  // Verify store ownership via API whenever cookie isn't definitively '1'
+  // (handles stuck '0' cookies after store creation, and missing cookies from OAuth)
   let hasStore = merchantHasStore === '1';
-  if (!hasStore && merchantHasStore !== '0') {
-    // Cookie not set (e.g. Google OAuth login) — verify via API
+  if (!hasStore) {
     try {
       const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
       const res = await fetch(`${base}/api/stores`, {

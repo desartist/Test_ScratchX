@@ -282,16 +282,26 @@
 
 .dateIcon {
   position: absolute;
-  left: 13px;
+  right: 13px;
   color: #6c5ce7;
   pointer-events: none;
   flex-shrink: 0;
   z-index: 1;
 }
 
+.datePlaceholder {
+  position: absolute;
+  left: 13px;
+  font-size: 0.88rem;
+  color: #aab0c8;
+  pointer-events: none;
+  z-index: 1;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
 .dateInput {
   width: 100%;
-  padding: 13px 12px 13px 36px;
+  padding: 13px 36px 13px 13px;
   border: 1.5px solid #e0e4ff;
   border-radius: 12px;
   font-size: 0.88rem;
@@ -316,7 +326,7 @@
   opacity: 0.6;
 }
 
-/* Remove native calendar icon on webkit */
+/* Hide native calendar icon; our custom icon handles the tap target */
 .dateInput::-webkit-calendar-picker-indicator {
   opacity: 0;
   position: absolute;
@@ -324,6 +334,12 @@
   width: 100%;
   height: 100%;
   cursor: pointer;
+}
+
+/* Hide native "dd/mm/yyyy" text on iOS when empty — our .datePlaceholder shows instead */
+.dateInput:not([value])::-webkit-datetime-edit,
+.dateInput[value=""]::-webkit-datetime-edit {
+  color: transparent;
 }
 
 /* ── Button Row ────────────────────────────────────────────── */

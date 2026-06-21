@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Tag, ChevronRight, Plus, QrCode } from "lucide-react";
+import { ArrowLeft, Tag, Pencil, Plus, QrCode } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import RangeWizard from "@/components/campaign/RangeWizard";
 import LaunchWizardModal from "@/components/campaign/LaunchWizardModal";
@@ -112,15 +112,8 @@ export default function CampaignRangesStepPage() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        {/* Step header */}
+        {/* Page header */}
         <div className={styles.header}>
-          <div className={styles.steps}>
-            <span className={styles.stepDone}>1. Basic Info</span>
-            <span className={styles.stepDivider} />
-            <span className={styles.stepActive}>2. Reward Ranges</span>
-            <span className={styles.stepDivider} />
-            <span className={styles.stepNext}>3. Launch Setup</span>
-          </div>
           <h1 className={styles.title}>
             <Tag size={22} /> Setup Billing Range
           </h1>
@@ -151,14 +144,10 @@ export default function CampaignRangesStepPage() {
                   className={styles.rangeRow}
                   onClick={() => openEdit(range)}
                 >
-                  <span className={styles.rangeRowLeft}>
-                    <span className={styles.rangeRowName}>Range {i + 1}</span>
-                    <span className={styles.rangeRowLabel}>
-                      {range.label ||
-                        `₹${range.minAmount} - ₹${range.maxAmount}`}
-                    </span>
+                  <span className={styles.rangeRowText}>
+                    Range {i + 1} ({range.label || `₹${range.minAmount} - ₹${range.maxAmount}`})
                   </span>
-                  <ChevronRight size={18} className={styles.rangeRowChevron} />
+                  <Pencil size={16} className={styles.rangeRowEdit} />
                 </button>
               ))}
 
@@ -167,37 +156,40 @@ export default function CampaignRangesStepPage() {
                 className={styles.addMoreRow}
                 onClick={openCreate}
               >
-                <Plus size={16} /> Add more range
+                <span className={styles.addMoreIcon}>
+                  <Plus size={14} strokeWidth={2.5} />
+                </span>
+                Add more range
               </button>
             </div>
 
-            {qrGenerated ? (
-              <button
-                type="button"
-                className={styles.viewCampaignBtn}
-                onClick={() => router.push(`/campaign/${campaignId}`)}
-              >
-                View Campaign
-              </button>
-            ) : scratchesAllocated ? (
-              <button
-                type="button"
-                className={styles.generateQrBtn}
-                onClick={openLaunch}
-                disabled={!hasRanges}
-              >
-                <QrCode size={18} />
-                Generate QR
-              </button>
-            ) : (
-              <button
-                type="button"
-                className={styles.launchBtn}
-                onClick={openLaunch}
-                disabled={!hasRanges}
-              >
-                Allocate Scratches
-              </button>
+            {hasRanges && (
+              qrGenerated ? (
+                <button
+                  type="button"
+                  className={styles.viewCampaignBtn}
+                  onClick={() => router.push(`/campaign/${campaignId}`)}
+                >
+                  View Campaign
+                </button>
+              ) : scratchesAllocated ? (
+                <button
+                  type="button"
+                  className={styles.generateQrBtn}
+                  onClick={openLaunch}
+                >
+                  <QrCode size={18} />
+                  Generate QR
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.launchBtn}
+                  onClick={openLaunch}
+                >
+                  Allocate Scratches
+                </button>
+              )
             )}
           </>
         )}

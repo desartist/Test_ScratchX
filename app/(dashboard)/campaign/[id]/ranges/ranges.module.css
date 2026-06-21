@@ -99,12 +99,15 @@
 .header {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
+  text-align: center;
 }
 
 .title {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   margin: 0;
   font-size: 1.75rem;
@@ -120,6 +123,7 @@
   font-size: 0.9rem;
   color: #637080;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  text-align: center;
 }
 
 /* ── Messages ───────────────────────────────────────────────── */
@@ -161,7 +165,7 @@
   gap: 12px;
   width: 100%;
   text-align: left;
-  background: #fafbff;
+  background: #fff;
   border: 1.5px solid #e0e4ff;
   border-radius: 14px;
   padding: 16px 18px;
@@ -172,61 +176,66 @@
 
 .rangeRow:hover {
   border-color: #ef9e1b;
-  box-shadow: 0 4px 16px rgba(239, 158, 27, 0.12);
-  background: #fffdf5;
+  box-shadow: 0 4px 16px rgba(239, 158, 27, 0.10);
+  background: #fffdf8;
 }
 
-.rangeRowLeft {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.rangeRowName {
+.rangeRowText {
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 500;
   color: #010f44;
 }
 
-.rangeRowLabel {
-  font-size: 0.82rem;
-  color: #637080;
-  font-family: var(--font-afacad-flux), system-ui, sans-serif;
-}
-
-.rangeRowChevron {
+.rangeRowEdit {
   color: #9ba8b8;
   flex-shrink: 0;
   transition: color 0.2s;
 }
 
-.rangeRow:hover .rangeRowChevron {
+.rangeRow:hover .rangeRowEdit {
   color: #ef9e1b;
 }
 
-/* ── Add more range ghost row ───────────────────────────────── */
+/* ── Add more range row ─────────────────────────────────────── */
 .addMoreRow {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
   font-family: var(--font-afacad), system-ui, sans-serif;
   font-size: 0.9rem;
-  font-weight: 700;
-  color: #ef9e1b;
-  background: transparent;
-  border: 1.5px dashed #f5c46a;
+  font-weight: 600;
+  color: #637080;
+  background: #fff;
+  border: 1.5px solid #e0e4ff;
   border-radius: 14px;
-  padding: 14px 18px;
+  padding: 15px 18px;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-  margin-top: 2px;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .addMoreRow:hover {
-  background: rgba(239, 158, 27, 0.06);
-  border-color: #ef9e1b;
+  background: #f8f9ff;
+  border-color: #c5cbfa;
+  color: #010f44;
+}
+
+.addMoreIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid #c5cbfa;
+  border-radius: 50%;
+  color: #637080;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.addMoreRow:hover .addMoreIcon {
+  border-color: #6c5ce7;
+  color: #6c5ce7;
 }
 
 /* ── Allocate Scratches CTA ─────────────────────────────────── */

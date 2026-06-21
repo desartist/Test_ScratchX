@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
-import LocationStatus from "@/components/customer/LocationStatus";
 import styles from "./page.module.css";
 
 export default function ScanClientPage() {
@@ -64,7 +63,6 @@ export default function ScanClientPage() {
       } finally {
         setLoading(false);
       }
-      await getCustomerLocation();
     };
 
     if (campaignId) {
@@ -94,154 +92,103 @@ export default function ScanClientPage() {
     return Object.keys(errors).length === 0;
   };
 
-  // ===== LOCATION VERIFICATION =====
-  const getCustomerLocation = async () => {
+  // ===== SILENT LOCATION CAPTURE =====
+  const getCustomerLocation = () => {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
-        setLocationError("Geolocation not supported");
-        resolve(false);
+        resolve({ success: false, code: "unsupported" });
         return;
       }
-
-      // setLocationVerifying(true);
-      setLocationError(null);
-
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCustomerLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-          resolve(true);
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setCustomerLocation({ latitude, longitude });
+          resolve({ success: true, latitude, longitude });
         },
-        (error) => {
-          console.error("Geolocation error:", error);
-          setLocationError("Enable location services and try again");
-          resolve(false);
+        (err) => {
+          const code = err.code === 1 ? "denied" : err.code === 3 ? "timeout" : "unavailable";
+          resolve({ success: false, code });
         },
-        { timeout: 10000 },
+        { timeout: 12000, enableHighAccuracy: false }
       );
     });
   };
 
-  const verifyLocationWithStore = async (latitude, longitude) => {
-    try {
-      setLocationVerifying(true);
-      setLocationError(null);
+  // ===== SINGLE CTA: SHOW MY COUPONS =====
+  // Validates → captures GPS silently → verifies with store → submits
+  const handleShowCoupons = async (e) => {
+    e.preventDefault();
+    setLocationError(null);
+    setError(null);
 
-      const storesList = campaign?.assignedStores;
-      if (!storesList || storesList.length === 0) {
-        setLocationError("Store info not found");
+    if (!validateForm()) return;
+
+    setLocationVerifying(true);
+
+    // Step 1: get GPS (use cached if available)
+    let lat = customerLocation.latitude;
+    let lng = customerLocation.longitude;
+
+    if (!lat || !lng) {
+      const loc = await getCustomerLocation();
+      if (!loc.success) {
+        const msgs = {
+          denied:      { emoji: "🔒", title: "Location permission needed", body: "We need your location to make sure you're at the store.", tip: "Tap 'Allow' when your browser asks, or enable it in your phone settings." },
+          timeout:     { emoji: "⏱️", title: "GPS is taking a moment", body: "We couldn't get your location in time — this sometimes happens indoors.", tip: "Try stepping outside briefly, then tap Show My Coupons again." },
+          unsupported: { emoji: "📵", title: "Location not available", body: "Your browser doesn't support location services.", tip: "Try opening this page in Chrome or Safari." },
+          unavailable: { emoji: "📡", title: "Can't detect your location", body: "Your GPS seems to be off or unavailable right now.", tip: "Enable location / GPS on your device and try again." },
+        };
+        setLocationError(msgs[loc.code] || msgs.unavailable);
         setLocationVerifying(false);
-        return { success: false, matchedStore: null };
+        return;
       }
+      lat = loc.latitude;
+      lng = loc.longitude;
+    }
 
+    // Step 2: verify with store
+    const storesList = campaign?.assignedStores;
+    if (!storesList?.length) {
+      setLocationError({ title: "Store not found", body: "No stores are assigned to this campaign. Contact the merchant." });
+      setLocationVerifying(false);
+      return;
+    }
+
+    try {
       const response = await fetch(`/api/customer/location-verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          campaignId,
-          storesList,
-          customerLatitude: latitude,
-          customerLongitude: longitude,
-        }),
+        body: JSON.stringify({ campaignId, storesList, customerLatitude: lat, customerLongitude: lng }),
       });
-
       const result = await response.json();
-      console.log(result, "location result");
-      if (!result.success || !result.data.isValid) {
-        // Build detailed error message showing all store distances
-        let errorMsg = result.data?.message ||
-          `You must be within ${result.data?.allowedRadius}m of the store. Current distance: ${Math.round(result.data?.distance || 0)}m`;
 
-        // Add debug info if available
-        if (result.data?.debugInfo) {
-          console.warn(
-            "⚠️ Store coordinate issues:",
-            result.data.debugInfo
-          );
-        }
-
-        if (result.data?.allStoreDistances) {
-          console.log(
-            "📊 All store distances:",
-            result.data.allStoreDistances
-          );
-        }
-
-        setLocationError(errorMsg);
-        return { success: false, matchedStore: null };
+      if (!result.success || !result.data?.isValid) {
+        const dist = Math.round(result.data?.distance || 0);
+        const radius = result.data?.allowedRadius || 500;
+        setLocationError({
+          emoji: "📍",
+          title: "Almost there!",
+          body: `It looks like you're about ${dist}m away from the store. Head a little closer — you need to be within ${radius}m to unlock your reward.`,
+          tip: "Make sure you're inside the store and your GPS is turned on.",
+        });
+        setLocationVerifying(false);
+        return;
       }
-      const matchedStoreData = result.data?.matchedStore;
-      setMatchedStore(matchedStoreData);
+
+      const verifiedStoreData = result.data?.matchedStore;
+      setMatchedStore(verifiedStoreData);
       setLocationVerified(true);
-      setLocationError(null);
-      return { success: true, matchedStore: matchedStoreData };
-    } catch (err) {
-      console.error("Location verification error:", err);
-      setLocationError("Failed to verify location");
-      return { success: false, matchedStore: null };
-    } finally {
+      setLocationVerifying(false);
+
+      // Step 3: submit participation
+      submitParticipation(verifiedStoreData, lat, lng);
+    } catch {
+      setLocationError({ emoji: "🌐", title: "Connection issue", body: "We couldn't reach our servers to verify your location.", tip: "Check your internet connection and try again." });
       setLocationVerifying(false);
     }
   };
 
-  // Handle verify location button click
-  const handleVerifyLocation = async (e) => {
-    e.preventDefault();
-
-    const hasLocation = customerLocation.latitude && customerLocation.longitude;
-    if (!hasLocation) {
-      const isGotLocation = await getCustomerLocation();
-      if (!isGotLocation) {
-        setLocationError("Enable GPS and try again");
-        return;
-      }
-    }
-
-    await verifyLocationWithStore(
-      customerLocation.latitude,
-      customerLocation.longitude,
-    );
-  };
-
-  // ===== FORM SUBMISSION (STEP 1 -> STEP 2) =====
-  const handleShowCoupons = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    let verifiedStoreData = matchedStore;
-
-    // Get location if not already verified
-    if (!locationVerified) {
-      const hasLocation =
-        customerLocation.latitude && customerLocation.longitude;
-      if (!hasLocation) {
-        const isGotLocation = await getCustomerLocation();
-        if (!isGotLocation) {
-          setLocationError("Enable GPS and try again");
-          return;
-        }
-      }
-
-      const verificationResult = await verifyLocationWithStore(
-        customerLocation.latitude,
-        customerLocation.longitude,
-      );
-      if (!verificationResult.success) {
-        return;
-      }
-      verifiedStoreData = verificationResult.matchedStore;
-    }
-
-    // Submit participation to create scratch
-    submitParticipation(verifiedStoreData);
-  };
-
-  const submitParticipation = async (verifiedStoreData) => {
+  const submitParticipation = async (verifiedStoreData, lat, lng) => {
     try {
       setSubmitting(true);
       setError(null);
@@ -261,9 +208,9 @@ export default function ScanClientPage() {
           customerName: formData.customerName.trim(),
           customerMobile: formData.customerMobile.trim(),
           customerEmail: null,
-          billAmount: 0, // Will be provided during redemption
-          customerLatitude: customerLocation.latitude,
-          customerLongitude: customerLocation.longitude,
+          billAmount: 0,
+          customerLatitude: lat ?? customerLocation.latitude,
+          customerLongitude: lng ?? customerLocation.longitude,
           customerConsent: true,
           verifiedStore: verifiedStoreData,
         }),
@@ -363,170 +310,153 @@ export default function ScanClientPage() {
 
   // STEP 1: FORM
   if (step === "FORM") {
+    // Build store avatar initials — storeName lives in assignedStores[0]
+    const storeName = campaign?.assignedStores?.[0]?.storeName || "";
+    const campaignName = campaign?.campaignName || "";
+    const initials = storeName
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() || "")
+      .join("");
+
     return (
       <div className={styles.container}>
-        <div className={styles.gridContainer}>
-          <section className={styles.formSection}>
-            <div className={styles.form}>
-              <h1 className={styles.title}>Unlock Your Reward</h1>
-              <p className={styles.subtitle}>
-                Please enter your details to unlock exclusive offers.
-              </p>
+        <div className={styles.pageWrapper}>
+          {/* Store info header — shown after page load from campaign data */}
+          {storeName && (
+            <div className={styles.storeHeader}>
+              <div className={styles.storeAvatar}>{initials || "S"}</div>
+              <div className={styles.storeInfo}>
+                <p className={styles.storeName}>{storeName}</p>
+                {campaignName && <p className={styles.campaignName}>{campaignName}</p>}
+              </div>
+            </div>
+          )}
 
-              {error && <div className={styles.errorAlert}>{error}</div>}
-              {locationError && (
-                <div className={styles.warningAlert}>{locationError}</div>
-              )}
+          <div className={styles.formCard}>
+            <h1 className={styles.title}>Unlock Your Reward</h1>
+            <p className={styles.subtitle}>
+              Please enter your details to scratch &amp; win exclusive offers
+            </p>
 
-              <form onSubmit={handleShowCoupons}>
-                {/* Name Field */}
-                <div className={styles.inputGroup}>
-                  <label className={styles.label}>
-                    Your Name <span className={styles.required}>*</span>
-                  </label>
+            {error && <div className={styles.errorAlert}>{error}</div>}
+
+            <form onSubmit={handleShowCoupons}>
+              {/* Name Field */}
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>Your Name</label>
+                <input
+                  type="text"
+                  className={`${styles.input} ${validationErrors.customerName ? styles.inputError : ""}`}
+                  placeholder="Nimit"
+                  value={formData.customerName}
+                  onChange={(e) => {
+                    setFormData({ ...formData, customerName: e.target.value });
+                    if (validationErrors.customerName)
+                      setValidationErrors({ ...validationErrors, customerName: null });
+                  }}
+                />
+                {validationErrors.customerName && (
+                  <span className={styles.errorText}>{validationErrors.customerName}</span>
+                )}
+              </div>
+
+              {/* Contact Number Field */}
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>Contact Number</label>
+                <div className={`${styles.mobileInputWrapper} ${validationErrors.customerMobile ? styles.inputError : ""}`}>
+                  <span className={styles.phonePrefix}>+91</span>
+                  <div className={styles.prefixDivider} />
                   <input
-                    type="text"
-                    className={`${styles.input} ${validationErrors.customerName ? styles.inputError : ""}`}
-                    placeholder="Your full name"
-                    value={formData.customerName}
+                    type="tel"
+                    className={styles.mobileInput}
+                    placeholder="9099321133"
+                    maxLength="10"
+                    value={formData.customerMobile}
                     onChange={(e) => {
-                      setFormData({
-                        ...formData,
-                        customerName: e.target.value,
-                      });
-                      if (validationErrors.customerName) {
-                        setValidationErrors({
-                          ...validationErrors,
-                          customerName: null,
-                        });
-                      }
+                      const value = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData({ ...formData, customerMobile: value });
+                      if (validationErrors.customerMobile)
+                        setValidationErrors({ ...validationErrors, customerMobile: null });
                     }}
                   />
-                  {validationErrors.customerName && (
-                    <span className={styles.errorText}>
-                      {validationErrors.customerName}
-                    </span>
-                  )}
                 </div>
+                {validationErrors.customerMobile && (
+                  <span className={styles.errorText}>{validationErrors.customerMobile}</span>
+                )}
+              </div>
 
-                {/* Contact Number Field */}
-                <div className={styles.inputGroup}>
-                  <label className={styles.label}>
-                    Contact Number <span className={styles.required}>*</span>
-                  </label>
-                  <div className={styles.mobileInputWrapper}>
-                    <span className={styles.phonePrefix}>+91</span>
-                    <input
-                      type="tel"
-                      className={`${styles.input} ${styles.mobileInput} ${validationErrors.customerMobile ? styles.inputError : ""}`}
-                      placeholder="9099321133"
-                      maxLength="10"
-                      value={formData.customerMobile}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9]/g, "");
-                        setFormData({ ...formData, customerMobile: value });
-                        if (validationErrors.customerMobile) {
-                          setValidationErrors({
-                            ...validationErrors,
-                            customerMobile: null,
-                          });
-                        }
-                      }}
-                    />
-                  </div>
-                  {validationErrors.customerMobile && (
-                    <span className={styles.errorText}>
-                      {validationErrors.customerMobile}
-                    </span>
-                  )}
+              {/* Range Selection */}
+              <div className={styles.rangeSection}>
+                <label className={styles.label}>Select your purchase range</label>
+                <div className={styles.rangeGroup}>
+                  {ranges.map((range) => (
+                    <label
+                      key={range._id}
+                      className={`${styles.rangeOption} ${formData.selectedRange === range._id ? styles.checked : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="purchaseRange"
+                        value={range._id}
+                        checked={formData.selectedRange === range._id}
+                        onChange={() => {
+                          setFormData({ ...formData, selectedRange: range._id });
+                          if (validationErrors.selectedRange)
+                            setValidationErrors({ ...validationErrors, selectedRange: null });
+                        }}
+                        className={styles.rangeRadio}
+                      />
+                      <span className={styles.radioCircle} />
+                      <span className={styles.rangeText}>
+                        ₹{range.minAmount.toLocaleString("en-IN")} - ₹{range.maxAmount.toLocaleString("en-IN")}
+                      </span>
+                    </label>
+                  ))}
                 </div>
+                {validationErrors.selectedRange && (
+                  <span className={styles.errorText}>{validationErrors.selectedRange}</span>
+                )}
+              </div>
 
-                {/* Range Selection */}
-                <div className={styles.rangeSection}>
-                  <label className={styles.rangeLabel}>
-                    Select your purchase range
-                  </label>
-                  <div className={styles.rangeGroup}>
-                    {ranges.map((range) => (
-                      <label
-                        key={range._id}
-                        className={`${styles.rangeOption} ${formData.selectedRange === range._id ? styles.checked : ""}`}
-                      >
-                        <input
-                          type="radio"
-                          name="purchaseRange"
-                          value={range._id}
-                          checked={formData.selectedRange === range._id}
-                          onChange={() => {
-                            setFormData({
-                              ...formData,
-                              selectedRange: range._id,
-                            });
-                            if (validationErrors.selectedRange) {
-                              setValidationErrors({
-                                ...validationErrors,
-                                selectedRange: null,
-                              });
-                            }
-                          }}
-                          className={styles.rangeInput}
-                        />
-                        <div className={styles.checkbox}></div>
-                        <span>
-                          ₹{range.minAmount} - ₹{range.maxAmount}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                  {validationErrors.selectedRange && (
-                    <span className={styles.errorText}>
-                      {validationErrors.selectedRange}
-                    </span>
-                  )}
-                </div>
-
-                {/* Location Status Component */}
-                <LocationStatus
-                  status={
-                    locationVerifying
-                      ? "verifying"
-                      : locationError
-                        ? "error"
-                        : locationVerified
-                          ? "verified"
-                          : "verifying"
-                  }
-                  latitude={customerLocation.latitude}
-                  longitude={customerLocation.longitude}
-                  storeName={matchedStore?.storeName}
-                  distance={matchedStore?.distance}
-                  errorMessage={locationError}
-                  onRetry={handleVerifyLocation}
-                />
-
-                {/* Two-Button Flow */}
-                <div className={styles.buttonGroup}>
-                  <button
-                    type="button"
-                    className={styles.verifyBtn}
-                    onClick={handleVerifyLocation}
-                    disabled={locationVerifying || locationVerified}
-                  >
-                    {locationVerifying ? "Verifying..." : "Verify Location"}
-                  </button>
-
-                  <button
-                    type="submit"
-                    className={styles.submitBtn}
-                    disabled={submitting || !locationVerified}
-                  >
-                    {submitting ? "Processing..." : "Show My Coupons"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </section>
+              <button
+                type="submit"
+                className={styles.submitBtn}
+                disabled={submitting || locationVerifying}
+              >
+                {locationVerifying
+                  ? <><span className={styles.btnSpinner} /> Verifying location…</>
+                  : submitting
+                  ? <><span className={styles.btnSpinner} /> Processing…</>
+                  : "Show My Coupons"}
+              </button>
+            </form>
+          </div>
         </div>
+
+        {/* Location error bottom-sheet modal */}
+        {locationError && (
+          <div className={styles.locModalBackdrop} onClick={() => setLocationError(null)}>
+            <div className={styles.locModal} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.locModalHandle} />
+              <div className={styles.locModalEmoji}>{locationError.emoji}</div>
+              <h3 className={styles.locModalTitle}>{locationError.title}</h3>
+              <p className={styles.locModalBody}>{locationError.body}</p>
+              {locationError.tip && (
+                <div className={styles.locModalTip}>
+                  <span className={styles.locModalTipIcon}>💡</span>
+                  {locationError.tip}
+                </div>
+              )}
+              <button
+                className={styles.locModalBtn}
+                onClick={() => setLocationError(null)}
+              >
+                Got it, I'll try again
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

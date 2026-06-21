@@ -95,7 +95,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--font-size-2xl, 24px);
+  font-size: 1.15rem;
   font-weight: 700;
 }
 

@@ -38,17 +38,8 @@ function StoreCard({ store, stats, idx, onViewStore, onReview }) {
       )}
 
       <div className={styles.meta}>
-        <span>{num(stats?.scans || 0)} Scans</span>
-        <span className={styles.sep}>·</span>
         <span>{num(campaignCount)} Campaigns</span>
       </div>
-
-      {Number.isFinite(num(scratchAllocated)) && (
-        <div className={styles.entitlement}>
-          <span className={styles.entitlementLabel}>{num(scratchAllocated)} allocated</span>
-          <span className={styles.usedLabel}>{used} Used</span>
-        </div>
-      )}
 
       <div className={styles.actions}>
         <button type="button" className={`${styles.btn} ${styles.btnOutline}`} onClick={onViewStore}>

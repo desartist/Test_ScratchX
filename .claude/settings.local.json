@@ -425,7 +425,8 @@
       "Bash(xargs cat)",
       "Bash(xargs ls)",
       "Bash(grep -E \"\\\\.js$|\\\\.css$\")",
-      "Bash(chmod 755 /Users/abhishekpratapsingh/Desktop/coupon_campaigns/lib)"
+      "Bash(chmod 755 /Users/abhishekpratapsingh/Desktop/coupon_campaigns/lib)",
+      "Bash(cat >> *)"
     ]
   }
 }

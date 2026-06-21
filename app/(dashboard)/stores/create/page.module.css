@@ -577,7 +577,7 @@
 }
 
 .welcomeHero {
-  margin-top: 40px;
+  margin-top: 100px;
   padding: 0 16px;
   text-align: center;
   display: flex;
@@ -664,6 +664,8 @@
   border: 1.5px solid #e8eaff;
   box-shadow: 0 2px 12px rgba(1,15,68,0.06);
   transition: transform 0.2s, box-shadow 0.2s;
+  align-items: center;
+
 }
 
 .welcomeCard:hover {
@@ -689,8 +691,12 @@
   color: #010f44;
   line-height: 1.35;
   margin: 0;
+  text-align: center;
 }
-
+.copyright{
+      font-size: 12px;
+    margin-top: 31px;
+}
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .pageShell { padding: 0 16px 48px; }
@@ -706,4 +712,46 @@
     left: calc(16.66% + 20px);
     right: calc(16.66% + 20px);
   }
+}
+
+/* ── Business Type Dropdown ─────────────────────────────────── */
+.selectWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 14px 44px 14px 16px;
+  border: 1.5px solid #dde1f5;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #010f44;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.select:focus {
+  border-color: #6c5ce7;
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.12);
+}
+
+.selectPlaceholder {
+  color: #9ba8b8;
+}
+
+.selectChevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ba8b8;
+  pointer-events: none;
+  flex-shrink: 0;
 }

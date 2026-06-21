@@ -340,20 +340,31 @@ export default function LaunchWizardModal({
           <div className={styles.stepBody}>
             <header className={styles.stepHeader}>
               <h2 className={styles.title}>Allocate Scratches</h2>
-              {campaignName && (
-                <p className={styles.subtitle}>{campaignName}</p>
-              )}
             </header>
 
             {isUnlimited ? (
               <div className={styles.unlimitedCard}>
-                <span className={styles.pill}>First Quarter Access</span>
+                {(() => {
+                  const PLAN_DAYS = 30;
+                  const daysRemaining = Number.isFinite(subscription?.daysRemaining)
+                    ? subscription.daysRemaining
+                    : Number.isFinite(subscription?.remainingDays)
+                      ? subscription.remainingDays
+                      : null;
+                  const dayOf = daysRemaining !== null
+                    ? Math.max(1, PLAN_DAYS - daysRemaining)
+                    : null;
+                  return (
+                    <span className={styles.pill}>
+                      {dayOf !== null ? `Day ${dayOf} of ${PLAN_DAYS}` : "Unlimited Plan"}
+                    </span>
+                  );
+                })()}
                 <span className={styles.unlimitedTitle}>
-                  <Sparkles size={20} /> Unlimited scratch cards / month
+                  <Sparkles size={18} /> Unlimited Scratches
                 </span>
                 <span className={styles.unlimitedMeta}>
-                  {subscription?.scratchConsumed || 0} used · Valid until{" "}
-                  {formatDate(subscription?.unlimitedScratchesExpiryDate)}
+                  Valid until {formatDate(subscription?.unlimitedScratchesExpiryDate)}
                 </span>
               </div>
             ) : (

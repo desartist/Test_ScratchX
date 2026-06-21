@@ -203,7 +203,9 @@ export default function CreateCampaignPage() {
                   Start Date <span className={styles.required}>*</span>
                 </label>
                 <div className={styles.dateInputWrapper}>
-                  <Calendar size={16} className={styles.dateIcon} />
+                  {!formData.startDate && (
+                    <span className={styles.datePlaceholder}>DD/MM/YYYY</span>
+                  )}
                   <input
                     type="date"
                     id="startDate"
@@ -214,6 +216,7 @@ export default function CreateCampaignPage() {
                     className={`${styles.dateInput} ${fieldErrors.startDate ? styles.inputError : ""}`}
                     disabled={submitting}
                   />
+                  <Calendar size={16} className={styles.dateIcon} />
                 </div>
                 <FieldError message={fieldErrors.startDate} />
               </div>
@@ -223,7 +226,9 @@ export default function CreateCampaignPage() {
                   End Date <span className={styles.required}>*</span>
                 </label>
                 <div className={styles.dateInputWrapper}>
-                  <Calendar size={16} className={styles.dateIcon} />
+                  {!formData.endDate && (
+                    <span className={styles.datePlaceholder}>DD/MM/YYYY</span>
+                  )}
                   <input
                     type="date"
                     id="endDate"
@@ -234,6 +239,7 @@ export default function CreateCampaignPage() {
                     className={`${styles.dateInput} ${fieldErrors.endDate ? styles.inputError : ""}`}
                     disabled={submitting}
                   />
+                  <Calendar size={16} className={styles.dateIcon} />
                 </div>
                 <FieldError message={fieldErrors.endDate} />
               </div>

@@ -113,7 +113,7 @@ export async function POST(request) {
 
     // CRITICAL FIX: Use payload data, not database queries
     // Allowed radius: 100 meters (not 2km)
-    const ALLOWED_RADIUS_METERS = 2200;
+    const ALLOWED_RADIUS_METERS = 100;
 
     // Validate customer location against all stores
     const validationResult = validateCustomerLocation(

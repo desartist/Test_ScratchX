@@ -56,7 +56,9 @@ function WelcomeScreen({ onGetStarted }) {
           </div>
           <p className={styles.welcomeCardLabel}>Easy Campaign<br />Creation</p>
         </div>
+
       </div>
+          <p className={styles.copyright}>© Copyright 2026 | Powered by Desartist</p>
     </div>
   );
 }
@@ -82,6 +84,7 @@ export default function CreateStorePage() {
     store_name: '',
     contact_person: '',
     contact_number: '',
+    business_type: '',
 
     // Step 2: Location
     latitude: null,
@@ -144,6 +147,7 @@ export default function CreateStorePage() {
           const area = a.suburb || a.neighbourhood || a.village || a.town || null;
           const city = a.city || a.town || a.village || a.county || null;
           const state = a.state || null;
+          const pincode = a.postcode ? a.postcode.replace(/\D/g, '').slice(0, 6) : null;
           setLocationInfo({
             landmark,
             area,
@@ -153,6 +157,13 @@ export default function CreateStorePage() {
               ? geo.display_name.split(',').slice(0, 3).join(',')
               : null,
           });
+          // Auto-fill city, state, pincode from reverse geocode (address must be filled by user)
+          setFormData((prev) => ({
+            ...prev,
+            city: prev.city || city || '',
+            state: prev.state || state || '',
+            pincode: prev.pincode || pincode || '',
+          }));
         } catch {
           setLocationInfo(null);
         }
@@ -265,6 +276,10 @@ export default function CreateStorePage() {
       newErrors.contact_number = 'Contact number must be exactly 10 digits';
     }
 
+    if (!formData.business_type) {
+      newErrors.business_type = 'Please select a business type';
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return false;
@@ -316,7 +331,7 @@ export default function CreateStorePage() {
     setError(null);
 
     if (currentStep === 1) {
-      setTouched({ store_name: true, contact_person: true, contact_number: true });
+      setTouched({ store_name: true, contact_person: true, contact_number: true, business_type: true });
       if (!validateStep1()) return;
       setCurrentStep(2);
     } else if (currentStep === 2) {
@@ -364,6 +379,7 @@ export default function CreateStorePage() {
           pincode: formData.pincode,
           contact_person: formData.contact_person,
           contact_number: formData.contact_number,
+          business_type: formData.business_type,
           latitude: formData.latitude,
           longitude: formData.longitude,
         }),
@@ -524,6 +540,47 @@ export default function CreateStorePage() {
               />
               {touched.contact_number && errors.contact_number && (
                 <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.contact_number}</span>
+              )}
+            </div>
+
+            {/* Business Type */}
+            <div className={styles.formGroup}>
+              <label htmlFor="business_type" className={styles.label}>
+                Business Type <span className={styles.required}>*</span>
+              </label>
+              <div className={styles.selectWrapper}>
+                <select
+                  id="business_type"
+                  name="business_type"
+                  value={formData.business_type}
+                  onChange={(e) => {
+                    handleChange(e);
+                    setErrors(prev => ({ ...prev, business_type: undefined }));
+                  }}
+                  onBlur={() => handleFieldBlur('business_type')}
+                  className={`${styles.select} ${!formData.business_type ? styles.selectPlaceholder : ''}`}
+                  disabled={submitting}
+                >
+                  <option value="">Select Business Type</option>
+                  <option value="grocery_kirana">Grocery &amp; Kirana Stores</option>
+                  <option value="jewellery_luxury">Jewellery &amp; Luxury</option>
+                  <option value="electronics_gadgets">Electronics &amp; Gadgets</option>
+                  <option value="fashion_apparel">Fashion &amp; Apparel</option>
+                  <option value="bakeries_sweets">Bakeries &amp; Sweet Shops</option>
+                  <option value="quick_service">Quick Service (QSR)</option>
+                  <option value="salon_beauty">Salon &amp; Beauty</option>
+                  <option value="fitness_gyms">Fitness &amp; Gyms</option>
+                  <option value="supermarket">Supermarkets / Hypermarkets</option>
+                  <option value="pharmacy_medical">Pharmacy / Medical</option>
+                  <option value="home_lifestyle">Home &amp; Lifestyle</option>
+                  <option value="other">Other</option>
+                </select>
+                <svg className={styles.selectChevron} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+              {touched.business_type && errors.business_type && (
+                <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.business_type}</span>
               )}
             </div>
 
@@ -781,6 +838,12 @@ export default function CreateStorePage() {
                   <span className={styles.summaryLabel}>Contact Number:</span>
                   <span>{formData.contact_number}</span>
                 </div>
+                {formData.business_type && (
+                  <div className={styles.summaryItem}>
+                    <span className={styles.summaryLabel}>Business Type:</span>
+                    <span style={{ textTransform: 'capitalize' }}>{formData.business_type}</span>
+                  </div>
+                )}
               </div>
 
               <div className={styles.summarySection}>
