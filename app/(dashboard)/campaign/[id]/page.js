@@ -11,13 +11,16 @@ import {
   Tag,
   QrCode,
   Lock,
+  Ticket,
+  Plus,
 } from "lucide-react";
 import styles from "./page.module.css";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import Badge from "@/components/dashboard/Badge";
 import StoreAssignment from "@/components/campaign/StoreAssignment";
 import RewardRanges from "@/components/campaign/RewardRanges";
-import ScratchAllocation from "@/components/campaign/ScratchAllocation";
+import ScratchAllocationModal from "@/components/campaign/ScratchAllocationModal";
 import CampaignQrStudio from "@/components/campaign/CampaignQrStudio";
 import StatusBadge from "./components/StatusBadge";
 import CampaignStatusActions from "./components/CampaignStatusActions";
@@ -59,7 +62,11 @@ export default function CampaignDetailsPage({ params }) {
   const [generatingQr, setGeneratingQr] = useState(false);
   const [qrError, setQrError] = useState(null);
 
-  // Fetch campaign details
+  // Launch wizard modal state
+  const [launchWizardOpen, setLaunchWizardOpen] = useState(false);
+
+  // Fetch campaign details with critical-first pattern
+  // Critical: campaign, ranges, and subscription (needed for correct UI display)
   const fetchCampaignDetails = useCallback(
     async (id) => {
       if (!account?.id) {
@@ -71,31 +78,73 @@ export default function CampaignDetailsPage({ params }) {
       setError(null);
 
       try {
-        const response = await fetch(`/api/campaigns/${id}`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "x-user-id": account.id,
-            "x-user-role": account.role || "Merchant",
-          },
-        });
+        const result = await criticalFetchService.fetchCriticalFirst(
+          `campaign-detail-${id}`,
+          [
+            {
+              key: 'campaign',
+              url: `/api/campaigns/${id}`,
+              options: {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                  'x-user-id': account.id,
+                  'x-user-role': account.role || 'Merchant',
+                },
+              },
+            },
+            {
+              key: 'ranges',
+              url: `/api/campaign_range?id=${id}`,
+              options: {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                  'x-user-id': account.id,
+                  'x-user-role': account.role || 'Merchant',
+                },
+              },
+            },
+            {
+              key: 'subscription',
+              url: '/api/subscription/status',
+              options: {
+                method: 'GET',
+                credentials: 'include',
+              },
+            },
+          ],
+          []
+        );
 
-        const data = await response.json();
-
-        if (data.success && data.data) {
-          setCampaign(data.data);
-          // Filter for active assignments only (exclude soft-deleted 'removed' status)
-          const activeStores = (data.data.assignedStores || []).filter(
-            (s) => s.status === "active",
+        // Handle critical data
+        const campaignData = result.critical?.campaign;
+        if (campaignData?.success && campaignData?.data) {
+          setCampaign(campaignData.data);
+          const activeStores = (campaignData.data.assignedStores || []).filter(
+            (s) => s.status === 'active',
           );
           setAssignedStores(activeStores);
         } else {
-          setError("Campaign not found");
+          setError('Campaign not found');
           setCampaign(null);
         }
+
+        const rangesData = result.critical?.ranges;
+        if (rangesData?.success && Array.isArray(rangesData?.ranges)) {
+          setRanges(rangesData.ranges);
+        } else {
+          setRanges([]);
+        }
+
+        // Handle subscription data (now critical)
+        const subscriptionData = result.critical?.subscription;
+        if (subscriptionData?.success) {
+          setSubscription(subscriptionData);
+        }
       } catch (err) {
-        console.error("Failed to fetch campaign:", err);
-        setError("Failed to load campaign details");
+        console.error('Failed to fetch campaign:', err);
+        setError('Failed to load campaign details');
         setCampaign(null);
       } finally {
         setLoading(false);
@@ -104,105 +153,20 @@ export default function CampaignDetailsPage({ params }) {
     [account],
   );
 
-  // Fetch assigned stores
-  const fetchAssignedStores = useCallback(
-    async (id) => {
-      if (!account?.id) return;
-
-      setStoresLoading(true);
-
-      try {
-        const response = await fetch(`/api/campaigns/${id}`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "x-user-id": account.id,
-            "x-user-role": account.role || "Merchant",
-          },
-        });
-
-        const data = await response.json();
-        if (data.success && data.data && data.data.assignedStores) {
-          // Filter for active assignments only (exclude soft-deleted 'removed' status)
-          const activeStores = (data.data.assignedStores || []).filter(
-            (s) => s.status === "active",
-          );
-          setAssignedStores(activeStores);
-        } else {
-          setAssignedStores([]);
-        }
-      } catch (err) {
-        console.error("Failed to fetch assigned stores:", err);
-        setAssignedStores([]);
-      } finally {
-        setStoresLoading(false);
-      }
-    },
-    [account],
-  );
-
-  // Fetch reward ranges (gating: condition b)
-  const fetchRanges = useCallback(
-    async (id) => {
-      if (!id || !account?.id) return;
-      try {
-        const response = await fetch(`/api/campaign_range?id=${id}`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "x-user-id": account.id,
-            "x-user-role": account.role || "Merchant",
-          },
-        });
-        const data = await response.json();
-        if (data.success && Array.isArray(data.ranges)) {
-          setRanges(data.ranges);
-        } else {
-          setRanges([]);
-        }
-      } catch (err) {
-        console.error("Failed to fetch ranges:", err);
-        setRanges([]);
-      }
-    },
-    [account],
-  );
-
-  // Fetch subscription status (gating: condition e)
-  const fetchSubscription = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/subscription/status`, {
-        method: "GET",
-        credentials: "include",
-      });
-      const data = await response.json();
-      if (data && data.success) {
-        setSubscription(data);
-      } else {
-        setSubscription(null);
-      }
-    } catch (err) {
-      console.error("Failed to fetch subscription status:", err);
-      setSubscription(null);
-    }
-  }, []);
-
   // Callback to handle status updates from CampaignStatusActions
   const handleStatusUpdated = useCallback((updatedCampaign) => {
     setCampaign(updatedCampaign);
     setRefreshTrigger((prev) => prev + 1);
   }, []);
 
-  // Unwrap params and fetch
+  // Unwrap params and fetch campaign details with all data
   useEffect(() => {
     async function unwrapParams() {
       try {
         const { id } = await params;
         setCampaignId(id);
+        // Single call handles all critical data: campaign, ranges, subscription
         fetchCampaignDetails(id);
-        fetchAssignedStores(id);
-        fetchRanges(id);
-        fetchSubscription();
       } catch (err) {
         console.error("Failed to unwrap params:", err);
         setError("Failed to load campaign");
@@ -213,9 +177,6 @@ export default function CampaignDetailsPage({ params }) {
   }, [
     params,
     fetchCampaignDetails,
-    fetchAssignedStores,
-    fetchRanges,
-    fetchSubscription,
     refreshTrigger,
   ]);
 
@@ -224,9 +185,17 @@ export default function CampaignDetailsPage({ params }) {
   const refetch = useCallback(() => {
     if (!campaignId) return;
     fetchCampaignDetails(campaignId);
-    fetchRanges(campaignId);
-    fetchSubscription();
-  }, [campaignId, fetchCampaignDetails, fetchRanges, fetchSubscription]);
+  }, [campaignId, fetchCampaignDetails]);
+
+  // Handle launch wizard completion
+  const handleLaunchWizardClose = useCallback(() => {
+    setLaunchWizardOpen(false);
+  }, []);
+
+  const handleLaunchWizardComplete = useCallback(() => {
+    setLaunchWizardOpen(false);
+    refetch();
+  }, [refetch]);
 
   // Refetch campaign details after store assignment changes
   const handleStoresChanged = useCallback(() => {
@@ -279,14 +248,33 @@ export default function CampaignDetailsPage({ params }) {
   if (error) {
     return (
       <div className={styles.container}>
-        <button
-          className={styles.backButton}
-          onClick={() => router.back()}
-          title="Go back"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <div className={styles.errorContainer}>{error}</div>
+        <div className={styles.errorContainer}>
+          <p style={{ margin: 0, marginBottom: '16px' }}>{error}</p>
+          <button
+            onClick={() => router.push('/campaign')}
+            style={{
+              background: 'linear-gradient(135deg, #ef9e1b, #f5b23a)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '10px 20px',
+              fontSize: '0.9rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 6px 20px rgba(239, 158, 27, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = 'none';
+            }}
+          >
+            Back to Campaigns
+          </button>
+        </div>
       </div>
     );
   }
@@ -294,14 +282,35 @@ export default function CampaignDetailsPage({ params }) {
   if (!campaign) {
     return (
       <div className={styles.container}>
-        <button
-          className={styles.backButton}
-          onClick={() => router.back()}
-          title="Go back"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <div className={styles.emptyState}>Campaign not found</div>
+        <div className={styles.emptyState} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+          <p style={{ margin: 0, fontSize: '1.1rem', color: '#010f44', fontWeight: '600' }}>Campaign not found</p>
+          <p style={{ margin: 0, color: '#637080', fontSize: '0.95rem' }}>The campaign you're looking for doesn't exist or may have been deleted.</p>
+          <button
+            onClick={() => router.push('/campaign')}
+            style={{
+              background: 'linear-gradient(135deg, #ef9e1b, #f5b23a)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '12px 28px',
+              fontSize: '0.95rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 12px rgba(239, 158, 27, 0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 6px 20px rgba(239, 158, 27, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 12px rgba(239, 158, 27, 0.3)';
+            }}
+          >
+            View All Campaigns
+          </button>
+        </div>
       </div>
     );
   }
@@ -485,14 +494,116 @@ export default function CampaignDetailsPage({ params }) {
           </div>
 
           {/* Scratches Allocation */}
-          <ScratchAllocation
-            campaignId={campaignId}
-            allocated={allocated}
-            used={used}
-            remaining={remaining}
-            available={availableScratches}
-            onChanged={refetch}
-          />
+          {allocated > 0 ? (
+            <div className={styles.section}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <h2 className={styles.sectionTitle}>Scratches Allocation</h2>
+                <button
+                  type="button"
+                  onClick={() => setLaunchWizardOpen(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #ef9e1b, #f5b23a)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '8px 16px',
+                    fontSize: '0.85rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 20px rgba(239, 158, 27, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                >
+                  <Plus size={16} />
+                  Modify
+                </button>
+              </div>
+              <div className={styles.detailsGrid}>
+                <div className={styles.detailItem}>
+                  <label className={styles.detailLabel}>Available</label>
+                  <p className={styles.detailValue} style={{ color: '#ef9e1b', fontSize: '1.2rem', fontWeight: '700' }}>
+                    {availableScratches === "Unlimited" ? "∞ Unlimited" : availableScratches}
+                  </p>
+                </div>
+                <div className={styles.detailItem}>
+                  <label className={styles.detailLabel}>Allocated</label>
+                  <p className={styles.detailValue}>{allocated.toLocaleString()}</p>
+                </div>
+                <div className={styles.detailItem}>
+                  <label className={styles.detailLabel}>Used</label>
+                  <p className={styles.detailValue}>{used.toLocaleString()}</p>
+                </div>
+                <div className={styles.detailItem}>
+                  <label className={styles.detailLabel}>Remaining</label>
+                  <p className={styles.detailValue} style={{ color: remaining > 0 ? '#27ae60' : '#c0392b' }}>
+                    {remaining.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              {remaining === 0 && allocated > 0 && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '12px 14px',
+                  background: '#fff3cd',
+                  border: '1.5px solid #fde8ba',
+                  borderRadius: '10px',
+                  color: '#856404',
+                  fontSize: '0.85rem',
+                  fontWeight: '500',
+                }}>
+                  All allocated scratches have been used. Allocate more to continue.
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className={styles.section} style={{ textAlign: 'center', padding: '40px 24px' }}>
+              <Ticket size={40} style={{ color: '#ef9e1b', marginBottom: '16px', opacity: 0.7 }} />
+              <h2 className={styles.sectionTitle} style={{ marginBottom: '8px' }}>No Scratches Allocated</h2>
+              <p style={{ color: '#637080', marginBottom: '20px', fontSize: '0.95rem' }}>
+                Allocate scratches to enable customers to play and win rewards
+              </p>
+              <button
+                type="button"
+                onClick={() => setLaunchWizardOpen(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #ef9e1b, #f5b23a)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '12px 28px',
+                  fontSize: '0.95rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(239, 158, 27, 0.3)',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(239, 158, 27, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(239, 158, 27, 0.3)';
+                }}
+              >
+                <Plus size={18} />
+                Allocate Scratches
+              </button>
+            </div>
+          )}
 
           {/* Store Assignment */}
           <StoreAssignment
@@ -580,6 +691,14 @@ export default function CampaignDetailsPage({ params }) {
           </section>
         </div>
       </div>
+
+      {/* Scratch Allocation Modal */}
+      <ScratchAllocationModal
+        campaignId={campaignId}
+        open={launchWizardOpen}
+        onClose={handleLaunchWizardClose}
+        onAllocated={handleLaunchWizardComplete}
+      />
     </div>
   );
 }

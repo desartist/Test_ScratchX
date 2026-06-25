@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/components/auth/AuthContext";
-import { QrCode, Users, Gift, ShoppingBag, TrendingUp, Store } from "lucide-react";
+import { criticalFetchService } from "@/lib/criticalFetchService";
+import { QrCode, Users, Gift, ShoppingBag, TrendingUp, Store, UserPlus, Repeat2 } from "lucide-react";
 import styles from "./page.module.css";
 
 export default function AnalyticsPage() {
@@ -11,32 +12,78 @@ export default function AnalyticsPage() {
   const { account, loading: authLoading } = useAuthContext();
 
   const [campaigns, setCampaigns] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading || !account?.id) return;
 
-    async function fetchCampaigns() {
+    async function fetchData() {
       try {
-        const res = await fetch("/api/campaigns", {
-          headers: {
-            "x-user-id": account.id,
-            "x-user-role": account.role || "merchant",
-            "x-user-email": account.email || "",
-          },
-        });
-        if (!res.ok) throw new Error("Failed");
-        const result = await res.json();
-        setCampaigns(result.data || []);
+        const result = await criticalFetchService.fetchCriticalFirst(
+          'analytics-campaigns',
+          [
+            {
+              key: 'campaigns',
+              url: '/api/campaigns',
+              options: {
+                headers: {
+                  'x-user-id': account.id,
+                  'x-user-role': account.role || 'merchant',
+                  'x-user-email': account.email || '',
+                },
+              },
+            },
+            {
+              key: 'customers',
+              url: '/api/customers',
+              options: {
+                headers: {
+                  'x-user-id': account.id,
+                  'x-user-role': account.role || 'merchant',
+                },
+              },
+            },
+          ],
+          []
+        );
+
+        const campaignsData = result.critical?.campaigns;
+        const customersData = result.critical?.customers;
+        setCampaigns(campaignsData?.data || []);
+        setCustomers(customersData?.data || []);
       } catch {
         setCampaigns([]);
+        setCustomers([]);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchCampaigns();
+    fetchData();
   }, [account, authLoading]);
+
+  // Calculate new vs repeat customers
+  const customerStats = (() => {
+    const mobileCount = {};
+
+    // Count occurrences of each mobile number
+    customers.forEach(c => {
+      const mobile = c.customer_mobile;
+      mobileCount[mobile] = (mobileCount[mobile] || 0) + 1;
+    });
+
+    // Categorize as new (1 occurrence) or repeat (2+ occurrences)
+    let newCustomers = 0;
+    let repeatCustomers = 0;
+
+    Object.values(mobileCount).forEach(count => {
+      if (count === 1) newCustomers++;
+      else if (count > 1) repeatCustomers++;
+    });
+
+    return { newCustomers, repeatCustomers };
+  })();
 
   // Aggregate stats across all campaigns
   const stats = campaigns.reduce(
@@ -99,9 +146,10 @@ export default function AnalyticsPage() {
         <>
           <div className={styles.kpiGrid}>
             <KpiCard icon={<QrCode size={22} />} label="QR Scans" value={stats.qrScanned} color="#6c5ce7" />
-            <KpiCard icon={<Users size={22} />} label="Unique Customers" value={stats.uniqueCustomers} color="#0984e3" />
+            <KpiCard icon={<UserPlus size={22} />} label="New Customers" value={customerStats.newCustomers} color="#0984e3" />
+            <KpiCard icon={<Repeat2 size={22} />} label="Repeat Customers" value={customerStats.repeatCustomers} color="#00b894" />
             <KpiCard icon={<Gift size={22} />} label="Scratches Used" value={stats.scratchesUsed} color="#ef9e1b" />
-            <KpiCard icon={<ShoppingBag size={22} />} label="Redeemed" value={stats.redeemed} color="#00b894" />
+            <KpiCard icon={<ShoppingBag size={22} />} label="Redeemed" value={stats.redeemed} color="#d63031" />
           </div>
 
           <div className={styles.summaryRow}>

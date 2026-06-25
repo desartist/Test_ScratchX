@@ -1,22 +1,35 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { usePathname } from "next/navigation";
 import styles from "./PlanStatusCard.module.css";
 
 export default function PlanStatusCard() {
-  const [subData, setSubData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { planData, loading, loadPlanData } = useSubscription();
+  const pathname = usePathname();
 
   useEffect(() => {
-    fetch("/api/subscription/current", { credentials: "include" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => { if (data?.subscription) setSubData(data); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    // Refresh plan data whenever user navigates to a new page
+    console.log('[PlanStatusCard] User navigated to:', pathname);
+    loadPlanData();
+  }, [pathname, loadPlanData]);
 
-  const displayName = subData?.displayName || null;
+  useEffect(() => {
+    // Also refresh when tab becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('[PlanStatusCard] Tab became visible, refreshing plan data...');
+        loadPlanData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [loadPlanData]);
+
+  const displayName = planData?.displayName || null;
   const theme = displayName?.toLowerCase().includes("smart") ? "smart" : "core";
   const isTopTier = theme === "smart";
 
@@ -28,7 +41,7 @@ export default function PlanStatusCard() {
     );
   }
 
-  if (!subData) {
+  if (!planData) {
     return (
       <div className={`${styles.pill} ${styles["theme-core"]}`}>
         <div className={styles.pillContent}>

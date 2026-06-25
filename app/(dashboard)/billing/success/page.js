@@ -3,11 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, ArrowRight } from 'lucide-react';
+import { useSubscription } from '@/components/subscription/SubscriptionContext';
 import styles from './success.module.css';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { updatePlan } = useSubscription();
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -15,19 +17,30 @@ export default function PaymentSuccessPage() {
   const paymentId = searchParams.get('paymentId');
 
   useEffect(() => {
-    // Simulate fetching payment details
-    setTimeout(() => {
-      setPaymentDetails({
-        paymentId,
-        plan,
-        status: 'completed',
-        amount: 499,
-        currency: 'INR',
-        transactionId: `TXN-${Date.now()}`,
-      });
-      setLoading(false);
-    }, 1000);
-  }, [paymentId, plan]);
+    const initializeSuccess = async () => {
+      try {
+        // Update global subscription state (reloads from server and updates context)
+        await updatePlan();
+      } catch (err) {
+        console.error('Error updating plan:', err);
+      }
+
+      // Simulate fetching payment details
+      setTimeout(() => {
+        setPaymentDetails({
+          paymentId,
+          plan,
+          status: 'completed',
+          amount: 499,
+          currency: 'INR',
+          transactionId: `TXN-${Date.now()}`,
+        });
+        setLoading(false);
+      }, 1000);
+    };
+
+    initializeSuccess();
+  }, [paymentId, plan, updatePlan]);
 
   const handleDashboard = () => {
     router.push('/dashboard');

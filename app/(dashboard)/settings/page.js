@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import SettingsProfileCard from "@/components/settings/SettingsProfileCard";
 import SettingsAccountCard from "@/components/settings/SettingsAccountCard";
 import SettingsSubscriptionCard from "@/components/settings/SettingsSubscriptionCard";
@@ -28,19 +29,28 @@ export default function SettingsPage() {
 
       try {
         setLoading(true);
-        const response = await fetch("/api/merchant", {
-          headers: {
-            "x-user-id": account.id,
-            "x-user-role": account.role || "merchant",
-          },
-        });
+        const result = await criticalFetchService.fetchCriticalFirst(
+          'settings-merchant',
+          [
+            {
+              key: 'merchant',
+              url: '/api/merchant',
+              options: {
+                headers: {
+                  'x-user-id': account.id,
+                  'x-user-role': account.role || 'merchant',
+                },
+              },
+            },
+          ],
+          []
+        );
 
-        if (response.ok) {
-          const data = await response.json();
+        const data = result.critical?.merchant;
+        if (data) {
           console.log("Fetched merchant data:", data);
           setMerchant(data.account || account);
         } else {
-          // Fallback to account data
           setMerchant(account);
         }
       } catch (err) {

@@ -65,7 +65,12 @@ export async function POST(req) {
 
     if (account.status === 'deactivated') {
       return Response.json(
-        { success: false, error: 'Your account has been deactivated.' },
+        {
+          success: false,
+          error: 'Your account has been deactivated.',
+          code: 'ACCOUNT_DEACTIVATED',
+          accountId: account._id,
+        },
         { status: 403 }
       );
     }

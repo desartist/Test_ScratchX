@@ -28,15 +28,19 @@ export default function SubscriptionHero({
 
   return (
     <section className={styles.hero}>
-      {/* Top row: day counter + trend */}
+      {/* Top row: plan name + day counter + trend */}
       <div className={styles.topRow}>
-        {showDayPill ? (
-          <span className={styles.dayPill}>
-            Day {dayOf} of {totalDays}
-          </span>
-        ) : (
-          <span className={styles.dayPill}>{fallback(planName)}</span>
-        )}
+        <div className={styles.topLeft}>
+           {showDayPill && (
+            <span className={styles.dayPill}>
+              Day {dayOf} of {totalDays}
+            </span>
+          )}
+          {planName && (
+            <span className={styles.planLabel}>{planName}</span>
+          )}
+         
+        </div>
         {trend && (
           <span className={styles.trendPill}>
             ↑ {trend}

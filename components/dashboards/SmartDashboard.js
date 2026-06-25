@@ -191,37 +191,73 @@ export default function SmartDashboard() {
     let cancelled = false;
     const CACHE_KEY = `dashboard_${account?.id || account?._id}`;
 
-    // ── Step 1: Show cached data instantly (zero wait) ────────────
+    // ── Step 1: Show cached data instantly (zero wait) ─────────────────
     const cached = dashboardCache.get(CACHE_KEY);
     if (cached) {
       applyResults(cached.data);
       setLoading(false);
     }
 
-    // ── Step 2: Skip network fetch if cache is fresh (< 60s) ─────
+    // ── Step 2: Skip network fetch if cache is fresh (< 60s) ───────────
     if (cached && !dashboardCache.isStale(CACHE_KEY)) return;
 
-    // ── Step 3: Fetch in background (silently if cached, shown if not) ─
     const fetcher = buildFetcher();
+
     (async () => {
-      const raw = await Promise.allSettled([
-        fetcher("/api/dashboard"),
-        fetcher("/api/subscription/status"),
-        fetcher("/api/analytics/kpi-summary"),
-        fetcher("/api/analytics/customer-growth"),
-        fetcher("/api/analytics/scratch-usage?days=7"),
-        fetcher("/api/analytics/campaign-consumption"),
-        fetcher("/api/analytics/store-performance?days=7"),
-        fetcher("/api/merchant/scratch-requests?status=pending"),
-        fetcher("/api/notifications/recent"),
+      // ── Step 3: Critical batch — unblocks the UI immediately ──────────
+      // dashboard + subscription + KPIs + notifications + pending
+      const criticalRaw = await Promise.allSettled([
+        fetcher("/api/dashboard"),           // index 0
+        fetcher("/api/subscription/status"), // index 1
+        fetcher("/api/analytics/kpi-summary"), // index 2
+        fetcher("/api/merchant/scratch-requests?status=pending"), // index 3
+        fetcher("/api/notifications/recent"), // index 4
       ]);
 
       if (cancelled) return;
 
-      const results = await Promise.all(raw.map(settle));
-      dashboardCache.set(CACHE_KEY, results);
-      applyResults(results);
-      setLoading(false);
+      // Map into the 9-slot shape applyResults expects (analytics slots = null for now)
+      const criticalResults = await Promise.all(criticalRaw.map(settle));
+      const partialResults = [
+        criticalResults[0], // dashboard
+        criticalResults[1], // subscription
+        criticalResults[2], // kpi
+        null,               // customerGrowth (pending)
+        null,               // scratchUsage (pending)
+        null,               // campaignConsumption (pending)
+        null,               // storePerf (pending)
+        criticalResults[3], // pendingRequests
+        criticalResults[4], // notifications
+      ];
+
+      applyResults(partialResults);
+      setLoading(false); // Show UI now with core data
+
+      // ── Step 4: Non-critical batch — charts load silently after ───────
+      const analyticsRaw = await Promise.allSettled([
+        fetcher("/api/analytics/customer-growth"),
+        fetcher("/api/analytics/scratch-usage?days=7"),
+        fetcher("/api/analytics/campaign-consumption"),
+        fetcher("/api/analytics/store-performance?days=7"),
+      ]);
+
+      if (cancelled) return;
+
+      const analyticsResults = await Promise.all(analyticsRaw.map(settle));
+      const fullResults = [
+        criticalResults[0],
+        criticalResults[1],
+        criticalResults[2],
+        analyticsResults[0], // customerGrowth
+        analyticsResults[1], // scratchUsage
+        analyticsResults[2], // campaignConsumption
+        analyticsResults[3], // storePerf
+        criticalResults[3],
+        criticalResults[4],
+      ];
+
+      dashboardCache.set(CACHE_KEY, fullResults);
+      applyResults(fullResults);
     })();
 
     return () => { cancelled = true; };
@@ -341,21 +377,6 @@ export default function SmartDashboard() {
       icon: <StoreIcon size={20} />,
     },
     { label: "View Customers", href: "/customers", icon: <Users size={20} /> },
-    {
-      label: "Manage Subscription",
-      href: "/subscription",
-      icon: <CreditCard size={20} />,
-    },
-    {
-      label: "Purchase Scratches",
-      href: "/billing/scratch-packs",
-      icon: <Ticket size={20} />,
-    },
-    {
-      label: "Generate Reports",
-      href: "/analytics",
-      icon: <BarChart3 size={20} />,
-    },
   ];
 
   const primaryStore = stores[0];
@@ -506,13 +527,13 @@ export default function SmartDashboard() {
         </>
       )}
 
-      {/* Recent Activity */}
-      {notifications?.length > 0 && (
+      {/* Recent Activity — hidden for now */}
+      {/* {notifications?.length > 0 && (
         <>
           <SectionHeader title="Recent Activity" />
           <RecentActivity items={notifications} />
         </>
-      )}
+      )} */}
     </div>
   );
 }

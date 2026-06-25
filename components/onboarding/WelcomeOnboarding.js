@@ -13,7 +13,7 @@ export default function WelcomeOnboarding() {
           QR Scratch Card Platform
         </div> */}
         <h1 className={styles.headline}>
-          Set up your<br />store<br />
+          Set up your store 
           <span className={styles.accent}>in minutes</span>
         </h1>
         <p className={styles.subtitle}>

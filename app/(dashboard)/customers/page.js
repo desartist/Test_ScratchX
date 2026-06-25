@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Search, Filter, ChevronDown } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthContext';
+import { criticalFetchService } from '@/lib/criticalFetchService';
 import CustomerStatsCard from '@/components/customers/CustomerStatsCard';
 import CustomerDetailDrawer from '@/components/customers/CustomerDetailDrawer';
 import styles from './customers.module.css';
@@ -40,7 +41,7 @@ export default function CustomersPage() {
     activeParticipants: 0,
   });
 
-  // Fetch customers
+  // Fetch customers with cache for first page, bypass for subsequent pages
   const fetchCustomers = useCallback(async () => {
     if (!account?.id) {
       setLoading(false);
@@ -62,20 +63,50 @@ export default function CustomersPage() {
         sortBy: sortBy,
       });
 
-      const response = await fetch(`/api/customers?${params}`, {
-        headers: {
-          'x-user-id': account.id,
-          'x-user-role': account.role || 'merchant',
-        },
-      });
+      // Use cache only for first page, bypass for pagination
+      const useCache = currentPage === 1;
+      const cacheKey = `customers-list-page${currentPage}`;
 
-      if (!response.ok) throw new Error('Failed to fetch customers');
+      if (useCache) {
+        const result = await criticalFetchService.fetchCriticalFirst(
+          cacheKey,
+          [
+            {
+              key: 'customers',
+              url: `/api/customers?${params}`,
+              options: {
+                headers: {
+                  'x-user-id': account.id,
+                  'x-user-role': account.role || 'merchant',
+                },
+              },
+            },
+          ],
+          []
+        );
 
-      const data = await response.json();
-      setCustomers(data.data || []);
-      setStats(data.stats || {});
-      setCampaigns(data.filters?.campaigns || []);
-      setStores(data.filters?.stores || []);
+        const data = result.critical?.customers || result.customers;
+        setCustomers(data?.data || []);
+        setStats(data?.stats || {});
+        setCampaigns(data?.filters?.campaigns || []);
+        setStores(data?.filters?.stores || []);
+      } else {
+        // For pagination, fetch without cache
+        const response = await fetch(`/api/customers?${params}`, {
+          headers: {
+            'x-user-id': account.id,
+            'x-user-role': account.role || 'merchant',
+          },
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch customers');
+
+        const data = await response.json();
+        setCustomers(data.data || []);
+        setStats(data.stats || {});
+        setCampaigns(data.filters?.campaigns || []);
+        setStores(data.filters?.stores || []);
+      }
     } catch (err) {
       setError(err.message);
       console.error('Error fetching customers:', err);
@@ -285,62 +316,68 @@ export default function CustomersPage() {
                 className={styles.customerCard}
                 onClick={() => handleCustomerClick(customer)}
               >
-                {/* Left Section: Customer Info */}
-                <div className={styles.customerInfo}>
-                  <div className={styles.customerName}>{customer.customer_name}</div>
-                  <div className={styles.customerMeta}>
-                    <span className={styles.mobile}>📱 {customer.customer_mobile}</span>
-                    {customer.customer_email && (
-                      <span className={styles.email}>✉️ {customer.customer_email}</span>
-                    )}
+                {/* Main Content Section */}
+                <div className={styles.customerMainContent}>
+                  {/* Left: Customer Info */}
+                  <div className={styles.customerInfo}>
+                    <div className={styles.customerName}>{customer.customer_name}</div>
+                    <div className={styles.customerMeta}>
+                      <span className={styles.mobile}>📱 {customer.customer_mobile}</span>
+                      {customer.customer_email && (
+                        <span className={styles.email}>✉️ {customer.customer_email}</span>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Center Section: Campaign & Store */}
-                <div className={styles.campaignStore}>
-                  <div className={styles.campaign}>
-                    <div className={styles.label}>Campaign</div>
-                    <div className={styles.value}>
-                      {customer.campaign_id?.campaignName || customer.campaign_id?.name}
+                  {/* Center: Campaign & Store */}
+                  <div className={styles.campaignStore}>
+                    <div className={styles.campaign}>
+                      <div className={styles.label}>Campaign</div>
+                      <div className={styles.value}>
+                        {customer.campaign_id?.campaignName || customer.campaign_id?.name}
+                      </div>
+                    </div>
+                    <div className={styles.store}>
+                      <div className={styles.label}>Store</div>
+                      <div className={styles.value}>{customer.store_id?.store_name}</div>
+                      <div className={styles.city}>{customer.store_id?.city}</div>
                     </div>
                   </div>
-                  <div className={styles.store}>
-                    <div className={styles.label}>Store</div>
-                    <div className={styles.value}>{customer.store_id?.store_name}</div>
-                    <div className={styles.city}>{customer.store_id?.city}</div>
-                  </div>
-                </div>
 
-                {/* Right Section: Reward & Status */}
-                <div className={styles.rewardStatus}>
-                  <div className={styles.reward}>
-                    <div className={styles.label}>
-                      {formatWonReward(customer.scratch_card_id) ? 'Won' : 'Range'}
+                  {/* Right: Reward & Status */}
+                  <div className={styles.rewardStatus}>
+                    <div className={styles.reward}>
+                      <div className={styles.label}>
+                        {formatWonReward(customer.scratch_card_id) ? 'Won' : 'Range'}
+                      </div>
+                      <div className={styles.value}>
+                        {formatWonReward(customer.scratch_card_id)
+                          || `₹${customer.range_id?.minAmount || 0} – ₹${customer.range_id?.maxAmount || 0}`}
+                      </div>
                     </div>
-                    <div className={styles.value} style={formatWonReward(customer.scratch_card_id) ? { color: '#ef9e1b', fontWeight: 800 } : {}}>
-                      {formatWonReward(customer.scratch_card_id)
-                        || `₹${customer.range_id?.minAmount || 0} – ₹${customer.range_id?.maxAmount || 0}`}
-                    </div>
-                  </div>
-                  <div
-                    className={styles.statusBadge}
-                    style={{ borderColor: statusColors[customer.status] }}
-                  >
                     <div
-                      className={styles.statusDot}
-                      style={{ backgroundColor: statusColors[customer.status] }}
-                    />
-                    <span>{statusLabels[customer.status]}</span>
+                      className={styles.statusBadge}
+                      style={{ borderColor: statusColors[customer.status] }}
+                    >
+                      <div
+                        className={styles.statusDot}
+                        style={{ backgroundColor: statusColors[customer.status] }}
+                      />
+                      <span>{statusLabels[customer.status]}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Date */}
-                <div className={styles.date}>
-                  {new Date(customer.createdAt).toLocaleDateString('en-IN', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: '2-digit'
-                  })}
+                {/* Right: Date & Icon */}
+                <div className={styles.dateSection}>
+                  <div className={styles.date}>
+                    {new Date(customer.createdAt).toLocaleDateString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: '2-digit'
+                    })}
+                  </div>
+                  <div className={styles.participationIcon}>👤</div>
                 </div>
               </div>
             ))}

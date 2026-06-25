@@ -54,7 +54,8 @@ export default function TeamPage() {
   }, [account?.id]);
 
   const maxManagers = subscription?.planId?.limits?.maxManagersPerAccount || 0;
-  const canAddMore = teamMembers.length < maxManagers;
+  const hasTeamFeature = subscription?.planId?.limits?.maxManagersPerAccount !== undefined && subscription?.planId?.limits?.maxManagersPerAccount > 0;
+  const canAddMore = hasTeamFeature && teamMembers.length < maxManagers;
 
   const formatDate = (date) => {
     if (!date) return "Never";
@@ -106,10 +107,12 @@ export default function TeamPage() {
         <div className={styles.headerActions}>
           <button
             className={styles.inviteButton}
-            disabled={!canAddMore}
+            disabled={!canAddMore || !hasTeamFeature}
             title={
-              !canAddMore
-                ? `You can only add ${maxManagers} team members with your current plan`
+              !hasTeamFeature
+                ? "Team management not available in your plan"
+                : !canAddMore
+                ? `You can only add ${maxManagers} team member${maxManagers === 1 ? "" : "s"} with your current plan`
                 : ""
             }
           >
@@ -136,41 +139,19 @@ export default function TeamPage() {
       </div>
 
       {/* Plan Info */}
-      {maxManagers === 0 && (
-        <div
-          style={{
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            borderRadius: "12px",
-            padding: "16px 20px",
-            marginBottom: "24px",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "12px",
-          }}
-        >
-          <AlertCircle size={20} style={{ color: "#c0392b", flexShrink: 0 }} />
-          <div>
-            <p
-              style={{
-                margin: "0 0 4px 0",
-                fontWeight: "700",
-                color: "#c0392b",
-                fontSize: "14px",
-              }}
-            >
-              No Team Members Available
+      {!hasTeamFeature && (
+        <div className={styles.planLimitCard}>
+          <div className={styles.planLimitIcon}>
+            <AlertCircle size={24} />
+          </div>
+          <div className={styles.planLimitContent}>
+            <h3 className={styles.planLimitTitle}>Team Management Not Included</h3>
+            <p className={styles.planLimitDescription}>
+              Your current plan doesn't include team member management. Upgrade your plan to invite team members and collaborate more effectively.
             </p>
-            <p
-              style={{
-                margin: "0",
-                color: "#c0392b",
-                fontSize: "13px",
-                fontWeight: "500",
-              }}
-            >
-              Your current plan doesn't include team member management. Upgrade to add team members.
-            </p>
+            <a href="/subscription" className={styles.upgradeLink}>
+              View Upgrade Options →
+            </a>
           </div>
         </div>
       )}

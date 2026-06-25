@@ -19,13 +19,28 @@
   pointer-events: none;
 }
 
-/* ── Top row: day pill + trend pill ── */
+/* ── Top row: plan name + day pill + trend pill ── */
 .topRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 16px;
+}
+
+.topLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.planLabel {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.90;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
 }
 
 .dayPill {

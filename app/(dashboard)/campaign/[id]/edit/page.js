@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthContext } from '@/components/auth/AuthContext';
+import { criticalFetchService } from '@/lib/criticalFetchService';
 import Link from 'next/link';
 import styles from './EditCampaign.module.css';
 
@@ -27,7 +28,7 @@ export default function EditCampaignPage() {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // Fetch campaign on load
+  // Fetch campaign on load with caching
   useEffect(() => {
     const fetchCampaign = async () => {
       try {
@@ -40,30 +41,39 @@ export default function EditCampaignPage() {
           return;
         }
 
-        const response = await fetch(`/api/campaigns/${id}`, {
-          headers: {
-            'x-user-id': account.id,
-            'x-user-role': account.role,
-          },
-        });
+        const result = await criticalFetchService.fetchCriticalFirst(
+          `campaign-edit-${id}`,
+          [
+            {
+              key: 'campaign',
+              url: `/api/campaigns/${id}`,
+              options: {
+                headers: {
+                  'x-user-id': account.id,
+                  'x-user-role': account.role,
+                },
+              },
+            },
+          ],
+          []
+        );
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to load campaign');
+        const data = result.critical?.campaign?.data;
+
+        if (!data) {
+          throw new Error('Failed to load campaign');
         }
-
-        const data = await response.json();
 
         // Pre-fill form with campaign data
         setFormData({
-          campaignName: data.data.campaignName || '',
-          description: data.data.description || '',
-          startDate: data.data.startDate ? data.data.startDate.split('T')[0] : '',
-          endDate: data.data.endDate ? data.data.endDate.split('T')[0] : '',
-          rewardType: data.data.rewardType || '',
-          rewardValue: data.data.rewardValue || '',
-          rewardUnit: data.data.rewardUnit || '',
-          distributionMethod: data.data.distributionMethod || '',
+          campaignName: data.campaignName || '',
+          description: data.description || '',
+          startDate: data.startDate ? data.startDate.split('T')[0] : '',
+          endDate: data.endDate ? data.endDate.split('T')[0] : '',
+          rewardType: data.rewardType || '',
+          rewardValue: data.rewardValue || '',
+          rewardUnit: data.rewardUnit || '',
+          distributionMethod: data.distributionMethod || '',
         });
       } catch (err) {
         setError(err.message || 'Failed to load campaign');

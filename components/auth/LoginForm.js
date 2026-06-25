@@ -28,6 +28,40 @@ export default function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [deactivatedEmail, setDeactivatedEmail] = useState(null);
+  const [reactivating, setReactivating] = useState(false);
+
+  // Detect deactivation from error message
+  const isDeactivated = error?.includes('deactivated');
+
+  // On mount: restore remembered email and try Credential Management API
+  React.useEffect(() => {
+    const remembered = localStorage.getItem('rememberEmail');
+    if (remembered) {
+      setEmail(remembered);
+      setRememberMe(true);
+    }
+    // Browser Credential Management API — auto-fill if credentials are saved
+    if (window.PasswordCredential && navigator.credentials) {
+      navigator.credentials.get({ password: true, mediation: 'silent' })
+        .then((cred) => {
+          if (cred && cred.type === 'password') {
+            setEmail(cred.id);
+            setPassword(cred.password);
+            setRememberMe(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
+
+  // When deactivation error is detected, set the deactivated email
+  React.useEffect(() => {
+    if (isDeactivated && email && !deactivatedEmail) {
+      setDeactivatedEmail(email);
+    }
+  }, [isDeactivated, email, deactivatedEmail]);
 
   const validateForm = () => {
     const errors = {};
@@ -51,11 +85,40 @@ export default function LoginForm() {
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
     if (validationErrors.email) setValidationErrors(prev => ({ ...prev, email: '' }));
+    setDeactivatedEmail(null); // Clear deactivation state when user changes email
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
     if (validationErrors.password) setValidationErrors(prev => ({ ...prev, password: '' }));
+  };
+
+  const handleReactivate = async () => {
+    if (!deactivatedEmail || !password.trim()) {
+      alert("Please enter your password");
+      return;
+    }
+
+    setReactivating(true);
+    try {
+      const response = await fetch("/api/account/reactivate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: deactivatedEmail, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      setDeactivatedEmail(null);
+      clearError();
+      setPassword('');
+      alert("Account reactivated! Please log in with your credentials.");
+    } catch (err) {
+      alert("Failed to reactivate: " + err.message);
+    } finally {
+      setReactivating(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -70,15 +133,58 @@ export default function LoginForm() {
     } else {
       localStorage.removeItem('rememberEmail');
     }
-    await login(email, password);
+
+    setSubmitting(true);
+    try {
+      await login(email, password);
+
+      // Ask the browser to save credentials after a successful login
+      if (rememberMe && window.PasswordCredential && navigator.credentials) {
+        try {
+          const cred = new PasswordCredential({ id: email, password });
+          await navigator.credentials.store(cred);
+        } catch {
+          // Credential Management API not supported or user dismissed — ignore
+        }
+      } else if (!rememberMe && navigator.credentials?.preventSilentAccess) {
+        // Clear saved credentials if user unchecked Remember me
+        navigator.credentials.preventSilentAccess();
+        localStorage.removeItem('rememberEmail');
+      }
+    } catch (err) {
+      // Handle deactivated account
+      // The login function sets error in context, so check that instead
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
+    <form onSubmit={isDeactivated ? (e) => { e.preventDefault(); } : handleSubmit} className={styles.form}>
       {error && (
         <div className={styles.errorBanner}>
           <span className={styles.errorIcon}>⚠️</span>
           <span>{error}</span>
+        </div>
+      )}
+
+      {isDeactivated && (
+        <div className={styles.reactivationBox}>
+          <h4>✅ Reactivate Your Account</h4>
+          <p>
+            Your account has been deactivated. Enter your password in the field below,
+            then click the <strong>Reactivate Account</strong> button to restore access to your account.
+            <br/>
+            <span style={{ fontSize: '0.9em', opacity: 0.8 }}>Your data is safe and will be restored.</span>
+          </p>
+          <button
+            type="button"
+            onClick={() => handleReactivate()}
+            disabled={reactivating || !password.trim()}
+            className={styles.reactivateBtn}
+          >
+            {reactivating ? "Reactivating..." : "Reactivate Account"}
+          </button>
         </div>
       )}
 
@@ -93,6 +199,7 @@ export default function LoginForm() {
           onBlur={() => handleFieldBlur('email')}
           className={`${styles.inputField} ${validationErrors.email ? styles.error : ''}`}
           placeholder="name@company.com"
+          autoComplete="email"
           disabled={isLoading}
           autoComplete="email"
           required
@@ -116,6 +223,7 @@ export default function LoginForm() {
             onBlur={() => handleFieldBlur('password')}
             className={`${styles.inputField} ${validationErrors.password ? styles.error : ''}`}
             placeholder="••••••••"
+            autoComplete="current-password"
             disabled={isLoading}
             autoComplete="current-password"
             required
@@ -154,9 +262,9 @@ export default function LoginForm() {
         </Link>
       </div>
 
-      <button type="submit" className={styles.submitButton} disabled={isLoading}>
-        {isLoading && <span className={styles.loadingSpinner}></span>}
-        {isLoading ? 'Signing in...' : 'Sign In'}
+      <button type="submit" className={styles.submitButton} disabled={submitting}>
+        {submitting && <span className={styles.loadingSpinner}></span>}
+        {submitting ? 'Signing in...' : 'Sign In'}
       </button>
     </form>
   );

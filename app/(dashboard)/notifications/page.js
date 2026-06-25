@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import styles from "./page.module.css";
 
 // ── Icon map by notification type ──────────────────────────────
@@ -54,12 +55,23 @@ export default function NotificationsPage() {
   const fetchNotifications = useCallback(async () => {
     if (!account?.id) return;
     try {
-      const res = await fetch("/api/notifications?limit=50", {
-        headers: { "x-user-id": account.id, "x-user-role": account.role || "Merchant" },
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const result = await criticalFetchService.fetchCriticalFirst(
+        'notifications-page',
+        [
+          {
+            key: 'notifications',
+            url: '/api/notifications?limit=50',
+            options: {
+              headers: { 'x-user-id': account.id, 'x-user-role': account.role || 'Merchant' },
+              credentials: 'include',
+            },
+          },
+        ],
+        []
+      );
+
+      const data = result.critical?.notifications;
+      if (data) {
         setNotifications(data.data || []);
       }
     } catch (_) {}

@@ -7,6 +7,7 @@ import CampaignCard from "@/components/dashboard/CampaignCard";
 import FilterTabs from "@/components/dashboard/FilterTabs";
 import SearchBar from "@/components/dashboard/SearchBar";
 import CampaignEmptyState from "@/components/campaign/CampaignEmptyState";
+import { smartCacheService } from "@/lib/smartCacheService";
 import styles from "./campaign.module.css";
 
 // Low-scratch threshold: allocated > 0 AND remaining/allocated <= 10%.
@@ -46,17 +47,15 @@ export default function CampaignPage() {
   const fetchCampaigns = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/campaigns", {
-        headers: {
-          "x-user-id": account.id,
-          "x-user-role": account.role || "merchant",
-          "x-user-email": account.email || "",
-        },
-      });
+      // Use smartCacheService for instant load + background refresh
+      const campaignsData = await smartCacheService.fetchWithCache(
+        'campaigns-list',
+        '/api/campaigns',
+        account.id,
+        account.role || 'Merchant'
+      );
 
-      if (!response.ok) throw new Error("Failed to fetch campaigns");
-      const result = await response.json();
-      setCampaigns(result.data || []);
+      setCampaigns(Array.isArray(campaignsData) ? campaignsData : []);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -77,48 +76,47 @@ export default function CampaignPage() {
   const togglePause = useCallback(
     async (campaignId, nextStatus) => {
       try {
-        const response = await fetch(`/api/campaigns/${campaignId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-id": account?.id,
-            "x-user-role": account?.role || "Merchant",
-            "x-user-email": account?.email || "",
-          },
-          body: JSON.stringify({ status: nextStatus }),
-        });
-        if (!response.ok) {
-          // Fall back to details page if status update isn't supported.
+        // Use smartCacheService for optimistic update
+        const result = await smartCacheService.updateWithCache(
+          'campaigns-list',
+          campaignId,
+          `/api/campaigns/${campaignId}`,
+          { status: nextStatus },
+          account?.id,
+          account?.role || "Merchant"
+        );
+
+        if (!result.success) {
           router.push(`/campaign/${campaignId}`);
           return;
         }
-        await fetchCampaigns();
+        // Campaign status updated instantly in list
       } catch (err) {
         console.error("Error updating campaign status:", err);
         router.push(`/campaign/${campaignId}`);
       }
     },
-    [account, fetchCampaigns, router],
+    [account],
   );
 
   const deleteCampaign = useCallback(
     async (campaignId) => {
-      const res = await fetch(`/api/campaigns/${campaignId}`, {
-        method: "DELETE",
-        credentials: "include",
-        headers: {
-          "x-user-id": account?.id,
-          "x-user-role": account?.role || "Merchant",
-        },
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data?.success === false) {
-        return { error: data?.error || data?.message || "Failed to delete campaign." };
+      // Use smartCacheService for optimistic delete
+      const result = await smartCacheService.deleteWithCache(
+        'campaigns-list',
+        campaignId,
+        `/api/campaigns/${campaignId}`,
+        account?.id,
+        account?.role || "Merchant"
+      );
+
+      if (!result.success) {
+        return { error: result.error || "Failed to delete campaign." };
       }
-      await fetchCampaigns();
+      // Campaign removed from list instantly
       return { success: true };
     },
-    [account, fetchCampaigns],
+    [account],
   );
 
   // Central action handler for card menu + inline buttons.

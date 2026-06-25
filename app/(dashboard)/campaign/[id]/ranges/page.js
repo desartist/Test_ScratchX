@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Tag, Pencil, Plus, QrCode } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import RangeWizard from "@/components/campaign/RangeWizard";
 import LaunchWizardModal from "@/components/campaign/LaunchWizardModal";
 import styles from "./ranges.module.css";
@@ -51,19 +52,31 @@ export default function CampaignRangesStepPage() {
         Authorization: token ? `Bearer ${token}` : "",
       };
 
-      const [rangesRes, campaignRes] = await Promise.all([
-        fetch(`/api/campaign_range?id=${campaignId}`, { method: "GET", credentials: "include", headers }),
-        fetch(`/api/campaigns/${campaignId}`, { credentials: "include", headers }),
-      ]);
+      const result = await criticalFetchService.fetchCriticalFirst(
+        `campaign-ranges-${campaignId}`,
+        [
+          {
+            key: 'ranges',
+            url: `/api/campaign_range?id=${campaignId}`,
+            options: { method: "GET", credentials: "include", headers },
+          },
+          {
+            key: 'campaign',
+            url: `/api/campaigns/${campaignId}`,
+            options: { credentials: "include", headers },
+          },
+        ],
+        []
+      );
 
-      const rangesData = await rangesRes.json().catch(() => ({}));
+      const rangesData = result.critical?.ranges;
       if (rangesData?.success && Array.isArray(rangesData.ranges)) {
         setRanges(rangesData.ranges);
       } else {
         setRanges([]);
       }
 
-      const campaignData = await campaignRes.json().catch(() => ({}));
+      const campaignData = result.critical?.campaign;
       setCampaign(campaignData?.data || campaignData?.campaign || campaignData || null);
     } catch (err) {
       console.error("Failed to fetch ranges:", err);

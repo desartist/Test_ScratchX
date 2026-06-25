@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import styles from "./subscription.module.css";
 import { AlertCircle } from "lucide-react";
 
@@ -73,28 +74,41 @@ export default function SubscriptionPage() {
   const [error, setError] = useState(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
 
-  // Fetch current subscription and plans
+  // Fetch current subscription and plans with caching
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [subRes, plansRes, statusRes] = await Promise.all([
-          fetch("/api/subscription/current"),
-          fetch("/api/subscription/plans"),
-          fetch("/api/subscription/status"),
-        ]);
+        const result = await criticalFetchService.fetchCriticalFirst(
+          'subscription-page',
+          [
+            {
+              key: 'current',
+              url: '/api/subscription/current',
+            },
+            {
+              key: 'plans',
+              url: '/api/subscription/plans',
+            },
+            {
+              key: 'status',
+              url: '/api/subscription/status',
+            },
+          ],
+          []
+        );
 
-        const subData = await subRes.json();
-        const plansData = await plansRes.json();
-        const statusData = await statusRes.json();
+        const subData = result.critical?.current;
+        const plansData = result.critical?.plans;
+        const statusData = result.critical?.status;
 
-        if (subData.success) {
+        if (subData?.success) {
           setSubscription(subData.subscription);
         }
-        if (plansData.success) {
+        if (plansData?.success) {
           setPlans(plansData.data || []);
         }
-        if (statusData.success) {
+        if (statusData?.success) {
           setSubscriptionStatus(statusData);
         }
         setError(null);

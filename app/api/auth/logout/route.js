@@ -25,15 +25,14 @@ export async function POST(request) {
   try {
     await connectDB();
 
-    const body = await request.json();
-    const { accessToken, refreshToken } = body;
-
-    // At least one token is required
-    if (!accessToken && !refreshToken) {
-      return NextResponse.json(
-        { success: false, error: 'At least one token is required' },
-        { status: 400 }
-      );
+    let accessToken = null;
+    let refreshToken = null;
+    try {
+      const body = await request.json();
+      accessToken = body.accessToken || null;
+      refreshToken = body.refreshToken || null;
+    } catch {
+      // body may be empty — that's fine, we'll still clear the cookie session
     }
 
     // Blacklist access token (15 minute expiry)

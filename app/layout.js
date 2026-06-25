@@ -2,6 +2,7 @@ import React from "react";
 import "./globals.css";
 import styles from "./layout.module.css";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { SubscriptionProvider } from "@/components/subscription/SubscriptionContext";
 
 export const metadata = {
   title: "ScratchX | Premium Digital Rewards & Customer Engagement Platform",
@@ -79,7 +80,9 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning style={{ colorScheme: 'light' }}>
       <body suppressHydrationWarning>
         <AuthProvider>
-          <main className={styles.mainContent}>{children}</main>
+          <SubscriptionProvider>
+            <main className={styles.mainContent}>{children}</main>
+          </SubscriptionProvider>
         </AuthProvider>
       </body>
     </html>

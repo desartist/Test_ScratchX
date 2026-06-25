@@ -110,6 +110,44 @@
 }
 
 /* ────────────────────────────────────────────────────────────────
+  REFRESH BUTTON
+──────────────────────────────────────────────────────────────── */
+
+.refreshButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  opacity: 0.7;
+}
+
+.refreshButton:hover:not(:disabled) {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.refreshButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.refreshButton svg {
+  transition: transform 0.3s ease;
+}
+
+.refreshButton:not(:disabled):active svg {
+  transform: rotate(180deg);
+}
+
+/* ────────────────────────────────────────────────────────────────
   LOADING STATE
 ──────────────────────────────────────────────────────────────── */
 

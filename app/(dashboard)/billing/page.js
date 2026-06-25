@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import styles from "./billing.module.css";
 import { CheckCircle, AlertCircle } from "lucide-react";
 
@@ -74,10 +75,19 @@ export default function BillingPage() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const res = await fetch("/api/subscription/plans");
-        const data = await res.json();
+        const result = await criticalFetchService.fetchCriticalFirst(
+          'billing-plans',
+          [
+            {
+              key: 'plans',
+              url: '/api/subscription/plans',
+            },
+          ],
+          []
+        );
 
-        if (data.success && data.data) {
+        const data = result.critical?.plans;
+        if (data?.success && data?.data) {
           setPlans(data.data);
         } else {
           setError("Could not load plans");

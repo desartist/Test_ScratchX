@@ -6,8 +6,8 @@ import styles from "./DangerZoneCard.module.css";
 
 export default function DangerZoneCard({ merchant }) {
   const router = useRouter();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteStep, setDeleteStep] = useState(1);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [deactivateStep, setDeactivateStep] = useState(1);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -21,14 +21,14 @@ export default function DangerZoneCard({ merchant }) {
     }
   };
 
-  const handleDeleteClick = () => {
-    setShowDeleteModal(true);
-    setDeleteStep(1);
+  const handleDeactivateClick = () => {
+    setShowDeactivateModal(true);
+    setDeactivateStep(1);
     setPassword("");
     setError(null);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDeactivate = async () => {
     setError(null);
 
     if (!password?.trim()) {
@@ -46,23 +46,25 @@ export default function DangerZoneCard({ merchant }) {
         body: JSON.stringify({ password }),
       });
 
+      const data = await response.json().catch(() => ({ error: "Invalid response from server" }));
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to delete account");
+        throw new Error(data.error || `Failed to deactivate account (${response.status})`);
       }
 
-      setShowDeleteModal(false);
-      router.push("/auth/login");
+      // Success — wait a moment then redirect
+      setShowDeactivateModal(false);
+      setTimeout(() => router.push("/auth/login"), 500);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "An error occurred while deactivating your account");
     } finally {
       setLoading(false);
     }
   };
 
   const handleCloseModal = () => {
-    setShowDeleteModal(false);
-    setDeleteStep(1);
+    setShowDeactivateModal(false);
+    setDeactivateStep(1);
     setPassword("");
     setError(null);
   };
@@ -81,21 +83,22 @@ export default function DangerZoneCard({ merchant }) {
 
         <button
           className={styles.deleteBtn}
-          onClick={handleDeleteClick}
+          onClick={handleDeactivateClick}
         >
-          Delete Account
+          Deactivate Account
         </button>
       </div>
 
-      {showDeleteModal && (
+      {showDeactivateModal && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
-            {deleteStep === 1 ? (
+            {deactivateStep === 1 ? (
               <>
-                <h4>Delete Account?</h4>
+                <h4>Deactivate Account?</h4>
                 <p>
-                  This action cannot be undone. All your campaigns, data, and
-                  account information will be permanently deleted.
+                  Your account will be deactivated and you won't be able to access it.
+                  <strong> Your data is safe and will not be deleted.</strong> You can
+                  reactivate your account anytime by logging in again.
                 </p>
                 <p style={{ color: "#c62828", fontSize: "14px", marginTop: "12px" }}>
                   Email: {merchant?.email}
@@ -109,17 +112,17 @@ export default function DangerZoneCard({ merchant }) {
                   </button>
                   <button
                     className={styles.deleteBtn}
-                    onClick={() => setDeleteStep(2)}
+                    onClick={() => setDeactivateStep(2)}
                   >
-                    Continue to Delete
+                    Continue to Deactivate
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <h4>Confirm Account Deletion</h4>
+                <h4>Confirm Account Deactivation</h4>
                 <p>
-                  Enter your password to confirm you want to delete your account.
+                  Enter your password to confirm you want to deactivate your account.
                 </p>
 
                 {error && <div className={styles.errorMessage}>{error}</div>}
@@ -136,17 +139,17 @@ export default function DangerZoneCard({ merchant }) {
                 <div className={styles.buttonGroup}>
                   <button
                     className={styles.cancelBtn}
-                    onClick={() => setDeleteStep(1)}
+                    onClick={() => setDeactivateStep(1)}
                     disabled={loading}
                   >
                     Back
                   </button>
                   <button
                     className={styles.deleteBtn}
-                    onClick={handleConfirmDelete}
+                    onClick={handleConfirmDeactivate}
                     disabled={loading}
                   >
-                    {loading ? "Deleting..." : "Delete Account"}
+                    {loading ? "Deactivating..." : "Deactivate Account"}
                   </button>
                 </div>
               </>

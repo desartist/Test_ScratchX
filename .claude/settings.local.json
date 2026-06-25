@@ -426,7 +426,25 @@
       "Bash(xargs ls)",
       "Bash(grep -E \"\\\\.js$|\\\\.css$\")",
       "Bash(chmod 755 /Users/abhishekpratapsingh/Desktop/coupon_campaigns/lib)",
-      "Bash(cat >> *)"
+      "Bash(cat >> *)",
+      "Bash(curl -s http://localhost:3000/settings)",
+      "Bash(pkill -f \"node.*dev\")",
+      "Bash(pkill -f \"node.*dev\" || true; sleep 2; npm run dev > /tmp/dev-server.log 2>&1 & *)",
+      "Bash(chmod u+w /Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/api/account/)",
+      "Bash(cp /Users/abhishekpratapsingh/Downloads/boxicons_qr-filled.svg /Users/abhishekpratapsingh/Desktop/coupon_campaigns/public/qr-icon.svg)",
+      "Bash(cp /Users/abhishekpratapsingh/Downloads/mdi_coupon.svg /Users/abhishekpratapsingh/Desktop/coupon_campaigns/public/coupon-icon.svg)",
+      "Bash(chmod u+w /Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/api/subscription)",
+      "Bash(chmod u-w *)",
+      "Bash(chmod -R u+w /Users/abhishekpratapsingh/Desktop/coupon_campaigns/components/stores)",
+      "Bash(curl -s http://localhost:3000/dashboard/stores/create)",
+      "Bash(curl -s http://localhost:3000/dashboard/customers)",
+      "Bash(cat \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(dashboard\\)/campaign/[id]/page.js\" > /tmp/campaign_page.js && wc -l /tmp/campaign_page.js)",
+      "Bash(chmod 755 /Users/abhishekpratapsingh/Desktop/coupon_campaigns/components/campaign/)",
+      "Bash(grep -E \"page\\\\.js$|page\\\\.module\\\\.css$\")",
+      "mcp__Claude_in_Chrome__navigate",
+      "Bash(kill 74321)",
+      "Bash(python3)",
+      "Bash(grep -E \"\\\\.\\(js|jsx|tsx|ts\\)$\")"
     ]
   }
 }

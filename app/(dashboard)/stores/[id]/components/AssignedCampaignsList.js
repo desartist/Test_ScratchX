@@ -9,8 +9,10 @@ import {
   BarChart3,
   Filter,
   ArrowUpDown,
+  MoreVertical,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuthContext } from "@/components/auth/AuthContext";
 import styles from "./AssignedCampaignsList.module.css";
 
 export default function AssignedCampaignsList({
@@ -19,6 +21,7 @@ export default function AssignedCampaignsList({
   onCampaignRemoved,
 }) {
   const router = useRouter();
+  const { account } = useAuthContext();
   const [loadingRemove, setLoadingRemove] = useState(null);
   const [error, setError] = useState(null);
   const [selectedCampaigns, setSelectedCampaigns] = useState([]);
@@ -26,6 +29,8 @@ export default function AssignedCampaignsList({
   const [sortBy, setSortBy] = useState("daysLeft");
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   // Format date
   const formatDate = (dateString) => {
@@ -259,7 +264,83 @@ export default function AssignedCampaignsList({
     };
   }, [campaigns]);
 
-  // Export to CSV
+  // Export customer details to CSV
+  const handleExportCustomersCSV = async () => {
+    if (!account?.id) {
+      setError('User information not loaded. Please refresh the page.');
+      return;
+    }
+
+    setLoadingCustomers(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/customers?store=${storeId}&limit=10000`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": account.id,
+          "x-user-role": account.role || "merchant",
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch customer data');
+      }
+      
+      const result = await response.json();
+      const customers = result.data || result.participants || [];
+      
+      if (customers.length === 0) {
+        setError('No customers found for this store');
+        setLoadingCustomers(false);
+        return;
+      }
+      
+      const headers = [
+        "Customer Name",
+        "Phone",
+        "Campaign",
+        "Status",
+        "Participated Date",
+        "Reward Type",
+        "Reward Value",
+        "Store"
+      ];
+      
+      const rows = customers.map((customer) => [
+        customer.customer_name || '-',
+        customer.customer_mobile || '-',
+        customer.campaign_id?.name || customer.campaign_id?.campaignName || '-',
+        customer.status || '-',
+        formatDate(customer.createdAt),
+        customer.scratch_card_id?.reward_type || '-',
+        customer.scratch_card_id?.reward_value || '-',
+        customer.store_id?.store_name || '-'
+      ]);
+      
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+      ].join("\n");
+      
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `customers-store-${storeId}-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      setError(err.message || "Failed to export customer data");
+    } finally {
+      setLoadingCustomers(false);
+    }
+  };
+
+    // Export to CSV
   const handleExportCSV = () => {
     if (campaigns.length === 0) return;
 
@@ -382,23 +463,63 @@ export default function AssignedCampaignsList({
             <BarChart3 size={18} />
             Analytics
           </button>
-          <div className={styles.exportMenu}>
+          <div className={styles.exportMenuContainer}>
             <button
               className={styles.toolbarButton}
-              title="Download as CSV"
-              onClick={handleExportCSV}
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              title="Export options"
             >
-              <Download size={18} />
-              CSV
+              <MoreVertical size={18} />
             </button>
-            <button
-              className={styles.toolbarButton}
-              title="Download as JSON"
-              onClick={handleExportJSON}
-            >
-              <Download size={18} />
-              JSON
-            </button>
+            {showExportMenu && (
+              <div className={styles.exportDropdown}>
+                <button
+                  className={styles.exportOption}
+                  onClick={() => {
+                    setShowAnalytics(!showAnalytics);
+                    setShowExportMenu(false);
+                  }}
+                  title="View analytics"
+                >
+                  <BarChart3 size={16} />
+                  <span>Analytics</span>
+                </button>
+                <button
+                  className={styles.exportOption}
+                  onClick={() => {
+                    handleExportCSV();
+                    setShowExportMenu(false);
+                  }}
+                  title="Download campaigns as CSV"
+                >
+                  <Download size={16} />
+                  <span>Campaigns CSV</span>
+                </button>
+                <button
+                  className={styles.exportOption}
+                  onClick={() => {
+                    handleExportCustomersCSV();
+                    setShowExportMenu(false);
+                  }}
+                  disabled={loadingCustomers}
+                  title="Download customers as CSV"
+                >
+                  <Download size={16} />
+                  <span>{loadingCustomers ? "Exporting..." : "Customers CSV"}</span>
+                </button>
+                <button
+                  className={styles.exportOption}
+                  onClick={() => {
+                    handleExportJSON();
+                    setShowExportMenu(false);
+                  }}
+                  title="Download campaigns as JSON"
+                >
+                  <Download size={16} />
+                  <span>Campaigns JSON</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
