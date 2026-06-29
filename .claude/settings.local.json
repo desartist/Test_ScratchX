@@ -444,7 +444,15 @@
       "mcp__Claude_in_Chrome__navigate",
       "Bash(kill 74321)",
       "Bash(python3)",
-      "Bash(grep -E \"\\\\.\\(js|jsx|tsx|ts\\)$\")"
+      "Bash(grep -E \"\\\\.\\(js|jsx|tsx|ts\\)$\")",
+      "Bash(kill 77404)",
+      "Bash(curl -X POST http://localhost:3000/api/auth/otp-send -H 'Content-Type: application/json' -d '{\"phone\": \"8963894358\"}')",
+      "Bash(curl -X POST http://localhost:3000/api/auth/otp-send -H 'Content-Type: application/json' -d '{\"phone\": \"+918963894358\"}')",
+      "Bash(curl -s https://docs.msg91.com/overview)",
+      "Bash(curl -s \"https://docs.msg91.com/api/otp/send-otp\")",
+      "Bash(git branch *)",
+      "Bash(git fetch *)",
+      "Bash(git push *)"
     ]
   }
 }
