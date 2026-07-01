@@ -410,7 +410,7 @@ export default function ScanClientPage() {
         <div className={styles.revealContainer}>
           <div className={styles.endedLogoWrapper}>
             <Image
-              src="/horizontal_logo.webp"
+              src="/horizontal_logo.svg"
               alt="ScratchX"
               width={140}
               height={50}
@@ -447,7 +447,7 @@ export default function ScanClientPage() {
         <div className={styles.revealContainer}>
           <div className={styles.endedLogoWrapper}>
             <Image
-              src="/horizontal_logo.webp"
+              src="/horizontal_logo.svg"
               alt="ScratchX"
               width={140}
               height={50}
@@ -478,7 +478,7 @@ export default function ScanClientPage() {
         <div className={styles.revealContainer}>
           <div className={styles.expiredLogoWrapper}>
             <Image
-              src="/horizontal_logo.webp"
+              src="/horizontal_logo.svg"
               alt="ScratchX"
               width={140}
               height={50}

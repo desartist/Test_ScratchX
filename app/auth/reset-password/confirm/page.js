@@ -66,7 +66,7 @@ function ConfirmResetContent() {
     return (
       <div className={styles.page}>
         <div className={styles.logoWrap}>
-          <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.logoImg} />
+          <img src="/horizontal_logo.svg" alt="ScratchX" className={styles.logoImg} />
         </div>
         <div className={styles.card}>
           <div className={styles.iconWrap}>
@@ -90,7 +90,7 @@ function ConfirmResetContent() {
     return (
       <div className={styles.page}>
         <div className={styles.logoWrap}>
-          <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.logoImg} />
+          <img src="/horizontal_logo.svg" alt="ScratchX" className={styles.logoImg} />
         </div>
         <div className={styles.card}>
           <div className={styles.successBox}>
@@ -111,7 +111,7 @@ function ConfirmResetContent() {
   return (
     <div className={styles.page}>
       <div className={styles.logoWrap}>
-        <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.logoImg} />
+        <img src="/horizontal_logo.svg" alt="ScratchX" className={styles.logoImg} />
       </div>
       <div className={styles.card}>
         <div className={styles.iconWrap}>
