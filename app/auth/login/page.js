@@ -10,7 +10,7 @@ export default function LoginPage() {
     <div className={styles.page}>
       {/* Logo */}
       <div className={styles.logoWrap}>
-        <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.logoImg} />
+        <img src="/horizontal_logo.svg" alt="ScratchX" className={styles.logoImg} />
       </div>
 
       <div className={styles.card}>

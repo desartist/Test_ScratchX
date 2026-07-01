@@ -537,7 +537,7 @@ export default function CreateStorePage() {
   return (
     <div className={styles.pageShell}>
       <div className={styles.topBar}>
-        <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.topLogo} />
+        <img src="/horizontal_logo.svg" alt="ScratchX" className={styles.topLogo} />
       </div>
     <div className={styles.container}>
       {/* Header */}
