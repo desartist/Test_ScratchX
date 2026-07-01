@@ -69,7 +69,7 @@ export async function POST(request) {
         expiryDate: statusCheck.expiryDate,
         daysOverdue: statusCheck.daysOverdue,
         actionRequired: "Renew Subscription",
-        actionUrl: "/billing/plans",
+        actionUrl: "/subscription",
       },
       { status: 402 } // Payment Required
     );
