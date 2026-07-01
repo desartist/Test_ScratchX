@@ -25,7 +25,7 @@ import { validateCustomerLocation } from "@/lib/utils/distanceCalculator";
  *     isValid: boolean,
  *     matchedStore: { storeId, storeName, latitude, longitude },
  *     distance: number (in meters),
- *     allowedRadius: 100,
+ *     allowedRadius: 250,
  *     message: string
  *   }
  * }
@@ -149,8 +149,8 @@ export async function POST(request) {
     });
 
     // CRITICAL FIX: Use fresh store coordinates from database
-    // Allowed radius: 100 meters (not 2km)
-    const ALLOWED_RADIUS_METERS = 100;
+    // Allowed radius: 250 meters
+    const ALLOWED_RADIUS_METERS = 250;
 
     // Validate customer location against all stores (with fresh coordinates)
     const validationResult = validateCustomerLocation(

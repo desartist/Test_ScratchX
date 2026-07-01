@@ -242,7 +242,7 @@ export async function POST(request) {
     }
 
     // ===== RE-VALIDATE LOCATION =====
-    const ALLOWED_RADIUS_METERS = 100;
+    const ALLOWED_RADIUS_METERS = 250;
     const { calculateDistance } = require("@/lib/utils/distanceCalculator");
 
     console.log("🔍 Re-validating location with verified store:", {
