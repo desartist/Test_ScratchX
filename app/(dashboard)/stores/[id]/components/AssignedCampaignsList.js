@@ -361,7 +361,7 @@ export default function AssignedCampaignsList({
                       className={styles.actionButton}
                       onClick={() =>
                         router.push(
-                          `/campaigns/${campaign._id}`,
+                          `/campaign/${campaign._id}`,
                         )
                       }
                       title="View campaign"
