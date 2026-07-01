@@ -18,6 +18,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  animation: slideDown 0.3s ease;
 }
 
 .errorIcon {
@@ -25,12 +26,81 @@
   flex-shrink: 0;
 }
 
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Tabs Container ────────────────────────────────────────── */
+.tabsContainer {
+  display: flex;
+  gap: 12px;
+  background: #f8f9ff;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid #e8eaff;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #637080;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.tab:hover {
+  color: #010f44;
+  background: rgba(1, 15, 68, 0.04);
+}
+
+.tabActive {
+  background: white;
+  color: #010f44;
+  box-shadow: 0 2px 8px rgba(1, 15, 68, 0.08);
+}
+
+/* ── Tab Content ───────────────────────────────────────────── */
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ── Field ─────────────────────────────────────────────────── */
 .fieldWrapper {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
 }
 
 .label {
@@ -39,6 +109,9 @@
   color: #010f44;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .inputField {
@@ -70,7 +143,7 @@
   background: #fff8f8;
 }
 
-/* ── Inline validation ─────────────────────────────────────── */
+/* ── Error Message ─────────────────────────────────────────── */
 .errorMessage {
   font-size: 0.78rem;
   color: #e74c3c;
@@ -80,13 +153,33 @@
   gap: 4px;
 }
 
-.successCheck {
+/* ── Password Wrapper ──────────────────────────────────────── */
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordWrapper .inputField {
+  padding-right: 44px;
+  width: 100%;
+}
+
+.eyeBtn {
   position: absolute;
-  right: 14px;
-  top: 38px;
-  color: #27ae60;
-  font-size: 16px;
-  font-weight: 700;
+  right: 12px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #8896a7;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.eyeBtn:hover {
+  color: #010f44;
 }
 
 /* ── Remember / Forgot row ─────────────────────────────────── */
@@ -117,7 +210,7 @@
 .rememberLabel {
   color: #637080;
   font-size: 0.88rem;
-  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
 .forgotLink {
@@ -131,36 +224,31 @@
 }
 
 .forgotLink:hover {
-  color: #d98e14;
+  color: #ff9500;
 }
 
 /* ── Submit Button ─────────────────────────────────────────── */
 .submitButton {
   width: 100%;
+  padding: 13px 20px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-afacad), system-ui, sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  background: #ef9e1b;
-  color: #fff;
-  border: none;
-  border-radius: 14px;
-  padding: 15px 24px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 4px;
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.35);
-  font-family: var(--font-afacad), system-ui, sans-serif;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
+  gap: 8px;
 }
 
 .submitButton:hover:not(:disabled) {
-  background: #d98e14;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(239, 158, 27, 0.45);
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.3);
 }
 
 .submitButton:active:not(:disabled) {
@@ -168,30 +256,247 @@
 }
 
 .submitButton:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* ── Spinner ───────────────────────────────────────────────── */
-.loadingSpinner {
-  width: 18px;
-  height: 18px;
-  border: 2.5px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  flex-shrink: 0;
+.spinner {
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Divider ───────────────────────────────────────────────── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #b0bac8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e8eaff;
+}
+
+/* ── Google Button ─────────────────────────────────────────── */
+.googleButton {
+  width: 100%;
+  padding: 13px 20px;
+  background: white;
+  color: #010f44;
+  border: 1.5px solid #e8eaff;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.googleButton:hover {
+  background: #f8f9ff;
+  border-color: #d0d8e4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(1, 15, 68, 0.08);
+}
+
+.googleButton:active {
+  transform: translateY(0);
+}
+
+/* ── OTP Help Text ─────────────────────────────────────────── */
+.otpHelpText {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #637080;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Reactivation Box ──────────────────────────────────────── */
+.reactivationBox {
+  background: linear-gradient(135deg, #d4edda 0%, #c8e6c9 100%);
+  border: 1.5px solid #28a745;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.reactivationBox h4 {
+  margin: 0 0 8px 0;
+  font-size: 0.95rem;
+  color: #155724;
+  font-weight: 700;
+}
+
+.reactivationBox p {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  color: #155724;
+  line-height: 1.5;
+}
+
+.reactivateBtn {
+  width: 100%;
+  padding: 10px 16px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.reactivateBtn:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-2px);
+}
+
+.reactivateBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Sign Up Line ──────────────────────────────────────────── */
+.signupLine {
+  text-align: center;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #637080;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.signupLine a {
+  color: #010f44;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.signupLine a:hover {
+  color: #ef9e1b;
+}
+
+/* ── OTP Verification Box ──────────────────────────────────── */
+.verificationBox {
+  background: linear-gradient(135deg, #e3f2fd 0%, #e1f5fe 100%);
+  border: 1.5px solid #64b5f6;
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.verificationBox h3 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  color: #1976d2;
+  font-weight: 700;
+}
+
+.verificationBox p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #1565c0;
+  line-height: 1.6;
+}
+
+.verificationBox strong {
+  color: #0d47a1;
+  font-weight: 700;
+}
+
+/* ── Helper Text ───────────────────────────────────────────── */
+.helperText {
+  margin: 4px 0 0 0;
+  font-size: 0.8rem;
+  color: #628098;
+  font-weight: 500;
+}
+
+/* ── Back Button ────────────────────────────────────────────── */
+.backButton {
+  width: 100%;
+  padding: 11px 20px;
+  background: transparent;
+  color: #010f44;
+  border: 1.5px solid #e8eaff;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.backButton:hover:not(:disabled) {
+  background: #f8f9ff;
+  border-color: #d0d8e4;
+  color: #ef9e1b;
+}
+
+.backButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.backButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ── Responsive ────────────────────────────────────────────── */
-@media (max-width: 480px) {
+@media (max-width: 520px) {
+  .form {
+    gap: 16px;
+  }
+
+  .tabsContainer {
+    gap: 8px;
+  }
+
+  .tab {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    gap: 6px;
+  }
+
+  .tab svg {
+    display: none;
+  }
+
+  .fieldWrapper {
+    gap: 6px;
+  }
+
   .footer {
     flex-direction: column;
+    gap: 12px;
     align-items: flex-start;
-    gap: 10px;
+  }
+
+  .googleButton {
+    font-size: 0.9rem;
   }
 }

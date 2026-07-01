@@ -25,14 +25,14 @@ export default function ScanClientPage() {
   });
   const [validationErrors, setValidationErrors] = useState({});
 
-  // Location State
+  // Location State — captured silently in background
   const [customerLocation, setCustomerLocation] = useState({
     latitude: null,
     longitude: null,
   });
-  const [locationVerifying, setLocationVerifying] = useState(false);
-  const [locationError, setLocationError] = useState(null);
+  const [locationError, setLocationError] = useState(null); // { type, message }
   const [locationVerified, setLocationVerified] = useState(false);
+  const [locationVerifying, setLocationVerifying] = useState(false);
 
   // Coupon & Reward State
   const [selectedCouponIndex, setSelectedCouponIndex] = useState(null);
@@ -92,129 +92,104 @@ export default function ScanClientPage() {
     return Object.keys(errors).length === 0;
   };
 
-  // ===== LOCATION CAPTURE =====
-  const getCustomerLocation = async () => {
+  // ===== LOCATION CAPTURE (silent, returns coords directly) =====
+  const getCustomerLocation = () => {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
-        setLocationError("Geolocation not supported");
-        resolve(false);
+        resolve({ success: false, code: "unsupported" });
         return;
       }
-
-      setLocationError(null);
-
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCustomerLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-          console.log("✅ Location captured:", {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-          resolve(true);
+          const { latitude, longitude } = position.coords;
+          setCustomerLocation({ latitude, longitude });
+          resolve({ success: true, latitude, longitude });
         },
-        (error) => {
-          console.error("Geolocation error:", error);
-          setLocationError("Enable location services and try again");
-          resolve(false);
+        (err) => {
+          const code = err.code === 1 ? "denied"
+            : err.code === 3 ? "timeout"
+            : "unavailable";
+          resolve({ success: false, code });
         },
-        { timeout: 10000 }
+        { timeout: 12000, enableHighAccuracy: false }
       );
     });
   };
 
-  // ===== BUTTON 1: VERIFY LOCATION =====
-  const handleVerifyLocation = async (e) => {
+  // ===== SINGLE BUTTON: SHOW MY COUPONS =====
+  // Validates form → captures location silently → verifies with store → proceeds
+  const handleShowCoupons = async (e) => {
     e.preventDefault();
+    setLocationError(null);
+    setError(null);
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLocationVerifying(true);
-    setLocationError(null);
 
-    try {
-      // Get location if not already captured
-      if (!customerLocation.latitude || !customerLocation.longitude) {
-        const hasLocation = await getCustomerLocation();
-        if (!hasLocation) {
-          setLocationError("Enable GPS and try again");
-          setLocationVerifying(false);
-          return;
-        }
-      }
+    // Step 1: get GPS coords (use cached if already have them)
+    let lat = customerLocation.latitude;
+    let lng = customerLocation.longitude;
 
-      // Call location-verify API
-      const storesList = campaign?.assignedStores;
-      if (!storesList || storesList.length === 0) {
-        setLocationError("Store info not found");
+    if (!lat || !lng) {
+      const loc = await getCustomerLocation();
+      if (!loc.success) {
+        const msgs = {
+          denied:      { title: "Location access denied", body: "Please allow location permission in your browser settings and try again." },
+          timeout:     { title: "Location timed out", body: "GPS took too long. Move to an open area and try again." },
+          unsupported: { title: "GPS not supported", body: "Your browser doesn't support location services. Try Chrome or Safari." },
+          unavailable: { title: "Location unavailable", body: "Unable to detect your location. Check GPS is enabled and try again." },
+        };
+        setLocationError(msgs[loc.code] || msgs.unavailable);
         setLocationVerifying(false);
         return;
       }
+      lat = loc.latitude;
+      lng = loc.longitude;
+    }
 
-      console.log("📍 Verifying location with API...");
+    // Step 2: verify with store API
+    const storesList = campaign?.assignedStores;
+    if (!storesList?.length) {
+      setLocationError({ title: "Store not found", body: "No stores are assigned to this campaign. Please contact the merchant." });
+      setLocationVerifying(false);
+      return;
+    }
 
+    try {
       const response = await fetch(`/api/customer/location-verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          campaignId,
-          storesList,
-          customerLatitude: customerLocation.latitude,
-          customerLongitude: customerLocation.longitude,
-        }),
+        body: JSON.stringify({ campaignId, storesList, customerLatitude: lat, customerLongitude: lng }),
       });
-
       const result = await response.json();
-      console.log("✅ Location-verify response:", result);
 
       if (!result.success || !result.data?.isValid) {
-        setLocationError(
-          `You must be within ${result.data?.allowedRadius}m of the store. Current distance: ${Math.round(result.data?.distance || 0)}m`
-        );
+        const dist = Math.round(result.data?.distance || 0);
+        const radius = result.data?.allowedRadius || 500;
+        setLocationError({
+          title: "You're too far from the store",
+          body: `You need to be within ${radius}m of the store. You are currently ${dist}m away.`,
+        });
         setLocationVerifying(false);
         return;
       }
 
-      // Success: Store the matched store and mark as verified
       setMatchedStore(result.data?.matchedStore);
       setLocationVerified(true);
-      setLocationError(null);
-      console.log("✅ Location verified successfully!");
-      console.log("🏪 Matched store:", result.data?.matchedStore);
-    } catch (err) {
-      console.error("Location verification error:", err);
-      setLocationError("Failed to verify location. Please try again.");
-    } finally {
+    } catch {
+      setLocationError({ title: "Verification failed", body: "Could not verify your location. Check your internet connection and try again." });
       setLocationVerifying(false);
-    }
-  };
-
-  // ===== BUTTON 2: SHOW MY COUPONS (Only after location verified) =====
-  const handleShowCoupons = async (e) => {
-    e.preventDefault();
-
-    if (!matchedStore || !locationVerified) {
-      setError("Please verify your location first");
       return;
     }
 
+    // Step 3: submit participation
     setSubmitting(true);
     setError(null);
 
     try {
-      console.log("📤 Calling participate API with matchedStore:", matchedStore);
+      const currentMatchedStore = matchedStore;
 
-      if (!matchedStore || !matchedStore.storeId) {
-        setError("Store verification failed. Please try again.");
-        return;
-      }
-
-      // IMPORTANT: Send ONLY the verified store from location-verify API
-      // DO NOT send storesList - we trust ONLY the verified store
       const response = await fetch(`/api/customer/participate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -225,10 +200,10 @@ export default function ScanClientPage() {
           customerMobile: formData.customerMobile.trim(),
           customerEmail: null,
           billAmount: 0,
-          customerLatitude: customerLocation.latitude,
-          customerLongitude: customerLocation.longitude,
+          customerLatitude: lat,
+          customerLongitude: lng,
           customerConsent: true,
-          verifiedStore: matchedStore  // ONLY verified store from location-verify API
+          verifiedStore: currentMatchedStore,
         }),
       });
 
@@ -350,7 +325,6 @@ export default function ScanClientPage() {
           </p>
 
           {error && <div className={styles.errorAlert}>{error}</div>}
-          {locationError && <div className={styles.warningAlert}>{locationError}</div>}
 
           <form>
             {/* Name Field */}
@@ -429,38 +403,40 @@ export default function ScanClientPage() {
               )}
             </div>
 
-            {/* Location Status */}
-            {locationVerified ? (
-              <div className={styles.successAlert}>
-                ✓ Location verified! You're at {matchedStore?.storeName}
-              </div>
-            ) : (
-              <div className={styles.infoAlert}>
-                📍 Please verify your location first
+            {/* Location / submission error card */}
+            {locationError && (
+              <div className={styles.locationErrorCard}>
+                <div className={styles.locationErrorIcon}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </div>
+                <div className={styles.locationErrorBody}>
+                  <p className={styles.locationErrorTitle}>{locationError.title}</p>
+                  <p className={styles.locationErrorMsg}>{locationError.body}</p>
+                </div>
               </div>
             )}
 
-            {/* BUTTON 1: Verify Location (always visible) */}
+            {/* Single CTA button */}
             <button
               type="button"
               className={styles.submitBtn}
-              onClick={handleVerifyLocation}
-              disabled={locationVerifying}
+              onClick={handleShowCoupons}
+              disabled={submitting || locationVerifying}
             >
-              {locationVerifying ? "Verifying Location..." : "📍 Verify Location"}
+              {locationVerifying ? (
+                <span className={styles.btnSpinner}>
+                  <span className={styles.spinner} /> Verifying location…
+                </span>
+              ) : submitting ? (
+                <span className={styles.btnSpinner}>
+                  <span className={styles.spinner} /> Processing…
+                </span>
+              ) : "Show My Coupons"}
             </button>
-
-            {/* BUTTON 2: Show My Coupons (only after location verified) */}
-            {locationVerified && (
-              <button
-                type="button"
-                className={styles.submitBtn}
-                onClick={handleShowCoupons}
-                disabled={submitting}
-              >
-                {submitting ? "Processing..." : "Show My Coupons"}
-              </button>
-            )}
           </form>
         </div>
       </div>

@@ -100,7 +100,7 @@ export default function SubscriptionWidget() {
 
   // Calculate progress percentage for remaining days
   const progressPercentage = status.unlimitedScratches
-    ? Math.min((status.remainingDays / 365) * 100, 100)
+    ? Math.min((status.remainingDays / 30) * 100, 100)
     : 0
 
   // Format date display
@@ -141,7 +141,7 @@ export default function SubscriptionWidget() {
 
       {/* Entitlement section */}
       <div className={styles.entitlementSection}>
-        <h4 className={styles.entitlementTitle}>Unlimited Scratches</h4>
+        <h4 className={styles.entitlementTitle}>Unlimited scratch cards / month</h4>
 
         {status.unlimitedScratches ? (
           <>

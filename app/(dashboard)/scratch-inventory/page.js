@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAuthContext } from '@/components/auth/AuthContext';
 import { useRouter } from 'next/navigation';
+import { criticalFetchService } from '@/lib/criticalFetchService';
 import DataTable from '@/components/common/DataTable';
 import styles from './page.module.css';
 
@@ -37,12 +38,22 @@ export default function ScratchInventoryPage() {
         'x-user-role': account.role
       };
 
-      // Fetch inventory data
-      const inventoryRes = await fetch('/api/inventory', { headers });
-      if (!inventoryRes.ok) {
+      const result = await criticalFetchService.fetchCriticalFirst(
+        'scratch-inventory',
+        [
+          {
+            key: 'inventory',
+            url: '/api/inventory',
+            options: { headers },
+          },
+        ],
+        []
+      );
+
+      const inventoryData = result.critical?.inventory;
+      if (!inventoryData) {
         throw new Error('Failed to fetch inventory');
       }
-      const inventoryData = await inventoryRes.json();
       setInventory(inventoryData);
 
       // Calculate stats

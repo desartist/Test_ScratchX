@@ -2,15 +2,22 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background: white;
+  border: 1.5px solid #e8eaff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(1, 15, 68, 0.06);
 }
 
-/* Header */
+/* Title Section */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f2ff;
 }
 
 .headerActions {
@@ -20,8 +27,7 @@
 }
 
 .exportMenu {
-  display: flex;
-  gap: 4px;
+  display: none;
 }
 
 .toolbarButton {
@@ -98,29 +104,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 12px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 12px 0;
   flex-wrap: wrap;
 }
-
 
 .toolbarLeft {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
-.toolbarRight {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.checkboxLabel {
+.selectAllLabel {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -131,6 +126,52 @@
   user-select: none;
 }
 
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.filterButton,
+.sortButton,
+.removeButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: #f0f2ff;
+  border: 1px solid #e0e4ff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #010f44;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.filterButton:hover,
+.sortButton:hover {
+  background-color: #e0e4ff;
+  border-color: #c5cbfa;
+}
+
+.removeButton {
+  background-color: #fee2e2;
+  border-color: #fecaca;
+  color: #c0392b;
+}
+
+.removeButton:hover:not(:disabled) {
+  background-color: #fecaca;
+  border-color: #fc8080;
+}
+
+.removeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .checkbox {
   width: 18px;
@@ -139,31 +180,15 @@
   accent-color: #ef9e1b;
 }
 
-.batchRemoveButton {
+
+/* Filter Panel */
+.filterPanel {
   display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f2ff;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background-color: #dc2626;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
-
-.batchRemoveButton:hover:not(:disabled) {
-  background-color: #b91c1c;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
-}
-
-.batchRemoveButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 
 .filterGroup {
   display: flex;
@@ -172,27 +197,29 @@
 }
 
 .filterLabel {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: #637080;
+  color: #010f44;
+  white-space: nowrap;
 }
 
-
 .filterSelect {
-  padding: 6px 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background-color: white;
+  padding: 8px 12px;
+  border: 1px solid #e0e4ff;
+  border-radius: 8px;
+  background-color: #f9f9ff;
   color: #010f44;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
+  min-width: 140px;
 }
 
 .filterSelect:focus {
   outline: none;
   border-color: #ef9e1b;
+  background-color: white;
 }
 
 
@@ -257,317 +284,543 @@
 }
 
 
-/* Campaigns List */
-.campaignsList {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* Campaign Card */
-.campaignCard {
-  position: relative;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 20px;
-  padding-left: 48px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.campaignCard:hover {
-  border-color: #d0d0d0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.cardCheckbox {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  z-index: 10;
-}
-
-
-/* Card Header */
-.cardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  border-bottom: 1px solid #f0f0f0;
-  padding-bottom: 16px;
-}
-
-
-.headerLeft {
+/* Campaign List Wrapper */
+.campaignListWrapper {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  flex: 1;
+  padding-top: 12px;
+}
+
+.noResults {
+  padding: 40px 20px;
+  text-align: center;
+  color: #637080;
+  font-size: 14px;
+}
+
+/* Campaign List */
+.campaignList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Campaign Row */
+.campaignRow {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 12px;
+  padding: 14px;
+  background: white;
+  border: 1px solid #e8eaff;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.campaignRow:hover {
+  border-color: #ef9e1b;
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.1);
+}
+
+.campaignRow.selected {
+  background: #f9f9ff;
+  border-color: #ef9e1b;
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.1);
+}
+
+.selectCheckbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-row: span 3;
+}
+
+/* Campaign Info */
+.campaignInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  grid-column: 2;
 }
 
 .campaignName {
   margin: 0;
   padding: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: #010f44;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-
-.badgeGroup {
+.campaignMeta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.statusBadge {
+.badge {
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   white-space: nowrap;
 }
 
 .statusActive {
-  background-color: #d1fae5;
-  color: #065f46;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
 }
 
 .statusInactive {
-  background-color: #fee2e2;
-  color: #7f1d1d;
-}
-
-.statusEndingSoon {
-  background-color: #fef3c7;
-  color: #92400e;
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  color: #721c24;
 }
 
 .statusEnded {
-  background-color: #e5e7eb;
-  color: #374151;
+  background: linear-gradient(135deg, #e2e3e5 0%, #d6d8db 100%);
+  color: #383d41;
+}
+
+.statusDraft {
+  background: linear-gradient(135deg, #e2e3e5 0%, #d6d8db 100%);
+  color: #383d41;
 }
 
 .statusDefault {
-  background-color: #e0e7ff;
-  color: #312e81;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+  color: #666;
 }
 
-
-.daysBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  background-color: #f3f4f6;
-  color: #4b5563;
-  white-space: nowrap;
+.daysLeft {
+  font-size: 12px;
+  color: #637080;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
-.daysWarning {
-  background-color: #fee2e2;
-  color: #7f1d1d;
-}
-
-
-/* Details Grid */
-.detailsGrid {
+/* Campaign Details */
+.campaignDetails {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 1024px) {
-  .detailsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .detailsGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  grid-column: 2;
+  margin-top: 4px;
 }
 
 .detailItem {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .detailLabel {
   margin: 0;
   padding: 0;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #637080;
+  color: #9ba8b8;
 }
-
 
 .detailValue {
   margin: 0;
   padding: 0;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   color: #010f44;
+  word-break: break-word;
 }
 
 
-/* Progress Section */
-.progressSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-}
-
-
-.progressHeader {
+/* Campaign Actions */
+.campaignActions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.progressLabel {
-  margin: 0;
-  padding: 0;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #637080;
-}
-
-
-.progressValue {
-  margin: 0;
-  padding: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #010f44;
-}
-
-
-.progressBar {
-  height: 8px;
-  background-color: #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-
-.progressFill {
-  height: 100%;
-  background: linear-gradient(90deg, #ef9e1b 0%, #d98c12 100%);
-  transition: width 0.3s ease;
-}
-
-.progressStats {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: #637080;
-}
-
-
-/* Card Actions */
-.cardActions {
-  display: flex;
   gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid #f0f0f0;
+  grid-column: 2;
+  margin-top: 8px;
 }
 
-
-@media (max-width: 640px) {
-  .cardActions {
-    flex-direction: column;
-  }
-}
-
-.viewButton,
-.removeButton {
+.actionButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: #f0f2ff;
+  border: 1px solid #e0e4ff;
+  border-radius: 10px;
+  color: #010f44;
   cursor: pointer;
   transition: all 0.2s ease;
-  flex: 1;
 }
 
-.viewButton {
-  background-color: #010f44;
-  color: white;
-  border-color: #010f44;
+.actionButton:hover:not(:disabled) {
+  background: #e0e4ff;
+  border-color: #c5cbfa;
+  transform: translateY(-1px);
 }
 
-.viewButton:hover:not(:disabled) {
-  background-color: #0a1565;
-  border-color: #0a1565;
-  box-shadow: 0 2px 8px rgba(1, 15, 68, 0.15);
+.actionButton.danger {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #c0392b;
 }
 
-.removeButton {
-  background-color: #ffffff;
-  color: #dc2626;
-  border-color: #dc2626;
+.actionButton.danger:hover:not(:disabled) {
+  background: #fecaca;
+  border-color: #fc8080;
 }
 
-.removeButton:hover:not(:disabled) {
-  background-color: #fee2e2;
-  border-color: #dc2626;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.removeButton:disabled {
+/* Error Banner */
+.errorBanner {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #fff5e8 0%, #ffefde 100%);
+  border-left: 4px solid #ff9907;
+  border-radius: 8px;
+  color: #b86e00;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.emptyTitle {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #010f44;
+}
+
+.emptyDescription {
+  margin: 0;
+  font-size: 14px;
+  color: #637080;
+}
+
+
+@media (max-width: 768px) {
+  .campaignDetails {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .toolbarLeft,
+  .toolbarRight {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .selectAllLabel {
+    flex: 1;
+  }
+
+  .filterButton,
+  .sortButton,
+  .removeButton {
+    flex: 1;
+  }
+
+  .filterPanel {
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .filterGroup {
+    width: 100%;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .filterSelect {
+    width: 100%;
+  }
+
+  .campaignRow {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .selectCheckbox {
+    grid-row: 1;
+  }
+
+  .campaignName {
+    font-size: 14px;
+  }
+
+  .campaignDetails {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .detailItem {
+    gap: 3px;
+  }
+
+  .detailLabel {
+    font-size: 10px;
+  }
+
+  .detailValue {
+    font-size: 12px;
+  }
+
+  .actionButton {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* ── Export Menu Dropdown ── */
+.exportMenuContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.exportDropdown {
+  position: absolute;
+  top: 100%;
+  right: -80px;
+  background: white;
+  border: 1.5px solid #e0e4ff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(1, 15, 68, 0.12);
+  min-width: 200px;
+  z-index: 1000;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.exportOption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #010f44;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.exportOption:hover:not(:disabled) {
+  background: #f8f9ff;
+  color: #6c5ce7;
+}
+
+.exportOption:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+.exportOption span {
+  flex: 1;
+}
+
+.exportOption svg {
+  flex-shrink: 0;
+}
 
 @media (max-width: 640px) {
-  .detailsGrid {
-    gap: 12px;
+  .exportDropdown {
+    right: -50px;
+    min-width: 160px;
+  }
+}
+
+/* ===== CONFIRMATION MODAL ===== */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.confirmModal {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 440px;
+  padding: 40px 32px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.confirmIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #c02c2c;
+}
+
+.confirmTitle {
+  margin: 0 0 12px 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #010f44;
+  letter-spacing: -0.3px;
+}
+
+.confirmMessage {
+  margin: 0 0 32px 0;
+  font-size: 15px;
+  color: #637080;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.confirmFooter {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirmCancelBtn,
+.confirmDeleteBtn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.2px;
+  min-width: 120px;
+}
+
+.confirmCancelBtn {
+  background-color: #f0f4f8;
+  color: #010f44;
+  border: 2px solid #e0e8f0;
+}
+
+.confirmCancelBtn:hover:not(:disabled) {
+  background-color: #e0e8f0;
+  border-color: #d0d8e0;
+  transform: translateY(-2px);
+}
+
+.confirmDeleteBtn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.confirmDeleteBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+}
+
+.confirmDeleteBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .confirmModal {
+    padding: 32px 24px;
   }
 
-  .campaignCard {
-    padding: 16px;
-    gap: 12px;
+  .confirmIcon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 20px;
   }
 
-  .cardHeader {
-    padding-bottom: 12px;
+  .confirmTitle {
+    font-size: 18px;
   }
 
-  .badgeGroup {
-    gap: 6px;
+  .confirmMessage {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .confirmFooter {
+    flex-direction: column;
+  }
+
+  .confirmCancelBtn,
+  .confirmDeleteBtn {
+    width: 100%;
   }
 }

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import styles from "./subscription.module.css";
 import { AlertCircle } from "lucide-react";
 
@@ -27,7 +28,7 @@ function FeatureList({ features, limits }) {
       </li>
       <li className={styles.featureItem}>
         {features.unlimitedScratches ? CHECK : CROSS}
-        <span>Unlimited Scratches</span>
+        <span>Unlimited scratch cards / month</span>
       </li>
       <li className={styles.featureItem}>
         {features.rewardManagement ? CHECK : CROSS}
@@ -73,28 +74,41 @@ export default function SubscriptionPage() {
   const [error, setError] = useState(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
 
-  // Fetch current subscription and plans
+  // Fetch current subscription and plans with caching
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [subRes, plansRes, statusRes] = await Promise.all([
-          fetch("/api/subscription/current"),
-          fetch("/api/subscription/plans"),
-          fetch("/api/subscription/status"),
-        ]);
+        const result = await criticalFetchService.fetchCriticalFirst(
+          'subscription-page',
+          [
+            {
+              key: 'current',
+              url: '/api/subscription/current',
+            },
+            {
+              key: 'plans',
+              url: '/api/subscription/plans',
+            },
+            {
+              key: 'status',
+              url: '/api/subscription/status',
+            },
+          ],
+          []
+        );
 
-        const subData = await subRes.json();
-        const plansData = await plansRes.json();
-        const statusData = await statusRes.json();
+        const subData = result.critical?.current;
+        const plansData = result.critical?.plans;
+        const statusData = result.critical?.status;
 
-        if (subData.success) {
+        if (subData?.success) {
           setSubscription(subData.subscription);
         }
-        if (plansData.success) {
+        if (plansData?.success) {
           setPlans(plansData.data || []);
         }
-        if (statusData.success) {
+        if (statusData?.success) {
           setSubscriptionStatus(statusData);
         }
         setError(null);
@@ -149,6 +163,25 @@ export default function SubscriptionPage() {
   const unlimitedScratchesExpired =
     hasActivePlan && !isUnlimitedScratches && subscriptionStatus?.scratchRemaining === 0;
 
+  // Define plan hierarchy (tier: higher number = higher tier)
+  const PLAN_TIERS = {
+    'Core': 1,
+    'Smart': 2,
+  };
+
+  // Filter plans based on current plan tier
+  // Only show plans that are the current plan or higher tier
+  const availablePlans = plans.filter((plan) => {
+    if (!hasActivePlan) {
+      // If no active plan, show all plans
+      return true;
+    }
+    const currentTier = PLAN_TIERS[currentPlanName] ?? 0;
+    const planTier = PLAN_TIERS[plan.name] ?? 0;
+    // Only show if plan tier is >= current tier
+    return planTier >= currentTier;
+  });
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
@@ -190,7 +223,7 @@ export default function SubscriptionPage() {
                   <span className={styles.activeBadge}>ACTIVE</span>
                   <div className={styles.entitlementDetails}>
                     <p className={styles.entitlementText}>
-                      Unlimited Scratches
+                      Unlimited scratch cards / month
                       {subscriptionStatus?.remainingDays && (
                         <span className={styles.daysRemaining}>
                           {subscriptionStatus.remainingDays} days remaining
@@ -209,7 +242,7 @@ export default function SubscriptionPage() {
                   <span className={styles.expiredBadge}>EXPIRED</span>
                   <div className={styles.entitlementDetails}>
                     <p className={styles.entitlementText}>
-                      Unlimited Scratches
+                      Unlimited scratch cards / month
                       {subscriptionStatus?.scratchPurchased > 0 && (
                         <span className={styles.purchasedCount}>
                           {subscriptionStatus.scratchPurchased} purchased
@@ -233,7 +266,7 @@ export default function SubscriptionPage() {
           </div>
 
           <div className={styles.plansGrid}>
-            {plans.map((plan) => (
+            {availablePlans.map((plan) => (
               <div
                 key={plan._id}
                 className={`${styles.planCard} ${
@@ -318,7 +351,7 @@ export default function SubscriptionPage() {
             <div className={styles.scratchesAlert}>
               <AlertCircle size={24} />
               <div className={styles.alertContent}>
-                <h3 className={styles.alertTitle}>Out of Unlimited Scratches?</h3>
+                <h3 className={styles.alertTitle}>Need more scratch cards?</h3>
                 <p className={styles.alertMessage}>
                   Purchase additional scratches to continue creating campaigns.
                 </p>

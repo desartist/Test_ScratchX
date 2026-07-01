@@ -1,41 +1,45 @@
-/* components/dashboard/CampaignCard.module.css */
+/* ── Card ───────────────────────────────────────────────────── */
 .card {
-  padding: 20px;
-  background: white;
-  border: 1px solid #e8e8e8;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease,
-    transform 0.25s ease;
+  background: #fff;
+  border: 1.5px solid #ebebf0;
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(1, 15, 68, 0.05);
+  padding: 24px 24px 20px;
   cursor: pointer;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
 .card:hover {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: var(--color-primary);
+  box-shadow: 0 8px 28px rgba(1, 15, 68, 0.10);
+  border-color: #c8caff;
   transform: translateY(-2px);
 }
 
 .card:focus-visible {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.2);
+  border-color: #6c5ce7;
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
 }
 
-
-/* Header */
+/* ── Header ─────────────────────────────────────────────────── */
 .cardHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 10px;
 }
 
 .headerMain {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .titleRow {
@@ -47,123 +51,157 @@
 
 .name {
   margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--color-navy);
-  line-height: 1.3;
+  font-size: 20px;
+  font-weight: 800;
+  color: #010f44;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
-
 
 .dateRange {
-  margin: 6px 0 0 0;
-  font-size: 0.8125rem;
-  color: var(--color-muted);
+  margin: 0;
+  font-size: 14px;
+  color: #9ba8b8;
+  font-weight: 500;
+  letter-spacing: 0.1px;
 }
 
-.menuWrap {
-  flex-shrink: 0;
-}
+.menuWrap { flex-shrink: 0; }
 
-/* Meta row */
+/* ── Meta row ───────────────────────────────────────────────── */
 .metaRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 16px;
+  align-items: center;
+  gap: 6px 20px;
+  padding: 4px 0;
 }
 
 .metaItem {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.8125rem;
+  gap: 7px;
+  font-size: 15px;
+  color: #5a6478;
   font-weight: 500;
-  color: var(--color-muted);
+}
+
+.metaItemBold {
+  font-weight: 800;
+  color: #010f44;
 }
 
 .metaIcon {
-  color: var(--color-muted);
+  color: #9ba8b8;
   flex-shrink: 0;
 }
 
-/* Scratch allocation */
+/* ── Scratch section ────────────────────────────────────────── */
 .scratchSection {
-  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f6f7fc;
+  border-radius: 14px;
+  padding: 14px 16px;
 }
 
 .scratchHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
 }
 
 .scratchLabel {
-  font-size: 0.8125rem;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--color-muted);
+  color: #9ba8b8;
+  letter-spacing: 0.1px;
 }
 
 .scratchCount {
-  font-size: 0.8125rem;
+  font-size: 17px;
   font-weight: 700;
-  color: var(--color-navy);
+  color: #010f44;
+  letter-spacing: -0.3px;
 }
-
 
 .scratchRemaining {
-  margin-top: 6px;
   text-align: right;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-muted);
+  font-size: 15px;
+  font-weight: 700;
+  color: #010f44;
 }
 
-/* Low-scratch warning */
+.scratchRemainingLow {
+  color: #e84040;
+}
+
+.scratchNotSet {
+  padding: 10px 14px;
+  background: #f8f9ff;
+  border: 1.5px dashed #d0d5f0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #9ba8b8;
+  text-align: center;
+}
+
+/* ── Low-scratch warning ────────────────────────────────────── */
 .lowWarning {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 14px;
-  padding: 10px 12px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.35);
-  border-radius: 8px;
+  gap: 10px;
 }
 
 .lowWarningText {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-error);
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #637080;
 }
 
 .lowWarningIcon {
   flex-shrink: 0;
+  color: #f59e0b;
 }
 
 .addBtn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: var(--color-error);
+  gap: 5px;
+  padding: 10px 20px;
+  background: #e84040;
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.15s, transform 0.15s;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  flex-shrink: 0;
 }
 
 .addBtn:hover {
-  background: #ff5252;
+  background: #c0392b;
   transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+  .card { padding: 18px 18px 16px; gap: 14px; border-radius: 20px; }
+  .name { font-size: 18px; }
+  .metaRow { gap: 6px 14px; padding: 12px 14px; }
+  .metaItem { font-size: 14px; }
+  .scratchCount { font-size: 15px; }
+  .scratchRemaining { font-size: 14px; }
 }

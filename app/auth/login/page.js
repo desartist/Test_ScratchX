@@ -10,15 +10,14 @@ export default function LoginPage() {
     <div className={styles.page}>
       {/* Logo */}
       <div className={styles.logoWrap}>
-        <span className={styles.logoText}>Scratch</span>
-        <span className={styles.logoX}>X</span>
+        <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.logoImg} />
       </div>
 
       <div className={styles.card}>
         {/* Header */}
         <div className={styles.cardHeader}>
-          <h1 className={styles.title}>Welcome Back</h1>
-          <p className={styles.subtitle}>Sign in to your ScratchX account</p>
+          <h1 className={styles.title}>Sign in to your account</h1>
+          <p className={styles.subtitle}>Enter your credentials to continue</p>
         </div>
 
         {/* Form */}
@@ -27,7 +26,7 @@ export default function LoginPage() {
         {/* Footer */}
         <p className={styles.signupLine}>
           Don&apos;t have an account?{' '}
-          <Link href="/auth/register">Sign up free</Link>
+          <Link href="/auth/register">Sign up</Link>
         </p>
       </div>
     </div>

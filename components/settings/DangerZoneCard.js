@@ -1,42 +1,71 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle } from "lucide-react";
+import { LogOut, Trash2, AlertCircle, Check } from "lucide-react";
 import styles from "./DangerZoneCard.module.css";
 
 export default function DangerZoneCard({ merchant }) {
   const router = useRouter();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteStep, setDeleteStep] = useState(1);
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  const handleLogout = async () => {
+  // Logout all devices
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
+
+  // Deactivate account
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [deactivateStep, setDeactivateStep] = useState(1);
+  const [password, setPassword] = useState("");
+  const [deactivateLoading, setDeactivateLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  // ===== LOGOUT FROM ALL DEVICES =====
+  const handleLogoutAllDevices = async () => {
+    setLogoutLoading(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-      router.push("/auth/login");
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        setSuccess("Logged out from all devices successfully");
+        setShowLogoutModal(false);
+        setTimeout(() => router.push("/auth/login"), 1500);
+      } else {
+        setError("Failed to logout. Please try again.");
+      }
     } catch (err) {
-      alert("Logout failed: " + err.message);
+      setError("Logout failed: " + err.message);
+    } finally {
+      setLogoutLoading(false);
     }
   };
 
-  const handleDeleteClick = () => {
-    setShowDeleteModal(true);
-    setDeleteStep(1);
-    setPassword("");
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
     setError(null);
+    setSuccess(null);
   };
 
-  const handleConfirmDelete = async () => {
+  // ===== DEACTIVATE ACCOUNT =====
+  const handleDeactivateClick = () => {
+    setShowDeactivateModal(true);
+    setDeactivateStep(1);
+    setPassword("");
+    setError(null);
+    setSuccess(null);
+  };
+
+  const handleConfirmDeactivate = async () => {
     setError(null);
 
     if (!password?.trim()) {
-      setError("Password is required");
+      setError("Password is required to confirm");
       return;
     }
 
-    setLoading(true);
+    setDeactivateLoading(true);
 
     try {
       const response = await fetch("/api/account/delete", {
@@ -46,107 +75,252 @@ export default function DangerZoneCard({ merchant }) {
         body: JSON.stringify({ password }),
       });
 
+      const data = await response.json().catch(() => ({
+        error: "Invalid response from server"
+      }));
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to delete account");
+        throw new Error(data.error || `Failed to deactivate account (${response.status})`);
       }
 
-      setShowDeleteModal(false);
-      router.push("/auth/login");
+      setSuccess("Account deactivated successfully. Redirecting...");
+      setShowDeactivateModal(false);
+      setTimeout(() => router.push("/auth/login"), 1500);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "An error occurred while deactivating your account");
     } finally {
-      setLoading(false);
+      setDeactivateLoading(false);
     }
   };
 
-  const handleCloseModal = () => {
-    setShowDeleteModal(false);
-    setDeleteStep(1);
+  const handleDeactivateCancel = () => {
+    setShowDeactivateModal(false);
+    setDeactivateStep(1);
     setPassword("");
     setError(null);
+    setSuccess(null);
   };
 
   return (
-    <div className={styles.dangerZone}>
-      <div className={styles.header}>
-        <AlertCircle size={24} />
-        <h3>Danger Zone</h3>
+    <div className={styles.dangerZoneSection}>
+      {/* ===== HEADER ===== */}
+      <div className={styles.dangerZoneHeader}>
+        <div className={styles.dangerZoneTitle}>
+          <span className={styles.dangerIcon}>⚠️</span>
+          <h3>Danger Zone</h3>
+        </div>
+        <p className={styles.dangerZoneSubtext}>
+          Irreversible actions. Proceed with caution.
+        </p>
       </div>
 
-      <div className={styles.actions}>
-        <button className={styles.logoutBtn} onClick={handleLogout}>
-          Logout From All Devices
-        </button>
-
+      {/* ===== ACTIONS ===== */}
+      <div className={styles.dangerZoneActions}>
+        {/* Logout All Devices */}
         <button
-          className={styles.deleteBtn}
-          onClick={handleDeleteClick}
+          className={styles.dangerAction}
+          onClick={() => setShowLogoutModal(true)}
         >
-          Delete Account
+          <div className={styles.actionContent}>
+            <span className={styles.actionIcon}>🔓</span>
+            <div className={styles.actionText}>
+              <p className={styles.actionTitle}>Logout from All Devices</p>
+              <p className={styles.actionDescription}>
+                Sign out of all active sessions
+              </p>
+            </div>
+          </div>
+          <span className={styles.actionArrow}>→</span>
+        </button>
+
+        {/* Deactivate Account */}
+        <button
+          className={styles.dangerAction + " " + styles.critical}
+          onClick={handleDeactivateClick}
+        >
+          <div className={styles.actionContent}>
+            <span className={styles.actionIcon}>🗑️</span>
+            <div className={styles.actionText}>
+              <p className={styles.actionTitle}>Deactivate Account</p>
+              <p className={styles.actionDescription}>
+                Permanently delete your account and data
+              </p>
+            </div>
+          </div>
+          <span className={styles.actionArrow}>→</span>
         </button>
       </div>
 
-      {showDeleteModal && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            {deleteStep === 1 ? (
+      {/* ===== LOGOUT MODAL ===== */}
+      {showLogoutModal && (
+        <div className={styles.modalOverlay} onClick={handleLogoutCancel}>
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {success ? (
+              <div className={styles.successState}>
+                <div className={styles.successIcon}>✓</div>
+                <h4>Success!</h4>
+                <p>{success}</p>
+              </div>
+            ) : (
               <>
-                <h4>Delete Account?</h4>
-                <p>
-                  This action cannot be undone. All your campaigns, data, and
-                  account information will be permanently deleted.
-                </p>
-                <p style={{ color: "#c62828", fontSize: "14px", marginTop: "12px" }}>
-                  Email: {merchant?.email}
-                </p>
+                <div className={styles.modalHeader}>
+                  <LogOut size={28} />
+                  <h4>Logout from All Devices?</h4>
+                </div>
+
+                <div className={styles.modalBody}>
+                  <p>
+                    You will be signed out from all devices where you're currently
+                    logged in. You'll need to sign in again on any device you want
+                    to use.
+                  </p>
+                </div>
+
+                {error && (
+                  <div className={styles.errorMessage}>
+                    <AlertCircle size={16} />
+                    {error}
+                  </div>
+                )}
+
                 <div className={styles.buttonGroup}>
                   <button
                     className={styles.cancelBtn}
-                    onClick={handleCloseModal}
+                    onClick={handleLogoutCancel}
+                    disabled={logoutLoading}
                   >
                     Cancel
                   </button>
                   <button
-                    className={styles.deleteBtn}
-                    onClick={() => setDeleteStep(2)}
+                    className={styles.actionBtn}
+                    onClick={handleLogoutAllDevices}
+                    disabled={logoutLoading}
                   >
-                    Continue to Delete
+                    {logoutLoading ? "Logging out..." : "Logout"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ===== DEACTIVATE MODAL ===== */}
+      {showDeactivateModal && (
+        <div className={styles.modalOverlay} onClick={handleDeactivateCancel}>
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {success ? (
+              <div className={styles.successState}>
+                <div className={styles.successIcon}>✓</div>
+                <h4>Account Deactivated</h4>
+                <p>{success}</p>
+              </div>
+            ) : deactivateStep === 1 ? (
+              <>
+                <div className={styles.modalHeader}>
+                  <Trash2 size={28} className={styles.criticalIcon} />
+                  <h4>Deactivate Your Account?</h4>
+                </div>
+
+                <div className={styles.stepIndicator}>
+                  <span className={styles.stepDot + " " + styles.active}>1</span>
+                  <span className={styles.stepLine}></span>
+                  <span className={styles.stepDot}>2</span>
+                </div>
+
+                <div className={styles.modalBody}>
+                  <p>
+                    Your account will be deactivated and you won't be able to access
+                    it immediately.
+                  </p>
+                  <div className={styles.infoBox}>
+                    <strong>Your data is safe.</strong> We won't delete any of your
+                    information. You can reactivate your account anytime by logging
+                    in again.
+                  </div>
+                  <p className={styles.emailText}>
+                    Account: <strong>{merchant?.email}</strong>
+                  </p>
+                </div>
+
+                {error && (
+                  <div className={styles.errorMessage}>
+                    <AlertCircle size={16} />
+                    {error}
+                  </div>
+                )}
+
+                <div className={styles.buttonGroup}>
+                  <button
+                    className={styles.cancelBtn}
+                    onClick={handleDeactivateCancel}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className={styles.actionBtn + " " + styles.critical}
+                    onClick={() => setDeactivateStep(2)}
+                  >
+                    Continue
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <h4>Confirm Account Deletion</h4>
-                <p>
-                  Enter your password to confirm you want to delete your account.
-                </p>
+                <div className={styles.modalHeader}>
+                  <Trash2 size={28} className={styles.criticalIcon} />
+                  <h4>Confirm Deactivation</h4>
+                </div>
 
-                {error && <div className={styles.errorMessage}>{error}</div>}
+                <div className={styles.stepIndicator}>
+                  <span className={styles.stepDot}>1</span>
+                  <span className={styles.stepLine}></span>
+                  <span className={styles.stepDot + " " + styles.active}>2</span>
+                </div>
 
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={styles.input}
-                  disabled={loading}
-                />
+                <div className={styles.modalBody}>
+                  <p>
+                    Enter your password to confirm you want to deactivate your
+                    account.
+                  </p>
+                  <input
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={styles.input}
+                    disabled={deactivateLoading}
+                    autoFocus
+                  />
+                </div>
+
+                {error && (
+                  <div className={styles.errorMessage}>
+                    <AlertCircle size={16} />
+                    {error}
+                  </div>
+                )}
 
                 <div className={styles.buttonGroup}>
                   <button
                     className={styles.cancelBtn}
-                    onClick={() => setDeleteStep(1)}
-                    disabled={loading}
+                    onClick={() => setDeactivateStep(1)}
+                    disabled={deactivateLoading}
                   >
                     Back
                   </button>
                   <button
-                    className={styles.deleteBtn}
-                    onClick={handleConfirmDelete}
-                    disabled={loading}
+                    className={styles.actionBtn + " " + styles.critical}
+                    onClick={handleConfirmDeactivate}
+                    disabled={deactivateLoading}
                   >
-                    {loading ? "Deleting..." : "Delete Account"}
+                    {deactivateLoading ? "Deactivating..." : "Deactivate Account"}
                   </button>
                 </div>
               </>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Store, CheckCircle2, Hourglass, QrCode } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import { useStoreValidation } from "@/lib/hooks/useStoreValidation";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import StoreCard from "@/components/stores/StoreCard";
 import StatsCard from "@/components/stores/StatsCard";
 import SearchBar from "@/components/dashboard/SearchBar";
@@ -50,7 +51,9 @@ export default function StoresPage() {
   }, [stores, mainStoreId]);
 
   /**
-   * Fetch stores for the current merchant/account
+   * Fetch stores with critical-first pattern
+   * Critical: stores list (needed for immediate UI)
+   * Non-critical: pending requests & subscription status (loaded in background)
    */
   const fetchStores = useCallback(async () => {
     try {
@@ -68,20 +71,48 @@ export default function StoresPage() {
         setMainStoreId(account.mainStoreId);
       }
 
-      const response = await fetch("/api/stores", {
-        headers: {
-          "x-user-id": account.id,
-          "x-user-role": account.role,
-        },
-      });
+      const result = await criticalFetchService.fetchCriticalFirst(
+        'stores-list',
+        [
+          {
+            key: 'stores',
+            url: '/api/stores',
+            options: {
+              headers: {
+                'x-user-id': account.id,
+                'x-user-role': account.role,
+              },
+            },
+          },
+        ],
+        [
+          {
+            key: 'pending',
+            url: '/api/merchant/scratch-requests?status=pending',
+          },
+          {
+            key: 'subscription',
+            url: '/api/subscription/status',
+          },
+        ]
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to load stores");
+      const storesData = result.critical?.stores || result.stores;
+      setStores(storesData?.data || storesData || []);
+
+      // Handle non-critical data if available
+      if (result.nonCritical?.pending?.data) {
+        const ids = new Set(
+          result.nonCritical.pending.data
+            .map((r) => (r.storeId ? String(r.storeId) : null))
+            .filter(Boolean)
+        );
+        setPendingStoreIds(ids);
       }
 
-      const result = await response.json();
-      setStores(result.data || []);
+      if (result.nonCritical?.subscription?.unlimitedScratches) {
+        setUnlimitedScratches(true);
+      }
     } catch (err) {
       setError(err.message || "Failed to load stores");
       console.error("Error fetching stores:", err);
@@ -89,37 +120,6 @@ export default function StoresPage() {
       setLoading(false);
     }
   }, [account]);
-
-  /**
-   * Fetch pending scratch-allocation requests and the merchant's unlimited
-   * entitlement flag. Failures here are non-fatal — the card simply falls back
-   * to the allocation view / no pending badge.
-   */
-  const fetchAuxData = useCallback(async () => {
-    try {
-      const [pendingRes, subRes] = await Promise.all([
-        fetch("/api/merchant/scratch-requests?status=pending"),
-        fetch("/api/subscription/status"),
-      ]);
-
-      if (pendingRes.ok) {
-        const pendingJson = await pendingRes.json();
-        const ids = new Set(
-          (pendingJson.data || [])
-            .map((r) => (r.storeId ? String(r.storeId) : null))
-            .filter(Boolean)
-        );
-        setPendingStoreIds(ids);
-      }
-
-      if (subRes.ok) {
-        const subJson = await subRes.json();
-        setUnlimitedScratches(Boolean(subJson.unlimitedScratches));
-      }
-    } catch (err) {
-      console.error("Error fetching store aux data:", err);
-    }
-  }, []);
 
   /**
    * Delete a store (non-main stores only)
@@ -158,13 +158,37 @@ export default function StoresPage() {
 
   /**
    * Fetch stores on mount and when account changes
+   * Critical and non-critical data are fetched together via criticalFetchService
    */
   useEffect(() => {
     if (account && account.id) {
       fetchStores();
-      fetchAuxData();
     }
-  }, [account, fetchStores, fetchAuxData]);
+  }, [account, fetchStores]);
+
+  /**
+   * Auto-refetch stores when page becomes visible (e.g., returning from create/edit)
+   */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && account && account.id) {
+        console.log("[Stores] Page visible - refetching stores");
+        fetchStores();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [account, fetchStores]);
+
+  /**
+   * Redirect to store creation onboarding if merchant has no stores
+   */
+  useEffect(() => {
+    if (!loading && stores.length === 0) {
+      window.location.href = "/stores/create";
+    }
+  }, [loading, stores]);
 
   /**
    * Number of stores that currently have a pending scratch request.
@@ -235,7 +259,7 @@ export default function StoresPage() {
         <Link href="/stores/create">
           <button className={styles.createButton}>
             <Plus size={16} style={{ marginRight: "0.5rem" }} />
-            Create Store
+            Add Store
           </button>
         </Link>
       </div>

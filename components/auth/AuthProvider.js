@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from './AuthContext';
 import { tokenService } from '@/lib/tokenService';
 import { authService } from '@/lib/authService';
+import { dashboardCache } from '@/lib/dashboardCache';
 
 export function AuthProvider({ children }) {
   const router = useRouter();
@@ -28,28 +29,61 @@ export function AuthProvider({ children }) {
     return null;
   }, []);
 
+  const forceLogout = useCallback(async () => {
+    tokenService.clearTokens();
+    setAccount(null);
+    setAccessToken(null);
+    setRefreshToken(null);
+    // Clear the authToken cookie (set by Google OAuth) to prevent middleware redirect loops
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+    } catch {
+      // Ignore — clearing the cookie is best-effort; we still redirect
+    }
+    router.push('/auth/login');
+  }, [router]);
+
+  // Keep a ref so initializeAuth (which runs once) always calls the latest forceLogout.
+  const forceLogoutRef = useRef(forceLogout);
+  forceLogoutRef.current = forceLogout;
+
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         const storedAccessToken = tokenService.getAccessToken();
         const storedRefreshToken = tokenService.getRefreshToken();
+        const hadStoredTokens = Boolean(storedAccessToken || storedRefreshToken);
 
         if (storedAccessToken && storedRefreshToken) {
           setAccessToken(storedAccessToken);
           setRefreshToken(storedRefreshToken);
         }
 
-        await refreshAccount();
+        const profile = await authService.getMe();
+        if (!profile) {
+          // Only force logout if there were stored tokens that are now invalid.
+          // Fresh unauthenticated visits (login page) should do nothing.
+          if (hadStoredTokens) {
+            forceLogoutRef.current();
+          }
+          return;
+        }
+        setAccount(profile);
       } catch (err) {
         console.error('Error initializing auth:', err);
-        setError(err.message);
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
-  }, [refreshAccount]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const applyAuthResult = async (userData, newAccessToken, newRefreshToken) => {
     tokenService.setAccessToken(newAccessToken);
@@ -77,7 +111,6 @@ export function AuthProvider({ children }) {
       router.push(redirectTo || '/dashboard');
     } catch (err) {
       setError(err.message);
-      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -175,25 +208,30 @@ export function AuthProvider({ children }) {
     setError(null);
 
     try {
-      if (accessToken && refreshToken) {
-        await authService.logout(accessToken, refreshToken);
-      } else {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
-        });
-      }
+      // Always call logout with credentials:include so the authToken cookie
+      // (set by Google OAuth) is sent and cleared server-side regardless of
+      // which login method was used.
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken, refreshToken }),
+      });
 
+      dashboardCache.clear();
       tokenService.clearTokens();
       setAccount(null);
       setAccessToken(null);
       setRefreshToken(null);
       router.push('/auth/login');
     } catch (err) {
-      setError(err.message);
-      throw err;
+      // Even if the API call fails, clear client-side state and redirect
+      dashboardCache.clear();
+      tokenService.clearTokens();
+      setAccount(null);
+      setAccessToken(null);
+      setRefreshToken(null);
+      router.push('/auth/login');
     } finally {
       setIsLoading(false);
     }
@@ -220,6 +258,7 @@ export function AuthProvider({ children }) {
     requestPasswordReset,
     resetPassword,
     logout,
+    forceLogout,
     clearError,
   };
 

@@ -102,7 +102,7 @@ export default function CampaignCard({
 
   const handleMenuAction = useCallback(
     (action) => {
-      onAction(action, id);
+      return onAction(action, id);
     },
     [onAction, id],
   );
@@ -144,16 +144,18 @@ export default function CampaignCard({
       {/* Meta row */}
       <div className={styles.metaRow}>
         <span className={styles.metaItem}>
-          <Clock size={15} className={styles.metaIcon} />
-          {daysDisplay}
+          <Clock size={16} className={styles.metaIcon} />
+          <span className={styles.metaItemBold}>{daysDisplay.replace(" left", "")}</span>
+          {daysDisplay.includes(" left") && <span> left</span>}
         </span>
         <span className={styles.metaItem}>
-          <Store size={15} className={styles.metaIcon} />
-          {storesCount} Store{storesCount !== 1 ? "s" : ""}
+          <Store size={16} className={styles.metaIcon} />
+          <span className={styles.metaItemBold}>{storesCount}</span>
+          <span> Store{storesCount !== 1 ? "s" : ""}</span>
         </span>
         {priceRange && (
           <span className={styles.metaItem}>
-            <IndianRupee size={15} className={styles.metaIcon} />
+            <IndianRupee size={16} className={styles.metaIcon} />
             {priceRange}
           </span>
         )}
@@ -163,19 +165,27 @@ export default function CampaignCard({
       <div className={styles.scratchSection}>
         <div className={styles.scratchHeader}>
           <span className={styles.scratchLabel}>Scratch Allocation</span>
-          <span className={styles.scratchCount}>
-            {used.toLocaleString()} / {allocated.toLocaleString()}
-          </span>
+          {allocated > 0 && (
+            <span className={styles.scratchCount}>
+              {used.toLocaleString()} / {allocated.toLocaleString()}
+            </span>
+          )}
         </div>
-        <ProgressBar
-          current={used}
-          total={allocated}
-          showLabel={false}
-          status={isLow ? "critical" : "normal"}
-        />
-        <div className={styles.scratchRemaining}>
-          {remaining.toLocaleString()} left
-        </div>
+        {allocated > 0 ? (
+          <>
+            <ProgressBar
+              current={used}
+              total={allocated}
+              showLabel={false}
+              status={isLow ? "critical" : "normal"}
+            />
+            <div className={`${styles.scratchRemaining} ${isLow ? styles.scratchRemainingLow : ""}`}>
+              {remaining.toLocaleString()} left
+            </div>
+          </>
+        ) : (
+          <div className={styles.scratchNotSet}>No scratches allocated yet</div>
+        )}
       </div>
 
       {/* Low-scratch warning + Add */}

@@ -20,6 +20,22 @@ export default function ScratchCouponGridPage() {
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Check existing participation status and redirect if already scratched/revealed
+  useEffect(() => {
+    if (!participationId) return;
+    fetch(`/api/customer/participation/${participationId}`)
+      .then((r) => r.json())
+      .then((result) => {
+        if (!result.success) return;
+        const st = result.data?.status;
+        if (st === 'revealed' || st === 'redeemed' || st === 'scratched') {
+          router.replace(`/customer/campaign/${campaignId}/scratch/${participationId}`);
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [participationId, campaignId]);
+
   // Fetch campaign data on mount
   useEffect(() => {
     const fetchCampaignData = async () => {

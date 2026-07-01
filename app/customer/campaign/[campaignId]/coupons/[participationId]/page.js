@@ -103,6 +103,8 @@ export default function CouponPage() {
   const campaignId      = params.campaignId;
   const participationId = params.participationId;
 
+  const REVEAL_DURATION  = 300; // seconds — 5-min window to show cashier
+
   const [participation,  setParticipation]  = useState(null);
   const [coupons,        setCoupons]        = useState([]);
   // phase: 'select' → 'scratch' → 'revealed'
@@ -110,7 +112,8 @@ export default function CouponPage() {
   const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [loading,        setLoading]        = useState(true);
   const [error,          setError]          = useState(null);
-  const [timeLeft,       setTimeLeft]       = useState(300);
+  const [expired,        setExpired]        = useState(false);
+  const [timeLeft,       setTimeLeft]       = useState(REVEAL_DURATION);
   const [animReady,      setAnimReady]      = useState(false);
 
   const canvasRef        = useRef(null);
@@ -129,19 +132,58 @@ export default function CouponPage() {
           fetch(`/api/customer/campaign/${campaignId}/coupons`),
         ]);
         const pJson = await pRes.json();
-        if (!pJson.success) { setError(pJson.error || "Failed to load"); return; }
+        if (!pJson.success) {
+          if (pJson.expired) { setExpired(true); return; }
+          setError(pJson.error || "Failed to load"); return;
+        }
         setParticipation(pJson.data);
         participationRef.current = pJson.data;
 
         if (pJson.data.status === "revealed" || pJson.data.status === "redeemed") {
           setPhase("revealed");
           setTimeout(() => setAnimReady(true), 80);
+          // Restore persisted reveal time so refresh doesn't reset countdown
+          const storageKey = `reveal_ts_${participationId}`;
+          const saved = localStorage.getItem(storageKey);
+          if (saved) {
+            const elapsed = (Date.now() - parseInt(saved, 10)) / 1000;
+            const timeRemaining = Math.max(0, Math.round(REVEAL_DURATION - elapsed));
+            setTimeLeft(timeRemaining);
+
+            // ===== CRITICAL FIX: Check if already expired =====
+            // If user returns after 5 minutes have passed, show expired immediately
+            if (timeRemaining === 0) {
+              console.log("[Participation] Already expired - showing expired state");
+              // The expired state will be shown by the countdown UI since timeLeft is 0
+            }
+          } else {
+            // First time revealing - set full duration
+            setTimeLeft(REVEAL_DURATION);
+          }
         }
 
         const cJson = await cRes.json();
+
+        // Filter coupons by selected range
+        let filteredCoupons = [];
+        if (cJson.success && cJson.data?.coupons?.length > 0) {
+          const selectedRangeId = pJson.data?.range_id?._id;
+          console.error("[COUPONS PAGE] Selected range ID:", selectedRangeId);
+          console.error("[COUPONS PAGE] Total coupons from API:", cJson.data.coupons.length);
+
+          filteredCoupons = cJson.data.coupons.filter(coupon => {
+            const couponRangeId = coupon.rangeId;
+            const matches = String(couponRangeId) === String(selectedRangeId);
+            console.error(`[COUPONS PAGE FILTER] Coupon ${coupon.id}: "${couponRangeId}" === "${selectedRangeId}" => ${matches ? "✅ MATCH" : "❌ SKIP"}`);
+            return matches;
+          });
+
+          console.error("[COUPONS PAGE] Filtered coupons:", filteredCoupons.length);
+        }
+
         setCoupons(
-          cJson.success && cJson.data?.coupons?.length > 0
-            ? cJson.data.coupons
+          filteredCoupons.length > 0
+            ? filteredCoupons
             : Array.from({ length: 6 }, (_, i) => ({ id: String(i + 1) }))
         );
       } catch (_) {
@@ -152,22 +194,44 @@ export default function CouponPage() {
     })();
   }, [participationId, campaignId]);
 
-  // ── Countdown timer (starts when revealed) ──
+  // ===== CRITICAL: Show expired screen when timer reaches 0 =====
+  useEffect(() => {
+    if (timeLeft === 0 && phase === "revealed") {
+      console.log("[Timer] Session expired - showing expired screen");
+      // Optionally add visual feedback when timer expires
+    }
+  }, [timeLeft, phase]);
+
+  // ── Countdown timer (persists across refreshes via localStorage) ──
   useEffect(() => {
     if (phase !== "revealed") return;
-    revealedAtRef.current = Date.now();
+    const storageKey = `reveal_ts_${participationId}`;
+    // Use persisted timestamp if available, otherwise stamp now (fresh reveal)
+    if (!localStorage.getItem(storageKey)) {
+      localStorage.setItem(storageKey, String(Date.now()));
+    }
+    revealedAtRef.current = parseInt(localStorage.getItem(storageKey), 10);
     const iv = setInterval(() => {
-      const remaining = Math.max(0, 300 - (Date.now() - revealedAtRef.current) / 1000);
-      setTimeLeft(Math.round(remaining));
-      if (remaining === 0) clearInterval(iv);
-    }, 1000);
+      const remaining = Math.max(0, REVEAL_DURATION - (Date.now() - revealedAtRef.current) / 1000);
+      const rounded = Math.round(remaining);
+      setTimeLeft(rounded);
+      if (rounded === 0) {
+        clearInterval(iv);
+        console.log("[Timer] Countdown complete - timer is now 0");
+      }
+    }, 100); // Faster updates for more responsive UI
     return () => clearInterval(iv);
-  }, [phase]);
+  }, [phase, participationId]);
 
   // ── Scratch threshold ──
   const handleThreshold = useCallback(async () => {
     if (hasTriggeredRef.current) return;
     hasTriggeredRef.current = true;
+    // Persist the reveal timestamp so refresh doesn't reset the countdown
+    const storageKey = `reveal_ts_${participationId}`;
+    if (!localStorage.getItem(storageKey)) {
+      localStorage.setItem(storageKey, String(Date.now()));
+    }
     setPhase("revealed");
     setTimeout(() => setAnimReady(true), 80);
 
@@ -203,7 +267,6 @@ export default function CouponPage() {
   const storeInitials = storeName.split(" ").filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   const reward        = participation?.reward || null;
   const rewardDisplay = formatReward(reward);
-  const otherCoupons  = coupons.filter((c) => c.id !== selectedCoupon?.id);
 
   // ── Loading ──
   if (loading) {
@@ -212,6 +275,24 @@ export default function CouponPage() {
         <div className={styles.centeredState}>
           <div className={styles.spinner} />
           <p className={styles.stateText}>Loading your coupons…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Expired session ──
+  if (expired) {
+    return (
+      <div className={`${styles.page} ${styles.pageDark}`}>
+        <div className={styles.centeredState}>
+          <div className={styles.expiredIcon}>⏰</div>
+          <h2 className={styles.expiredTitle}>Session Expired</h2>
+          <p className={styles.expiredDesc}>
+            Your reward session has timed out. Each scratch session is valid for 5 minutes after revealing your reward.
+          </p>
+          <div className={styles.expiredHint}>
+            Please visit the store again to get a new coupon.
+          </div>
         </div>
       </div>
     );
@@ -241,22 +322,6 @@ export default function CouponPage() {
     </div>
   );
 
-  // ── Mini strip of remaining coupons ──
-  const miniStrip = otherCoupons.length > 0 && (
-    <div className={styles.miniStrip}>
-      {otherCoupons.slice(0, 5).map((c, i) => (
-        <div key={c.id || i} className={styles.miniCard}>
-          <GiftSvgMini />
-        </div>
-      ))}
-      {otherCoupons.length > 5 && (
-        <div className={`${styles.miniCard} ${styles.miniCardMore}`}>
-          +{otherCoupons.length - 5}
-        </div>
-      )}
-    </div>
-  );
-
   // ════════════════════════════════════════════
   // SELECT phase — mystery cards, no values shown
   // ════════════════════════════════════════════
@@ -264,36 +329,38 @@ export default function CouponPage() {
     return (
       <div className={styles.page}>
         {storeHeader}
-        <div className={styles.titleBlock}>
-          <h1 className={styles.pageTitle}>Pick your lucky coupon</h1>
-          <p className={styles.pageSubtitle}>Tap one to scratch — <em>only one</em></p>
-        </div>
+        <div className={styles.body}>
+          <div className={styles.titleBlock}>
+            <h1 className={styles.pageTitle}>Pick your lucky coupon</h1>
+            <p className={styles.pageSubtitle}>Tap one to scratch — <em>only one</em></p>
+          </div>
 
-        <div className={styles.grid}>
-          {coupons.map((coupon, index) => (
-            <button
-              key={coupon.id || index}
-              type="button"
-              className={styles.card}
-              onClick={() => {
-                setSelectedCoupon(coupon);
-                setPhase("scratch");
-              }}
-              aria-label="Select coupon"
-            >
-              <span className={`${styles.dot} ${styles.dot1}`} />
-              <span className={`${styles.dot} ${styles.dot2}`} />
-              <span className={`${styles.dot} ${styles.dot3}`} />
-              <span className={`${styles.dot} ${styles.dot4}`} />
-              <span className={`${styles.dot} ${styles.dot5}`} />
-              <div className={styles.cardContent}>
-                <div className={styles.giftCircle}><GiftSvg /></div>
-              </div>
-            </button>
-          ))}
-        </div>
+          <div className={styles.grid}>
+            {coupons.map((coupon, index) => (
+              <button
+                key={coupon.id || index}
+                type="button"
+                className={styles.card}
+                onClick={() => {
+                  setSelectedCoupon(coupon);
+                  setPhase("scratch");
+                }}
+                aria-label="Select coupon"
+              >
+                <span className={`${styles.dot} ${styles.dot1}`} />
+                <span className={`${styles.dot} ${styles.dot2}`} />
+                <span className={`${styles.dot} ${styles.dot3}`} />
+                <span className={`${styles.dot} ${styles.dot4}`} />
+                <span className={`${styles.dot} ${styles.dot5}`} />
+                <div className={styles.cardContent}>
+                  <div className={styles.giftCircle}><GiftSvg /></div>
+                </div>
+              </button>
+            ))}
+          </div>
 
-        <p className={styles.countHint}>{coupons.length} coupons available</p>
+          <p className={styles.countHint}>{coupons.length} coupons available</p>
+        </div>
       </div>
     );
   }
@@ -305,33 +372,33 @@ export default function CouponPage() {
     return (
       <div className={`${styles.page} ${styles.pageDark}`}>
         {storeHeader}
-        <div className={styles.scratchBlock}>
-          <p className={styles.scratchTitle}>Scratch to reveal your reward!</p>
-          <div className={styles.scratchCardWrap}>
-            {/* Reward card — revealed bit by bit as canvas is scratched away */}
-            <div className={styles.scratchRevealBg}>
-              <div className={styles.scratchRevealGiftCircle}>
-                <RevealGiftSvg />
+        <div className={styles.body}>
+          <div className={styles.scratchBlock}>
+            <p className={styles.scratchTitle}>Scratch to reveal your reward!</p>
+            <div className={styles.scratchCardWrap}>
+              <div className={styles.scratchRevealBg}>
+                <div className={styles.scratchRevealGiftCircle}>
+                  <RevealGiftSvg />
+                </div>
+                {reward?.image ? (
+                  <img src={reward.image} alt="Gift reward" className={styles.scratchRevealGiftImg} />
+                ) : (
+                  <div className={styles.scratchRevealValue}>{rewardDisplay}</div>
+                )}
+                {reward?.description && (
+                  <div className={styles.scratchRevealDesc}>{reward.description}</div>
+                )}
+                <div className={styles.scratchRevealLabel}>You Won!</div>
               </div>
-              {reward?.image ? (
-                <img src={reward.image} alt="Gift reward" className={styles.scratchRevealGiftImg} />
-              ) : (
-                <div className={styles.scratchRevealValue}>{rewardDisplay}</div>
-              )}
-              {reward?.description && (
-                <div className={styles.scratchRevealDesc}>{reward.description}</div>
-              )}
-              <div className={styles.scratchRevealLabel}>You Won!</div>
+              <canvas
+                ref={canvasRef}
+                width={280}
+                height={370}
+                className={styles.scratchCanvas}
+              />
             </div>
-            {/* Golden scratch overlay — erased by finger/mouse */}
-            <canvas
-              ref={canvasRef}
-              width={280}
-              height={370}
-              className={styles.scratchCanvas}
-            />
+            <p className={styles.scratchHint}>Use finger or mouse to scratch</p>
           </div>
-          <p className={styles.scratchHint}>Use finger or mouse to scratch</p>
         </div>
       </div>
     );
@@ -342,53 +409,74 @@ export default function CouponPage() {
   // ════════════════════════════════════════════
   const isExpiring = timeLeft <= 60 && timeLeft > 0;
   const isExpired  = timeLeft === 0;
-  const handleCopy = () => {
-    if (reward?.couponCode) navigator.clipboard.writeText(reward.couponCode).catch(() => {});
-  };
 
   return (
     <div className={`${styles.page} ${styles.pageDark}`}>
       {storeHeader}
+      {!isExpired && <div className={styles.body}>
+        <div className={styles.celebBlock}>
+          <div className={styles.celebEmoji}>🎉</div>
+          <h1 className={styles.celebTitle}>You Won!</h1>
+          <p className={styles.celebSub}>Here is your reward</p>
+        </div>
 
-      <div className={styles.celebBlock}>
-        <div className={styles.celebEmoji}>🎉</div>
-        <h1 className={styles.celebTitle}>You Won!</h1>
-        <p className={styles.celebSub}>Here is your reward</p>
-      </div>
-
-      {/* Reward card */}
-      <div className={`${styles.rewardCard} ${animReady ? styles.rewardCardIn : ""}`}>
-        <div className={styles.rewardTop}>
-          <div className={styles.rewardGiftCircle}>
-            <RewardGiftSvg />
+        {/* Reward card */}
+        <div className={`${styles.rewardCard} ${animReady ? styles.rewardCardIn : ""}`}>
+          <div className={styles.rewardTop}>
+            <div className={styles.rewardGiftCircle}>
+              <RewardGiftSvg />
+            </div>
+            {reward?.image ? (
+              <img src={reward.image} alt="Gift reward" className={styles.rewardGiftImg} />
+            ) : (
+              <div className={styles.rewardValue}>{rewardDisplay}</div>
+            )}
+            {reward?.description && (
+              <div className={styles.rewardDesc}>{reward.description}</div>
+            )}
           </div>
-          {reward?.image ? (
-            <img src={reward.image} alt="Gift reward" className={styles.rewardGiftImg} />
-          ) : (
-            <div className={styles.rewardValue}>{rewardDisplay}</div>
-          )}
-          {reward?.description && (
-            <div className={styles.rewardDesc}>{reward.description}</div>
-          )}
         </div>
-      </div>
 
-      {/* 5-minute countdown */}
-      <div className={`${styles.countdown} ${isExpiring ? styles.countdownWarn : ""} ${isExpired ? styles.countdownDead : ""}`}>
-        <div className={styles.countdownLabel}>
-          {isExpired ? "Session Expired" : "Show to cashier before"}
-        </div>
-        <div className={`${styles.countdownTime} ${isExpiring ? styles.countdownTimeWarn : ""} ${isExpired ? styles.countdownTimeDead : ""}`}>
-          {isExpired ? "00:00" : formatTime(timeLeft)}
-        </div>
-        <div className={styles.countdownSub}>
-          {isExpired
-            ? "Ask the cashier for assistance"
-            : `${Math.ceil(timeLeft / 60)} minute${Math.ceil(timeLeft / 60) !== 1 ? "s" : ""} remaining to redeem`}
-        </div>
-      </div>
+        {/* Selected Range/Billing Range */}
+        {participation?.billingRange && (
+          <div className={styles.rangeInfo}>
+            <span className={styles.rangeLabel}>
+              Billing Range: ₹{participation.billingRange.min?.toLocaleString("en-IN")} - ₹{participation.billingRange.max?.toLocaleString("en-IN")}
+            </span>
+          </div>
+        )}
 
-      <p className={styles.claimHint}>Present this screen at the store counter to claim</p>
+        {/* 5-minute countdown */}
+        <div className={`${styles.countdown} ${isExpiring ? styles.countdownWarn : ""} ${isExpired ? styles.countdownDead : ""}`}>
+          <div className={styles.countdownLabel}>
+            {isExpired ? "Session Expired" : "Show to cashier before"}
+          </div>
+          <div className={`${styles.countdownTime} ${isExpiring ? styles.countdownTimeWarn : ""} ${isExpired ? styles.countdownTimeDead : ""}`}>
+            {isExpired ? "00:00" : formatTime(timeLeft)}
+          </div>
+          <div className={styles.countdownSub}>
+            {isExpired
+              ? "Ask the cashier for assistance"
+              : `${Math.ceil(timeLeft / 60)} minute${Math.ceil(timeLeft / 60) !== 1 ? "s" : ""} remaining to redeem`}
+          </div>
+        </div>
+              
+        <p className={styles.claimHint}>Present this screen at the store counter to claim</p>
+      </div>}
+      {isExpired && (
+        <div className={styles.body}>
+          <div className={styles.expiredBlock}>
+            <div className={styles.expiredIcon}>⏰</div>
+            <h2 className={styles.expiredTitle}>Session Expired</h2>
+            <p className={styles.expiredDesc}>
+              Your reward session has timed out. Each scratch session is valid for 5 minutes after revealing your reward.
+            </p>
+            <div className={styles.expiredHint}>
+              Please visit the store again to get a new coupon.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -406,15 +494,6 @@ function GiftSvg() {
   );
 }
 
-function GiftSvgMini() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="2" y="7" width="20" height="5" rx="1" fill="rgba(255,255,255,0.35)" />
-      <rect x="4" y="12" width="16" height="10" rx="1" fill="rgba(255,255,255,0.28)" />
-      <line x1="12" y1="7" x2="12" y2="22" stroke="rgba(255,255,255,0.6)" strokeWidth="1" />
-    </svg>
-  );
-}
 
 function RevealGiftSvg() {
   return (

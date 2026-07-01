@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuthContext } from "@/components/auth/AuthContext";
-import { UserPlus, Edit2, Trash2, AlertCircle } from "lucide-react";
+import { UserPlus, Edit2, Trash2, AlertCircle, X } from "lucide-react";
 import styles from "./team.module.css";
 
 export default function TeamPage() {
@@ -11,6 +11,26 @@ export default function TeamPage() {
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingMember, setEditingMember] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+  const [formError, setFormError] = useState(null);
+  const [editFormError, setEditFormError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,8 +73,7 @@ export default function TeamPage() {
     }
   }, [account?.id]);
 
-  const maxManagers = subscription?.planId?.limits?.maxManagersPerAccount || 0;
-  const canAddMore = teamMembers.length < maxManagers;
+  const canAddMore = true;
 
   const formatDate = (date) => {
     if (!date) return "Never";
@@ -82,6 +101,150 @@ export default function TeamPage() {
       .toUpperCase() || "?";
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCreateTeamMember = async (e) => {
+    e.preventDefault();
+    setFormError(null);
+
+    if (!formData.name || !formData.email || !formData.phone || !formData.password) {
+      setFormError("All fields are required");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setFormError("Password must be at least 6 characters");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/team/members", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create team member");
+      }
+
+      setTeamMembers((prev) => [data.member, ...prev]);
+      setShowModal(false);
+      setFormData({ name: "", email: "", phone: "", password: "" });
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditClick = (member) => {
+    setEditingMember(member);
+    setEditFormData({
+      name: member.name,
+      email: member.email,
+      phone: member.phone,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleUpdateTeamMember = async (e) => {
+    e.preventDefault();
+    setEditFormError(null);
+
+    if (!editFormData.name || !editFormData.email || !editFormData.phone) {
+      setEditFormError("All fields are required");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/team/members", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: editingMember._id,
+          ...editFormData,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update team member");
+      }
+
+      setTeamMembers((prev) =>
+        prev.map((m) =>
+          m._id === editingMember._id
+            ? { ...m, ...editFormData }
+            : m
+        )
+      );
+      setShowEditModal(false);
+      setEditingMember(null);
+    } catch (err) {
+      setEditFormError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteClick = (member) => {
+    setMemberToDelete(member);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    const memberId = memberToDelete._id;
+    setDeleting(memberId);
+    setShowDeleteConfirm(false);
+
+    try {
+      const res = await fetch(`/api/team/members?memberId=${memberId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete team member");
+      }
+
+      setTeamMembers((prev) => prev.filter((m) => m._id !== memberId));
+      setMemberToDelete(null);
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setMemberToDelete(null);
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -106,12 +269,7 @@ export default function TeamPage() {
         <div className={styles.headerActions}>
           <button
             className={styles.inviteButton}
-            disabled={!canAddMore}
-            title={
-              !canAddMore
-                ? `You can only add ${maxManagers} team members with your current plan`
-                : ""
-            }
+            onClick={() => setShowModal(true)}
           >
             <UserPlus size={18} />
             Add Team Member
@@ -125,55 +283,7 @@ export default function TeamPage() {
           <div className={styles.statValue}>{teamMembers.length}</div>
           <div className={styles.statLabel}>Active Members</div>
         </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{maxManagers}</div>
-          <div className={styles.statLabel}>Member Limit</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{maxManagers - teamMembers.length}</div>
-          <div className={styles.statLabel}>Available Slots</div>
-        </div>
       </div>
-
-      {/* Plan Info */}
-      {maxManagers === 0 && (
-        <div
-          style={{
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            borderRadius: "12px",
-            padding: "16px 20px",
-            marginBottom: "24px",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "12px",
-          }}
-        >
-          <AlertCircle size={20} style={{ color: "#c0392b", flexShrink: 0 }} />
-          <div>
-            <p
-              style={{
-                margin: "0 0 4px 0",
-                fontWeight: "700",
-                color: "#c0392b",
-                fontSize: "14px",
-              }}
-            >
-              No Team Members Available
-            </p>
-            <p
-              style={{
-                margin: "0",
-                color: "#c0392b",
-                fontSize: "13px",
-                fontWeight: "500",
-              }}
-            >
-              Your current plan doesn't include team member management. Upgrade to add team members.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Team Members Table */}
       {teamMembers.length > 0 ? (
@@ -216,10 +326,19 @@ export default function TeamPage() {
               </div>
 
               <div className={styles.actionsCell}>
-                <button className={styles.actionButton} title="Edit">
+                <button
+                  className={styles.actionButton}
+                  title="Edit"
+                  onClick={() => handleEditClick(member)}
+                >
                   <Edit2 size={16} />
                 </button>
-                <button className={styles.actionButton} title="Remove">
+                <button
+                  className={styles.actionButton}
+                  title="Remove"
+                  disabled={deleting === member._id}
+                  onClick={() => handleDeleteClick(member)}
+                >
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -234,14 +353,241 @@ export default function TeamPage() {
             <p className={styles.emptyStateDescription}>
               Invite team members to collaborate on campaigns and manage your stores
             </p>
-            {canAddMore && (
+            <button
+              className={styles.emptyStateButton}
+              onClick={() => setShowModal(true)}
+            >
+              <UserPlus size={16} />
+              Add Your First Team Member
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Team Member Modal */}
+      {showModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Add Team Member</h2>
               <button
-                className={styles.emptyStateButton}
+                className={styles.modalClose}
+                onClick={() => setShowModal(false)}
               >
-                <UserPlus size={16} />
-                Add Your First Team Member
+                <X size={24} />
               </button>
-            )}
+            </div>
+
+            <form onSubmit={handleCreateTeamMember} className={styles.modalForm}>
+              {formError && (
+                <div className={styles.formError}>
+                  <AlertCircle size={16} />
+                  {formError}
+                </div>
+              )}
+
+              <div className={styles.formGroup}>
+                <label htmlFor="name" className={styles.formLabel}>
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter full name"
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="email" className={styles.formLabel}>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Enter email address"
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="phone" className={styles.formLabel}>
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="Enter phone number"
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="password" className={styles.formLabel}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="Enter password (min 6 characters)"
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.cancelButton}
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={styles.submitButton}
+                  disabled={submitting}
+                >
+                  {submitting ? "Creating..." : "Create Team Member"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Team Member Modal */}
+      {showEditModal && editingMember && (
+        <div className={styles.modalOverlay} onClick={() => setShowEditModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Edit Team Member</h2>
+              <button
+                className={styles.modalClose}
+                onClick={() => setShowEditModal(false)}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateTeamMember} className={styles.modalForm}>
+              {editFormError && (
+                <div className={styles.formError}>
+                  <AlertCircle size={16} />
+                  {editFormError}
+                </div>
+              )}
+
+              <div className={styles.formGroup}>
+                <label htmlFor="edit-name" className={styles.formLabel}>
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="edit-name"
+                  name="name"
+                  value={editFormData.name}
+                  onChange={handleEditInputChange}
+                  placeholder="Enter full name"
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="edit-email" className={styles.formLabel}>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="edit-email"
+                  name="email"
+                  value={editFormData.email}
+                  onChange={handleEditInputChange}
+                  placeholder="Enter email address"
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="edit-phone" className={styles.formLabel}>
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  id="edit-phone"
+                  name="phone"
+                  value={editFormData.phone}
+                  onChange={handleEditInputChange}
+                  placeholder="Enter phone number"
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.cancelButton}
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={styles.submitButton}
+                  disabled={submitting}
+                >
+                  {submitting ? "Updating..." : "Update Team Member"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && memberToDelete && (
+        <div className={styles.modalOverlay} onClick={handleCancelDelete}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmIcon}>
+              <AlertCircle size={48} />
+            </div>
+            <h2 className={styles.confirmTitle}>Delete Team Member?</h2>
+            <p className={styles.confirmMessage}>
+              Are you sure you want to delete <strong>{memberToDelete.name}</strong>? This action cannot be undone.
+            </p>
+            <div className={styles.confirmFooter}>
+              <button
+                className={styles.confirmCancelBtn}
+                onClick={handleCancelDelete}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.confirmDeleteBtn}
+                onClick={handleConfirmDelete}
+                disabled={deleting === memberToDelete._id}
+              >
+                {deleting === memberToDelete._id ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}

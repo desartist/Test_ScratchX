@@ -1,8 +1,33 @@
+/* ── Full-page shell ────────────────────────────────────────── */
+.pageShell {
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(145deg, #f5f6ff 0%, #fafbff 60%, #fff8ee 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px 60px;
+}
+
+/* ── Top bar with logo ──────────────────────────────────────── */
+.topBar {
+  width: 100%;
+  max-width: 800px;
+  padding: 28px 0 0;
+  display: flex;
+  justify-content: center;
+}
+
+.topLogo {
+  height: 36px;
+  width: auto;
+}
+
 /* ── Container ─────────────────────────────────────────────── */
 .container {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 32px 24px 64px;
+  width: 100%;
+  max-width: 560px;
+  padding: 40px 0 0;
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -14,19 +39,20 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  text-align: center;
 }
 
 .title {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 800;
   color: #010f44;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
 }
 
 .headerSubtitle {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #637080;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
@@ -42,7 +68,6 @@
   position: relative;
 }
 
-/* connecting line between circles */
 .stepCircles::before {
   content: '';
   position: absolute;
@@ -110,12 +135,15 @@
 
 /* ── Messages ──────────────────────────────────────────────── */
 .errorMessage {
-  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
   background: #fff0f0;
-  border: 1px solid #ffc5c5;
+  border: 1.5px solid #ffc5c5;
   border-radius: 12px;
   color: #c0392b;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
@@ -132,10 +160,10 @@
 /* ── Form Card ─────────────────────────────────────────────── */
 .form {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 24px;
   border: 1.5px solid #e8eaff;
-  box-shadow: 0 4px 24px rgba(1, 15, 68, 0.07);
-  padding: 32px 32px 28px;
+  box-shadow: 0 8px 40px rgba(1, 15, 68, 0.09);
+  padding: 36px 36px 32px;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -156,7 +184,7 @@
 
 .subtitle {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: #637080;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
   line-height: 1.5;
@@ -189,7 +217,7 @@
 .textarea,
 .select {
   width: 100%;
-  padding: 13px 16px;
+  padding: 14px 18px;
   border: 1.5px solid #e0e4ff;
   border-radius: 12px;
   font-size: 0.95rem;
@@ -239,9 +267,14 @@
 
 /* ── Error Text ────────────────────────────────────────────── */
 .errorText {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
   font-size: 0.78rem;
-  color: #e74c3c;
+  color: #e03e3e;
   font-weight: 600;
+  line-height: 1.3;
 }
 
 /* ── Two Column Row ────────────────────────────────────────── */
@@ -322,16 +355,17 @@
 
 .locationDetected {
   display: flex;
-  gap: 14px;
-  padding: 12px 14px;
+  gap: 10px;
+  padding: 8px 12px;
   background: #f0fff4;
   border: 1px solid #b7e8c4;
   border-radius: 10px;
+  align-items: center;
 }
 
 .locationCheckmark {
-  width: 32px;
-  height: 32px;
+  width: 22px;
+  height: 22px;
   background: #27ae60;
   border-radius: 50%;
   display: flex;
@@ -339,45 +373,54 @@
   justify-content: center;
   color: #fff;
   font-weight: 800;
-  font-size: 15px;
+  font-size: 11px;
   flex-shrink: 0;
 }
 
 .locationDetails {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.locationLabel {
-  margin: 0;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #1a7f3c;
-}
-
-.locationLandmark {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #010f44;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.landmarkIcon {
-  font-size: 14px;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .locationArea {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: #637080;
+  font-weight: 600;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
-  line-height: 1.4;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.retakeBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: transparent;
+  color: #637080;
+  border: 1px solid #d0d8e4;
+  border-radius: 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.retakeBtn:hover:not(:disabled) {
+  background: #f0f2ff;
+  border-color: #c5cbfa;
+  color: #010f44;
+}
+
+.retakeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .useCurrentButton {
@@ -386,7 +429,7 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 11px 20px;
+  padding: 12px 20px;
   background: #ef9e1b;
   color: #fff;
   border: none;
@@ -408,64 +451,39 @@
   cursor: not-allowed;
 }
 
-.refreshLocationButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  padding: 9px 16px;
-  background: transparent;
-  color: #637080;
-  border: 1.5px solid #e0e4ff;
-  border-radius: 10px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-  font-family: var(--font-afacad), system-ui, sans-serif;
-}
-
-.refreshLocationButton:hover:not(:disabled) {
-  background: #f0f2ff;
-  border-color: #c5cbfa;
-  color: #010f44;
-}
-
-.refreshLocationButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* ── Button Row ────────────────────────────────────────────── */
 .buttonRow {
   display: flex;
   gap: 12px;
-  margin-top: 12px;
-  padding-top: 20px;
+  margin-top: 20px;
+  padding-top: 24px;
   border-top: 1px solid #f0f2ff;
+  justify-content: space-between;
+  flex-wrap: wrap;
 }
 
 .cancelButton {
-  flex: 1;
-  padding: 13px 24px;
+  padding: 14px 28px;
   border: 1.5px solid #e0e4ff;
   background: transparent;
-  color: #010f44;
+  color: #637080;
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
   font-family: var(--font-afacad), system-ui, sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .cancelButton:hover:not(:disabled) {
   background: #f0f2ff;
   border-color: #c5cbfa;
+  color: #010f44;
 }
 
 .cancelButton:disabled {
@@ -474,29 +492,30 @@
 }
 
 .primaryButton {
-  flex: 2;
-  padding: 13px 24px;
-  background: #ef9e1b;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, #ef9e1b, #f5b23a);
   color: #fff;
   border: none;
-  border-radius: 12px;
-  font-size: 0.95rem;
+  border-radius: 14px;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 14px rgba(239, 158, 27, 0.3);
+  transition: transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.35);
   font-family: var(--font-afacad), system-ui, sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  letter-spacing: 0.2px;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  flex: 1;
+  min-width: 200px;
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: #d98e14;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(239, 158, 27, 0.4);
+  box-shadow: 0 8px 28px rgba(239, 158, 27, 0.45);
 }
 
 .primaryButton:active:not(:disabled) {
@@ -551,28 +570,484 @@
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
+/* ── Welcome / Onboarding Screen ─────────────────────────────── */
+.welcomeScreen {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 40px 60px;
+  min-height: 100vh;
+  justify-content: center;
+}
+
+.welcomeHero {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 60px;
+}
+
+.welcomeLogo {
+  height: 52px;
+  width: auto;
+}
+
+.welcomeHeadline {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #010f44;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.welcomeSubtitle {
+  font-size: 18px;
+  color: #637080;
+  margin: 0;
+  line-height: 1.6;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  max-width: 600px;
+}
+
+.welcomeAccent {
+  color: #010f44;
+}
+
+.welcomeCta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 80px;
+}
+
+.welcomeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  background: #ef9e1b;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 20px 32px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 8px 24px rgba(239,158,27,0.35);
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.welcomeBtn:hover {
+  background: #d98e14;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(239,158,27,0.45);
+}
+
+.welcomeHint {
+  font-size: 14px;
+  color: #9ba8b8;
+  margin: 0;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+.welcomeCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+  max-width: 550px;
+}
+
+.welcomeCard {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 36px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border: 1.5px solid #e8eaff;
+  box-shadow: 0 4px 16px rgba(1,15,68,0.07);
+  transition: transform 0.2s, box-shadow 0.2s;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: 240px;
+}
+
+.welcomeCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(1,15,68,0.1);
+}
+
+.welcomeCardIcon {
+  width: 64px;
+  height: 64px;
+  background: #e8e5ff;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.welcomeCardIcon img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.welcomeCardLabel {
+  font-size: 18px;
+  font-weight: 700;
+  color: #010f44;
+  line-height: 1.35;
+  margin: 0;
+  text-align: left;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  letter-spacing: -0.2px;
+}
+
+.copyright {
+  font-size: 12px;
+  margin-top: auto;
+  color: #9ba8b8;
+}
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .form {
-    padding: 24px 18px 20px;
-  }
+  .pageShell { padding: 0 16px 48px; }
+  .container { padding-top: 28px; gap: 20px; }
+  .title { font-size: 1.6rem; }
+  .form { padding: 24px 20px 22px; border-radius: 18px; }
 
   .twoColumnRow {
     grid-template-columns: 1fr;
   }
 
-  .buttonRow {
-    flex-direction: column-reverse;
-  }
-
-  .cancelButton,
-  .primaryButton {
-    flex: none;
-    width: 100%;
-  }
-
   .stepCircles::before {
     left: calc(16.66% + 20px);
     right: calc(16.66% + 20px);
+  }
+}
+
+/* ── Business Type Dropdown ─────────────────────────────────── */
+.selectWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 14px 44px 14px 16px;
+  border: 1.5px solid #dde1f5;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #010f44;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.select:focus {
+  border-color: #6c5ce7;
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.12);
+}
+
+.selectPlaceholder {
+  color: #9ba8b8;
+}
+
+.selectChevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ba8b8;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* ── Location Modal ───────────────────────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  max-width: 420px;
+  width: 100%;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modalHeader {
+  padding: 28px 28px 0;
+  text-align: center;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #010f44;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.modalBody {
+  padding: 32px 28px;
+  text-align: center;
+}
+
+.modalIcon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+.modalMessage {
+  margin: 0;
+  font-size: 15px;
+  color: #637080;
+  line-height: 1.6;
+  font-family: system-ui, sans-serif;
+}
+
+.modalFooter {
+  padding: 20px 28px 28px;
+}
+
+.modalButton {
+  width: 100%;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #ef9e1b, #f5b23a);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  box-shadow: 0 4px 14px rgba(239, 158, 27, 0.3);
+}
+
+.modalButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.4);
+}
+
+.modalButton:active {
+  transform: translateY(0);
+}
+
+.modalButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Location Error Box ─────────────────────────────────────── */
+.locationErrorBox {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  background: #fff5f5;
+  border: 1.5px solid #ffc5c5;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.errorText {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #c0392b;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* ── Modal Form Fields ──────────────────────────────────────── */
+.modalFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.modalLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #010f44;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modalInput {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e0e4ff;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #010f44;
+  background: #fafbff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  box-sizing: border-box;
+}
+
+.modalInput::placeholder {
+  color: #b0bac8;
+}
+
+.modalInput:focus {
+  border-color: #010f44;
+  box-shadow: 0 0 0 3px rgba(1, 15, 68, 0.07);
+  background: #fff;
+}
+
+.modalInput:disabled {
+  background: #f5f6ff;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modalTwoColumn {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Modal Error Message ────────────────────────────────────── */
+.modalError {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fff0f0;
+  border: 1.5px solid #ffc5c5;
+  border-radius: 10px;
+  color: #c0392b;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.modalCancelButton {
+  padding: 14px 20px;
+  border: 1.5px solid #e0e4ff;
+  background: transparent;
+  color: #637080;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.modalCancelButton:hover:not(:disabled) {
+  background: #f0f2ff;
+  border-color: #c5cbfa;
+  color: #010f44;
+}
+
+.modalCancelButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── Modal Footer with Two Buttons ──────────────────────────── */
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  padding: 20px 28px 28px;
+}
+
+.modalFooter .modalButton {
+  flex: 1;
+  margin: 0;
+}
+
+.modalFooter .modalCancelButton {
+  flex: 1;
+}
+
+@media (max-width: 480px) {
+  .modal {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  .modalTitle {
+    font-size: 1.25rem;
+  }
+
+  .modalBody {
+    padding: 24px 20px;
+  }
+
+  .modalIcon {
+    font-size: 48px;
+  }
+
+  .modalMessage {
+    font-size: 14px;
+  }
+
+  .modalFooter {
+    padding: 16px 20px 20px;
+    flex-direction: column;
+  }
+
+  .modalTwoColumn {
+    grid-template-columns: 1fr;
+  }
+
+  .modalFooter .modalButton,
+  .modalFooter .modalCancelButton {
+    width: 100%;
   }
 }

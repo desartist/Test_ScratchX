@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { LogOut } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import SettingsProfileCard from "@/components/settings/SettingsProfileCard";
 import SettingsAccountCard from "@/components/settings/SettingsAccountCard";
 import SettingsSubscriptionCard from "@/components/settings/SettingsSubscriptionCard";
@@ -13,7 +15,7 @@ import ActiveSessionsCard from "@/components/settings/ActiveSessionsCard";
 import styles from "./settings.module.css";
 
 export default function SettingsPage() {
-  const { account } = useAuthContext();
+  const { account, logout } = useAuthContext();
   const [merchant, setMerchant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,19 +29,28 @@ export default function SettingsPage() {
 
       try {
         setLoading(true);
-        const response = await fetch("/api/merchant", {
-          headers: {
-            "x-user-id": account.id,
-            "x-user-role": account.role || "merchant",
-          },
-        });
+        const result = await criticalFetchService.fetchCriticalFirst(
+          'settings-merchant',
+          [
+            {
+              key: 'merchant',
+              url: '/api/merchant',
+              options: {
+                headers: {
+                  'x-user-id': account.id,
+                  'x-user-role': account.role || 'merchant',
+                },
+              },
+            },
+          ],
+          []
+        );
 
-        if (response.ok) {
-          const data = await response.json();
+        const data = result.critical?.merchant;
+        if (data) {
           console.log("Fetched merchant data:", data);
           setMerchant(data.account || account);
         } else {
-          // Fallback to account data
           setMerchant(account);
         }
       } catch (err) {
@@ -124,6 +135,12 @@ export default function SettingsPage() {
 
       {/* Danger Zone */}
       <DangerZoneCard merchant={merchant} />
+
+      {/* Logout */}
+      <button onClick={logout} className={styles.logoutBtn}>
+        <LogOut size={18} />
+        Log Out
+      </button>
     </div>
   );
 }

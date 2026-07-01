@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, CalendarDays, Store as StoreIcon } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import Badge from "@/components/dashboard/Badge";
 import CampaignQrStudio from "@/components/campaign/CampaignQrStudio";
 import styles from "./page.module.css";
@@ -33,7 +34,7 @@ export default function CampaignLiveViewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Unwrap params and fetch campaign
+  // Unwrap params and fetch campaign with caching
   useEffect(() => {
     const fetchCampaign = async () => {
       try {
@@ -46,24 +47,30 @@ export default function CampaignLiveViewPage() {
           return;
         }
 
-        const response = await fetch(`/api/campaigns/${id}`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-id": account.id,
-            "x-user-role": account.role || "Merchant",
-          },
-        });
+        const result = await criticalFetchService.fetchCriticalFirst(
+          `campaign-live-${id}`,
+          [
+            {
+              key: 'campaign',
+              url: `/api/campaigns/${id}`,
+              options: {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-user-id": account.id,
+                  "x-user-role": account.role || "Merchant",
+                },
+              },
+            },
+          ],
+          []
+        );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch campaign");
-        }
+        const data = result.critical?.campaign;
+        const campaignData = data?.data || data;
 
-        const data = await response.json();
-        const campaignData = data.data || data;
-
-        if (!campaignData._id) {
+        if (!campaignData?._id) {
           throw new Error("Invalid campaign data");
         }
 
@@ -134,7 +141,28 @@ export default function CampaignLiveViewPage() {
   }
 
   const campaignName = campaign.campaignName || campaign.name || "Campaign";
-  const status = campaign.status?.toLowerCase() || "draft";
+
+  // Calculate status based on dates
+  const getCalculatedStatus = () => {
+    const now = new Date();
+    const startDate = new Date(campaign.startDate);
+    const endDate = new Date(campaign.endDate);
+
+    // If end date has passed, campaign is ended
+    if (endDate < now) {
+      return "ended";
+    }
+
+    // If start date hasn't arrived yet, campaign is draft
+    if (startDate > now) {
+      return "draft";
+    }
+
+    // Otherwise use the stored status (active, paused, etc.)
+    return (campaign.status || "active").toLowerCase();
+  };
+
+  const status = getCalculatedStatus();
   const activeStores = (campaign.assignedStores || []).filter(
     (s) => s.status === "active",
   );

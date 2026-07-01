@@ -2,8 +2,9 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Tag, ChevronRight, Plus } from "lucide-react";
+import { ArrowLeft, Tag, Pencil, Plus, QrCode } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { criticalFetchService } from "@/lib/criticalFetchService";
 import RangeWizard from "@/components/campaign/RangeWizard";
 import LaunchWizardModal from "@/components/campaign/LaunchWizardModal";
 import styles from "./ranges.module.css";
@@ -12,7 +13,7 @@ import styles from "./ranges.module.css";
  * Step 2 of campaign setup — "Setup Billing Range".
  *
  * LISTING state: shows each existing range as a clickable row (opens the
- * editor) plus an "Add more range" ghost row (opens the editor in create
+ * editor) plus an "Add Billing Range" ghost row (opens the editor in create
  * mode) and a "Preview & Launch" button (-> campaign details).
  * EDITOR state: renders <RangeWizard> for create OR edit; on done, returns
  * to the listing and refetches.
@@ -30,6 +31,9 @@ export default function CampaignRangesStepPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Campaign data (scratch allocation + QR state).
+  const [campaign, setCampaign] = useState(null);
+
   // mode: 'list' | 'edit'. editRange null => create.
   const [mode, setMode] = useState("list");
   const [editRange, setEditRange] = useState(null);
@@ -42,21 +46,38 @@ export default function CampaignRangesStepPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/campaign_range?id=${campaignId}`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "x-user-id": userId,
-          "x-user-role": userRole,
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      });
-      const data = await res.json().catch(() => ({}));
-      if (data?.success && Array.isArray(data.ranges)) {
-        setRanges(data.ranges);
+      const headers = {
+        "x-user-id": userId,
+        "x-user-role": userRole,
+        Authorization: token ? `Bearer ${token}` : "",
+      };
+
+      const result = await criticalFetchService.fetchCriticalFirst(
+        `campaign-ranges-${campaignId}`,
+        [
+          {
+            key: 'ranges',
+            url: `/api/campaign_range?id=${campaignId}`,
+            options: { method: "GET", credentials: "include", headers },
+          },
+          {
+            key: 'campaign',
+            url: `/api/campaigns/${campaignId}`,
+            options: { credentials: "include", headers },
+          },
+        ],
+        []
+      );
+
+      const rangesData = result.critical?.ranges;
+      if (rangesData?.success && Array.isArray(rangesData.ranges)) {
+        setRanges(rangesData.ranges);
       } else {
         setRanges([]);
       }
+
+      const campaignData = result.critical?.campaign;
+      setCampaign(campaignData?.data || campaignData?.campaign || campaignData || null);
     } catch (err) {
       console.error("Failed to fetch ranges:", err);
       setError("Failed to load reward ranges");
@@ -69,6 +90,21 @@ export default function CampaignRangesStepPage() {
   useEffect(() => {
     fetchRanges();
   }, [fetchRanges]);
+
+  /**
+   * Auto-refetch ranges when page becomes visible (e.g., returning from edit)
+   */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && campaignId && userId) {
+        console.log("[Ranges] Page visible - refetching ranges");
+        fetchRanges();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [campaignId, userId, fetchRanges]);
 
   const openCreate = useCallback(() => {
     setEditRange(null);
@@ -95,19 +131,17 @@ export default function CampaignRangesStepPage() {
   );
 
   const hasRanges = ranges.length > 0;
+  const scratchesAllocated = Number(campaign?.allocated_scratch_cards) > 0;
+  const qrGenerated = !!(campaign?.qrCodeUrl || campaign?.qrGeneratedAt);
+
+  // Which step to open the wizard at
+  const wizardInitialStep = scratchesAllocated ? "stores" : "allocate";
 
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        {/* Step header */}
+        {/* Page header */}
         <div className={styles.header}>
-          <div className={styles.steps}>
-            <span className={styles.stepDone}>1. Basic Info</span>
-            <span className={styles.stepDivider} />
-            <span className={styles.stepActive}>2. Reward Ranges</span>
-            <span className={styles.stepDivider} />
-            <span className={styles.stepNext}>3. Launch Setup</span>
-          </div>
           <h1 className={styles.title}>
             <Tag size={22} /> Setup Billing Range
           </h1>
@@ -138,14 +172,10 @@ export default function CampaignRangesStepPage() {
                   className={styles.rangeRow}
                   onClick={() => openEdit(range)}
                 >
-                  <span className={styles.rangeRowLeft}>
-                    <span className={styles.rangeRowName}>Range {i + 1}</span>
-                    <span className={styles.rangeRowLabel}>
-                      {range.label ||
-                        `₹${range.minAmount} - ₹${range.maxAmount}`}
-                    </span>
+                  <span className={styles.rangeRowText}>
+                    Range {i + 1} ({range.label || `₹${range.minAmount} - ₹${range.maxAmount}`})
                   </span>
-                  <ChevronRight size={18} className={styles.rangeRowChevron} />
+                  <Pencil size={16} className={styles.rangeRowEdit} />
                 </button>
               ))}
 
@@ -154,18 +184,41 @@ export default function CampaignRangesStepPage() {
                 className={styles.addMoreRow}
                 onClick={openCreate}
               >
-                <Plus size={16} /> Add more range
+                <span className={styles.addMoreIcon}>
+                  <Plus size={14} strokeWidth={2.5} />
+                </span>
+                Add Billing Range
               </button>
             </div>
 
-            <button
-              type="button"
-              className={styles.launchBtn}
-              onClick={openLaunch}
-              disabled={!hasRanges}
-            >
-              Allocate Scratches
-            </button>
+            {hasRanges && (
+              qrGenerated ? (
+                <button
+                  type="button"
+                  className={styles.viewCampaignBtn}
+                  onClick={() => router.push(`/campaign/${campaignId}`)}
+                >
+                  View Campaign
+                </button>
+              ) : scratchesAllocated ? (
+                <button
+                  type="button"
+                  className={styles.generateQrBtn}
+                  onClick={openLaunch}
+                >
+                  <QrCode size={18} />
+                  Generate QR
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.launchBtn}
+                  onClick={openLaunch}
+                >
+                  Allocate Scratches
+                </button>
+              )
+            )}
           </>
         )}
 
@@ -175,19 +228,10 @@ export default function CampaignRangesStepPage() {
             open={launchOpen}
             onClose={closeLaunch}
             onLaunched={handleLaunched}
+            initialStep={wizardInitialStep}
           />
         )}
 
-        {/* Navigation */}
-        <div className={styles.footer}>
-          <button
-            type="button"
-            className={styles.backBtn}
-            onClick={() => router.push("/campaign")}
-          >
-            <ArrowLeft size={18} /> Back to campaigns
-          </button>
-        </div>
       </div>
     </div>
   );
