@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/connectDB';
+import rangeModel from '@/models/rangeModel';
 
 /**
  * GET /api/customer/participation/[participationId]
@@ -87,7 +88,10 @@ export async function GET(request, { params }) {
     const scratchCard = participation.scratch_card_id
       ? await ScratchCardRecord.findById(participation.scratch_card_id).lean()
       : null;
-
+    const billingRange = participation.range_id
+      ? await rangeModel.findById(participation.range_id).lean()
+      : null;
+    console.log("[GET billingRange] billingRange:", billingRange);
     function buildRewardName(type, value) {
       switch (type) {
         case 'discount': return value ? `₹${value} OFF` : 'Discount';
@@ -135,10 +139,10 @@ export async function GET(request, { params }) {
         longitude: participation.store_id.longitude
       } : null,
       reward: reward,
-      billingRange: participation.range_id ? {
-        _id: participation.range_id._id.toString(),
-        min: participation.range_id.min,
-        max: participation.range_id.max
+      billingRange: billingRange ? {
+        _id: billingRange._id.toString(),
+        min: billingRange.minAmount,
+        max: billingRange.maxAmount
       } : null,
       participatedAt: participation.participatedAt || participation.createdAt,
     };

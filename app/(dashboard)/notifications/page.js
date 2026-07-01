@@ -9,6 +9,13 @@ import {
   Info,
   Search,
   Filter,
+  LogIn,
+  Plus,
+  Edit2,
+  Trash,
+  MapPin,
+  Gift,
+  Users,
 } from 'lucide-react';
 import styles from './notifications.module.css';
 
@@ -16,24 +23,16 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [readFilter, setReadFilter] = useState('all');
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetchNotifications();
-  }, [typeFilter, readFilter]);
+  }, []);
 
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        limit: 100,
-        ...(typeFilter !== 'all' && { type: typeFilter }),
-        ...(readFilter !== 'all' && { read: readFilter === 'unread' ? false : true }),
-      });
-
-      const res = await fetch(`/api/distributor/notifications?${params}`, {
+      const res = await fetch(`/api/distributor/notifications?limit=100`, {
         credentials: 'include',
       });
       const json = await res.json();
@@ -90,6 +89,22 @@ export default function NotificationsPage() {
 
   const getNotificationIcon = (type) => {
     switch (type) {
+      case 'user_login':
+        return <LogIn size={20} />;
+      case 'campaign_created':
+        return <Plus size={20} />;
+      case 'campaign_updated':
+        return <Edit2 size={20} />;
+      case 'campaign_deleted':
+        return <Trash size={20} />;
+      case 'store_created':
+        return <Plus size={20} />;
+      case 'store_updated':
+        return <MapPin size={20} />;
+      case 'coupon_created':
+        return <Gift size={20} />;
+      case 'participation_created':
+        return <Users size={20} />;
       case 'success':
         return <CheckCircle size={20} />;
       case 'warning':
@@ -138,39 +153,12 @@ export default function NotificationsPage() {
         <div className={styles.header}>
           <div className={styles.headerContent}>
             <h1>Notifications</h1>
-            <p>Stay updated with important alerts</p>
           </div>
           {unreadCount > 0 && (
             <div className={styles.unreadBadge}>
               {unreadCount} unread
             </div>
           )}
-        </div>
-
-        {/* Filters */}
-        <div className={styles.filterSection}>
-          <select
-            value={readFilter}
-            onChange={(e) => setReadFilter(e.target.value)}
-            className={styles.filterSelect}
-          >
-            <option value="all">All Notifications</option>
-            <option value="unread">Unread</option>
-            <option value="read">Read</option>
-          </select>
-
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className={styles.filterSelect}
-          >
-            <option value="all">All Types</option>
-            <option value="order_confirmed">Order Confirmed</option>
-            <option value="inventory_low">Inventory Low</option>
-            <option value="plan_assigned">Plan Assigned</option>
-            <option value="commission_earned">Commission Earned</option>
-            <option value="payout_processed">Payout Processed</option>
-          </select>
         </div>
 
         {/* Notifications List */}

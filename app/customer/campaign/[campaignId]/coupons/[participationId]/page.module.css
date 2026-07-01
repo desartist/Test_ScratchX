@@ -262,7 +262,7 @@
 
 /* Reward card */
 .rewardCard {
-  width: calc(100% - 32px);
+  width: calc(50% - 32px);
   border-radius: 22px;
   background: linear-gradient(150deg, #ffc107 0%, #ff9800 100%);
   overflow: hidden;
@@ -424,4 +424,30 @@
   text-align: center;
   max-width: 280px;
   line-height: 1.5;
+}
+
+
+/* ── Range Info ── */
+.rangeInfo {
+  background: linear-gradient(135deg, #0d21a1 0%, #ff9907 100%);
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(13, 33, 161, 0.3);
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.rangeLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  display: block;
+  text-align: center;
+}
+.expiredBlock{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 100px;
 }

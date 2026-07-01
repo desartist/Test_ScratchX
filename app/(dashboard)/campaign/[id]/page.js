@@ -78,6 +78,18 @@ export default function CampaignDetailsPage({ params }) {
       setError(null);
 
       try {
+        // Update campaign statuses first (checks if any campaigns have ended)
+        try {
+          await fetch('/api/campaigns/update-status', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+        } catch (err) {
+          console.warn('Failed to update campaign statuses:', err);
+        }
+
         const result = await criticalFetchService.fetchCriticalFirst(
           `campaign-detail-${id}`,
           [

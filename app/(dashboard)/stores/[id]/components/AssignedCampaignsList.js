@@ -10,6 +10,8 @@ import {
   Filter,
   ArrowUpDown,
   MoreVertical,
+  AlertCircle,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/components/auth/AuthContext";
@@ -31,6 +33,8 @@ export default function AssignedCampaignsList({
   const [showFilters, setShowFilters] = useState(false);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   // Format date
   const formatDate = (dateString) => {
@@ -77,44 +81,12 @@ export default function AssignedCampaignsList({
 
   // Handle single campaign removal
   const handleRemoveCampaign = async (campaignId) => {
-    if (
-      !confirm("Are you sure you want to remove this campaign from the store?")
-    ) {
-      return;
-    }
-
-    setLoadingRemove(campaignId);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/stores/${storeId}/remove-campaign`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          campaignIds: [campaignId],
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to remove campaign");
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        setLoadingRemove(null);
-        onCampaignRemoved();
-      } else {
-        setError(result.error || "Failed to remove campaign");
-        setLoadingRemove(null);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to remove campaign");
-      setLoadingRemove(null);
-    }
+    setConfirmAction({
+      type: "single",
+      campaignId,
+      message: "Are you sure you want to remove this campaign from the store?",
+    });
+    setShowConfirmModal(true);
   };
 
   // Handle batch removal
@@ -124,16 +96,26 @@ export default function AssignedCampaignsList({
       return;
     }
 
-    if (
-      !confirm(
-        `Are you sure you want to remove ${selectedCampaigns.length} campaign${selectedCampaigns.length !== 1 ? "s" : ""} from the store?`,
-      )
-    ) {
-      return;
-    }
+    setConfirmAction({
+      type: "batch",
+      campaignIds: selectedCampaigns,
+      message: `Are you sure you want to remove ${selectedCampaigns.length} campaign${selectedCampaigns.length !== 1 ? "s" : ""} from the store?`,
+    });
+    setShowConfirmModal(true);
+  };
 
-    setLoadingRemove("batch");
+  // Execute removal after confirmation
+  const executeRemoval = async () => {
+    if (!confirmAction) return;
+
+    const campaignIds =
+      confirmAction.type === "single"
+        ? [confirmAction.campaignId]
+        : confirmAction.campaignIds;
+
+    setLoadingRemove(confirmAction.type === "batch" ? "batch" : confirmAction.campaignId);
     setError(null);
+    setShowConfirmModal(false);
 
     try {
       const response = await fetch(`/api/stores/${storeId}/remove-campaign`, {
@@ -143,26 +125,27 @@ export default function AssignedCampaignsList({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          campaignIds: selectedCampaigns,
+          campaignIds,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to remove campaigns");
+        throw new Error(errorData.error || "Failed to remove campaign(s)");
       }
 
       const result = await response.json();
       if (result.success || result.removedCount > 0) {
         setSelectedCampaigns([]);
         setLoadingRemove(null);
+        setConfirmAction(null);
         onCampaignRemoved();
       } else {
-        setError(result.error || "Failed to remove campaigns");
+        setError(result.error || "Failed to remove campaign(s)");
         setLoadingRemove(null);
       }
     } catch (err) {
-      setError(err.message || "Failed to remove campaigns");
+      setError(err.message || "Failed to remove campaign(s)");
       setLoadingRemove(null);
     }
   };
@@ -200,27 +183,12 @@ export default function AssignedCampaignsList({
           const daysB = getDaysLeft(b.endDate || b.end_date) || 999;
           return daysA - daysB;
         }
-        case "usage": {
-          const totalA = a.scratchTotal || a.allocated_scratch_cards || 0;
-          const usedA = a.scratchUsed || a.used_scratch_cards || 0;
-          const usageA = totalA > 0 ? (usedA / totalA) * 100 : 0;
-
-          const totalB = b.scratchTotal || b.allocated_scratch_cards || 0;
-          const usedB = b.scratchUsed || b.used_scratch_cards || 0;
-          const usageB = totalB > 0 ? (usedB / totalB) * 100 : 0;
-
-          return usageB - usageA;
-        }
-        case "date": {
-          const dateA = new Date(a.startDate || a.start_date || 0);
-          const dateB = new Date(b.startDate || b.start_date || 0);
-          return dateB - dateA;
-        }
-        case "name": {
-          const nameA = (a.name || a.campaignName || "").toLowerCase();
-          const nameB = (b.name || b.campaignName || "").toLowerCase();
-          return nameA.localeCompare(nameB);
-        }
+        case "name":
+          return (a.name || a.campaignName || "").localeCompare(
+            b.name || b.campaignName || ""
+          );
+        case "date":
+          return new Date(b.createdAt) - new Date(a.createdAt);
         default:
           return 0;
       }
@@ -229,215 +197,14 @@ export default function AssignedCampaignsList({
     return filtered;
   }, [campaigns, filterStatus, sortBy]);
 
-  // Calculate analytics
-  const analytics = useMemo(() => {
-    if (campaigns.length === 0) return null;
-
-    const totalAllocated = campaigns.reduce(
-      (sum, c) => sum + (c.scratchTotal || c.allocated_scratch_cards || 0),
-      0,
-    );
-    const totalUsed = campaigns.reduce(
-      (sum, c) => sum + (c.scratchUsed || c.used_scratch_cards || 0),
-      0,
-    );
-    const totalRemaining = totalAllocated - totalUsed;
-    const avgUsagePercent =
-      totalAllocated > 0 ? (totalUsed / totalAllocated) * 100 : 0;
-
-    const activeCampaigns = campaigns.filter(
-      (c) => c.status?.toLowerCase() === "active",
-    ).length;
-    const endingSoon = campaigns.filter((c) => {
-      const days = getDaysLeft(c.endDate || c.end_date);
-      return days !== null && days < 7 && days >= 0;
-    }).length;
-
-    return {
-      totalCampaigns: campaigns.length,
-      activeCampaigns,
-      endingSoon,
-      totalAllocated,
-      totalUsed,
-      totalRemaining,
-      avgUsagePercent,
-    };
-  }, [campaigns]);
-
-  // Export customer details to CSV
-  const handleExportCustomersCSV = async () => {
-    if (!account?.id) {
-      setError('User information not loaded. Please refresh the page.');
-      return;
-    }
-
-    setLoadingCustomers(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/customers?store=${storeId}&limit=10000`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": account.id,
-          "x-user-role": account.role || "merchant",
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch customer data');
-      }
-      
-      const result = await response.json();
-      const customers = result.data || result.participants || [];
-      
-      if (customers.length === 0) {
-        setError('No customers found for this store');
-        setLoadingCustomers(false);
-        return;
-      }
-      
-      const headers = [
-        "Customer Name",
-        "Phone",
-        "Campaign",
-        "Status",
-        "Participated Date",
-        "Reward Type",
-        "Reward Value",
-        "Store"
-      ];
-      
-      const rows = customers.map((customer) => [
-        customer.customer_name || '-',
-        customer.customer_mobile || '-',
-        customer.campaign_id?.name || customer.campaign_id?.campaignName || '-',
-        customer.status || '-',
-        formatDate(customer.createdAt),
-        customer.scratch_card_id?.reward_type || '-',
-        customer.scratch_card_id?.reward_value || '-',
-        customer.store_id?.store_name || '-'
-      ]);
-      
-      const csvContent = [
-        headers.join(","),
-        ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
-      ].join("\n");
-      
-      const blob = new Blob([csvContent], { type: "text/csv" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `customers-store-${storeId}-${new Date().toISOString().split("T")[0]}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      setError(err.message || "Failed to export customer data");
-    } finally {
-      setLoadingCustomers(false);
-    }
-  };
-
-    // Export to CSV
-  const handleExportCSV = () => {
-    if (campaigns.length === 0) return;
-
-    const headers = [
-      "Campaign Name",
-      "Status",
-      "Start Date",
-      "End Date",
-      "Days Left",
-      "Allocated",
-      "Used",
-      "Remaining",
-      "Usage %",
-    ];
-    const rows = filteredAndSortedCampaigns.map((campaign) => {
-      const daysLeft = getDaysLeft(campaign.endDate || campaign.end_date);
-      const total =
-        campaign.scratchTotal || campaign.allocated_scratch_cards || 0;
-      const used = campaign.scratchUsed || campaign.used_scratch_cards || 0;
-      const remaining = total - used;
-      const usage = total > 0 ? ((used / total) * 100).toFixed(1) : 0;
-
-      return [
-        campaign.name || campaign.campaignName,
-        campaign.status || "Active",
-        formatDate(campaign.startDate || campaign.start_date),
-        formatDate(campaign.endDate || campaign.end_date),
-        daysLeft !== null ? daysLeft : "N/A",
-        total,
-        used,
-        remaining,
-        `${usage}%`,
-      ];
-    });
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `campaigns-store-${storeId}-${new Date().toISOString().split("T")[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Export to JSON
-  const handleExportJSON = () => {
-    if (campaigns.length === 0) return;
-
-    const data = {
-      storeId,
-      exportDate: new Date().toISOString(),
-      totalCampaigns: filteredAndSortedCampaigns.length,
-      campaigns: filteredAndSortedCampaigns.map((campaign) => ({
-        id: campaign._id,
-        name: campaign.name || campaign.campaignName,
-        status: campaign.status,
-        startDate: campaign.startDate || campaign.start_date,
-        endDate: campaign.endDate || campaign.end_date,
-        daysLeft: getDaysLeft(campaign.endDate || campaign.end_date),
-        scratchAllocated:
-          campaign.scratchTotal || campaign.allocated_scratch_cards,
-        scratchUsed: campaign.scratchUsed || campaign.used_scratch_cards,
-        scratchRemaining:
-          (campaign.scratchTotal || campaign.allocated_scratch_cards || 0) -
-          (campaign.scratchUsed || campaign.used_scratch_cards || 0),
-      })),
-    };
-
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `campaigns-store-${storeId}-${new Date().toISOString().split("T")[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  if (!campaigns || campaigns.length === 0) {
+  if (campaigns.length === 0) {
     return (
       <div className={styles.container}>
-        <div className={styles.header}>
-          <h2 className={styles.title}>Campaigns Assigned to This Store</h2>
-        </div>
         <div className={styles.emptyState}>
-          <p className={styles.emptyText}>
-            No campaigns assigned to this store yet
-          </p>
-          <p className={styles.emptySubtext}>
-            Assign campaigns using the "Assign Campaigns" button above
+          <div className={styles.emptyIcon}>📋</div>
+          <h3 className={styles.emptyTitle}>No Campaigns Assigned</h3>
+          <p className={styles.emptyDescription}>
+            Assign campaigns to this store to get started
           </p>
         </div>
       </div>
@@ -446,164 +213,54 @@ export default function AssignedCampaignsList({
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <div>
-          <h2 className={styles.title}>Campaigns Assigned to This Store</h2>
-          <p className={styles.subtitle}>
-            {filteredAndSortedCampaigns.length} of {campaigns.length} campaign
-            {campaigns.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <div className={styles.headerActions}>
-          <button
-            className={styles.toolbarButton}
-            onClick={() => setShowAnalytics(!showAnalytics)}
-            title="View analytics"
-          >
-            <BarChart3 size={18} />
-            Analytics
-          </button>
-          <div className={styles.exportMenuContainer}>
-            <button
-              className={styles.toolbarButton}
-              onClick={() => setShowExportMenu(!showExportMenu)}
-              title="Export options"
-            >
-              <MoreVertical size={18} />
-            </button>
-            {showExportMenu && (
-              <div className={styles.exportDropdown}>
-                <button
-                  className={styles.exportOption}
-                  onClick={() => {
-                    setShowAnalytics(!showAnalytics);
-                    setShowExportMenu(false);
-                  }}
-                  title="View analytics"
-                >
-                  <BarChart3 size={16} />
-                  <span>Analytics</span>
-                </button>
-                <button
-                  className={styles.exportOption}
-                  onClick={() => {
-                    handleExportCSV();
-                    setShowExportMenu(false);
-                  }}
-                  title="Download campaigns as CSV"
-                >
-                  <Download size={16} />
-                  <span>Campaigns CSV</span>
-                </button>
-                <button
-                  className={styles.exportOption}
-                  onClick={() => {
-                    handleExportCustomersCSV();
-                    setShowExportMenu(false);
-                  }}
-                  disabled={loadingCustomers}
-                  title="Download customers as CSV"
-                >
-                  <Download size={16} />
-                  <span>{loadingCustomers ? "Exporting..." : "Customers CSV"}</span>
-                </button>
-                <button
-                  className={styles.exportOption}
-                  onClick={() => {
-                    handleExportJSON();
-                    setShowExportMenu(false);
-                  }}
-                  title="Download campaigns as JSON"
-                >
-                  <Download size={16} />
-                  <span>Campaigns JSON</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      {error && <div className={styles.errorBanner}>{error}</div>}
 
-      {error && <div className={styles.errorMessage}>{error}</div>}
-
-      {/* Analytics Dashboard */}
-      {showAnalytics && analytics && (
-        <div className={styles.analyticsPanel}>
-          <div className={styles.analyticsGrid}>
-            <div className={styles.analyticsCard}>
-              <p className={styles.analyticsLabel}>Total Campaigns</p>
-              <p className={styles.analyticsValue}>
-                {analytics.totalCampaigns}
-              </p>
-            </div>
-            <div className={styles.analyticsCard}>
-              <p className={styles.analyticsLabel}>Active</p>
-              <p className={styles.analyticsValue}>
-                {analytics.activeCampaigns}
-              </p>
-            </div>
-            <div className={styles.analyticsCard}>
-              <p className={styles.analyticsLabel}>Ending Soon</p>
-              <p className={styles.analyticsValue}>{analytics.endingSoon}</p>
-            </div>
-            <div className={styles.analyticsCard}>
-              <p className={styles.analyticsLabel}>Avg Usage</p>
-              <p className={styles.analyticsValue}>
-                {analytics.avgUsagePercent.toFixed(1)}%
-              </p>
-            </div>
-            <div className={styles.analyticsCard}>
-              <p className={styles.analyticsLabel}>Total Allocated</p>
-              <p className={styles.analyticsValue}>
-                {analytics.totalAllocated.toLocaleString()}
-              </p>
-            </div>
-            <div className={styles.analyticsCard}>
-              <p className={styles.analyticsLabel}>Total Used</p>
-              <p className={styles.analyticsValue}>
-                {analytics.totalUsed.toLocaleString()}
-              </p>
-            </div>
-            <div className={styles.analyticsCard}>
-              <p className={styles.analyticsLabel}>Total Remaining</p>
-              <p className={styles.analyticsValue}>
-                {analytics.totalRemaining.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Toolbar with Filters and Sorting */}
+      {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
-          <label className={styles.checkboxLabel}>
+          <label className={styles.selectAllLabel}>
             <input
               type="checkbox"
               checked={
-                selectedCampaigns.length ===
-                  filteredAndSortedCampaigns.length &&
+                selectedCampaigns.length === filteredAndSortedCampaigns.length &&
                 filteredAndSortedCampaigns.length > 0
               }
               onChange={handleSelectAll}
               className={styles.checkbox}
             />
-            Select All ({selectedCampaigns.length})
+            Select All ({filteredAndSortedCampaigns.length})
           </label>
+        </div>
+
+        <div className={styles.toolbarRight}>
+          <button
+            className={styles.filterButton}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter size={16} />
+            Filter
+          </button>
+          <button className={styles.sortButton} onClick={() => setShowFilters(!showFilters)}>
+            <ArrowUpDown size={16} />
+            Sort
+          </button>
 
           {selectedCampaigns.length > 0 && (
             <button
-              className={styles.batchRemoveButton}
+              className={styles.removeButton}
               onClick={handleBatchRemove}
               disabled={loadingRemove === "batch"}
             >
               <Trash2 size={16} />
-              Remove Selected ({selectedCampaigns.length})
+              Remove ({selectedCampaigns.length})
             </button>
           )}
         </div>
+      </div>
 
-        <div className={styles.toolbarRight}>
+      {/* Filters and Sort (if shown) */}
+      {showFilters && (
+        <div className={styles.filterPanel}>
           <div className={styles.filterGroup}>
             <label className={styles.filterLabel}>Status:</label>
             <select
@@ -614,172 +271,146 @@ export default function AssignedCampaignsList({
               <option value="all">All</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
-              <option value="ending_soon">Ending Soon</option>
               <option value="ended">Ended</option>
             </select>
           </div>
 
           <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Sort by:</label>
+            <label className={styles.filterLabel}>Sort By:</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className={styles.filterSelect}
             >
-              <option value="daysLeft">Days Left (Ascending)</option>
-              <option value="usage">Usage (High to Low)</option>
-              <option value="date">Date (Newest First)</option>
-              <option value="name">Name (A-Z)</option>
+              <option value="daysLeft">Days Left</option>
+              <option value="name">Name</option>
+              <option value="date">Date Created</option>
             </select>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className={styles.campaignsList}>
-        {filteredAndSortedCampaigns.map((campaign) => {
-          const daysLeft = getDaysLeft(campaign.endDate || campaign.end_date);
-          const scratchUsed =
-            campaign.scratchUsed || campaign.used_scratch_cards || 0;
-          const scratchTotal =
-            campaign.scratchTotal || campaign.allocated_scratch_cards || 0;
-          const scratchRemaining = Math.max(0, scratchTotal - scratchUsed);
-          // Round used% first, then derive remaining as its complement so they
-          // always sum to exactly 100 (avoids 0.1% used + 100.0% remaining).
-          const usagePercent =
-            scratchTotal > 0 ? (scratchUsed / scratchTotal) * 100 : 0;
-          const usedDisplayPct = parseFloat(usagePercent.toFixed(1));
-          const remainingDisplayPct = parseFloat((100 - usedDisplayPct).toFixed(1));
+      {/* Campaign List */}
+      <div className={styles.campaignListWrapper}>
+        {filteredAndSortedCampaigns.length === 0 ? (
+          <div className={styles.noResults}>
+            <p>No campaigns match your filters</p>
+          </div>
+        ) : (
+          <div className={styles.campaignList}>
+            {filteredAndSortedCampaigns.map((campaign) => {
+              const daysLeft = getDaysLeft(campaign.endDate || campaign.end_date);
+              const isSelected = selectedCampaigns.includes(campaign._id);
 
-          return (
-            <div key={campaign._id} className={styles.campaignCard}>
-              {/* Checkbox */}
-              <label className={styles.cardCheckbox}>
-                <input
-                  type="checkbox"
-                  checked={selectedCampaigns.includes(campaign._id)}
-                  onChange={() => handleSelectCampaign(campaign._id)}
-                  className={styles.checkbox}
-                />
-              </label>
-
-              {/* Campaign Header */}
-              <div className={styles.cardHeader}>
-                <div className={styles.headerLeft}>
-                  <h3 className={styles.campaignName}>
-                    {campaign.name || campaign.campaignName}
-                  </h3>
-                  <div className={styles.badgeGroup}>
-                    <span
-                      className={`${styles.statusBadge} ${getStatusColor(campaign.status)}`}
-                    >
-                      {campaign.status?.charAt(0).toUpperCase() +
-                        campaign.status?.slice(1) || "Active"}
-                    </span>
-                    {daysLeft !== null && (
-                      <span
-                        className={`${styles.daysBadge} ${daysLeft < 7 ? styles.daysWarning : ""}`}
-                      >
-                        {daysLeft <= 0
-                          ? "Ended"
-                          : `${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Campaign Details Grid */}
-              <div className={styles.detailsGrid}>
-                {/* Date Range */}
-                <div className={styles.detailItem}>
-                  <p className={styles.detailLabel}>Period</p>
-                  <p className={styles.detailValue}>
-                    {formatDate(campaign.startDate || campaign.start_date)} -{" "}
-                    {formatDate(campaign.endDate || campaign.end_date)}
-                  </p>
-                </div>
-
-                {/* Billing Ranges */}
-                <div className={styles.detailItem}>
-                  <p className={styles.detailLabel}>Billing Ranges</p>
-                  <p className={styles.detailValue}>
-                    {campaign.billingRanges?.length ||
-                      campaign.ranges?.length ||
-                      0}{" "}
-                    range
-                    {(campaign.billingRanges?.length ||
-                      campaign.ranges?.length ||
-                      0) !== 1
-                      ? "s"
-                      : ""}
-                  </p>
-                </div>
-
-                {/* Scratch Allocation */}
-                <div className={styles.detailItem}>
-                  <p className={styles.detailLabel}>Allocated</p>
-                  <p className={styles.detailValue}>
-                    {scratchTotal.toLocaleString()} cards
-                  </p>
-                </div>
-
-                {/* Scratch Used */}
-                <div className={styles.detailItem}>
-                  <p className={styles.detailLabel}>Used</p>
-                  <p className={styles.detailValue}>
-                    {scratchUsed.toLocaleString()} cards
-                  </p>
-                </div>
-              </div>
-
-              {/* Scratch Progress Bar */}
-              {scratchTotal > 0 && (
-                <div className={styles.progressSection}>
-                  <div className={styles.progressHeader}>
-                    <p className={styles.progressLabel}>Scratch Usage</p>
-                    <p className={styles.progressValue}>
-                      {scratchRemaining.toLocaleString()} remaining
-                    </p>
-                  </div>
-                  <div className={styles.progressBar}>
-                    <div
-                      className={styles.progressFill}
-                      style={{ width: `${Math.min(usagePercent, 100)}%` }}
+              return (
+                <div
+                  key={campaign._id}
+                  className={`${styles.campaignRow} ${isSelected ? styles.selected : ""}`}
+                >
+                  <label className={styles.selectCheckbox}>
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleSelectCampaign(campaign._id)}
+                      className={styles.checkbox}
                     />
+                  </label>
+
+                  <div className={styles.campaignInfo}>
+                    <div className={styles.campaignName}>
+                      {campaign.name || campaign.campaignName}
+                    </div>
+                    <div className={styles.campaignMeta}>
+                      <span
+                        className={`${styles.badge} ${getStatusColor(campaign.status)}`}
+                      >
+                        {campaign.status || "Draft"}
+                      </span>
+                      {daysLeft !== null && (
+                        <span className={styles.daysLeft}>
+                          {daysLeft} day{daysLeft !== 1 ? "s" : ""} left
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className={styles.progressStats}>
-                    <span>{usedDisplayPct}% used</span>
-                    <span>{remainingDisplayPct}% remaining</span>
+
+                  <div className={styles.campaignDetails}>
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Period:</span>
+                      <span className={styles.detailValue}>
+                        {formatDate(campaign.startDate || campaign.start_date)} -{" "}
+                        {formatDate(campaign.endDate || campaign.end_date)}
+                      </span>
+                    </div>
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Allocated:</span>
+                      <span className={styles.detailValue}>
+                        {campaign.allocated_scratch_cards?.toLocaleString("en-IN") || "-"}
+                      </span>
+                    </div>
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Used:</span>
+                      <span className={styles.detailValue}>
+                        {campaign.used_scratch_cards?.toLocaleString("en-IN") || "-"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.campaignActions}>
+                    <button
+                      className={styles.actionButton}
+                      onClick={() =>
+                        router.push(
+                          `/campaigns/${campaign._id}`,
+                        )
+                      }
+                      title="View campaign"
+                    >
+                      <Eye size={18} />
+                    </button>
+                    <button
+                      className={`${styles.actionButton} ${styles.danger}`}
+                      onClick={() => handleRemoveCampaign(campaign._id)}
+                      disabled={loadingRemove === campaign._id}
+                      title="Remove campaign"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                 </div>
-              )}
-
-              {/* Card Actions */}
-              <div className={styles.cardActions}>
-                <button
-                  className={styles.viewButton}
-                  onClick={() => router.push(`/campaign/${campaign._id}`)}
-                  title="View campaign details"
-                >
-                  <Eye size={16} />
-                  View Campaign
-                </button>
-                <button
-                  className={styles.removeButton}
-                  onClick={() => handleRemoveCampaign(campaign.campaignId)}
-                  disabled={loadingRemove === campaign.campaignId}
-                  title="Remove campaign from store"
-                >
-                  <Trash2 size={16} />
-                  {loadingRemove === campaign.campaignId
-                    ? "Removing..."
-                    : "Remove"}
-                </button>
-              </div>
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && confirmAction && (
+        <div className={styles.modalOverlay} onClick={() => setShowConfirmModal(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmIcon}>
+              <AlertCircle size={48} />
+            </div>
+            <h2 className={styles.confirmTitle}>Remove Campaign?</h2>
+            <p className={styles.confirmMessage}>{confirmAction.message}</p>
+            <div className={styles.confirmFooter}>
+              <button
+                className={styles.confirmCancelBtn}
+                onClick={() => setShowConfirmModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.confirmDeleteBtn}
+                onClick={executeRemoval}
+                disabled={loadingRemove}
+              >
+                {loadingRemove ? "Removing..." : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

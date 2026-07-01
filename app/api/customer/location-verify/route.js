@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/connectDB";
+import Store from "@/models/storeModel";
 import { validateCoordinates } from "@/lib/utils/geoUtils";
 import { validateCustomerLocation } from "@/lib/utils/distanceCalculator";
 
@@ -30,6 +32,7 @@ import { validateCustomerLocation } from "@/lib/utils/distanceCalculator";
  */
 export async function POST(request) {
   try {
+    await connectDB();
     const body = await request.json();
     const { campaignId, customerLatitude, customerLongitude, storesList } =
       body;
@@ -97,12 +100,46 @@ export async function POST(request) {
       );
     }
 
+    // CRITICAL FIX: Fetch fresh store coordinates from database
+    // This ensures we use the latest store location even if the campaign snapshot is old
+    const storeIds = storesList.map((s) => s.storeId);
+    const freshStores = await Store.find({ _id: { $in: storeIds } }).lean();
+
+    console.log("🔄 Fresh stores from DB:", freshStores.map(s => ({
+      storeId: s._id.toString(),
+      latitude: s.latitude,
+      longitude: s.longitude
+    })));
+
+    const storesMap = new Map(freshStores.map((s) => [s._id.toString(), s]));
+
+    // Merge fresh coordinates with provided store data
+    const updatedStoresList = storesList.map((store) => {
+      const freshStore = storesMap.get(store.storeId.toString());
+      if (freshStore && (freshStore.latitude || freshStore.longitude)) {
+        console.log(`✅ Updated store ${store.storeName} with fresh coordinates:`, {
+          lat: freshStore.latitude,
+          lng: freshStore.longitude
+        });
+        return {
+          ...store,
+          latitude: freshStore.latitude,
+          longitude: freshStore.longitude,
+        };
+      }
+      console.log(`⚠️ No fresh coordinates found for store ${store.storeName}, using provided:`, {
+        lat: store.latitude,
+        lng: store.longitude
+      });
+      return store;
+    });
+
     console.log("📍 Location Verification Request:", {
       campaignId,
       customerLatitude,
       customerLongitude,
-      storeCount: storesList.length,
-      stores: storesList.map((s) => ({
+      storeCount: updatedStoresList.length,
+      stores: updatedStoresList.map((s) => ({
         storeId: s.storeId,
         storeName: s.storeName,
         hasCoordinates: !!(s.latitude && s.longitude),
@@ -111,15 +148,15 @@ export async function POST(request) {
       })),
     });
 
-    // CRITICAL FIX: Use payload data, not database queries
+    // CRITICAL FIX: Use fresh store coordinates from database
     // Allowed radius: 100 meters (not 2km)
     const ALLOWED_RADIUS_METERS = 100;
 
-    // Validate customer location against all stores
+    // Validate customer location against all stores (with fresh coordinates)
     const validationResult = validateCustomerLocation(
       customerLatitude,
       customerLongitude,
-      storesList,
+      updatedStoresList,
       ALLOWED_RADIUS_METERS,
     );
 

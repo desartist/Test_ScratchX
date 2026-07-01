@@ -147,7 +147,18 @@ export default function CouponPage() {
           const saved = localStorage.getItem(storageKey);
           if (saved) {
             const elapsed = (Date.now() - parseInt(saved, 10)) / 1000;
-            setTimeLeft(Math.max(0, Math.round(REVEAL_DURATION - elapsed)));
+            const timeRemaining = Math.max(0, Math.round(REVEAL_DURATION - elapsed));
+            setTimeLeft(timeRemaining);
+
+            // ===== CRITICAL FIX: Check if already expired =====
+            // If user returns after 5 minutes have passed, show expired immediately
+            if (timeRemaining === 0) {
+              console.log("[Participation] Already expired - showing expired state");
+              // The expired state will be shown by the countdown UI since timeLeft is 0
+            }
+          } else {
+            // First time revealing - set full duration
+            setTimeLeft(REVEAL_DURATION);
           }
         }
 
@@ -183,6 +194,14 @@ export default function CouponPage() {
     })();
   }, [participationId, campaignId]);
 
+  // ===== CRITICAL: Show expired screen when timer reaches 0 =====
+  useEffect(() => {
+    if (timeLeft === 0 && phase === "revealed") {
+      console.log("[Timer] Session expired - showing expired screen");
+      // Optionally add visual feedback when timer expires
+    }
+  }, [timeLeft, phase]);
+
   // ── Countdown timer (persists across refreshes via localStorage) ──
   useEffect(() => {
     if (phase !== "revealed") return;
@@ -194,9 +213,13 @@ export default function CouponPage() {
     revealedAtRef.current = parseInt(localStorage.getItem(storageKey), 10);
     const iv = setInterval(() => {
       const remaining = Math.max(0, REVEAL_DURATION - (Date.now() - revealedAtRef.current) / 1000);
-      setTimeLeft(Math.round(remaining));
-      if (remaining === 0) clearInterval(iv);
-    }, 1000);
+      const rounded = Math.round(remaining);
+      setTimeLeft(rounded);
+      if (rounded === 0) {
+        clearInterval(iv);
+        console.log("[Timer] Countdown complete - timer is now 0");
+      }
+    }, 100); // Faster updates for more responsive UI
     return () => clearInterval(iv);
   }, [phase, participationId]);
 
@@ -390,7 +413,7 @@ export default function CouponPage() {
   return (
     <div className={`${styles.page} ${styles.pageDark}`}>
       {storeHeader}
-      <div className={styles.body}>
+      {!isExpired && <div className={styles.body}>
         <div className={styles.celebBlock}>
           <div className={styles.celebEmoji}>🎉</div>
           <h1 className={styles.celebTitle}>You Won!</h1>
@@ -414,6 +437,15 @@ export default function CouponPage() {
           </div>
         </div>
 
+        {/* Selected Range/Billing Range */}
+        {participation?.billingRange && (
+          <div className={styles.rangeInfo}>
+            <span className={styles.rangeLabel}>
+              Billing Range: ₹{participation.billingRange.min?.toLocaleString("en-IN")} - ₹{participation.billingRange.max?.toLocaleString("en-IN")}
+            </span>
+          </div>
+        )}
+
         {/* 5-minute countdown */}
         <div className={`${styles.countdown} ${isExpiring ? styles.countdownWarn : ""} ${isExpired ? styles.countdownDead : ""}`}>
           <div className={styles.countdownLabel}>
@@ -428,9 +460,23 @@ export default function CouponPage() {
               : `${Math.ceil(timeLeft / 60)} minute${Math.ceil(timeLeft / 60) !== 1 ? "s" : ""} remaining to redeem`}
           </div>
         </div>
-
+              
         <p className={styles.claimHint}>Present this screen at the store counter to claim</p>
-      </div>
+      </div>}
+      {isExpired && (
+        <div className={styles.body}>
+          <div className={styles.expiredBlock}>
+            <div className={styles.expiredIcon}>⏰</div>
+            <h2 className={styles.expiredTitle}>Session Expired</h2>
+            <p className={styles.expiredDesc}>
+              Your reward session has timed out. Each scratch session is valid for 5 minutes after revealing your reward.
+            </p>
+            <div className={styles.expiredHint}>
+              Please visit the store again to get a new coupon.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

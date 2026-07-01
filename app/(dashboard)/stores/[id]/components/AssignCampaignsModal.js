@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Search } from 'lucide-react';
+import { X, Search, Calendar, DollarSign } from 'lucide-react';
 import styles from './AssignCampaignsModal.module.css';
 
 export default function AssignCampaignsModal({
@@ -133,16 +133,13 @@ export default function AssignCampaignsModal({
 
       const result = await response.json();
       if (result.success) {
-        // Pass assignment results to parent for success toast
         onCampaignsAssigned({
           assignedCount: result.assignedCount || selectedCampaigns.length,
           skippedCount: result.skippedCount || 0,
           message: result.message || 'Campaigns assigned successfully'
         });
-        // Close modal immediately on success
         onClose();
       } else {
-        // Only show error if the API actually failed
         setError(result.message || 'Failed to assign campaigns');
       }
     } catch (err) {
@@ -151,6 +148,13 @@ export default function AssignCampaignsModal({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const formatDateRange = (campaign) => {
+    if (!campaign.startDate || !campaign.endDate) return null;
+    const start = new Date(campaign.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    const end = new Date(campaign.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    return `${start} - ${end}`;
   };
 
   if (!isOpen) return null;
@@ -197,6 +201,9 @@ export default function AssignCampaignsModal({
           ) : (
             filteredCampaigns.map(campaign => {
               const isAlreadyAssigned = assignedCampaignIds.includes(campaign._id.toString());
+              const dateRange = formatDateRange(campaign);
+              const campaignStatus = campaign.status || 'draft';
+
               return (
                 <label
                   key={campaign._id}
@@ -215,15 +222,22 @@ export default function AssignCampaignsModal({
                       {campaign.name || campaign.campaignName}
                     </span>
                     <div className={styles.statusRow}>
-                      {isAlreadyAssigned && (
+                      {isAlreadyAssigned ? (
                         <span className={`${styles.status} ${styles.statusAssigned}`}>
                           Already Assigned
                         </span>
-                      )}
-                      {campaign.status && !isAlreadyAssigned && (
-                        <span className={`${styles.status} ${styles[`status${campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}`]}`}>
-                          {campaign.status}
-                        </span>
+                      ) : (
+                        <>
+                          <span className={`${styles.status} ${styles[`status${campaignStatus.charAt(0).toUpperCase() + campaignStatus.slice(1)}`]}`}>
+                            {campaignStatus.charAt(0).toUpperCase() + campaignStatus.slice(1)}
+                          </span>
+                          {dateRange && (
+                            <span style={{ fontSize: '12px', color: '#b0b8c0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Calendar size={12} />
+                              {dateRange}
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

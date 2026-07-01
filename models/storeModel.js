@@ -229,5 +229,49 @@ storeSchema.pre('validate', function () {
   }
 });
 
+// ===== AUTO-SYNC STORE LOCATION WITH CAMPAIGNS =====
+// When a store's location (latitude/longitude) is updated, automatically
+// sync that change to all campaigns that have this store assigned
+storeSchema.post('save', async function (doc) {
+  try {
+    // Only sync if location changed (latitude or longitude modified)
+    if (this.isModified('latitude') || this.isModified('longitude')) {
+      const Campaign = mongoose.model('Campaign');
+
+      // Find all campaigns with this store assigned
+      const campaignFilter = {
+        'assignedStores.storeId': this._id
+      };
+
+      const campaigns = await Campaign.find(campaignFilter);
+
+      if (campaigns.length > 0) {
+        console.log(`🔄 Syncing store ${doc.store_name} coordinates to ${campaigns.length} campaign(s)`);
+
+        // Update each campaign's assignedStores snapshot
+        for (const campaign of campaigns) {
+          const storeAssignment = campaign.assignedStores.find(
+            s => s.storeId.toString() === this._id.toString()
+          );
+
+          if (storeAssignment) {
+            // Update coordinates in the snapshot
+            storeAssignment.latitude = doc.latitude;
+            storeAssignment.longitude = doc.longitude;
+            storeAssignment.lastModified = new Date();
+
+            // Save campaign with updated coordinates
+            await campaign.save();
+            console.log(`✅ Updated campaign ${campaign._id} with new store coordinates`);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error syncing store location to campaigns:', error.message);
+    // Don't throw - store save succeeded, just log the sync error
+  }
+});
+
 export default mongoose.models.Store ||
   mongoose.model("Store", storeSchema);

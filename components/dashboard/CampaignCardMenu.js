@@ -21,7 +21,7 @@ function DeleteModal({ onConfirm, onCancel, loading, apiError }) {
             <h3 className={styles.modalTitle}>Cannot Delete Campaign</h3>
             <p className={styles.modalText}>{apiError}</p>
             <div className={styles.modalHint}>
-              To delete this campaign, first change its status to <strong>Draft</strong> from the campaign detail page.
+              Only draft and ended campaigns can be deleted. To delete an active campaign, wait for it to end or change its status from the campaign detail page.
             </div>
             <button type="button" className={styles.modalCancelFull} onClick={onCancel}>
               Got it

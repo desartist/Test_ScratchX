@@ -67,6 +67,19 @@ export default function CampaignPage() {
   const fetchCampaigns = useCallback(async () => {
     try {
       setLoading(true);
+
+      // Update campaign statuses first (checks if any campaigns have ended)
+      try {
+        await fetch('/api/campaigns/update-status', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+      } catch (err) {
+        console.warn('Failed to update campaign statuses:', err);
+      }
+
       // Use smartCacheService for instant load + background refresh
       const campaignsData = await smartCacheService.fetchWithCache(
         'campaigns-list',
@@ -145,7 +158,12 @@ export default function CampaignPage() {
       if (!result.success) {
         return { error: result.error || "Failed to delete campaign." };
       }
-      // Campaign removed from list instantly
+
+      // Update React state immediately (optimistic update)
+      setCampaigns((prevCampaigns) =>
+        prevCampaigns.filter((c) => c._id !== campaignId)
+      );
+
       return { success: true };
     },
     [account],

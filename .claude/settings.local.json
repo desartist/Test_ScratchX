@@ -495,7 +495,9 @@
       "Bash(cp /tmp/scan_clear.js \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(client\\)/scan/[campaignId]/page.js\" && pkill -f \"next dev\" && sleep 2 && npm run dev > /tmp/server.log 2>&1 & *)",
       "Bash(cp /tmp/scan_error.js \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(client\\)/scan/[campaignId]/page.js\" && echo \"✅ Updated with console.error\\(\\) for visibility\")",
       "Bash(cp /tmp/coupons_fix.js \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/customer/campaign/[campaignId]/coupons/[participationId]/page.js\" && pkill -f \"next dev\" && sleep 2 && npm run dev > /tmp/server.log 2>&1 & *)",
-      "Bash(curl -s http://localhost:3000/api/campaigns)"
+      "Bash(curl -s http://localhost:3000/api/campaigns)",
+      "Bash(pkill -f \"node.*next\")",
+      "Bash(echo \" *)"
     ]
   }
 }

@@ -13,13 +13,6 @@ export async function GET(request) {
     const { account, error: authError } = await requireAuth();
     if (authError) return authError;
 
-    if (account.role !== 'Distributor') {
-      return NextResponse.json(
-        { success: false, error: 'Only distributors can view notifications' },
-        { status: 403 }
-      );
-    }
-
     const url = new URL(request.url);
     const type = url.searchParams.get('type');
     const read = url.searchParams.get('read');

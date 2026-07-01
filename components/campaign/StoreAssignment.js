@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Store as StoreIcon, Search, Trash2, MapPin, AlertCircle } from "lucide-react";
+import { Store as StoreIcon, Search, Trash2, MapPin, AlertCircle, X } from "lucide-react";
 import Badge from "@/components/dashboard/Badge";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import styles from "./StoreAssignment.module.css";
@@ -37,6 +37,8 @@ export default function StoreAssignment({
   const [selected, setSelected] = useState([]);
   const [assigning, setAssigning] = useState(false);
   const [removingId, setRemovingId] = useState(null);
+  const [optimisticAssigned, setOptimisticAssigned] = useState(new Set());
+  const [showModal, setShowModal] = useState(false);
 
   // Guard so the single-store auto-assign fires at most once.
   const autoAssignedRef = useRef(false);
@@ -44,7 +46,7 @@ export default function StoreAssignment({
   const userId = account?.id;
   const userRole = account?.role || "Merchant";
 
-  // Set of storeIds currently assigned (active snapshots).
+  // Set of storeIds currently assigned (active snapshots + optimistic updates).
   const assignedIds = useMemo(() => {
     const set = new Set();
     (assignedStores || []).forEach((s) => {
@@ -52,8 +54,10 @@ export default function StoreAssignment({
         set.add(String(s.storeId || s._id));
       }
     });
+    // Merge with optimistic updates
+    optimisticAssigned.forEach((id) => set.add(String(id)));
     return set;
-  }, [assignedStores]);
+  }, [assignedStores, optimisticAssigned]);
 
   // Map storeId -> pending request for this campaign.
   const pendingByStore = useMemo(() => {
@@ -174,6 +178,13 @@ export default function StoreAssignment({
       if (!campaignId || !userId || !storeId) return;
       setRemovingId(String(storeId));
       setError(null);
+      const storeIdStr = String(storeId);
+      // Optimistic update: immediately remove from assigned
+      setOptimisticAssigned((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(storeIdStr);
+        return newSet;
+      });
       try {
         const res = await fetch(
           `/api/campaigns/${campaignId}/stores/${storeId}`,
@@ -191,11 +202,18 @@ export default function StoreAssignment({
       } catch (err) {
         console.error("Failed to remove store:", err);
         setError(err.message || "Failed to remove store");
+        // Rollback: add back to optimistic if it was there before
+        const wasAssigned = (assignedStores || []).some(
+          (s) => s && s.status === "active" && String(s.storeId || s._id) === storeIdStr
+        );
+        if (wasAssigned) {
+          setOptimisticAssigned((prev) => new Set([...prev, storeIdStr]));
+        }
       } finally {
         setRemovingId(null);
       }
     },
-    [campaignId, userId, userRole, onChanged],
+    [campaignId, userId, userRole, onChanged, assignedStores],
   );
 
   const handleToggleSelect = useCallback((storeId) => {
@@ -210,11 +228,20 @@ export default function StoreAssignment({
     if (selected.length === 0) return;
     setAssigning(true);
     setError(null);
+    // Optimistic update: immediately show stores as assigned
+    setOptimisticAssigned((prev) => new Set([...prev, ...selected]));
     const ok = await assignStores(selected);
     setAssigning(false);
     if (ok) {
       setSelected([]);
       if (typeof onChanged === "function") onChanged();
+    } else {
+      // Rollback on failure
+      setOptimisticAssigned((prev) => {
+        const newSet = new Set(prev);
+        selected.forEach((id) => newSet.delete(id));
+        return newSet;
+      });
     }
   }, [selected, assignStores, onChanged]);
 
@@ -222,9 +249,19 @@ export default function StoreAssignment({
     async (storeId) => {
       setAssigning(true);
       setError(null);
+      // Optimistic update: immediately show store as assigned
+      setOptimisticAssigned((prev) => new Set([...prev, storeId]));
       const ok = await assignStores([storeId]);
       setAssigning(false);
       if (ok && typeof onChanged === "function") onChanged();
+      else {
+        // Rollback on failure
+        setOptimisticAssigned((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(storeId);
+          return newSet;
+        });
+      }
     },
     [assignStores, onChanged],
   );
@@ -243,6 +280,11 @@ export default function StoreAssignment({
 
   const locationOf = (store) =>
     [store.city, store.address].filter(Boolean).join(", ") || "—";
+
+  const getDaysLeftForStore = (store) => {
+    // This is placeholder - you can update with actual logic based on campaign dates
+    return "—";
+  };
 
   // ---- Render ----
   const header = (
@@ -325,6 +367,12 @@ export default function StoreAssignment({
   }
 
   // Multi-store (Smart) view.
+  const assignedStoreList = stores.filter((s) =>
+    assignedIds.has(String(s._id))
+  );
+
+  const unassignedStoreCount = stores.length - assignedStoreList.length;
+
   return (
     <section className={styles.section}>
       {header}
@@ -346,61 +394,36 @@ export default function StoreAssignment({
 
       {error && <div className={styles.errorBox}>{error}</div>}
 
-      <div className={styles.searchWrap}>
-        <Search size={16} className={styles.searchIcon} />
-        <input
-          type="text"
-          className={styles.searchInput}
-          placeholder="Search stores by name or code…"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      <ul className={styles.storeList}>
-        {filteredStores.length === 0 ? (
-          <li className={styles.stateMsg}>No stores match your search.</li>
-        ) : (
-          filteredStores.map((store) => {
-            const id = String(store._id);
-            const isAssigned = assignedIds.has(id);
-            const pending = pendingByStore.get(id);
-            const isSelected = selected.includes(id);
-            const disableSelect = limitReached && !isSelected;
-            return (
-              <li key={id} className={styles.storeRow}>
-                <div className={styles.rowLeft}>
-                  {!isAssigned && !pending && (
-                    <input
-                      type="checkbox"
-                      className={styles.checkbox}
-                      checked={isSelected}
-                      disabled={disableSelect || assigning}
-                      onChange={() => handleToggleSelect(id)}
-                      aria-label={`Select ${store.store_name}`}
-                    />
-                  )}
-                  <div className={styles.storeMain}>
-                    <span className={styles.storeName}>
-                      {store.store_name || "Store"}
-                    </span>
-                    <span className={styles.storeMeta}>
-                      {store.store_code && (
-                        <span className={styles.storeCode}>
-                          {store.store_code}
-                        </span>
-                      )}
-                      <span className={styles.storeLoc}>
-                        <MapPin size={13} />
-                        {locationOf(store)}
+      {/* Assigned Stores Section */}
+      {assignedStoreList.length > 0 && (
+        <div className={styles.assignedStoresSection}>
+          <h3 className={styles.sectionTitle}>Assigned Stores</h3>
+          <ul className={styles.storeList}>
+            {assignedStoreList.map((store) => {
+              const id = String(store._id);
+              return (
+                <li key={id} className={styles.storeRow}>
+                  <div className={styles.rowLeft}>
+                    <div className={styles.storeMain}>
+                      <span className={styles.storeName}>
+                        {store.store_name || "Store"}
                       </span>
-                    </span>
+                      <span className={styles.storeMeta}>
+                        {store.store_code && (
+                          <span className={styles.storeCode}>
+                            {store.store_code}
+                          </span>
+                        )}
+                        <span className={styles.storeLoc}>
+                          <MapPin size={13} />
+                          {locationOf(store)}
+                        </span>
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className={styles.rowRight}>
-                  {isAssigned ? (
-                    <>
-                      <Badge label="Assigned" variant="success" />
+                  <div className={styles.rowRight}>
+                    <Badge label="Assigned" variant="success" />
+                    {!limitReached && (
                       <button
                         type="button"
                         className={styles.removeBtn}
@@ -410,38 +433,25 @@ export default function StoreAssignment({
                       >
                         <Trash2 size={16} />
                       </button>
-                    </>
-                  ) : pending ? (
-                    <Badge label="Pending Request" variant="warning" />
-                  ) : (
-                    <button
-                      type="button"
-                      className={styles.assignBtn}
-                      onClick={() => handleAssignOne(id)}
-                      disabled={limitReached || assigning}
-                    >
-                      Assign
-                    </button>
-                  )}
-                </div>
-              </li>
-            );
-          })
-        )}
-      </ul>
-
-      {selected.length > 0 && (
-        <div className={styles.bulkBar}>
-          <span className={styles.bulkText}>{selected.length} selected</span>
-          <button
-            type="button"
-            className={styles.assignSelectedBtn}
-            onClick={handleAssignSelected}
-            disabled={assigning || limitReached}
-          >
-            {assigning ? "Assigning…" : `Assign Selected (${selected.length})`}
-          </button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         </div>
+      )}
+
+      {/* Add More Stores Button */}
+      {unassignedStoreCount > 0 && !limitReached && (
+        <button
+          type="button"
+          className={styles.addStoresBtn}
+          onClick={() => setShowModal(true)}
+        >
+          <StoreIcon size={18} />
+          Assign More Stores ({unassignedStoreCount} available)
+        </button>
       )}
 
       {limitReached && (
@@ -449,6 +459,110 @@ export default function StoreAssignment({
           Store limit reached for the {planType || "current"} plan ({storeLimit}).
           Remove a store to assign a different one.
         </p>
+      )}
+
+      {/* Modal for assigning stores */}
+      {showModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Assign Stores</h2>
+              <button
+                className={styles.modalClose}
+                onClick={() => setShowModal(false)}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className={styles.modalSearchWrap}>
+              <Search size={16} className={styles.modalSearchIcon} />
+              <input
+                type="text"
+                className={styles.modalSearchInput}
+                placeholder="Search stores by name or code…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <ul className={styles.modalStoreList}>
+              {filteredStores.length === 0 ? (
+                <li className={styles.emptyMsg}>No stores match your search.</li>
+              ) : (
+                filteredStores.map((store) => {
+                  const id = String(store._id);
+                  const isAssigned = assignedIds.has(id);
+                  const pending = pendingByStore.get(id);
+                  const isSelected = selected.includes(id);
+                  const disableSelect = (limitReached && !isSelected) || isAssigned;
+
+                  return (
+                    <li key={id} className={styles.modalStoreRow}>
+                      <div className={styles.modalRowLeft}>
+                        {!isAssigned && !pending && (
+                          <input
+                            type="checkbox"
+                            className={styles.checkbox}
+                            checked={isSelected}
+                            disabled={disableSelect || assigning}
+                            onChange={() => handleToggleSelect(id)}
+                          />
+                        )}
+                        <div className={styles.storeInfo}>
+                          <div className={styles.storeName}>
+                            {store.store_name || "Store"}
+                          </div>
+                          <div className={styles.storeDetails}>
+                            {store.store_code && (
+                              <span className={styles.storeCode}>
+                                {store.store_code}
+                              </span>
+                            )}
+                            <span className={styles.storeLocation}>
+                              <MapPin size={12} />
+                              {locationOf(store)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={styles.modalRowRight}>
+                        {isAssigned ? (
+                          <Badge label="Assigned" variant="success" />
+                        ) : pending ? (
+                          <Badge label="Pending Request" variant="warning" />
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+
+            {selected.length > 0 && (
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.modalCancelBtn}
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={styles.modalAssignBtn}
+                  onClick={async () => {
+                    await handleAssignSelected();
+                    setShowModal(false);
+                  }}
+                  disabled={assigning}
+                >
+                  {assigning ? "Assigning…" : `Assign (${selected.length})`}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </section>
   );

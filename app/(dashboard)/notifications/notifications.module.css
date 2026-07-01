@@ -133,6 +133,39 @@
   background: #3b82f6;
 }
 
+/* Notification Type Styles */
+.type-user_login {
+  background: #0d21a1;
+}
+
+.type-campaign_created {
+  background: linear-gradient(135deg, #0d21a1 0%, #ff9907 100%);
+}
+
+.type-campaign_updated {
+  background: #3b82f6;
+}
+
+.type-campaign_deleted {
+  background: #ef4444;
+}
+
+.type-store_created {
+  background: linear-gradient(135deg, #0d21a1 0%, #ff9907 100%);
+}
+
+.type-store_updated {
+  background: #f59e0b;
+}
+
+.type-coupon_created {
+  background: #10b981;
+}
+
+.type-participation_created {
+  background: #8b5cf6;
+}
+
 .content {
   flex: 1;
   min-width: 0;

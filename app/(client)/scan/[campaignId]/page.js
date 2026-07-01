@@ -44,8 +44,28 @@ export default function ScanClientPage() {
   const [participationId, setParticipationId] = useState(null);
   const [scratchCardId, setScratchCardId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [cooldownInfo, setCooldownInfo] = useState(null);
+  const [selectedRangeLabel, setSelectedRangeLabel] = useState("");
+  const [sessionTimeRemaining, setSessionTimeRemaining] = useState(300); // 5 minutes in seconds
 
-  // Fetch campaign on mount
+  // ===== CLEAR SESSION DATA (defined early so it can be used in useEffect) =====
+  const clearSessionData = () => {
+    // Clear all browser storage
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Clear form data
+    setFormData({ customerName: "", customerMobile: "", selectedRange: "" });
+    setAssignedReward(null);
+    setParticipationId(null);
+    setScratchCardId(null);
+    setSelectedCouponIndex(null);
+    setLocationVerified(false);
+
+    console.log("[Session] Cleared all session data");
+  };
+
+  // Fetch campaign on mount and verify participation status
   useEffect(() => {
     const fetchCampaign = async () => {
       try {
@@ -69,6 +89,12 @@ export default function ScanClientPage() {
 
         setCampaign(campaignData);
         setRanges(result.data.ranges || []);
+
+        // ===== FRESH FLOW: Always show FORM on page load =====
+        // Participation check (cooldown) only happens at form submission
+        // This ensures every QR scan starts fresh from the form, regardless of prior history
+        console.log("[Scan] Page loaded - always show FORM for fresh participation flow");
+        setStep("FORM");
 
         // Fetch coupons for this campaign
         const couponsResponse = await fetch(`/api/customer/campaign/${campaignId}/coupons`);
@@ -112,7 +138,7 @@ export default function ScanClientPage() {
     if (campaignId) {
       fetchCampaign();
     }
-  }, [campaignId]);
+  }, [campaignId, step]);
 
   // ===== FORM VALIDATION =====
   const validateForm = () => {
@@ -153,7 +179,7 @@ export default function ScanClientPage() {
           const code = err.code === 1 ? "denied" : err.code === 3 ? "timeout" : "unavailable";
           resolve({ success: false, code });
         },
-        { timeout: 12000, enableHighAccuracy: false }
+        { timeout: 20000, enableHighAccuracy: true, maximumAge: 0 }
       );
     });
   };
@@ -242,6 +268,29 @@ export default function ScanClientPage() {
         return;
       }
 
+      // Check if customer can participate (cooldown check)
+      const checkResponse = await fetch(`/api/customer/check-participation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaignId,
+          customerMobile: formData.customerMobile.trim(),
+        }),
+      });
+
+      const checkResult = await checkResponse.json();
+      if (!checkResult.canParticipate) {
+        setCooldownInfo({
+          name: checkResult.participantName,
+          date: checkResult.participationDate,
+          remainingMinutes: checkResult.remainingMinutes,
+          message: checkResult.message,
+        });
+        setStep("COOLDOWN");
+        setSubmitting(false);
+        return;
+      }
+
       const response = await fetch(`/api/customer/participate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -273,6 +322,10 @@ export default function ScanClientPage() {
       setParticipationId(participationId);
       setScratchCardId(result.data.scratchCardId);
 
+      // ===== CRITICAL FIX: Store mobile number to verify on return =====
+      // This allows us to check participation status if user goes back and returns
+      sessionStorage.setItem(`participation_mobile_${campaignId}`, formData.customerMobile.trim());
+
       // Redirect to coupon selection page (NOT directly to scratch/reward)
       // Flow: Registration → Coupon Selection → Scratch → Reward Reveal
       router.push(
@@ -290,6 +343,13 @@ export default function ScanClientPage() {
   const handlePickCoupon = (index) => {
     setSelectedCouponIndex(index);
 
+    // Get selected range info
+    const selectedRangeObj = ranges.find(r => r._id === formData.selectedRange);
+    if (selectedRangeObj) {
+      const rangeLabel = `₹${selectedRangeObj.minAmount.toLocaleString("en-IN")} - ₹${selectedRangeObj.maxAmount.toLocaleString("en-IN")}`;
+      setSelectedRangeLabel(rangeLabel);
+    }
+
     // Mock reward assignment
     const rewards = ["₹50", "₹100", "₹150", "₹200", "₹250", "₹300"];
     const selectedReward = rewards[index % rewards.length];
@@ -302,28 +362,32 @@ export default function ScanClientPage() {
     setStep("REVEAL");
   };
 
-  // ===== CLEAR SESSION DATA =====
-  const clearSessionData = () => {
-    // Clear all browser storage
-    localStorage.clear();
-    sessionStorage.clear();
+  // ===== COUNTDOWN TIMER EFFECT =====
+  useEffect(() => {
+    if (!scratched || step !== "REVEAL") return;
 
-    // Clear form data
-    setFormData({ customerName: "", customerMobile: "", selectedRange: "" });
-    setAssignedReward(null);
-    setParticipationId(null);
-    setScratchCardId(null);
-    setSelectedCouponIndex(null);
-    setLocationVerified(false);
+    const interval = setInterval(() => {
+      setSessionTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          console.log("[Session] Session expired after 5 minutes");
+          clearSessionData();
+          setStep("EXPIRED");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-    console.log("[Session] Cleared all session data");
-  };
+    return () => clearInterval(interval);
+  }, [scratched, step]);
 
   // ===== SCRATCH REVEAL (STEP 3) =====
   const handleScratch = () => {
     if (scratched) return;
 
     setScratched(true);
+    setSessionTimeRemaining(300); // Reset timer to 5 minutes
 
     // Trigger confetti
     confetti({
@@ -332,17 +396,42 @@ export default function ScanClientPage() {
       origin: { y: 0.6 },
       colors: ["#ff0055", "#00ccff", "#ff9900", "#cc00ff"],
     });
-
-    // Set 5-minute session timeout (300,000 ms = 5 minutes)
-    const sessionTimer = setTimeout(() => {
-      console.log("[Session] Session expired after 5 minutes");
-      clearSessionData();
-      setStep("EXPIRED"); // Show expired state
-    }, 300000); // 5 minutes
-
-    // Cleanup timer if component unmounts
-    return () => clearTimeout(sessionTimer);
   };
+
+  // ===== COOLDOWN STATE =====
+  if (step === "COOLDOWN") {
+    const participationDate = cooldownInfo?.date ? new Date(cooldownInfo.date).toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }) : "recently";
+
+    return (
+      <div className={styles.container}>
+        <div className={styles.revealContainer}>
+          <div className={styles.endedLogoWrapper}>
+            <Image
+              src="/horizontal_logo.webp"
+              alt="ScratchX"
+              width={140}
+              height={50}
+              className={styles.endedLogo}
+              priority
+            />
+          </div>
+          <div className={styles.cooldownCard}>
+            <div className={styles.cooldownIcon}>⏱️</div>
+            <h2 className={styles.cooldownTitle}>Try Again Later</h2>
+            <p className={styles.cooldownMessage}>
+              You scratched a coupon {participationDate}. You can participate again in <strong>{cooldownInfo?.remainingMinutes} minutes</strong>.
+            </p>
+            <div className={styles.cooldownInfo}>
+              <p>Come back soon to win more coupons! Each customer can participate multiple times with a cooldown period between attempts.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ===== ENDED CAMPAIGN STATE =====
   if (step === "ENDED") {
@@ -387,18 +476,25 @@ export default function ScanClientPage() {
     return (
       <div className={styles.container}>
         <div className={styles.revealContainer}>
+          <div className={styles.expiredLogoWrapper}>
+            <Image
+              src="/horizontal_logo.webp"
+              alt="ScratchX"
+              width={140}
+              height={50}
+              className={styles.endedLogo}
+              priority
+            />
+          </div>
           <div className={styles.expiredCard}>
-            <div className={styles.expiredIcon}>⏰</div>
-            <h2 className={styles.expiredTitle}>Session Expired</h2>
+            <div className={styles.expiredIcon}>⏳</div>
+            <h2 className={styles.expiredTitle}>Coupon Expired</h2>
             <p className={styles.expiredMessage}>
-              Your reward session has timed out. Each scratch session is valid for 5 minutes after revealing your reward.
+              Your session has expired. Please present this screen to the cashier within 5 minutes of revealing your reward.
             </p>
-            <button
-              className={styles.expiredButton}
-              onClick={() => window.location.href = `/customer/campaign/${campaignId}/scan`}
-            >
-              Please visit the store again to get a new coupon.
-            </button>
+            <div className={styles.expiredInfo}>
+              <p>For assistance, ask the cashier at the store counter.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -700,9 +796,28 @@ export default function ScanClientPage() {
 
   // STEP 3: REVEAL
   if (step === "REVEAL") {
+    const minutes = Math.floor(sessionTimeRemaining / 60);
+    const seconds = sessionTimeRemaining % 60;
+    const timerDisplay = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
     return (
       <div className={styles.container}>
         <div className={styles.revealContainer}>
+          {/* Timer Display */}
+          {scratched && (
+            <div className={styles.timerSection}>
+              <div className={styles.timerLabel}>SESSION EXPIRES IN</div>
+              <div className={styles.timerDisplay}>{timerDisplay}</div>
+            </div>
+          )}
+
+          {/* Range Info */}
+          {selectedRangeLabel && (
+            <div className={styles.rangeInfo}>
+              <span className={styles.rangeLabel}>Billing Range: {selectedRangeLabel}</span>
+            </div>
+          )}
+
           <div
             className={`${styles.revealCard} ${scratched ? styles.scratched : ""}`}
             onClick={handleScratch}

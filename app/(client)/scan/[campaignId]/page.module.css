@@ -1043,6 +1043,59 @@
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
 }
 
+.cooldownCard {
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  border-radius: 20px;
+  padding: 40px 24px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+  max-width: 400px;
+  margin: 0 auto;
+  animation: slideUp 0.5s ease-out;
+}
+
+.cooldownIcon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  animation: pulse 2s infinite;
+}
+
+.cooldownTitle {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.cooldownMessage {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  opacity: 0.95;
+  color: white;
+}
+
+.cooldownMessage strong {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.cooldownInfo {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.cooldownInfo p {
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .endedCard {
   background: linear-gradient(135deg, #0d21a1 0%, #ff9907 100%);
   border-radius: 20px;
@@ -1141,67 +1194,114 @@
   transform: translateY(-1px);
 }
 
+.expiredLogoWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 50px;
+  margin-top: -10px;
+  animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 .expiredCard {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   border-radius: 20px;
   padding: 40px 24px;
   text-align: center;
   color: white;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
   max-width: 400px;
   margin: 0 auto;
+  animation: slideUp 0.5s ease-out;
 }
 
 .expiredIcon {
   font-size: 64px;
   margin-bottom: 20px;
-  animation: bounce 2s infinite;
+  animation: pulse 2s infinite;
 }
 
-@keyframes bounce {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
 }
 
 .expiredTitle {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 800;
   margin-bottom: 16px;
   color: white;
+  letter-spacing: -0.5px;
 }
 
 .expiredMessage {
   font-size: 14px;
   line-height: 1.6;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   opacity: 0.95;
   color: white;
 }
 
-.expiredButton {
-  background-color: white;
-  color: #ff6b6b;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  width: 100%;
-  max-width: 300px;
+.expiredInfo {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
 }
 
-.expiredButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  background-color: #f9f9f9;
+.expiredInfo p {
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .revealContainer {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
+  gap: 20px;
+}
+
+.timerSection {
+  text-align: center;
+  background: rgba(220, 38, 38, 0.1);
+  border: 2px solid #dc2626;
+  border-radius: 12px;
+  padding: 16px 24px;
+  backdrop-filter: blur(10px);
+}
+
+.timerLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #991b1b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.timerDisplay {
+  font-size: 48px;
+  font-weight: 800;
+  font-family: 'Courier New', monospace;
+  color: #dc2626;
+  letter-spacing: 4px;
+}
+
+.rangeInfo {
+  background: linear-gradient(135deg, #0d21a1 0%, #ff9907 100%);
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(13, 33, 161, 0.3);
+}
+
+.rangeLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  display: block;
 }
