@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import CampaignCard from "@/components/dashboard/CampaignCard";
 import FilterTabs from "@/components/dashboard/FilterTabs";
 import SearchBar from "@/components/dashboard/SearchBar";
 import CampaignEmptyState from "@/components/campaign/CampaignEmptyState";
+import { smartCacheService } from "@/lib/smartCacheService";
 import styles from "./campaign.module.css";
 
 // Low-scratch threshold: allocated > 0 AND remaining/allocated <= 10%.
@@ -17,6 +17,26 @@ function getAllocated(campaign) {
   return Number(
     campaign.allocated_scratch_cards ?? campaign.scratchCardsLimit ?? 0,
   );
+}
+
+// Calculate campaign status based on dates
+function getCalculatedStatus(campaign) {
+  const now = new Date();
+  const startDate = new Date(campaign.startDate);
+  const endDate = new Date(campaign.endDate);
+
+  // If end date has passed, campaign is ended
+  if (endDate < now) {
+    return "ended";
+  }
+
+  // If start date hasn't arrived yet, campaign is draft
+  if (startDate > now) {
+    return "draft";
+  }
+
+  // Otherwise use the stored status (active, paused, etc.)
+  return campaign.status || "active";
 }
 
 function getRemaining(campaign) {
@@ -47,17 +67,28 @@ export default function CampaignPage() {
   const fetchCampaigns = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/campaigns", {
-        headers: {
-          "x-user-id": account.id,
-          "x-user-role": account.role || "merchant",
-          "x-user-email": account.email || "",
-        },
-      });
 
-      if (!response.ok) throw new Error("Failed to fetch campaigns");
-      const result = await response.json();
-      setCampaigns(result.data || []);
+      // Update campaign statuses first (checks if any campaigns have ended)
+      try {
+        await fetch('/api/campaigns/update-status', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+      } catch (err) {
+        console.warn('Failed to update campaign statuses:', err);
+      }
+
+      // Use smartCacheService for instant load + background refresh
+      const campaignsData = await smartCacheService.fetchWithCache(
+        'campaigns-list',
+        '/api/campaigns',
+        account.id,
+        account.role || 'Merchant'
+      );
+
+      setCampaigns(Array.isArray(campaignsData) ? campaignsData : []);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -74,32 +105,68 @@ export default function CampaignPage() {
     }
   }, [authLoading, account?.id, fetchCampaigns]);
 
+  // Auto-refetch campaigns when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && account?.id) {
+        console.log("[Campaigns] Page visible - refetching campaigns");
+        fetchCampaigns();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [account?.id, fetchCampaigns]);
+
   // Pause / resume via existing PUT endpoint.
   const togglePause = useCallback(
     async (campaignId, nextStatus) => {
       try {
-        const response = await fetch(`/api/campaigns/${campaignId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-id": account?.id,
-            "x-user-role": account?.role || "Merchant",
-            "x-user-email": account?.email || "",
-          },
-          body: JSON.stringify({ status: nextStatus }),
-        });
-        if (!response.ok) {
-          // Fall back to details page if status update isn't supported.
+        // Use smartCacheService for optimistic update
+        const result = await smartCacheService.updateWithCache(
+          'campaigns-list',
+          campaignId,
+          `/api/campaigns/${campaignId}`,
+          { status: nextStatus },
+          account?.id,
+          account?.role || "Merchant"
+        );
+
+        if (!result.success) {
           router.push(`/campaign/${campaignId}`);
           return;
         }
-        await fetchCampaigns();
+        // Campaign status updated instantly in list
       } catch (err) {
         console.error("Error updating campaign status:", err);
         router.push(`/campaign/${campaignId}`);
       }
     },
-    [account, fetchCampaigns, router],
+    [account],
+  );
+
+  const deleteCampaign = useCallback(
+    async (campaignId) => {
+      // Use smartCacheService for optimistic delete
+      const result = await smartCacheService.deleteWithCache(
+        'campaigns-list',
+        campaignId,
+        `/api/campaigns/${campaignId}`,
+        account?.id,
+        account?.role || "Merchant"
+      );
+
+      if (!result.success) {
+        return { error: result.error || "Failed to delete campaign." };
+      }
+
+      // Update React state immediately (optimistic update)
+      setCampaigns((prevCampaigns) =>
+        prevCampaigns.filter((c) => c._id !== campaignId)
+      );
+
+      return { success: true };
+    },
+    [account],
   );
 
   // Central action handler for card menu + inline buttons.
@@ -109,17 +176,8 @@ export default function CampaignPage() {
         case "scratches":
           router.push(`/campaign/${campaignId}/ranges`);
           break;
-        case "assign":
-          router.push(`/campaign/${campaignId}`);
-          break;
         case "edit":
           router.push(`/campaign/${campaignId}`);
-          break;
-        case "extend":
-          router.push(`/campaign/${campaignId}`);
-          break;
-        case "stats":
-          router.push(`/campaign/${campaignId}/live`);
           break;
         case "pause":
           togglePause(campaignId, "paused");
@@ -127,14 +185,13 @@ export default function CampaignPage() {
         case "resume":
           togglePause(campaignId, "active");
           break;
-        case "clone":
-          alert("Clone coming soon");
-          break;
+        case "delete":
+          return deleteCampaign(campaignId);
         default:
           break;
       }
     },
-    [router, togglePause],
+    [router, togglePause, deleteCampaign],
   );
 
   const handleView = useCallback(
@@ -227,13 +284,6 @@ export default function CampaignPage() {
             Manage your campaigns and track performance
           </p>
         </div>
-        <button
-          className={styles.createBtn}
-          onClick={() => router.push("/campaign/new")}
-        >
-          <Plus size={20} />
-          <span>Create Campaign</span>
-        </button>
       </div>
 
       {/* Search and Filter */}
@@ -286,7 +336,7 @@ export default function CampaignPage() {
                 name={campaignName}
                 startDate={campaign.startDate}
                 endDate={campaign.endDate}
-                status={campaign.status}
+                status={getCalculatedStatus(campaign)}
                 storesCount={storeCount}
                 scratchesLeft={remainingCards}
                 scratchesAllocated={allocatedCards}

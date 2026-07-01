@@ -1,6 +1,21 @@
 import { connectDB } from '@/lib/connectDB';
 import Campaign from '@/models/campaignModel';
+import Subscription from '@/models/subscriptionModel';
 import CampaignService from '@/lib/campaignService';
+
+async function checkMerchantSubscription(userId) {
+  const sub = await Subscription.findOne({
+    ownerId: userId,
+    ownerType: 'merchant',
+    status: { $in: ['trial', 'active', 'past_due'] },
+  }).lean();
+  return Boolean(sub);
+}
+
+const SUBSCRIPTION_REQUIRED_RESPONSE = Response.json(
+  { success: false, code: 'SUBSCRIPTION_REQUIRED', error: 'Please activate a subscription plan.', data: null },
+  { status: 402 }
+);
 
 /**
  * POST /api/campaigns - Create a new campaign
@@ -26,6 +41,10 @@ export async function POST(request) {
         { success: false, error: 'Only merchants can create campaigns', data: null, message: null },
         { status: 403 }
       );
+    }
+
+    if (!(await checkMerchantSubscription(userId))) {
+      return SUBSCRIPTION_REQUIRED_RESPONSE;
     }
 
     // Parse request body
@@ -96,6 +115,10 @@ export async function GET(request) {
         { success: false, error: 'Only merchants can view campaigns', data: null, message: null },
         { status: 403 }
       );
+    }
+
+    if (!(await checkMerchantSubscription(userId))) {
+      return SUBSCRIPTION_REQUIRED_RESPONSE;
     }
 
     // Parse query parameters

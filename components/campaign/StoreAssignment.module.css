@@ -7,6 +7,10 @@
   border: 1px solid #e8e8e8;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 
@@ -308,6 +312,267 @@
 }
 
 
+/* Assigned stores section */
+.assignedStoresSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+/* Add stores button */
+.addStoresBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addStoresBtn:hover {
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Modal styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #010f44;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.modalClose:hover {
+  color: #010f44;
+  background: #f5f5f5;
+  border-radius: 6px;
+}
+
+.modalSearchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  padding-top: 16px;
+}
+
+.modalSearchIcon {
+  position: absolute;
+  left: 36px;
+  color: #999;
+  pointer-events: none;
+}
+
+.modalSearchInput {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #010f44;
+  background: #fff;
+}
+
+.modalSearchInput:focus {
+  outline: none;
+  border-color: #ef9e1b;
+}
+
+.modalStoreList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 16px 24px;
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.emptyMsg {
+  padding: 24px;
+  text-align: center;
+  color: #999;
+  font-size: 0.9375rem;
+}
+
+.modalStoreRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.modalStoreRow:hover {
+  background: #f9f9f9;
+  border-color: #ef9e1b;
+}
+
+.modalRowLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.modalRowRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.storeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.storeDetails {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 0.8125rem;
+  color: #777;
+}
+
+.storeLocation {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+
+.modalCancelBtn {
+  flex: 1;
+  padding: 10px 16px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #010f44;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalCancelBtn:hover {
+  background: #efefef;
+  border-color: #ccc;
+}
+
+.modalAssignBtn {
+  flex: 1;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalAssignBtn:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.3);
+  transform: translateY(-1px);
+}
+
+.modalAssignBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 640px) {
   .section {
     padding: 16px;
@@ -328,6 +593,28 @@
   }
 
   .assignSelectedBtn {
+    width: 100%;
+  }
+
+  .modal {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .modalHeader,
+  .modalSearchWrap,
+  .modalStoreList,
+  .modalFooter {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .modalFooter {
+    flex-direction: column;
+  }
+
+  .modalCancelBtn,
+  .modalAssignBtn {
     width: 100%;
   }
 }

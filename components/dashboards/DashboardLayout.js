@@ -1,6 +1,5 @@
 "use client";
-import React from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthContext } from "@/components/auth/AuthContext";
@@ -39,14 +38,58 @@ const NAV_ICONS = {
   support: IconUsers,
 };
 
+function readMerchantHasStoreCookie() {
+  if (typeof document === "undefined") return null; // SSR — unknown
+  const match = document.cookie.match(/(?:^|;\s*)merchantHasStore=([^;]*)/);
+  if (!match) return null; // cookie not set yet
+  return match[1] === "1";
+}
+
 export default function DashboardLayout({ children, role }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Read cookie synchronously before first paint — no flash for cookie-bearing sessions.
+  const [hasStore, setHasStore] = useState(() =>
+    role !== "Merchant" ? true : readMerchantHasStoreCookie()
+  );
   const pathname = usePathname();
   const { account, logout } = useAuthContext();
 
+  // Only needed for old sessions where the cookie was never written (rare).
+  useEffect(() => {
+    if (hasStore !== null || role !== "Merchant" || !account?.id) return;
+    fetch("/api/stores", {
+      credentials: "include",
+      headers: { "x-user-id": account.id, "x-user-role": "Merchant" },
+    })
+      .then((r) => r.json())
+      .catch(() => ({}))
+      .then((data) => {
+        const stores = data?.data || data?.stores || [];
+        setHasStore(Array.isArray(stores) && stores.length > 0);
+      });
+  }, [hasStore, role, account?.id]);
+
+  // Cookie says no store OR API confirmed no store → bare page, no chrome.
+  if (hasStore === false) return <>{children}</>;
+  // Still checking (null) → render nothing briefly to avoid wrong chrome flash.
+  if (hasStore === null) return null;
+
+  const getDashboardHref = () => {
+    switch (role) {
+      case "Merchant":
+        return "/merchant-overview";
+      case "Distributor":
+        return "/distributor-overview";
+      case "Super_Admin":
+        return "/admin-overview";
+      default:
+        return "/dashboard";
+    }
+  };
+
   const getNavItems = () => {
     const baseItems = [
-      { label: "Dashboard", href: "/dashboard", iconKey: "dashboard" },
+      { label: "Dashboard", href: getDashboardHref(), iconKey: "dashboard" },
     ];
 
     switch (role) {
@@ -210,6 +253,7 @@ export default function DashboardLayout({ children, role }) {
   const displayName = account ? getAccountDisplayName(account) : "";
   const initials = account ? getAccountInitials(account) : "?";
 
+
   return (
     <div className={styles.container}>
       {sidebarOpen && (
@@ -222,7 +266,7 @@ export default function DashboardLayout({ children, role }) {
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : ""}`}>
         <div className={styles.sidebarHeader}>
           <Link href="/dashboard" className={styles.logo}>
-            Scractch<span className={styles.logoAccent}>X</span>
+            <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.logoImg} />
           </Link>
           <button
             className={styles.mobileCloseBtn}
@@ -244,101 +288,89 @@ export default function DashboardLayout({ children, role }) {
           </button>
         </div>
 
-        <div className={styles.sidebarProfile}>
-          <div className={styles.sidebarProfileHeader}>
-            <div className={styles.sidebarProfileAvatar}>
-          {account?.profileImage ? (
-            <img src={account.profileImage} alt="Profile" className={styles.sidebarProfileAvatarImg} />
-          ) : (
-            initials
-          )}
-        </div>
-            <div className={styles.sidebarProfileInfo}>
-              <span className={styles.sidebarProfileName}>
-                {displayName || account?.email}
-              </span>
-              <span className={styles.sidebarProfileMember}>
-                Member since 03.09.2024
-              </span>
-            </div>
-          </div>
-          <PlanStatusCard />
-        </div>
-
-        <nav className={styles.nav} aria-label="Main navigation">
-          {navItems.primary.map((item) => {
-            const isActive = pathname === item.href;
-            const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-                aria-current={isActive ? "page" : undefined}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <span className={styles.navIcon}>
-                  <Icon />
+        {/* Scrollable middle: profile + nav */}
+        <div className={styles.sidebarScrollArea}>
+          <div className={styles.sidebarProfile}>
+            <div className={styles.sidebarProfileHeader}>
+              <div className={styles.sidebarProfileAvatar}>
+                {account?.profileImage ? (
+                  <img src={account.profileImage} alt="Profile" className={styles.sidebarProfileAvatarImg} />
+                ) : (
+                  initials
+                )}
+              </div>
+              <div className={styles.sidebarProfileInfo}>
+                <span className={styles.sidebarProfileName}>
+                  {displayName || account?.email}
                 </span>
-                {item.label}
-              </Link>
-            );
-          })}
-
-          {navItems.secondary && navItems.secondary.length > 0 && (
-            <>
-              <div className={styles.navDivider}></div>
-              {navItems.secondary.map((item) => {
-                const isActive = pathname === item.href;
-                // ||
-                // (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-                    aria-current={isActive ? "page" : undefined}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <span className={styles.navIcon}>
-                      <Icon />
-                    </span>
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </>
-          )}
-        </nav>
-
-        <div className={styles.sidebarFooter}>
-          <button
-            onClick={logout}
-            className={styles.logoutBtn}
-            aria-label="Logout"
-          >
-            <span className={styles.navIcon}>
-              <IconLogout />
-            </span>
-            Logout
-          </button>
-          <div className={styles.trustedFooter}>
-            <div className={styles.trustedLogo}>
-              Scractch<span className={styles.logoAccent}>X</span>
+                <span className={styles.sidebarProfileMember}>
+                  Member since {account?.createdAt
+                    ? new Date(account.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.')
+                    : '—'}
+                </span>
+              </div>
             </div>
-            <div className={styles.trustedLabel}>TRUSTED BY</div>
-            <div className={styles.trustedStats}>
-              300+ Stores <span className={styles.trustedDivider}>|</span> 7+
-              Cities
-            </div>
-            <div className={styles.copyright}>
-              © Copyright 2024 | Powered by Desartist
+            <PlanStatusCard />
+          </div>
+
+          <nav className={styles.nav} aria-label="Main navigation">
+            {navItems.primary.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+                  aria-current={isActive ? "page" : undefined}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <span className={styles.navIcon}><Icon /></span>
+                  {item.label}
+                </Link>
+              );
+            })}
+
+            {navItems.secondary && navItems.secondary.length > 0 && (
+              <>
+                <div className={styles.navDivider}></div>
+                {navItems.secondary.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <span className={styles.navIcon}><Icon /></span>
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+          </nav>
+
+          {/* Footer scrolls with nav */}
+          <div className={styles.sidebarFooter}>
+            <div className={styles.trustedFooter}>
+              <div className={styles.trustedLogo}>
+                <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.trustedLogoImg} />
+              </div>
+              <div className={styles.trustedLabel}>TRUSTED BY</div>
+              <div className={styles.trustedStats}>
+                300+ Stores <span className={styles.trustedDivider}>|</span> 7+ Cities
+              </div>
+              <div className={styles.copyright}>
+                © Copyright 2026 | Powered by Desartist
+              </div>
             </div>
           </div>
         </div>
+        {/* End scrollable middle */}
       </aside>
 
       <main className={styles.main}>
@@ -365,11 +397,22 @@ export default function DashboardLayout({ children, role }) {
               </svg>
             </button>
             <div>
-              <p className={styles.headerEyebrow}>Overview</p>
-              <h1 className={styles.roleTitle}>{getRoleLabel()} Dashboard</h1>
+              <h1 className={styles.roleTitle}>{displayName || account?.email}</h1>
             </div>
             <div className={styles.userInfo}>
-              <div className={styles.userMeta}>
+              <Link href="/campaign/new" className={styles.createCampaignBtn}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Create Campaign
+              </Link>
+              <Link href="/notifications" className={styles.notificationBtn} aria-label="Notifications">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+              </Link>
+              {/* <div className={styles.userMeta}>
                 <span className={styles.userName}>
                   {displayName || account?.email}
                 </span>
@@ -381,7 +424,7 @@ export default function DashboardLayout({ children, role }) {
                 ) : (
                   initials
                 )}
-              </div>
+              </div> */}
             </div>
           </div>
         </header>

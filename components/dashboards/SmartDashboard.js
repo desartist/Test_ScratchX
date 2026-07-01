@@ -12,10 +12,13 @@ import {
 } from "lucide-react";
 
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { dashboardCache } from "@/lib/dashboardCache";
 import DashboardHeader from "@/components/dashboard/smart/DashboardHeader";
 import SubscriptionHero from "@/components/dashboard/smart/SubscriptionHero";
 import KpiTileGrid from "@/components/dashboard/smart/KpiTileGrid";
 import TopCampaignCard from "@/components/dashboard/smart/TopCampaignCard";
+import CampaignCarousel from "@/components/dashboard/smart/CampaignCarousel";
+import StoreCarousel from "@/components/dashboard/smart/StoreCarousel";
 import StorePerformanceCard from "@/components/dashboard/smart/StorePerformanceCard";
 import PendingRequestCard from "@/components/dashboard/smart/PendingRequestCard";
 import QuickActions from "@/components/dashboard/smart/QuickActions";
@@ -133,104 +136,132 @@ export default function SmartDashboard() {
     if (res.ok && res.data) setKpi(res.data);
   }, [buildFetcher]);
 
+  // Apply parsed API results to state
+  const applyResults = useCallback((results) => {
+    const [
+      rDashboard, rSub, rKpi, rGrowth,
+      rUsage, rConsumption, rStorePerf, rPending, rNotifications,
+    ] = results;
+
+    if (rDashboard?.ok && rDashboard.data) setDashboard(rDashboard.data);
+    if (rSub?.ok) setSubStatus(rSub.raw || null);
+    if (rKpi?.ok && rKpi.data) setKpi(rKpi.data);
+
+    if (rGrowth?.ok && rGrowth.data?.weeklyTrend) {
+      setCustomerGrowth(
+        rGrowth.data.weeklyTrend.map((row) => ({
+          label: row.day,
+          series: { new: Number(row.new) || 0, repeat: Number(row.repeat) || 0 },
+        })),
+      );
+    }
+
+    if (rUsage?.ok && Array.isArray(rUsage.data)) {
+      setScratchUsage(
+        rUsage.data.map((row) => ({
+          label: weekdayShort(row.date),
+          value: Number(row.used) || 0,
+        })),
+      );
+    }
+
+    if (rConsumption?.ok && Array.isArray(rConsumption.data)) {
+      setCampaignConsumption(
+        rConsumption.data.map((row, i) => ({
+          label: row.name || "Campaign",
+          value: Number(row.used) || 0,
+          color: DONUT_PALETTE[i % DONUT_PALETTE.length],
+        })),
+      );
+    }
+
+    if (rStorePerf?.ok && rStorePerf.data) {
+      setStorePerf({
+        storeWise: Array.isArray(rStorePerf.data.storeWise) ? rStorePerf.data.storeWise : [],
+        perStore: rStorePerf.data.perStore || {},
+      });
+    }
+
+    if (rPending?.ok && Array.isArray(rPending.data)) setPendingRequests(rPending.data);
+    if (rNotifications?.ok && Array.isArray(rNotifications.data)) setNotifications(rNotifications.data);
+  }, []);
+
   useEffect(() => {
     if (!account) return;
     let cancelled = false;
+    const CACHE_KEY = `dashboard_${account?.id || account?._id}`;
+
+    // ── Step 1: Show cached data instantly (zero wait) ─────────────────
+    const cached = dashboardCache.get(CACHE_KEY);
+    if (cached) {
+      applyResults(cached.data);
+      setLoading(false);
+    }
+
+    // ── Step 2: Skip network fetch if cache is fresh (< 60s) ───────────
+    if (cached && !dashboardCache.isStale(CACHE_KEY)) return;
+
     const fetcher = buildFetcher();
 
     (async () => {
-      const results = await Promise.allSettled([
-        fetcher("/api/dashboard"),
-        fetcher("/api/subscription/status"),
-        fetcher("/api/analytics/kpi-summary"),
-        fetcher("/api/analytics/customer-growth"),
-        fetcher("/api/analytics/scratch-usage?days=7"),
-        fetcher("/api/analytics/campaign-consumption"),
-        fetcher("/api/analytics/store-performance?days=7"),
-        fetcher("/api/merchant/scratch-requests?status=pending"),
-        fetcher("/api/notifications/recent"),
+      // ── Step 3: Critical batch — unblocks the UI immediately ──────────
+      // dashboard + subscription + KPIs + notifications + pending
+      const criticalRaw = await Promise.allSettled([
+        fetcher("/api/dashboard"),           // index 0
+        fetcher("/api/subscription/status"), // index 1
+        fetcher("/api/analytics/kpi-summary"), // index 2
+        fetcher("/api/merchant/scratch-requests?status=pending"), // index 3
+        fetcher("/api/notifications/recent"), // index 4
       ]);
 
       if (cancelled) return;
 
-      const [
-        rDashboard,
-        rSub,
-        rKpi,
-        rGrowth,
-        rUsage,
-        rConsumption,
-        rStorePerf,
-        rPending,
-        rNotifications,
-      ] = await Promise.all(results.map(settle));
+      // Map into the 9-slot shape applyResults expects (analytics slots = null for now)
+      const criticalResults = await Promise.all(criticalRaw.map(settle));
+      const partialResults = [
+        criticalResults[0], // dashboard
+        criticalResults[1], // subscription
+        criticalResults[2], // kpi
+        null,               // customerGrowth (pending)
+        null,               // scratchUsage (pending)
+        null,               // campaignConsumption (pending)
+        null,               // storePerf (pending)
+        criticalResults[3], // pendingRequests
+        criticalResults[4], // notifications
+      ];
 
-      // /api/dashboard returns the merchant payload under `data`.
-      if (rDashboard.ok && rDashboard.data) setDashboard(rDashboard.data);
+      applyResults(partialResults);
+      setLoading(false); // Show UI now with core data
 
-      // /api/subscription/status returns flat fields on the JSON body.
-      if (rSub.ok) setSubStatus(rSub.raw || null);
+      // ── Step 4: Non-critical batch — charts load silently after ───────
+      const analyticsRaw = await Promise.allSettled([
+        fetcher("/api/analytics/customer-growth"),
+        fetcher("/api/analytics/scratch-usage?days=7"),
+        fetcher("/api/analytics/campaign-consumption"),
+        fetcher("/api/analytics/store-performance?days=7"),
+      ]);
 
-      if (rKpi.ok && rKpi.data) setKpi(rKpi.data);
+      if (cancelled) return;
 
-      // customer-growth -> [{ label, series:{ new, repeat } }]
-      if (rGrowth.ok && rGrowth.data?.weeklyTrend) {
-        setCustomerGrowth(
-          rGrowth.data.weeklyTrend.map((row) => ({
-            label: row.day,
-            series: {
-              new: Number(row.new) || 0,
-              repeat: Number(row.repeat) || 0,
-            },
-          })),
-        );
-      }
+      const analyticsResults = await Promise.all(analyticsRaw.map(settle));
+      const fullResults = [
+        criticalResults[0],
+        criticalResults[1],
+        criticalResults[2],
+        analyticsResults[0], // customerGrowth
+        analyticsResults[1], // scratchUsage
+        analyticsResults[2], // campaignConsumption
+        analyticsResults[3], // storePerf
+        criticalResults[3],
+        criticalResults[4],
+      ];
 
-      // scratch-usage -> [{ label (weekday), value }]
-      if (rUsage.ok && Array.isArray(rUsage.data)) {
-        setScratchUsage(
-          rUsage.data.map((row) => ({
-            label: weekdayShort(row.date),
-            value: Number(row.used) || 0,
-          })),
-        );
-      }
-
-      // campaign-consumption -> donut segments
-      if (rConsumption.ok && Array.isArray(rConsumption.data)) {
-        setCampaignConsumption(
-          rConsumption.data.map((row, i) => ({
-            label: row.name || "Campaign",
-            value: Number(row.used) || 0,
-            color: DONUT_PALETTE[i % DONUT_PALETTE.length],
-          })),
-        );
-      }
-
-      if (rStorePerf.ok && rStorePerf.data) {
-        setStorePerf({
-          storeWise: Array.isArray(rStorePerf.data.storeWise)
-            ? rStorePerf.data.storeWise
-            : [],
-          perStore: rStorePerf.data.perStore || {},
-        });
-      }
-
-      if (rPending.ok && Array.isArray(rPending.data)) {
-        setPendingRequests(rPending.data);
-      }
-
-      if (rNotifications.ok && Array.isArray(rNotifications.data)) {
-        setNotifications(rNotifications.data);
-      }
-
-      setLoading(false);
+      dashboardCache.set(CACHE_KEY, fullResults);
+      applyResults(fullResults);
     })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [account, buildFetcher]);
+    return () => { cancelled = true; };
+  }, [account, buildFetcher, applyResults]);
 
   const handleApprove = useCallback(
     async (request) => {
@@ -302,6 +333,12 @@ export default function SmartDashboard() {
     ? subStatus.scratchConsumed
     : dashboard?.scratch?.distributed;
 
+  // Day counter: "Day X of 30"
+  const PLAN_TOTAL_DAYS = 30;
+  const heroDayOf = Number.isFinite(heroDaysRemaining)
+    ? Math.max(1, PLAN_TOTAL_DAYS - heroDaysRemaining)
+    : null;
+
   // Customer-insight headline numbers (only when present).
   const newCustomers = customerGrowth.reduce(
     (sum, d) => sum + (d.series?.new || 0),
@@ -340,21 +377,6 @@ export default function SmartDashboard() {
       icon: <StoreIcon size={20} />,
     },
     { label: "View Customers", href: "/customers", icon: <Users size={20} /> },
-    {
-      label: "Manage Subscription",
-      href: "/subscription",
-      icon: <CreditCard size={20} />,
-    },
-    {
-      label: "Purchase Scratches",
-      href: "/billing/scratch-packs",
-      icon: <Ticket size={20} />,
-    },
-    {
-      label: "Generate Reports",
-      href: "/analytics",
-      icon: <BarChart3 size={20} />,
-    },
   ];
 
   const primaryStore = stores[0];
@@ -370,12 +392,13 @@ export default function SmartDashboard() {
         storeName={storeName}
         location={storeLocation}
         unreadCount={unreadCount}
-        onCreateCampaign={() => router.push("/campaign/new")}
         onBellClick={() => router.push("/notifications")}
       />
       <SubscriptionHero
         planName={planName}
         status={subscription?.status}
+        dayOf={heroDayOf}
+        totalDays={PLAN_TOTAL_DAYS}
         validUntil={heroValidUntil}
         used={heroUsed}
         daysRemaining={heroDaysRemaining}
@@ -384,182 +407,133 @@ export default function SmartDashboard() {
       />
       <KpiTileGrid kpi={kpi} />
 
-      {/* Top Campaigns */}
-      <SectionHeader title="Top Campaigns" viewAllHref="/campaign" />
-      {topCampaigns.length > 0 ? (
-        <div className={styles.cardList}>
-          {topCampaigns.map((c) => (
-            <TopCampaignCard
-              key={c._id}
-              name={c.name}
-              status={c.status}
-              startDate={c.startDate}
-              endDate={c.endDate}
-              daysLeft={daysUntil(c.endDate)}
-              storeCount={stores.length}
-              priceRange={
-                c.billingRange && c.billingRange !== "₹0"
-                  ? c.billingRange
-                  : undefined
-              }
-              scratchAllocated={
-                (c.allocatedCards || 0) - (c.remainingCards || 0)
-              }
-              scratchTotal={c.allocatedCards || 0}
-              onView={() => router.push(`/campaign/${c._id}`)}
-              onAssign={() => router.push(`/campaign/${c._id}/assign`)}
-            />
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          icon="📣"
-          title="No campaigns yet"
-          description="Your campaigns will appear here once created."
+      {/* Top Campaigns — stacked carousel */}
+      {campaigns.length > 0 && (
+        <CampaignCarousel
+          campaigns={campaigns}
+          storeCount={stores.length}
+          viewAllHref="/campaign"
         />
       )}
 
-      {/* Store Performance */}
-      <SectionHeader title="Store Performance" viewAllHref="/stores" />
-      {storePerformance.length > 0 ? (
-        <div className={styles.cardList}>
-          {storePerformance.map((s, i) => {
-            const stats = storePerf.perStore?.[String(s._id)] || {};
-            return (
-              <StorePerformanceCard
-                key={s._id}
-                storeName={s.name}
-                isMainStore={i === 0}
-                location={s.address || s.city}
-                scans={Number(stats.scans) || 0}
-                campaignCount={Number(s.campaignCount) || 0}
-                entitlementLabel={
-                  Number.isFinite(s.scratchAllocated)
-                    ? `${s.scratchAllocated} allocated`
-                    : undefined
-                }
-                used={
-                  Number.isFinite(s.scratchAllocated) &&
-                  Number.isFinite(s.scratchRemaining)
-                    ? s.scratchAllocated - s.scratchRemaining
-                    : 0
-                }
-                onViewStore={() => router.push(`/stores/${s._id}`)}
-                onReview={() => router.push(`/stores/${s._id}`)}
+      {/* Store Performance — stacked carousel */}
+      {storePerformance.length > 0 && (
+        <StoreCarousel
+          stores={storePerformance}
+          storePerf={storePerf}
+          viewAllHref="/stores"
+        />
+      )}
+
+      {/* Pending Requests — only when there are pending items */}
+      {pendingRequests.length > 0 && (
+        <>
+          <SectionHeader title="Pending Requests" />
+          <div className={styles.cardList}>
+            {pendingRequests.map((req) => (
+              <PendingRequestCard
+                key={req._id}
+                title="Scratch Allocation Request"
+                priority={req.priority}
+                storeName={req.storeName}
+                timeAgo={formatDateLabel(req.createdAt) || undefined}
+                requesterName={req.requestedByName}
+                requestedQty={req.quantity}
+                campaignName={req.campaignName}
+                note={req.reason}
+                busy={busyRequestId === String(req._id)}
+                onApprove={() => handleApprove(req)}
+                onReview={() => router.push(`/campaign/${req.campaignId}`)}
               />
-            );
-          })}
-        </div>
-      ) : (
-        <EmptyState
-          icon="🏪"
-          title="No stores yet"
-          description="Create a store to start tracking performance."
-        />
+            ))}
+          </div>
+        </>
       )}
 
-      {/* Pending Requests */}
-      <SectionHeader title="Pending Requests" />
-      {pendingRequests.length > 0 ? (
-        <div className={styles.cardList}>
-          {pendingRequests.map((req) => (
-            <PendingRequestCard
-              key={req._id}
-              title="Scratch Allocation Request"
-              priority={req.priority}
-              storeName={req.storeName}
-              timeAgo={formatDateLabel(req.createdAt) || undefined}
-              requesterName={req.requestedByName}
-              requestedQty={req.quantity}
-              campaignName={req.campaignName}
-              note={req.reason}
-              busy={busyRequestId === String(req._id)}
-              onApprove={() => handleApprove(req)}
-              onReview={() => router.push(`/campaign/${req.campaignId}`)}
-            />
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          size="sm"
-          icon="✅"
-          title="No pending requests"
-          description="Allocation requests awaiting your review will show here."
-        />
-      )}
+      {/* Charts — only render blocks that have data */}
+      {(hasCustomerGrowth || scratchUsage?.length > 0 || campaignConsumption?.length > 0 || storeWiseItems.length > 0) && (
+        <div className={styles.chartsGrid}>
+          {(hasCustomerGrowth || customerGrowth?.length > 0) && (
+            <div className={styles.chartBlock}>
+              <SectionHeader title="Customer Insights" />
+              {hasCustomerGrowth && (
+                <div className={styles.statRow}>
+                  <div className={styles.stat}>
+                    <span className={styles.statValue}>{newCustomers}</span>
+                    <span className={styles.statLabel}>New Customers</span>
+                  </div>
+                  <div className={styles.stat}>
+                    <span className={styles.statValue}>{repeatCustomers}</span>
+                    <span className={styles.statLabel}>Repeat Customers</span>
+                  </div>
+                </div>
+              )}
+              <div className={styles.chartCard}>
+                <BarChart data={customerGrowth} />
+              </div>
+            </div>
+          )}
 
-      <div className={styles.chartsGrid}>
-        <div className={styles.chartBlock}>
-      {/* Customer Insights */}
-      <SectionHeader title="Customer Insights" />
-      {hasCustomerGrowth && (
-        <div className={styles.statRow}>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>{newCustomers}</span>
-            <span className={styles.statLabel}>New Customers</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>{repeatCustomers}</span>
-            <span className={styles.statLabel}>Repeat Customers</span>
-          </div>
-        </div>
-      )}
-      <div className={styles.chartCard}>
-        <BarChart data={customerGrowth} />
-      </div>
-        </div>
+          {scratchUsage?.length > 0 && (
+            <div className={styles.chartBlock}>
+              <SectionHeader title="Scratch Consumption" />
+              <div className={styles.chartCard}>
+                <LineAreaChart data={scratchUsage} />
+              </div>
+            </div>
+          )}
 
-        <div className={styles.chartBlock}>
-      {/* Scratch Consumption */}
-      <SectionHeader title="Scratch Consumption" />
-      <div className={styles.chartCard}>
-        <LineAreaChart data={scratchUsage} />
-      </div>
-        </div>
+          {campaignConsumption?.length > 0 && (
+            <div className={styles.chartBlock}>
+              <SectionHeader title="Campaign-wise Consumption" />
+              <div className={styles.chartCard}>
+                <DonutChart
+                  segments={campaignConsumption}
+                  centerLabel={consumptionTotal}
+                  centerSubLabel="Used"
+                />
+              </div>
+            </div>
+          )}
 
-        <div className={styles.chartBlock}>
-      {/* Campaign-wise Consumption */}
-      <SectionHeader title="Campaign-wise Consumption" />
-      <div className={styles.chartCard}>
-        <DonutChart
-          segments={campaignConsumption}
-          centerLabel={consumptionTotal}
-          centerSubLabel="Used"
-        />
-      </div>
-        </div>
-
-        <div className={styles.chartBlock}>
-      {/* Store-wise Performance */}
-      <SectionHeader title="Store-wise Performance" />
-      {storeWiseItems.length > 0 && (
-        <div className={styles.statRow}>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>
-              {storeWiseTotal.toLocaleString()}
-            </span>
-            <span className={styles.statLabel}>Total Scratches Used</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>{storeWiseItems.length}</span>
-            <span className={styles.statLabel}>Active Stores</span>
-          </div>
+          {storeWiseItems.length > 0 && (
+            <div className={styles.chartBlock}>
+              <SectionHeader title="Store-wise Performance" />
+              <div className={styles.statRow}>
+                <div className={styles.stat}>
+                  <span className={styles.statValue}>
+                    {storeWiseTotal.toLocaleString()}
+                  </span>
+                  <span className={styles.statLabel}>Total Scratches Used</span>
+                </div>
+                <div className={styles.stat}>
+                  <span className={styles.statValue}>{storeWiseItems.length}</span>
+                  <span className={styles.statLabel}>Active Stores</span>
+                </div>
+              </div>
+              <div className={styles.chartCard}>
+                <HBarList items={storeWiseItems} />
+              </div>
+            </div>
+          )}
         </div>
       )}
-      <div className={styles.chartCard}>
-        <HBarList items={storeWiseItems} />
-      </div>
-        </div>
-      </div>
-      {/* end chartsGrid */}
 
       {/* Quick Actions */}
-      <SectionHeader title="Quick Actions" />
-      <QuickActions actions={quickActions} />
+      {quickActions?.length > 0 && (
+        <>
+          <SectionHeader title="Quick Actions" />
+          <QuickActions actions={quickActions} />
+        </>
+      )}
 
-      {/* Recent Activity */}
-      <SectionHeader title="Recent Activity" />
-      <RecentActivity items={notifications} />
+      {/* Recent Activity — hidden for now */}
+      {/* {notifications?.length > 0 && (
+        <>
+          <SectionHeader title="Recent Activity" />
+          <RecentActivity items={notifications} />
+        </>
+      )} */}
     </div>
   );
 }

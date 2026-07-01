@@ -1,44 +1,46 @@
 'use client';
 
 import React from 'react';
-import { Store } from 'lucide-react';
+import styles from './StoreWelcomeScreen.module.css';
 
-export default function StoreWelcomeScreen() {
+export default function StoreWelcomeScreen({ onGetStarted }) {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '400px',
-      padding: '40px 20px',
-      textAlign: 'center',
-      background: '#f9f9f9',
-      borderRadius: '12px',
-    }}>
-      <div style={{
-        marginBottom: '20px',
-        color: '#ef9e1b',
-      }}>
-        <Store size={48} />
+    <div className={styles.welcomeScreen}>
+      <div className={styles.welcomeHero}>
+        <h1 className={styles.welcomeHeadline}>
+          Set up your store<br />
+          in minutes
+        </h1>
+        <p className={styles.welcomeSubtitle}>
+          Create campaigns, engage customers and turn<br />
+          walk-in customers into repeat buyers.
+        </p>
       </div>
-      <h2 style={{
-        margin: '0 0 12px 0',
-        fontSize: '24px',
-        fontWeight: 700,
-        color: '#010f44',
-      }}>
-        Create Your Store
-      </h2>
-      <p style={{
-        margin: 0,
-        color: '#637080',
-        fontSize: '14px',
-        maxWidth: '400px',
-        lineHeight: '1.5',
-      }}>
-        Add your store details to get started with managing campaigns and scratch cards.
-      </p>
+
+      <div className={styles.welcomeCta}>
+        <button className={styles.welcomeBtn} onClick={onGetStarted}>
+          <span>Get Started</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+        <p className={styles.welcomeHint}>Takes less than 2 minutes</p>
+      </div>
+
+      <div className={styles.welcomeCards}>
+        <div className={styles.welcomeCard}>
+          <div className={styles.welcomeCardIcon}>
+            <img src="/qr-icon.svg" alt="QR Code" width="44" height="44" />
+          </div>
+          <p className={styles.welcomeCardLabel}>Smart QR<br />Coupons</p>
+        </div>
+        <div className={styles.welcomeCard}>
+          <div className={styles.welcomeCardIcon}>
+            <img src="/coupon-icon.svg" alt="Coupon" width="44" height="44" />
+          </div>
+          <p className={styles.welcomeCardLabel}>Easy Campaign<br />Creation</p>
+        </div>
+      </div>
     </div>
   );
 }

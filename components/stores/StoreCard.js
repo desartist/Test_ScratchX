@@ -136,7 +136,28 @@ export default function StoreCard({
             {location || '—'}
           </p>
         </div>
-        <Badge label={statusBadge.label} variant={statusBadge.variant} />
+        <div className={styles.headerRight}>
+          <Badge label={statusBadge.label} variant={statusBadge.variant} />
+          <div className={styles.deleteButtonWrapper}>
+            <button
+              type="button"
+              className={`${styles.deleteBtn} ${isMainStore ? styles.disabled : ''}`}
+              onClick={handleDelete}
+              onMouseEnter={() => isMainStore && setShowDeleteTooltip(true)}
+              onMouseLeave={() => setShowDeleteTooltip(false)}
+              disabled={isMainStore}
+              title={isMainStore ? 'This is your Main Store and cannot be deleted' : 'Delete store'}
+              aria-label="Delete store"
+            >
+              <Trash2 size={15} />
+            </button>
+            {isMainStore && showDeleteTooltip && (
+              <div className={styles.tooltip}>
+                This is your Main Store.<br />Cannot be deleted.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Manager chip */}
@@ -209,25 +230,6 @@ export default function StoreCard({
         >
           {hasPendingRequest ? 'Review' : 'Assign'}
         </button>
-        <div className={styles.deleteButtonWrapper}>
-          <button
-            type="button"
-            className={`${styles.deleteBtn} ${isMainStore ? styles.disabled : ''}`}
-            onClick={handleDelete}
-            onMouseEnter={() => isMainStore && setShowDeleteTooltip(true)}
-            onMouseLeave={() => setShowDeleteTooltip(false)}
-            disabled={isMainStore}
-            title={isMainStore ? 'This is your Main Store and cannot be deleted' : 'Delete store'}
-            aria-label="Delete store"
-          >
-            <Trash2 size={16} />
-          </button>
-          {isMainStore && showDeleteTooltip && (
-            <div className={styles.tooltip}>
-              This is your Main Store.<br />Cannot be deleted.
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

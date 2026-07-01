@@ -60,6 +60,7 @@ export default function LaunchWizardModal({
   open,
   onClose,
   onLaunched,
+  initialStep,
 }) {
   const { account } = useAuthContext();
   const userId = account?.id || account?._id;
@@ -110,7 +111,7 @@ export default function LaunchWizardModal({
     if (!open || !campaignId || !userId) return;
     let active = true;
 
-    setStep("allocate");
+    setStep(initialStep || "allocate");
     setError(null);
     setAllocation(DEFAULT_ALLOCATION);
     setSelected([]);
@@ -175,7 +176,7 @@ export default function LaunchWizardModal({
     return () => {
       active = false;
     };
-  }, [open, campaignId, userId, readHeaders]);
+  }, [open, campaignId, userId, readHeaders, initialStep]);
 
   // Pre-select already-assigned stores (or auto-select the single store) once
   // both stores and assignment data have loaded.
@@ -339,20 +340,31 @@ export default function LaunchWizardModal({
           <div className={styles.stepBody}>
             <header className={styles.stepHeader}>
               <h2 className={styles.title}>Allocate Scratches</h2>
-              {campaignName && (
-                <p className={styles.subtitle}>{campaignName}</p>
-              )}
             </header>
 
             {isUnlimited ? (
               <div className={styles.unlimitedCard}>
-                <span className={styles.pill}>First Quarter Access</span>
+                {(() => {
+                  const PLAN_DAYS = 30;
+                  const daysRemaining = Number.isFinite(subscription?.daysRemaining)
+                    ? subscription.daysRemaining
+                    : Number.isFinite(subscription?.remainingDays)
+                      ? subscription.remainingDays
+                      : null;
+                  const dayOf = daysRemaining !== null
+                    ? Math.max(1, PLAN_DAYS - daysRemaining)
+                    : null;
+                  return (
+                    <span className={styles.pill}>
+                      {dayOf !== null ? `Day ${dayOf} of ${PLAN_DAYS}` : "Unlimited Plan"}
+                    </span>
+                  );
+                })()}
                 <span className={styles.unlimitedTitle}>
-                  <Sparkles size={20} /> Unlimited Scratches
+                  <Sparkles size={18} /> Unlimited Scratches
                 </span>
                 <span className={styles.unlimitedMeta}>
-                  {subscription?.scratchConsumed || 0} used · Valid until{" "}
-                  {formatDate(subscription?.unlimitedScratchesExpiryDate)}
+                  Valid until {formatDate(subscription?.unlimitedScratchesExpiryDate)}
                 </span>
               </div>
             ) : (

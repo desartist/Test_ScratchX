@@ -1,154 +1,255 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { X, Ticket, AlertCircle } from "lucide-react";
+import { useAuthContext } from "@/components/auth/AuthContext";
+import { smartCacheService } from "@/lib/smartCacheService";
+import styles from "./ScratchAllocationModal.module.css";
 
-export default function ScratchAllocationModal({ isOpen, onClose, campaignId }) {
-  const [allocation, setAllocation] = useState(0);
-  const [loading, setLoading] = useState(false);
+const QUICK_SELECT_CHIPS = [
+  { label: "1,000", value: 1000 },
+  { label: "2,000", value: 2000 },
+  { label: "4,000", value: 4000 },
+  { label: "5,000", value: 5000 },
+  { label: "No Cap", value: 1000000 },
+];
+
+const DEFAULT_ALLOCATION = 2000;
+
+/**
+ * ScratchAllocationModal
+ *
+ * Simple modal for allocating scratches to a campaign.
+ * Only focuses on scratch allocation, no stores or QR steps.
+ *
+ * Props:
+ *   - campaignId: string
+ *   - open: boolean
+ *   - onClose: () => void
+ *   - onAllocated: () => void (called after successful allocation)
+ */
+export default function ScratchAllocationModal({
+  campaignId,
+  open,
+  onClose,
+  onAllocated,
+}) {
+  const { account } = useAuthContext();
+  const userId = account?.id || account?._id;
+  const userRole = account?.role || "Merchant";
+
+  const [allocation, setAllocation] = useState(DEFAULT_ALLOCATION);
+  const [customAmount, setCustomAmount] = useState("");
+  const [subscription, setSubscription] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [allocating, setAllocating] = useState(false);
   const [error, setError] = useState(null);
 
-  if (!isOpen) return null;
+  const headers = useMemo(
+    () => ({
+      "Content-Type": "application/json",
+      "x-user-id": userId || "",
+      "x-user-role": userRole,
+    }),
+    [userId, userRole]
+  );
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Load subscription status when modal opens
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+
+    setAllocation(DEFAULT_ALLOCATION);
+    setCustomAmount("");
+    setError(null);
     setLoading(true);
+
+    (async () => {
+      try {
+        const res = await fetch("/api/subscription/status", {
+          credentials: "include",
+          headers,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (active) setSubscription(data?.success ? data : null);
+      } catch (err) {
+        console.error("Failed to fetch subscription:", err);
+        if (active) setSubscription(null);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [open, headers]);
+
+  const handleSelectChip = useCallback((value) => {
+    setAllocation(value);
+    setCustomAmount("");
+  }, []);
+
+  const handleCustomChange = useCallback((e) => {
+    const value = e.target.value;
+    setCustomAmount(value);
+    if (value && !isNaN(value)) {
+      setAllocation(Number(value));
+    }
+  }, []);
+
+  const handleAllocate = useCallback(async () => {
+    if (!campaignId || !userId || !allocation) {
+      setError("Invalid allocation amount");
+      return;
+    }
+
+    setAllocating(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/campaigns/${campaignId}/allocate-cards`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ count: allocation }),
+      const res = await fetch(`/api/campaigns/${campaignId}/allocate-scratch`, {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: JSON.stringify({ allocationAmount: allocation }),
       });
 
-      if (!response.ok) throw new Error('Failed to allocate cards');
+      const data = await res.json().catch(() => ({}));
 
-      onClose();
+      if (!res.ok || data?.success === false) {
+        setError(data?.error || data?.message || "Failed to allocate scratches");
+        return;
+      }
+
+      // Success - clear related caches to reflect updated allocations
+      smartCacheService.invalidateRelated({
+        'campaigns-list': true,
+        [`campaign-detail-${campaignId}`]: true,
+      });
+
+      if (typeof onAllocated === "function") {
+        onAllocated();
+      }
     } catch (err) {
-      setError(err.message);
+      console.error("Failed to allocate scratches:", err);
+      setError("Failed to allocate scratches");
     } finally {
-      setLoading(false);
+      setAllocating(false);
     }
-  };
+  }, [campaignId, userId, allocation, headers, onAllocated]);
+
+  const isUnlimited = subscription?.unlimitedScratches === true ||
+                      subscription?.scratchRemaining === "UNLIMITED";
+  const scratchRemaining = isUnlimited ? "Unlimited" : (subscription?.scratchRemaining || 0);
+
+  if (!open) return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '24px',
-        maxWidth: '400px',
-        width: '90%',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-        }}>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700 }}>Allocate Scratch Cards</h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#999',
-            }}
-          >
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className={styles.header}>
+          <div className={styles.headerContent}>
+            <Ticket size={24} className={styles.icon} />
+            <div>
+              <h2 className={styles.title}>Allocate Scratches</h2>
+              <p className={styles.subtitle}>Choose how many scratches to allocate</p>
+            </div>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}>
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '8px',
-              fontSize: '14px',
-              fontWeight: 600,
-              color: '#010f44',
-            }}>
-              Number of Cards
-            </label>
-            <input
-              type="number"
-              value={allocation}
-              onChange={(e) => setAllocation(parseInt(e.target.value) || 0)}
-              placeholder="Enter number of cards"
-              style={{
-                width: '100%',
-                padding: '10px',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-              }}
-              disabled={loading}
-            />
-          </div>
+        {/* Content */}
+        <div className={styles.content}>
+          {loading ? (
+            <div className={styles.loadingState}>Loading subscription...</div>
+          ) : (
+            <>
+              {/* Subscription Info */}
+              <div className={styles.subscriptionInfo}>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>Your Entitlement</span>
+                  <span className={styles.infoValue}>
+                    {isUnlimited ? "∞ Unlimited" : `${scratchRemaining} Scratches`}
+                  </span>
+                </div>
+              </div>
 
-          {error && (
-            <div style={{
-              background: '#fee2e2',
-              color: '#c0392b',
-              padding: '12px',
-              borderRadius: '8px',
-              marginBottom: '16px',
-              fontSize: '13px',
-            }}>
-              {error}
-            </div>
+              {/* Quick Select Chips */}
+              <div className={styles.section}>
+                <label className={styles.label}>Quick Select</label>
+                <div className={styles.chipsContainer}>
+                  {QUICK_SELECT_CHIPS.map((chip) => (
+                    <button
+                      key={chip.value}
+                      className={`${styles.chip} ${allocation === chip.value ? styles.chipActive : ""}`}
+                      onClick={() => handleSelectChip(chip.value)}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom Amount */}
+              <div className={styles.section}>
+                <label htmlFor="customAmount" className={styles.label}>
+                  Or Enter Custom Amount
+                </label>
+                <input
+                  id="customAmount"
+                  type="number"
+                  placeholder="Enter custom amount"
+                  value={customAmount}
+                  onChange={handleCustomChange}
+                  className={styles.input}
+                  min="1"
+                />
+              </div>
+
+              {/* Selected Amount Display */}
+              <div className={styles.selectedAmount}>
+                <span className={styles.selectedLabel}>Allocation Amount:</span>
+                <span className={styles.selectedValue}>
+                  {allocation === 1000000 ? "No Cap (∞)" : allocation.toLocaleString()}
+                </span>
+              </div>
+
+              {/* Info Message */}
+              {isUnlimited && (
+                <div className={styles.infoBox}>
+                  <AlertCircle size={16} />
+                  <span>You have unlimited scratches. This allocation is informational only.</span>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <div className={styles.errorBox}>
+                  <AlertCircle size={16} />
+                  <span>{error}</span>
+                </div>
+              )}
+            </>
           )}
+        </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                flex: 1,
-                padding: '10px',
-                background: '#f0f0f0',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              style={{
-                flex: 1,
-                padding: '10px',
-                background: '#ef9e1b',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-              disabled={loading}
-            >
-              {loading ? 'Allocating...' : 'Allocate'}
-            </button>
-          </div>
-        </form>
+        {/* Footer */}
+        <div className={styles.footer}>
+          <button className={styles.secondaryBtn} onClick={onClose} disabled={allocating}>
+            Cancel
+          </button>
+          <button
+            className={styles.primaryBtn}
+            onClick={handleAllocate}
+            disabled={allocating || !allocation || loading}
+          >
+            {allocating ? "Allocating..." : "Confirm & Allocate"}
+          </button>
+        </div>
       </div>
     </div>
   );

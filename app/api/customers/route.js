@@ -4,6 +4,7 @@ import Campaign from "@/models/campaignModel";
 import Store from "@/models/storeModel";
 import Account from "@/models/accountModel";
 import Range from "@/models/rangeModel";
+import "@/models/scratchCardRecordModel";
 
 export async function GET(request) {
   try {
@@ -128,7 +129,7 @@ export async function GET(request) {
     ]);
 
     // Get available campaigns and stores for filters
-    const campaigns = await Campaign.find({ merchant_id: merchantId })
+    const campaigns = await Campaign.find({ merchantId: merchantId })
       .select("_id campaignName name")
       .lean();
 

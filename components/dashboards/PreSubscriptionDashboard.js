@@ -223,7 +223,7 @@ const PlanComparisonSection = ({
                 </li>
                 <li className={styles.planFeature}>
                   <CheckCircle size={16} />
-                  <span>90 Days Unlimited Scratches</span>
+                  <span>30 Days Unlimited scratch cards / month</span>
                 </li>
                 {plan.description && (
                   <li className={styles.planFeature}>

@@ -1,12 +1,14 @@
 import { connectDB } from '@/lib/connectDB';
 import Account from '@/models/accountModel';
 import Store from '@/models/storeModel';
+import Subscription from '@/models/subscriptionModel';
 import passwordService from '@/lib/passwordService';
 import jwtService from '@/lib/jwtService';
 import { setAuthSession } from '@/lib/setAuthSession';
 import { ROLE_HOME } from '@/lib/permissions';
 import { createSession, enforceDeviceLimit } from '@/lib/services/sessionManagementService';
 import { getLocationFromIP } from '@/lib/services/geolocationService';
+import { cookies } from 'next/headers';
 
 export async function POST(req) {
   try {
@@ -63,7 +65,12 @@ export async function POST(req) {
 
     if (account.status === 'deactivated') {
       return Response.json(
-        { success: false, error: 'Your account has been deactivated.' },
+        {
+          success: false,
+          error: 'Your account has been deactivated.',
+          code: 'ACCOUNT_DEACTIVATED',
+          accountId: account._id,
+        },
         { status: 403 }
       );
     }
@@ -120,15 +127,45 @@ export async function POST(req) {
 
     const { accessToken, refreshToken, expiresIn } = jwtService.createTokenPair(account);
 
-    // Check if merchant has stores
-    let redirectTo = ROLE_HOME[account.role] ?? '/dashboard';
+    // Always redirect to dashboard; set merchantHasStore cookie so middleware
+    // can gate /stores/create without a DB round-trip on every request.
+    const redirectTo = ROLE_HOME[account.role] ?? '/dashboard';
 
     if (account.role === 'Merchant') {
-      const storeCount = await Store.countDocuments({ merchant_id: account._id });
-      if (storeCount === 0) {
-        redirectTo = '/stores/create';
-      }
+      const [storeCount, subscription] = await Promise.all([
+        Store.countDocuments({ merchant_id: account._id }),
+        Subscription.findOne({
+          ownerId: account._id,
+          ownerType: 'merchant',
+          status: { $in: ['trial', 'active', 'past_due'] },
+        }).lean(),
+      ]);
+      const cookieStore = await cookies();
+      const sameSiteValue = process.env.NODE_ENV === 'production' ? 'strict' : 'lax';
+      const cookieOpts = {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: sameSiteValue,
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      };
+      cookieStore.set('merchantHasStore', storeCount > 0 ? '1' : '0', cookieOpts);
+      cookieStore.set('merchantHasSub', subscription ? '1' : '0', cookieOpts);
     }
+
+    // Login notification (fire-and-forget)
+    try {
+      const Notification = (await import('@/models/notificationModel')).default;
+      await Notification.create({
+        ownerId: account._id,
+        ownerType: account.role?.toLowerCase().includes('distributor') ? 'distributor' : 'merchant',
+        type: 'system_alert',
+        title: '👋 New login detected',
+        message: `You signed in on ${new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}.`,
+        severity: 'low',
+        read: false,
+      });
+    } catch (_) {}
 
     return Response.json(
       {

@@ -54,12 +54,11 @@ export async function GET(request) {
     }
 
     return Response.json(
+      { success: true, role: account.role, data },
       {
-        success: true,
-        role: account.role,
-        data,
-      },
-      { status: 200 }
+        status: 200,
+        headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" },
+      }
     );
   } catch (error) {
     console.error("Dashboard error:", error);

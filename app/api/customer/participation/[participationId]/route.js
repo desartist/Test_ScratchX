@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/connectDB';
+import rangeModel from '@/models/rangeModel';
 
 /**
  * GET /api/customer/participation/[participationId]
@@ -71,23 +72,33 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Only enforce 5-min expiry for sessions not yet revealed/redeemed
+    // Only enforce 5-min expiry for sessions in "verified" status that haven't been revealed yet
+    // Revealed/redeemed sessions should always be accessible
     if (participation.status === 'verified') {
       const createdAt = new Date(participation.createdAt);
       const ageInSeconds = (Date.now() - createdAt.getTime()) / 1000;
+      // 5-minute (300 second) window to reveal the reward
       if (ageInSeconds > 300) {
+        console.log(`[Participation Expiry] Status: ${participation.status}, Age: ${ageInSeconds}s, Expired: true`);
         return NextResponse.json(
           { success: false, error: 'Reward session has expired', expired: true },
           { status: 410 }
         );
       }
+    } else if (participation.status === 'revealed' || participation.status === 'redeemed') {
+      // Already revealed/redeemed sessions have a longer expiry - allow indefinite access
+      // User can show coupon to cashier for a reasonable period (no hard expiry on access)
+      console.log(`[Participation Status] Status: ${participation.status}, allowing access`);
     }
 
     // Fetch the ScratchCardRecord which holds the actual assigned reward
     const scratchCard = participation.scratch_card_id
       ? await ScratchCardRecord.findById(participation.scratch_card_id).lean()
       : null;
-
+    const billingRange = participation.range_id
+      ? await rangeModel.findById(participation.range_id).lean()
+      : null;
+    console.log("[GET billingRange] billingRange:", billingRange);
     function buildRewardName(type, value) {
       switch (type) {
         case 'discount': return value ? `₹${value} OFF` : 'Discount';
@@ -114,6 +125,7 @@ export async function GET(request, { params }) {
       participationId: participation._id.toString(),
       status: participation.status,
       scratchCardId: scratchCard ? scratchCard._id.toString() : null,
+      rewardClaimExpiresAt: participation.reward_claim_expires_at || null,
       participantName: participation.participant_name,
       participantPhone: participation.participant_phone,
       campaign: participation.campaign_id ? {
@@ -134,10 +146,10 @@ export async function GET(request, { params }) {
         longitude: participation.store_id.longitude
       } : null,
       reward: reward,
-      billingRange: participation.range_id ? {
-        _id: participation.range_id._id.toString(),
-        min: participation.range_id.min,
-        max: participation.range_id.max
+      billingRange: billingRange ? {
+        _id: billingRange._id.toString(),
+        min: billingRange.minAmount,
+        max: billingRange.maxAmount
       } : null,
       participatedAt: participation.participatedAt || participation.createdAt,
     };

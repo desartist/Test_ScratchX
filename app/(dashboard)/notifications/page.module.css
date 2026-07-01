@@ -32,9 +32,15 @@
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
-.unreadBadge {
+.headerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
   flex-shrink: 0;
-  margin-top: 6px;
+}
+
+.unreadBadge {
   padding: 5px 12px;
   background: #010f44;
   color: #fff;
@@ -43,6 +49,119 @@
   border-radius: 20px;
   letter-spacing: 0.3px;
   white-space: nowrap;
+}
+
+.markAllBtn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1.5px solid #e0e4ff;
+  border-radius: 10px;
+  color: #637080;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+.markAllBtn:hover:not(:disabled) {
+  background: #f0f2ff;
+  border-color: #c5cbfa;
+  color: #010f44;
+}
+
+.markAllBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Empty State ───────────────────────────────────────────── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 24px;
+  background: #fff;
+  border: 1.5px solid #e8eaff;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #010f44;
+}
+
+.emptyDesc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #637080;
+  line-height: 1.5;
+  max-width: 320px;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+}
+
+/* ── List count ────────────────────────────────────────────── */
+.listCount {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #9ba8b8;
+}
+
+/* ── Action link ───────────────────────────────────────────── */
+.actionLink {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6c5ce7;
+  text-decoration: none;
+}
+
+.actionLink:hover { text-decoration: underline; }
+
+/* ── Skeleton loader ───────────────────────────────────────── */
+.skeleton {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+}
+
+.skeleton + .skeleton { border-top: 1px solid #f5f6ff; }
+
+.skeletonIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #f0f2ff;
+  flex-shrink: 0;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.skeletonBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonLine {
+  height: 13px;
+  border-radius: 6px;
+  background: #f0f2ff;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
 }
 
 /* ── Coming Soon Banner ────────────────────────────────────── */

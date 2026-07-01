@@ -3,14 +3,14 @@ import mongoose from "mongoose";
 const merchantSchema = new mongoose.Schema(
   {
     yourName: { type: String, required: true },
-    storeName: { type: String, required: true },
+    storeName: { type: String, default: null },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    storeAddress: { type: String, required: true },
-    businessType: { type: String, required: true },
-    countryCode: { type: String, required: true },
-    phoneNumber: { type: String, required: true },
-    storeLocation: { type: String, required: true },
+    storeAddress: { type: String, default: null },
+    businessType: { type: String, default: null },
+    countryCode: { type: String, default: null },
+    phoneNumber: { type: String, default: null },
+    storeLocation: { type: String, default: null },
     // Additional merchant info
     gst_number: {
       type: String,

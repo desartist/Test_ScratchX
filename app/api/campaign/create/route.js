@@ -18,7 +18,20 @@ export async function GET() {
     account.role === "Manager" ? account.parentId : account._id;
 
   const campaigns = await Campaign.find({ merchantId }).sort({ createdAt: -1 });
-  return Response.json({ success: true, campaigns }, { status: 200 });
+
+  const now = new Date();
+  const campaignsWithStatus = campaigns.map(campaign => {
+    const doc = campaign.toObject();
+    // Calculate status based on dates
+    if (doc.endDate && new Date(doc.endDate) < now) {
+      doc.status = 'ended';
+    } else if (doc.startDate && new Date(doc.startDate) > now) {
+      doc.status = 'draft';
+    }
+    return doc;
+  });
+
+  return Response.json({ success: true, campaigns: campaignsWithStatus }, { status: 200 });
 }
 
 export async function POST(request) {
@@ -103,6 +116,22 @@ export async function POST(request) {
     ...campaignData,
     merchantId: account._id,
   });
+
+  // Create in-app notification
+  try {
+    const Notification = (await import('@/models/notificationModel')).default;
+    await Notification.create({
+      ownerId: account._id,
+      ownerType: 'merchant',
+      type: 'campaign_created',
+      title: '🎯 Campaign created',
+      message: `"${campaignData.campaignName}" has been created. Add reward ranges and assign stores to activate it.`,
+      actionUrl: `/campaign/${campaign._id}`,
+      actionText: 'Set Up Campaign',
+      severity: 'info',
+      read: false,
+    });
+  } catch (_) {}
 
   return NextResponse.json({ success: true, campaign }, { status: 201 });
 }

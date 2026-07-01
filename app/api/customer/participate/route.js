@@ -185,6 +185,28 @@ export async function POST(request) {
       longitude: verifiedStore.longitude,
     });
 
+    // ===== DUPLICATE PARTICIPATION CHECK =====
+    const existingParticipation = await CustomerParticipation.findOne({
+      campaign_id: campaignId,
+      customer_mobile: customerMobile,
+      status: { $nin: ['expired', 'failed'] },
+    }).lean();
+
+    if (existingParticipation) {
+      const scratchUrl = `/customer/campaign/${campaignId}/scratch/${existingParticipation._id.toString()}`;
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            participationId: existingParticipation._id.toString(),
+            rewardScreenUrl: scratchUrl,
+            alreadyParticipated: true,
+          },
+        },
+        { status: 200 },
+      );
+    }
+
     // ===== FETCH & VALIDATE CAMPAIGN =====
     const campaign = await Campaign.findById(campaignId);
     if (!campaign) {
@@ -220,7 +242,7 @@ export async function POST(request) {
     }
 
     // ===== RE-VALIDATE LOCATION =====
-    const ALLOWED_RADIUS_METERS = 2200;
+    const ALLOWED_RADIUS_METERS = 250;
     const { calculateDistance } = require("@/lib/utils/distanceCalculator");
 
     console.log("🔍 Re-validating location with verified store:", {

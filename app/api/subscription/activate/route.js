@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
 import razorpay from "@/lib/razorpay";
+import mockPaymentService from "@/lib/mockPaymentService";
 import Payment from "@/models/paymentModel";
 import SubscriptionPlan from "@/models/subscriptionPlanModel";
 
@@ -102,24 +103,49 @@ export async function POST(request) {
       );
     }
 
-    // Create Razorpay order
+    // Create Razorpay order (or mock order if test mode enabled)
     // Amount must be in paise (multiply by 100)
     // Receipt must be <= 40 chars
     const timestamp = Date.now().toString().slice(-8);
     const merchantIdShort = merchantId.toString().slice(-6);
     const receipt = `ord_${merchantIdShort}_${timestamp}`;
 
-    const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(amount * 100),
-      currency: "INR",
-      receipt: receipt,
-      notes: {
-        planId: planId.toString(),
-        planName: plan.name,
-        merchantId: merchantId.toString(),
-        type: "subscription",
-      },
-    });
+    let razorpayOrder;
+    let mockPaymentData = null;
+
+    const isTestMode = mockPaymentService.isTestModeEnabled();
+    console.log('[Activate] Test mode check - isTestMode:', isTestMode, 'ENV:', process.env.PAYMENT_TEST_MODE);
+
+    if (isTestMode) {
+      console.log('✓ Using mock payment for testing');
+      razorpayOrder = mockPaymentService.createMockOrder({
+        amount: Math.round(amount * 100),
+        currency: "INR",
+        receipt: receipt,
+        notes: {
+          planId: planId.toString(),
+          planName: plan.name,
+          merchantId: merchantId.toString(),
+          type: "subscription",
+          testMode: true,
+        },
+      });
+
+      // Generate mock payment data for frontend to use
+      mockPaymentData = mockPaymentService.createMockPaymentData(razorpayOrder.id);
+    } else {
+      razorpayOrder = await razorpay.orders.create({
+        amount: Math.round(amount * 100),
+        currency: "INR",
+        receipt: receipt,
+        notes: {
+          planId: planId.toString(),
+          planName: plan.name,
+          merchantId: merchantId.toString(),
+          type: "subscription",
+        },
+      });
+    }
 
     // Determine planType from plan name (CORE or SMART)
     let planType = "CORE";
@@ -131,6 +157,13 @@ export async function POST(request) {
     ) {
       planType = "CORE";
     }
+
+    console.log('[Activate] Plan determination:', {
+      planId: planId.toString(),
+      'plan.name': plan.name,
+      'plan.displayName': plan.displayName,
+      planType,
+    });
 
     // Only store planId if it's a real MongoDB ObjectId (not a hardcoded string like "plan_smart")
     const isRealObjectId = plan._id && /^[0-9a-fA-F]{24}$/.test(plan._id.toString());
@@ -174,6 +207,11 @@ export async function POST(request) {
           planName: plan.name,
           merchantEmail,
           description: `${plan.displayName || plan.name} Plan - Lifetime Access`,
+          // Include mock payment data for frontend in test mode
+          ...(mockPaymentData && {
+            mockPayment: mockPaymentData,
+            testMode: true,
+          }),
         },
       },
       { status: 200 },

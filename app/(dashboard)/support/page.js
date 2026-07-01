@@ -39,7 +39,7 @@ const FAQS = [
     a: "Go to Campaigns → New Campaign. Fill in the campaign name, billing ranges, reward tiers and assign stores. Your campaign goes live instantly once you save.",
   },
   {
-    q: "What happens after my 90-day unlimited scratches period?",
+    q: "What happens after my 30-day unlimited scratch cards / month period?",
     a: "After the 90-day unlimited period expires, you can purchase scratch packs from the Billing section. Packs come in sizes of 1 000, 5 000, 10 000 and 50 000 scratches.",
   },
   {
@@ -109,26 +109,8 @@ export default function SupportPage() {
         ))}
       </section>
 
-      {/* ── Quick Links ──────────────────────────────────── */}
-      <section className={styles.quickSection}>
-        <h2 className={styles.sectionHeading}>Quick Links</h2>
-        <div className={styles.quickGrid}>
-          {[
-            { icon: <FileText size={20} />, label: "Documentation", sub: "Guides & API reference" },
-            { icon: <MessageSquare size={20} />, label: "Live Chat", sub: "Mon–Fri, 10 am–7 pm IST" },
-            { icon: <Phone size={20} />, label: "Call Us", sub: "+91 98765 43210" },
-            { icon: <ExternalLink size={20} />, label: "Status Page", sub: "System uptime & incidents" },
-          ].map((link) => (
-            <div key={link.label} className={styles.quickCard}>
-              <div className={styles.quickIcon}>{link.icon}</div>
-              <div>
-                <div className={styles.quickLabel}>{link.label}</div>
-                <div className={styles.quickSub}>{link.sub}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ── Quick Links (Hidden) ──────────────────────────────────── */}
+      {/* Quick Links section hidden */}
 
       {/* ── FAQs ─────────────────────────────────────────── */}
       <section className={styles.faqSection}>

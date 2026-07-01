@@ -171,6 +171,11 @@ const campaignSchema = new mongoose.Schema(
       type: Date,
       required: [true, 'End date is required']
     },
+    displayCoupons: {
+      type: Number,
+      enum: [4, 6, 8],
+      default: 6
+    },
     // totalQRCodes: {
     //   type: Number,
     //   required: [true, 'Total QR codes count is required'],

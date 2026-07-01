@@ -3,6 +3,21 @@ import { cookies } from 'next/headers';
 import { createHmac } from 'crypto';
 import Session from '@/models/sessionModel';
 import { connectDB } from '@/lib/connectDB';
+
+const COOKIE_NAMES = ['authToken', 'refreshToken', 'sessionId', 'accountId', 'accountRole', 'userEmail'];
+
+// GET /api/auth/logout — clear all auth cookies and redirect to login.
+// Used by the server layout when a session is invalid (user not in DB).
+export async function GET() {
+  const response = NextResponse.redirect(
+    new URL('/auth/login', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'),
+    { status: 302 }
+  );
+  for (const name of COOKIE_NAMES) {
+    response.cookies.set(name, '', { maxAge: 0, path: '/' });
+  }
+  return response;
+}
 import tokenBlacklist from '@/lib/tokenBlacklist';
 import jwtService from '@/lib/jwtService';
 
@@ -10,15 +25,14 @@ export async function POST(request) {
   try {
     await connectDB();
 
-    const body = await request.json();
-    const { accessToken, refreshToken } = body;
-
-    // At least one token is required
-    if (!accessToken && !refreshToken) {
-      return NextResponse.json(
-        { success: false, error: 'At least one token is required' },
-        { status: 400 }
-      );
+    let accessToken = null;
+    let refreshToken = null;
+    try {
+      const body = await request.json();
+      accessToken = body.accessToken || null;
+      refreshToken = body.refreshToken || null;
+    } catch {
+      // body may be empty — that's fine, we'll still clear the cookie session
     }
 
     // Blacklist access token (15 minute expiry)

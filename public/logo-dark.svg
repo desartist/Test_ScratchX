@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200">
+  <defs>
+    <clipPath id="clip-dark-ur">
+      <polygon points="100,83 183,0 200,17 117,100"/>
+    </clipPath>
+  </defs>
+  <polygon fill="#010f44" points="17,0 100,83 183,0 200,17 117,100 200,183 183,200 100,117 17,200 0,183 83,100 0,17"/>
+  <g clip-path="url(#clip-dark-ur)" fill="#ef9e1b" stroke="#010f44" stroke-width="1.2" stroke-linejoin="round">
+    <polygon points="187.5,5 180,18 195,18"/>
+    <polygon points="172.5,18 165,31 180,31"/>
+    <polygon points="187.5,18 180,31 195,31"/>
+    <polygon points="180,18 195,18 187.5,31"/>
+    <polygon points="157.5,31 150,44 165,44"/>
+    <polygon points="172.5,31 165,44 180,44"/>
+    <polygon points="187.5,31 180,44 195,44"/>
+    <polygon points="165,31 180,31 172.5,44"/>
+    <polygon points="180,31 195,31 187.5,44"/>
+    <polygon points="142.5,44 135,57 150,57"/>
+    <polygon points="157.5,44 150,57 165,57"/>
+    <polygon points="172.5,44 165,57 180,57"/>
+    <polygon points="187.5,44 180,57 195,57"/>
+    <polygon points="150,44 165,44 157.5,57"/>
+    <polygon points="165,44 180,44 172.5,57"/>
+    <polygon points="180,44 195,44 187.5,57"/>
+    <polygon points="127.5,57 120,70 135,70"/>
+    <polygon points="142.5,57 135,70 150,70"/>
+    <polygon points="157.5,57 150,70 165,70"/>
+    <polygon points="172.5,57 165,70 180,70"/>
+    <polygon points="187.5,57 180,70 195,70"/>
+    <polygon points="135,57 150,57 142.5,70"/>
+    <polygon points="150,57 165,57 157.5,70"/>
+    <polygon points="165,57 180,57 172.5,70"/>
+    <polygon points="180,57 195,57 187.5,70"/>
+    <polygon points="112.5,70 105,83 120,83"/>
+    <polygon points="127.5,70 120,83 135,83"/>
+    <polygon points="142.5,70 135,83 150,83"/>
+    <polygon points="157.5,70 150,83 165,83"/>
+    <polygon points="172.5,70 165,83 180,83"/>
+    <polygon points="187.5,70 180,83 195,83"/>
+    <polygon points="120,70 135,70 127.5,83"/>
+    <polygon points="135,70 150,70 142.5,83"/>
+    <polygon points="150,70 165,70 157.5,83"/>
+    <polygon points="165,70 180,70 172.5,83"/>
+    <polygon points="180,70 195,70 187.5,83"/>
+  </g>
+  <text x="220" y="148" font-family="'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif" font-weight="900" font-size="100" letter-spacing="-2">
+    <tspan fill="#010f44">Scratch</tspan><tspan fill="#ef9e1b">X</tspan>
+  </text>
+</svg>

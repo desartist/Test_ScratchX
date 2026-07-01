@@ -32,6 +32,23 @@ function couponsFromRange(rewards, min) {
   return mapped;
 }
 
+// Format number to Indian numbering system (10,000 instead of 10000)
+function formatIndian(num) {
+  const str = String(num).replace(/\D/g, ''); // Remove non-digits
+  if (!str) return '';
+  if (str.length <= 3) return str;
+  let result = str.slice(-3); // Last 3 digits
+  for (let i = str.length - 3; i > 0; i -= 2) {
+    result = str.slice(Math.max(0, i - 2), i) + ',' + result;
+  }
+  return result;
+}
+
+// Parse Indian formatted number back to plain number
+function parseIndian(str) {
+  return str.replace(/,/g, '');
+}
+
 // Canvas-based client-side image compression → base64 JPEG
 function compressImage(file, maxDim, quality) {
   return new Promise((resolve, reject) => {
@@ -73,6 +90,7 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
 
   const [loading,       setLoading]       = useState(true);
   const [existingCount, setExistingCount] = useState(0);
+  const [displayCoupons, setDisplayCoupons] = useState(null); // Fetch from campaign
 
   const [minAmount, setMinAmount] = useState(
     isEdit && range?.minAmount != null ? String(range.minAmount) : "",
@@ -81,7 +99,7 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
     isEdit && range?.maxAmount != null ? String(range.maxAmount) : "",
   );
   const [coupons, setCoupons] = useState(() =>
-    isEdit ? couponsFromRange(range?.rewards, DEFAULT_COUPONS) : makeCoupons(DEFAULT_COUPONS),
+    isEdit && displayCoupons ? couponsFromRange(range?.rewards, displayCoupons) : makeCoupons(DEFAULT_COUPONS),
   );
 
   const [saving,     setSaving]     = useState(false);
@@ -121,6 +139,7 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
         rangeLen   = Array.isArray(data?.ranges) ? data.ranges.length : 0;
       } catch { rangeLen = 0; }
       if (!active) return;
+      setDisplayCoupons(coupCount); // Update the display coupons count
       if (isEdit) {
         setCoupons((prev) => {
           if (prev.length >= coupCount) return prev;
@@ -140,7 +159,11 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
   const currentRangeNumber = existingCount + 1;
 
   const handleCouponChange = useCallback((index, field, val) => {
-    setCoupons((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: val } : c)));
+    let processed = val;
+    if (field === "amount" && val && /^\d/.test(val)) {
+      processed = formatIndian(val);
+    }
+    setCoupons((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: processed } : c)));
   }, []);
 
   // When user switches type, clear the amount to avoid stale values
@@ -178,8 +201,8 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
   const handleSave = useCallback(async () => {
     setFormError(null);
 
-    const min = Number(minAmount);
-    const max = Number(maxAmount);
+    const min = Number(parseIndian(minAmount));
+    const max = Number(parseIndian(maxAmount));
 
     if (!Number.isFinite(min) || min <= 0) {
       setFormError("Enter a minimum amount greater than 0.");
@@ -198,7 +221,7 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
         }
         continue;
       }
-      const value = Number(c.amount);
+      const value = Number(parseIndian(c.amount));
       if (c.amount === "" || !Number.isFinite(value) || value <= 0) continue;
       rewards.push({ type: c.type, value });
     }
@@ -250,22 +273,28 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
           <label className={styles.label} htmlFor="rw-min">Min. Amount (₹)</label>
           <input
             id="rw-min"
-            type="number"
+            type="text"
             className={styles.input}
-            placeholder="e.g. 1"
+            placeholder="e.g. 1,000"
             value={minAmount}
-            onChange={(e) => setMinAmount(e.target.value)}
+            onChange={(e) => {
+              const parsed = parseIndian(e.target.value);
+              setMinAmount(parsed ? formatIndian(parsed) : '');
+            }}
           />
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="rw-max">Max Amount (₹)</label>
           <input
             id="rw-max"
-            type="number"
+            type="text"
             className={styles.input}
-            placeholder="e.g. 499"
+            placeholder="e.g. 10,000"
             value={maxAmount}
-            onChange={(e) => setMaxAmount(e.target.value)}
+            onChange={(e) => {
+              const parsed = parseIndian(e.target.value);
+              setMaxAmount(parsed ? formatIndian(parsed) : '');
+            }}
           />
         </div>
       </div>
@@ -313,7 +342,7 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
                       <span className={styles.inputPrefix}>₹</span>
                       <input
                         id={`rw-amt-${index}`}
-                        type="number"
+                        type="text"
                         className={`${styles.input} ${styles.inputWithPrefix}`}
                         placeholder="e.g. 50"
                         value={coupon.amount}

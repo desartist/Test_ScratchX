@@ -1,27 +1,39 @@
-.scroller {
+.slider {
+  display: flex;
   overflow-x: auto;
+  overflow-y: hidden;
+  gap: 12px;
+  padding: 4px 0;
+  scroll-behavior: smooth;
+  cursor: grab;
+  user-select: none;
   -webkit-overflow-scrolling: touch;
-  margin: 0 calc(-1 * var(--spacing-4));
-  padding: 0 var(--spacing-4);
+  scrollbar-width: none;
 }
 
-.grid {
-  --r: 16px;
+.slider::-webkit-scrollbar {
+  display: none;
+}
+
+.slider.active {
+  cursor: grabbing;
+}
+
+.sliderTrack {
   display: flex;
+  gap: 12px;
   flex-wrap: nowrap;
-  gap: var(--spacing-8);
+  padding: 0;
 }
 
 .card {
-  flex: 0 0 auto;
-  min-width: 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-4);
-  padding: var(--spacing-10);
-  border-radius: var(--r);
+  gap: 8px;
+  padding: 20px 16px;
+  border-radius: 16px;
   background: var(--color-white);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
@@ -29,40 +41,58 @@
   color: var(--color-navy);
   cursor: pointer;
   text-align: center;
-  transition: all var(--transition-fast);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  width: 160px;
+  min-width: 160px;
+  user-select: none;
+  pointer-events: auto;
 }
 
 .card:hover {
   box-shadow: var(--shadow-card-elevated);
+  transform: translateY(-2px);
+}
+
+.card:active {
+  transform: translateY(0);
 }
 
 .icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
   background: var(--color-lavender-bg);
   color: var(--color-navy);
-  font-size: 20px;
+  font-size: 24px;
+  flex-shrink: 0;
 }
 
 .label {
-  font-size: var(--font-size-base);
+  font-size: 14px;
   font-weight: 600;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
-@media (min-width: 600px) {
-  .scroller {
-    overflow-x: visible;
-  }
-
-  .grid {
-    flex-wrap: wrap;
-  }
-
+@media (max-width: 600px) {
   .card {
-    flex: 1 1 0;
+    width: 140px;
+    min-width: 140px;
+    padding: 16px 12px;
+  }
+
+  .icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .label {
+    font-size: 12px;
   }
 }

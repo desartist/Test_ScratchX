@@ -72,10 +72,18 @@ export async function GET() {
     },
   };
 
-  let plan = subscription.planId;
-  if (!plan || !plan.limits) {
-    const key = subscription.planType?.toLowerCase();
-    plan = (key && HARDCODED_PLANS[`plan_${key}`]) || null;
+  // Always use planType as source of truth for determining the plan
+  let plan = null;
+
+  if (subscription.planType) {
+    // Use subscription.planType (CORE or SMART) to look up the hardcoded plan
+    const planTypeKey = `plan_${subscription.planType.toLowerCase()}`;
+    plan = HARDCODED_PLANS[planTypeKey];
+  }
+
+  // If no plan found via planType, try planId
+  if (!plan && subscription.planId) {
+    plan = subscription.planId;
   }
 
   const planName = plan?.name
@@ -85,6 +93,12 @@ export async function GET() {
     : null;
 
   const displayName = plan?.displayName || (planName ? `ScratchX ${planName}` : null);
+
+  console.log('[Current Subscription] Plan determination:', {
+    subscriptionPlanType: subscription.planType,
+    'plan.displayName': plan?.displayName,
+    displayName,
+  });
 
   const limits = plan
     ? {

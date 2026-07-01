@@ -1,23 +1,18 @@
 import React from 'react';
-import DashboardLayout from '@/components/dashboards/DashboardLayout';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import DashboardLayout from '@/components/dashboards/DashboardLayout';
 
 export const dynamic = 'force-dynamic';
-import { redirect } from 'next/navigation';
-import connectDB from '@/lib/db';
-import Store from '@/models/storeModel';
 
-async function getUser() {
+async function getUser(cookieHeader) {
   try {
-    const cookieStore = await cookies();
     const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
     const res = await fetch(`${base}/api/auth/me`, {
-      headers: {
-        cookie: cookieStore.toString(),
-      },
+      headers: { cookie: cookieHeader },
       credentials: 'include',
     });
-
+    if (res.status === 401) return { unauthorized: true };
     if (!res.ok) return null;
     const data = await res.json();
     return data.account || null;
@@ -27,24 +22,46 @@ async function getUser() {
   }
 }
 
-async function checkMerchantStore(userId) {
-  try {
-    await connectDB();
-    const storeCount = await Store.countDocuments({ merchant_id: userId });
-    return storeCount > 0;
-  } catch (error) {
-    console.error('Error checking merchant stores:', error);
-    return true; // Allow access on error to prevent blocking
-  }
-}
-
 export default async function Layout({ children }) {
-  const user = await getUser();
-  const role = user?.role || 'Merchant';
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
 
-  // NOTE: Store check removed from layout to prevent redirect loops
-  // Each page (campaigns, stores list) will do its own validation
-  // This allows /stores/create to be accessible without infinite redirects
+  const user = await getUser(cookieHeader);
+
+  if (!user || user.unauthorized) {
+    redirect('/auth/login');
+  }
+
+  const role = user?.role || 'Merchant';
+  const merchantHasStore = cookieStore.get('merchantHasStore')?.value;
+
+  // Verify store ownership via API whenever cookie isn't definitively '1'
+  // (handles stuck '0' cookies after store creation, and missing cookies from OAuth)
+  let hasStore = merchantHasStore === '1';
+  if (!hasStore) {
+    try {
+      const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const res = await fetch(`${base}/api/stores`, {
+        headers: { cookie: cookieHeader },
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        hasStore = Array.isArray(data.stores) ? data.stores.length > 0 : false;
+      }
+    } catch {
+      hasStore = false;
+    }
+  }
+
+  // Render without sidebar/header so the onboarding UI is clean
+  if (!hasStore) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f5f6fa' }}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <DashboardLayout role={role}>

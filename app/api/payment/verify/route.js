@@ -6,7 +6,9 @@ import Account from "@/models/accountModel";
 import Commission from "@/models/commissionModel";
 import scratchEntitlementService from "@/lib/scratchEntitlementService";
 import notificationService from "@/lib/services/notificationService";
+import mockPaymentService from "@/lib/mockPaymentService";
 import { createHmac } from "crypto";
+import { cookies } from "next/headers";
 
 const DEFAULT_COMMISSION_RATE = parseFloat(process.env.DISTRIBUTOR_COMMISSION_RATE ?? "20");
 
@@ -40,11 +42,24 @@ export async function POST(request) {
 
     // — Verify HMAC signature —
     // Razorpay signs: order_id + "|" + payment_id with key_secret
-    const expectedSignature = createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest("hex");
+    let isSignatureValid = false;
 
-    if (expectedSignature !== razorpay_signature) {
+    if (mockPaymentService.isTestModeEnabled()) {
+      // For mock payments, use mock signature generation
+      const mockSignature = mockPaymentService.generateSignature(razorpay_order_id, razorpay_payment_id);
+      isSignatureValid = mockSignature === razorpay_signature;
+      if (isSignatureValid) {
+        console.log('✓ Mock payment signature verified (TEST MODE)');
+      }
+    } else {
+      // For real payments, use actual Razorpay verification
+      const expectedSignature = createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+        .digest("hex");
+      isSignatureValid = expectedSignature === razorpay_signature;
+    }
+
+    if (!isSignatureValid) {
       console.error("[Payment Verify] Invalid signature for order:", razorpay_order_id);
       return Response.json(
         { success: false, error: "Invalid payment signature" },
@@ -151,6 +166,18 @@ export async function POST(request) {
     ).catch((error) => console.error("[Payment Verify] Notification error:", error));
 
     console.log(`✓ [Payment Verified] ${planType} plan activated for merchant ${account._id.toString()}`);
+
+    // Update merchantHasSub cookie so middleware immediately allows access
+    try {
+      const cookieStore = await cookies();
+      cookieStore.set('merchantHasSub', '1', {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      });
+    } catch (_) {}
 
     return Response.json(
       {

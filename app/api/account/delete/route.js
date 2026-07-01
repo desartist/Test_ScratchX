@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/connectDB";
-import { getLoginToken } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
+import { cookies } from "next/headers";
 import Account from "@/models/accountModel";
 import PasswordService from "@/lib/passwordService";
 import { logoutAllSessions } from "@/lib/services/sessionManagementService";
@@ -8,10 +9,10 @@ import { logAction } from "@/lib/services/auditLogService";
 export async function POST(req) {
   await connectDB();
 
-  const account = await getLoginToken();
-  if (!account) {
+  const { account, error } = await requireAuth();
+  if (error || !account) {
     return Response.json(
-      { success: false, error: "Unauthorized" },
+      { success: false, error: error || "Unauthorized" },
       { status: 401 }
     );
   }
@@ -21,7 +22,7 @@ export async function POST(req) {
 
   if (!password) {
     return Response.json(
-      { success: false, error: "Password required for account deletion" },
+      { success: false, error: "Password required for account deactivation" },
       { status: 400 }
     );
   }
@@ -30,7 +31,7 @@ export async function POST(req) {
   const fullAccount = await Account.findById(account._id).select("+password");
   if (!fullAccount.password) {
     return Response.json(
-      { success: false, error: "Cannot delete account without password" },
+      { success: false, error: "Cannot deactivate account without password" },
       { status: 400 }
     );
   }
@@ -43,7 +44,7 @@ export async function POST(req) {
     );
   }
 
-  // Soft delete account
+  // Deactivate account (soft delete) — preserves all data
   await Account.findByIdAndUpdate(
     account._id,
     {
@@ -55,17 +56,36 @@ export async function POST(req) {
 
   // Log action
   const ip = req.headers.get("x-forwarded-for") || "unknown";
-  await logAction(account._id, "ACCOUNT_DELETE", {
+  await logAction(account._id, "ACCOUNT_DEACTIVATE", {
     ip,
-    metadata: { softDelete: true, timestamp: new Date() },
+    metadata: { deactivated: true, dataPreserved: true, timestamp: new Date() },
   });
 
   // Logout all sessions
   await logoutAllSessions(account._id);
 
-  return Response.json({
+  // Clear all auth cookies
+  const cookieStore = await cookies();
+  const cookiesToClear = [
+    "authToken",
+    "refreshToken",
+    "sessionId",
+    "accountId",
+    "accountRole",
+    "userEmail",
+    "merchantHasStore",
+  ];
+
+  const response = Response.json({
     success: true,
-    message: "Account deleted successfully. You have been logged out.",
+    message: "Account deactivated successfully. Your data is preserved. You have been logged out.",
     redirect: "/auth/login",
   });
+
+  // Delete each cookie
+  cookiesToClear.forEach((cookieName) => {
+    response.cookies.delete(cookieName);
+  });
+
+  return response;
 }

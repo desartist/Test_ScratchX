@@ -7,9 +7,9 @@ import SmartDashboard from "@/components/dashboards/SmartDashboard";
 import DistributorDashboard from "@/components/dashboards/DistributorDashboard";
 import AdminDashboard from "@/components/dashboards/AdminDashboard";
 import PreSubscriptionDashboard from "@/components/dashboards/PreSubscriptionDashboard";
-import styles from "./page.module.css";
+import styles from "./merchant.module.css";
 
-export default function DashboardPage() {
+export default function MerchantOverviewPage() {
   const router = useRouter();
   const { account, token } = useAuthContext();
   const [loading, setLoading] = useState(true);

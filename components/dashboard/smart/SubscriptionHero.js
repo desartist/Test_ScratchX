@@ -16,6 +16,7 @@ export default function SubscriptionHero({
   validUntil,
   used,
   daysRemaining,
+  trend,
   onViewUsage,
   onChoosePlans,
 }) {
@@ -27,11 +28,22 @@ export default function SubscriptionHero({
 
   return (
     <section className={styles.hero}>
+      {/* Top row: plan name + day counter + trend */}
       <div className={styles.topRow}>
-        <span className={styles.planName}>{fallback(planName)}</span>
-        {showDayPill && (
-          <span className={styles.dayPill}>
-            Day {dayOf} of {totalDays}
+        <div className={styles.topLeft}>
+           {showDayPill && (
+            <span className={styles.dayPill}>
+              Day {dayOf} of {totalDays}
+            </span>
+          )}
+          {planName && (
+            <span className={styles.planLabel}>{planName}</span>
+          )}
+         
+        </div>
+        {trend && (
+          <span className={styles.trendPill}>
+            ↑ {trend}
           </span>
         )}
       </div>
@@ -44,6 +56,7 @@ export default function SubscriptionHero({
           <span className={styles.statValue}>{fallback(used)}</span>
           <span className={styles.statLabel}>Used</span>
         </div>
+        <div className={styles.statDivider} />
         <div className={styles.statCol}>
           <span className={styles.statValue}>{fallback(daysRemaining)}</span>
           <span className={styles.statLabel}>Days Access left</span>
@@ -52,8 +65,7 @@ export default function SubscriptionHero({
 
       {expiringSoon && (
         <div className={styles.warning}>
-          <span aria-hidden="true">⚠</span> Unlimited Scratches expire in{" "}
-          {daysRemaining} days.
+          ⚠ Unlimited scratch cards / month expire in {daysRemaining} days.
         </div>
       )}
 
@@ -87,6 +99,7 @@ SubscriptionHero.propTypes = {
   validUntil: PropTypes.string,
   used: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   daysRemaining: PropTypes.number,
+  trend: PropTypes.string,
   onViewUsage: PropTypes.func,
   onChoosePlans: PropTypes.func,
 };

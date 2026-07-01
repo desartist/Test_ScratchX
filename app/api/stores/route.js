@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
 import StoreService from '@/lib/storeService';
@@ -298,6 +299,37 @@ export async function POST(request) {
         );
       }
     }
+
+    // Create in-app notification for store creation
+    try {
+      const Notification = (await import('@/models/notificationModel')).default;
+      await Notification.create({
+        ownerId: userId,
+        ownerType: 'merchant',
+        type: 'system_alert',
+        title: isFirstStore ? '🏪 Your first store is live!' : '🏪 New store created',
+        message: isFirstStore
+          ? `"${store_name}" has been set up successfully. You can now create campaigns for it.`
+          : `"${store_name}" has been created and is ready for campaigns.`,
+        actionUrl: `/stores`,
+        actionText: 'View Stores',
+        severity: 'info',
+        read: false,
+      });
+    } catch (_) {}
+
+    // Mark that this merchant now has at least one store (used by middleware gate)
+    try {
+      const cookieStore = await cookies();
+      const sameSiteValue = process.env.NODE_ENV === 'production' ? 'strict' : 'lax';
+      cookieStore.set('merchantHasStore', '1', {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: sameSiteValue,
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      });
+    } catch (_) {}
 
     return NextResponse.json(
       {
