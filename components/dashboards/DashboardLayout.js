@@ -74,9 +74,22 @@ export default function DashboardLayout({ children, role }) {
   // Still checking (null) → render nothing briefly to avoid wrong chrome flash.
   if (hasStore === null) return null;
 
+  const getDashboardHref = () => {
+    switch (role) {
+      case "Merchant":
+        return "/merchant-overview";
+      case "Distributor":
+        return "/distributor-overview";
+      case "Super_Admin":
+        return "/admin-overview";
+      default:
+        return "/dashboard";
+    }
+  };
+
   const getNavItems = () => {
     const baseItems = [
-      { label: "Dashboard", href: "/dashboard", iconKey: "dashboard" },
+      { label: "Dashboard", href: getDashboardHref(), iconKey: "dashboard" },
     ];
 
     switch (role) {

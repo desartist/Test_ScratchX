@@ -163,6 +163,25 @@ export default function SubscriptionPage() {
   const unlimitedScratchesExpired =
     hasActivePlan && !isUnlimitedScratches && subscriptionStatus?.scratchRemaining === 0;
 
+  // Define plan hierarchy (tier: higher number = higher tier)
+  const PLAN_TIERS = {
+    'Core': 1,
+    'Smart': 2,
+  };
+
+  // Filter plans based on current plan tier
+  // Only show plans that are the current plan or higher tier
+  const availablePlans = plans.filter((plan) => {
+    if (!hasActivePlan) {
+      // If no active plan, show all plans
+      return true;
+    }
+    const currentTier = PLAN_TIERS[currentPlanName] ?? 0;
+    const planTier = PLAN_TIERS[plan.name] ?? 0;
+    // Only show if plan tier is >= current tier
+    return planTier >= currentTier;
+  });
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
@@ -247,7 +266,7 @@ export default function SubscriptionPage() {
           </div>
 
           <div className={styles.plansGrid}>
-            {plans.map((plan) => (
+            {availablePlans.map((plan) => (
               <div
                 key={plan._id}
                 className={`${styles.planCard} ${

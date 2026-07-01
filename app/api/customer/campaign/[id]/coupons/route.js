@@ -64,9 +64,13 @@ export async function GET(request, { params }) {
 
     // If no coupons found, return mock data for demo purposes
     if (allCoupons.length === 0) {
+      // Get first range ID for mock data if available
+      const firstRangeId = ranges.length > 0 ? ranges[0]._id : "mockRangeId";
+
       const mockCoupons = [
         {
           id: "1",
+          rangeId: firstRangeId,
           rewardName: "₹50 Off",
           couponCode: "50OFF2025",
           value: 50,
@@ -74,6 +78,7 @@ export async function GET(request, { params }) {
         },
         {
           id: "2",
+          rangeId: firstRangeId,
           rewardName: "₹100 Off",
           couponCode: "100OFF2025",
           value: 100,
@@ -81,6 +86,7 @@ export async function GET(request, { params }) {
         },
         {
           id: "3",
+          rangeId: firstRangeId,
           rewardName: "₹150 Off",
           couponCode: "150OFF2025",
           value: 150,
@@ -88,6 +94,7 @@ export async function GET(request, { params }) {
         },
         {
           id: "4",
+          rangeId: firstRangeId,
           rewardName: "₹200 Off",
           couponCode: "200OFF2025",
           value: 200,
@@ -95,6 +102,7 @@ export async function GET(request, { params }) {
         },
         {
           id: "5",
+          rangeId: firstRangeId,
           rewardName: "₹250 Off",
           couponCode: "250OFF2025",
           value: 250,
@@ -102,6 +110,7 @@ export async function GET(request, { params }) {
         },
         {
           id: "6",
+          rangeId: firstRangeId,
           rewardName: "₹300 Off",
           couponCode: "300OFF2025",
           value: 300,

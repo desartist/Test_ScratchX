@@ -13,7 +13,7 @@ import styles from "./ranges.module.css";
  * Step 2 of campaign setup — "Setup Billing Range".
  *
  * LISTING state: shows each existing range as a clickable row (opens the
- * editor) plus an "Add more range" ghost row (opens the editor in create
+ * editor) plus an "Add Billing Range" ghost row (opens the editor in create
  * mode) and a "Preview & Launch" button (-> campaign details).
  * EDITOR state: renders <RangeWizard> for create OR edit; on done, returns
  * to the listing and refetches.
@@ -90,6 +90,21 @@ export default function CampaignRangesStepPage() {
   useEffect(() => {
     fetchRanges();
   }, [fetchRanges]);
+
+  /**
+   * Auto-refetch ranges when page becomes visible (e.g., returning from edit)
+   */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && campaignId && userId) {
+        console.log("[Ranges] Page visible - refetching ranges");
+        fetchRanges();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [campaignId, userId, fetchRanges]);
 
   const openCreate = useCallback(() => {
     setEditRange(null);
@@ -172,7 +187,7 @@ export default function CampaignRangesStepPage() {
                 <span className={styles.addMoreIcon}>
                   <Plus size={14} strokeWidth={2.5} />
                 </span>
-                Add more range
+                Add Billing Range
               </button>
             </div>
 

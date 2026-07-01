@@ -317,7 +317,28 @@ export default function CampaignDetailsPage({ params }) {
 
   // ---- Derived display values (campaign is guaranteed non-null below) ----
   const campaignName = campaign.name || campaign.campaignName || "Campaign";
-  const status = campaign.status || "draft";
+
+  // Calculate status based on dates
+  const getCalculatedStatus = () => {
+    const now = new Date();
+    const startDate = new Date(campaign.startDate);
+    const endDate = new Date(campaign.endDate);
+
+    // If end date has passed, campaign is ended
+    if (endDate < now) {
+      return "ended";
+    }
+
+    // If start date hasn't arrived yet, campaign is draft
+    if (startDate > now) {
+      return "draft";
+    }
+
+    // Otherwise use the stored status (active, paused, etc.)
+    return campaign.status || "active";
+  };
+
+  const status = getCalculatedStatus();
 
   // Plan type + store limit (Core => 1 store, Smart => 5 stores).
   // Prefer a real maxStores value from the subscription payload if present.
@@ -468,7 +489,7 @@ export default function CampaignDetailsPage({ params }) {
               </div>
               <div className={styles.detailItem}>
                 <label className={styles.detailLabel}>Status</label>
-                <StatusBadge status={campaign?.status} />
+                <StatusBadge status={status} />
               </div>
               <div className={styles.detailItem}>
                 <label className={styles.detailLabel}>Start Date</label>

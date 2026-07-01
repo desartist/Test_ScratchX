@@ -16,6 +16,7 @@ const STATUS_COLOR = {
   active:    { bg: "#e8fff0", color: "#16a34a", dot: "#22c55e" },
   draft:     { bg: "#f0f2ff", color: "#4f46e5", dot: "#6c5ce7" },
   paused:    { bg: "#fff8ec", color: "#b45309", dot: "#f59e0b" },
+  ended:     { bg: "#f3f4f6", color: "#6b7280", dot: "#9ca3af" },
   expired:   { bg: "#fff0f0", color: "#dc2626", dot: "#ef4444" },
   scheduled: { bg: "#f0f8ff", color: "#0369a1", dot: "#38bdf8" },
 };
@@ -25,6 +26,7 @@ const STATUS_LABEL = {
   performing: "PERFORMING",
   draft:     "DRAFT",
   paused:    "PAUSED",
+  ended:     "ENDED",
   expired:   "EXPIRED",
   scheduled: "SCHEDULED",
 };
@@ -36,13 +38,33 @@ function CampaignCard({ campaign, storeCount, onClick }) {
     allocatedCards = 0, remainingCards = 0,
   } = campaign;
 
+  // Calculate status based on dates
+  const getCalculatedStatus = () => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // If end date has passed, campaign is ended
+    if (end < now) {
+      return "ended";
+    }
+
+    // If start date hasn't arrived yet, campaign is draft
+    if (start > now) {
+      return "draft";
+    }
+
+    // Otherwise use the stored status (active, paused, etc.)
+    return (status || "active").toLowerCase();
+  };
+
   const daysLeft = Math.max(0, Math.ceil((new Date(endDate) - Date.now()) / 86400000));
   const used = num(allocatedCards) - num(remainingCards);
   const total = num(allocatedCards);
   const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
   const left = Math.max(0, total - used);
   const isLow = total > 0 && left / total < 0.15;
-  const statusKey = (status || "draft").toLowerCase();
+  const statusKey = getCalculatedStatus();
   const statusLabel = STATUS_LABEL[statusKey] || statusKey.toUpperCase();
 
   // Days color: green if >30, orange if 8-30, red if ≤7

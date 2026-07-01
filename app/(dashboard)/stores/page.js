@@ -167,6 +167,21 @@ export default function StoresPage() {
   }, [account, fetchStores]);
 
   /**
+   * Auto-refetch stores when page becomes visible (e.g., returning from create/edit)
+   */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && account && account.id) {
+        console.log("[Stores] Page visible - refetching stores");
+        fetchStores();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [account, fetchStores]);
+
+  /**
    * Redirect to store creation onboarding if merchant has no stores
    */
   useEffect(() => {

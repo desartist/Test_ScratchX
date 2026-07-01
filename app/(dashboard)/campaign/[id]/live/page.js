@@ -141,7 +141,28 @@ export default function CampaignLiveViewPage() {
   }
 
   const campaignName = campaign.campaignName || campaign.name || "Campaign";
-  const status = campaign.status?.toLowerCase() || "draft";
+
+  // Calculate status based on dates
+  const getCalculatedStatus = () => {
+    const now = new Date();
+    const startDate = new Date(campaign.startDate);
+    const endDate = new Date(campaign.endDate);
+
+    // If end date has passed, campaign is ended
+    if (endDate < now) {
+      return "ended";
+    }
+
+    // If start date hasn't arrived yet, campaign is draft
+    if (startDate > now) {
+      return "draft";
+    }
+
+    // Otherwise use the stored status (active, paused, etc.)
+    return (campaign.status || "active").toLowerCase();
+  };
+
+  const status = getCalculatedStatus();
   const activeStores = (campaign.assignedStores || []).filter(
     (s) => s.status === "active",
   );

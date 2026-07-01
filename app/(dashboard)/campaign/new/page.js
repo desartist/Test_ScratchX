@@ -259,10 +259,9 @@ export default function CreateCampaignPage() {
               className={styles.select}
               disabled={submitting}
             >
-              <option value="3">3 Coupons</option>
+              <option value="4">4 Coupons</option>
               <option value="6">6 Coupons</option>
-              <option value="9">9 Coupons</option>
-              <option value="12">12 Coupons</option>
+              <option value="8">8 Coupons</option>
             </select>
           </div>
 

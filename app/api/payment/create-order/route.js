@@ -8,6 +8,7 @@ import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
 import Payment from "@/models/paymentModel";
 import razorpay from "@/lib/razorpay";
+import mockPaymentService from "@/lib/mockPaymentService";
 import crypto from "crypto";
 
 // Hardcoded plans matching frontend
@@ -77,17 +78,33 @@ export async function POST(request) {
       );
     }
 
-    // Create Razorpay order
+    // Create Razorpay order (or mock order if test mode enabled)
     // Amount should be in paise (multiply by 100)
-    const razorpayOrder = await razorpay.orders.create({
-      amount: finalAmount * 100,
-      currency: "INR",
-      receipt: `order_${merchantId}_${Date.now()}`,
-      notes: {
-        planName: planName,
-        merchantId: merchantId.toString(),
-      },
-    });
+    let razorpayOrder;
+
+    if (mockPaymentService.isTestModeEnabled()) {
+      console.log('✓ Using mock payment for testing');
+      razorpayOrder = mockPaymentService.createMockOrder({
+        amount: finalAmount * 100,
+        currency: "INR",
+        receipt: `order_${merchantId}_${Date.now()}`,
+        notes: {
+          planName: planName,
+          merchantId: merchantId.toString(),
+          testMode: true,
+        },
+      });
+    } else {
+      razorpayOrder = await razorpay.orders.create({
+        amount: finalAmount * 100,
+        currency: "INR",
+        receipt: `order_${merchantId}_${Date.now()}`,
+        notes: {
+          planName: planName,
+          merchantId: merchantId.toString(),
+        },
+      });
+    }
 
     // Save payment record
     const payment = new Payment({

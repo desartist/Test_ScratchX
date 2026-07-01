@@ -152,9 +152,27 @@ export default function CouponPage() {
         }
 
         const cJson = await cRes.json();
+
+        // Filter coupons by selected range
+        let filteredCoupons = [];
+        if (cJson.success && cJson.data?.coupons?.length > 0) {
+          const selectedRangeId = pJson.data?.range_id?._id;
+          console.error("[COUPONS PAGE] Selected range ID:", selectedRangeId);
+          console.error("[COUPONS PAGE] Total coupons from API:", cJson.data.coupons.length);
+
+          filteredCoupons = cJson.data.coupons.filter(coupon => {
+            const couponRangeId = coupon.rangeId;
+            const matches = String(couponRangeId) === String(selectedRangeId);
+            console.error(`[COUPONS PAGE FILTER] Coupon ${coupon.id}: "${couponRangeId}" === "${selectedRangeId}" => ${matches ? "✅ MATCH" : "❌ SKIP"}`);
+            return matches;
+          });
+
+          console.error("[COUPONS PAGE] Filtered coupons:", filteredCoupons.length);
+        }
+
         setCoupons(
-          cJson.success && cJson.data?.coupons?.length > 0
-            ? cJson.data.coupons
+          filteredCoupons.length > 0
+            ? filteredCoupons
             : Array.from({ length: 6 }, (_, i) => ({ id: String(i + 1) }))
         );
       } catch (_) {

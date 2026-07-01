@@ -1,156 +1,403 @@
-.dangerZone {
-  background: #fff;
-  border: 1.5px solid #fecdd3;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(239, 68, 68, 0.06);
-  font-family: var(--font-afacad), system-ui, sans-serif;
+/* ===== DANGER ZONE - THEMED DESIGN ===== */
+
+.dangerZoneSection {
+  background: #fafbff;
+  border: 1px solid #e0e4ff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 32px;
 }
 
-.header {
+/* ===== HEADER ===== */
+.dangerZoneHeader {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eff0ff;
+}
+
+.dangerZoneTitle {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 16px 20px;
-  border-bottom: 1.5px solid #fff0f0;
-  color: #991b1b;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
-.header h3 {
+.dangerZoneTitle h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #010f44;
   margin: 0;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: -0.2px;
 }
 
-.header svg { flex-shrink: 0; }
+.dangerIcon {
+  font-size: 20px;
+  opacity: 0.8;
+}
 
-.actions {
+.dangerZoneSubtext {
+  font-size: 13px;
+  color: #637080;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ===== ACTIONS ===== */
+.dangerZoneActions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px 20px;
+  gap: 12px;
 }
 
-.logoutBtn,
-.deleteBtn {
+.dangerAction {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  padding: 13px 16px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.88rem;
+  padding: 16px;
+  background: white;
+  border: 1.5px solid #e0e4ff;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.18s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
+  font-size: 14px;
   text-align: left;
 }
 
-.logoutBtn {
+.dangerAction:hover {
+  border-color: #d5d9ff;
+  background: #fafbff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(1, 15, 68, 0.04);
+}
+
+.dangerAction:active {
+  transform: translateY(0);
+}
+
+.dangerAction.critical:hover {
+  border-color: #fde8ba;
   background: #fffbf2;
-  border: 1.5px solid #fde8ba;
-  color: #92400e;
 }
 
-.logoutBtn:hover { background: #fff8ec; border-color: #ef9e1b; }
-
-.deleteBtn {
-  background: #fff0f0;
-  border: 1.5px solid #fecdd3;
-  color: #991b1b;
+.actionContent {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
 }
 
-.deleteBtn:hover:not(:disabled) { background: #ffe4e6; border-color: #f87171; }
-.deleteBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.actionIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
 
-/* ── Delete confirm modal ─────────────────────────────────────── */
-.modal {
+.actionText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.actionTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #010f44;
+  margin: 0;
+}
+
+.actionDescription {
+  font-size: 12px;
+  color: #9ba8b8;
+  margin: 0;
+}
+
+.dangerAction.critical .actionTitle {
+  color: #c62828;
+}
+
+.actionArrow {
+  color: #d5d9ff;
+  font-size: 18px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.dangerAction:hover .actionArrow {
+  color: #a8afd9;
+  transform: translateX(2px);
+}
+
+/* ===== MODAL ===== */
+.modalOverlay {
   position: fixed;
   inset: 0;
   background: rgba(1, 15, 68, 0.45);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modalContent {
-  background: #fff;
-  border-radius: 20px;
-  padding: 28px 24px;
-  text-align: center;
-  max-width: 400px;
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 420px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(1, 15, 68, 0.2);
+  box-shadow: 0 20px 60px rgba(1, 15, 68, 0.15);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.modalContent h4 {
-  margin: 0 0 10px;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #010f44;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.modalContent p {
-  margin: 0 0 18px;
+/* ===== MODAL HEADER ===== */
+.modalHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.modalHeader svg {
+  width: 32px;
+  height: 32px;
   color: #637080;
-  font-size: 0.88rem;
-  line-height: 1.55;
-  font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
-.errorMessage {
-  padding: 11px 14px;
-  background: #fff0f0;
-  color: #991b1b;
-  border: 1px solid #fecdd3;
-  border-radius: 10px;
-  font-size: 0.85rem;
+.modalHeader svg.criticalIcon {
+  color: #c62828;
+}
+
+.modalHeader h4 {
+  font-size: 18px;
   font-weight: 600;
-  margin-bottom: 14px;
+  color: #010f44;
+  margin: 0;
 }
 
+/* ===== STEP INDICATOR ===== */
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.stepDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  background: #f5f6ff;
+  color: #9ba8b8;
+  border: 2px solid #e0e4ff;
+  transition: all 0.2s ease;
+}
+
+.stepDot.active {
+  background: #ef9e1b;
+  color: white;
+  border-color: #ef9e1b;
+}
+
+.stepLine {
+  width: 24px;
+  height: 2px;
+  background: #e0e4ff;
+}
+
+/* ===== MODAL BODY ===== */
+.modalBody {
+  margin-bottom: 24px;
+}
+
+.modalBody p {
+  font-size: 14px;
+  color: #637080;
+  margin: 0 0 16px 0;
+  line-height: 1.6;
+}
+
+.modalBody p:last-child {
+  margin-bottom: 0;
+}
+
+.infoBox {
+  background: #fffbf2;
+  border-left: 3px solid #ef9e1b;
+  padding: 12px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #332311;
+  line-height: 1.5;
+  margin: 16px 0;
+}
+
+.infoBox strong {
+  color: #010f44;
+  font-weight: 600;
+}
+
+.emailText {
+  background: #fff0f0;
+  border-left: 3px solid #c62828;
+  padding: 12px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #c62828;
+  font-weight: 500;
+  margin: 16px 0 0 0;
+}
+
+/* ===== INPUT ===== */
 .input {
   width: 100%;
-  padding: 10px 13px;
+  padding: 11px 14px;
   border: 1.5px solid #e0e4ff;
-  border-radius: 10px;
-  font-size: 0.9rem;
+  border-radius: 6px;
+  font-size: 14px;
   background: #fafbff;
   color: #010f44;
   font-family: inherit;
-  transition: border-color 0.18s, box-shadow 0.18s;
+  transition: all 0.2s ease;
   box-sizing: border-box;
-  margin-bottom: 16px;
+  margin-top: 12px;
+}
+
+.input::placeholder {
+  color: #9ba8b8;
 }
 
 .input:focus {
   outline: none;
   border-color: #ef9e1b;
+  background: white;
   box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.12);
 }
 
-.input:disabled { background: #f5f6ff; color: #9ba8b8; cursor: not-allowed; }
+.input:disabled {
+  background: #f5f6ff;
+  color: #9ba8b8;
+  cursor: not-allowed;
+}
 
+/* ===== ERROR MESSAGE ===== */
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fff0f0;
+  border: 1px solid #fecdd3;
+  color: #c62828;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  animation: shake 0.3s ease-out;
+}
+
+.errorMessage svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* ===== SUCCESS STATE ===== */
+.successState {
+  text-align: center;
+}
+
+.successIcon {
+  font-size: 48px;
+  color: #1b9e3f;
+  margin-bottom: 12px;
+  animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.successState h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #010f44;
+  margin: 0 0 12px 0;
+}
+
+.successState p {
+  font-size: 14px;
+  color: #637080;
+  margin: 0;
+}
+
+/* ===== BUTTONS ===== */
 .buttonGroup {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 24px;
 }
 
 .cancelBtn,
-.confirmDeleteBtn {
+.actionBtn {
   flex: 1;
-  padding: 11px 14px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.88rem;
+  padding: 11px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.18s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
 }
 
@@ -160,18 +407,94 @@
   border: 1.5px solid #e0e4ff;
 }
 
-.cancelBtn:hover { border-color: #010f44; color: #010f44; }
-.cancelBtn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-.confirmDeleteBtn,
-.deleteBtn {
-  background: #ef4444;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
-  border: none;
+.cancelBtn:hover:not(:disabled) {
+  background: #eff0ff;
+  color: #010f44;
+  border-color: #d5d9ff;
 }
 
-.confirmDeleteBtn:hover:not(:disabled),
-.deleteBtn:hover:not(:disabled) { background: #dc2626; }
-.confirmDeleteBtn:disabled,
-.deleteBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actionBtn {
+  background: #ef9e1b;
+  color: white;
+  box-shadow: 0 2px 8px rgba(239, 158, 27, 0.2);
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: #e89003;
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.3);
+  transform: translateY(-1px);
+}
+
+.actionBtn.critical {
+  background: #c62828;
+  box-shadow: 0 2px 8px rgba(198, 40, 40, 0.2);
+}
+
+.actionBtn.critical:hover:not(:disabled) {
+  background: #b71c1c;
+  box-shadow: 0 4px 12px rgba(198, 40, 40, 0.3);
+  transform: translateY(-1px);
+}
+
+.actionBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 640px) {
+  .dangerZoneSection {
+    padding: 16px;
+    margin-top: 24px;
+  }
+
+  .dangerZoneTitle h3 {
+    font-size: 15px;
+  }
+
+  .dangerAction {
+    padding: 12px;
+  }
+
+  .actionContent {
+    gap: 12px;
+  }
+
+  .actionIcon {
+    font-size: 20px;
+  }
+
+  .actionTitle {
+    font-size: 13px;
+  }
+
+  .actionDescription {
+    font-size: 11px;
+  }
+
+  .actionArrow {
+    font-size: 16px;
+  }
+
+  .modalContent {
+    padding: 24px;
+    border-radius: 10px;
+  }
+
+  .modalHeader h4 {
+    font-size: 16px;
+  }
+
+  .buttonGroup {
+    flex-direction: column-reverse;
+  }
+
+  .buttonGroup button {
+    width: 100%;
+  }
+}

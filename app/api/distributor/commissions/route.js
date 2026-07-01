@@ -1,75 +1,110 @@
+/**
+ * GET /api/distributor/commissions - Get commission history
+ * GET /api/distributor/commissions/summary - Get commission summary
+ */
+
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/connectDB';
-import { getLoginToken } from '@/lib/auth';
-import Commission from '@/models/commissionModel';
-import Distributor from '@/models/distributorModel';
+import { requireAuth } from '@/lib/auth';
+import { commissionService } from '@/lib/services/distributor';
+import DistributorCommission from '@/models/distributorCommissionModel';
 
 export async function GET(request) {
   try {
     await connectDB();
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
 
-    const authToken = await getLoginToken();
-    if (!authToken) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 10;
-    const status = searchParams.get('status');
-    const skip = (page - 1) * limit;
-
-    const distributor = await Distributor.findById(authToken.accountId);
-    if (!distributor) {
+    if (account.role !== 'Distributor') {
       return NextResponse.json(
-        { success: false, error: 'Distributor not found' },
-        { status: 404 }
+        { success: false, error: 'Only distributors can view commissions' },
+        { status: 403 }
       );
     }
 
-    const query = { distributorId: authToken.accountId };
+    const url = new URL(request.url);
+    const endpoint = url.pathname.split('/').pop();
+    const status = url.searchParams.get('status');
+    const startDate = url.searchParams.get('startDate');
+    const endDate = url.searchParams.get('endDate');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '50');
+
+    // Handle summary endpoint
+    if (endpoint === 'summary') {
+      const summary = await commissionService.getCommissionSummary(
+        account._id,
+        startDate || undefined,
+        endDate || undefined
+      );
+
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            totalEarned: summary.totalEarned,
+            totalApproved: summary.totalApproved,
+            totalPaid: summary.totalPaid,
+            pendingCount: summary.pending,
+            approvedCount: summary.approved,
+            paidCount: summary.paid,
+            commissionCount: summary.commissions.length,
+          },
+        },
+        { status: 200 }
+      );
+    }
+
+    // Handle history endpoint (default)
+    const query = { distributorId: account._id };
+
     if (status) query.status = status;
 
-    const [commissions, total] = await Promise.all([
-      Commission.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .select('salesAmount commissionAmount bonusAmount totalEarning status period createdAt')
-        .lean(),
-      Commission.countDocuments(query),
-    ]);
+    if (startDate || endDate) {
+      query.earnedAt = {};
+      if (startDate) query.earnedAt.$gte = new Date(startDate);
+      if (endDate) query.earnedAt.$lte = new Date(endDate);
+    }
 
-    const pending = await Commission.aggregate([
-      { $match: { distributorId: authToken.accountId, status: 'pending' } },
-      { $group: { _id: null, total: { $sum: '$totalEarning' } } },
-    ]);
+    const commissions = await DistributorCommission.find(query)
+      .populate('retailerId', 'email name profile')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit);
 
-    const paid = await Commission.aggregate([
-      { $match: { distributorId: authToken.accountId, status: 'paid' } },
-      { $group: { _id: null, total: { $sum: '$totalEarning' } } },
-    ]);
+    const total = await DistributorCommission.countDocuments(query);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        distributor: {
-          name: distributor.name,
-          email: distributor.email,
-          commissionRate: distributor.commission.percentagePerSale,
-        },
-        commissions,
-        summary: {
-          pendingEarnings: pending[0]?.total || 0,
-          paidEarnings: paid[0]?.total || 0,
-          totalEarnings: distributor.totalEarnings,
-        },
-        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
-      },
-    });
-  } catch (error) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      {
+        success: true,
+        data: {
+          commissions: commissions.map((c) => ({
+            id: c._id,
+            commissionId: c.commissionId,
+            retailerId: c.retailerId?._id,
+            retailerName: c.retailerId?.profile?.companyName || c.retailerId?.name,
+            planType: c.planType,
+            amount: c.commissionAmount,
+            percentage: c.commissionPercentage,
+            status: c.status,
+            earnedAt: c.earnedAt,
+            approvedAt: c.approvedAt,
+            paidAt: c.paidAt,
+          })),
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit),
+          },
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('[API] Error fetching commissions:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch commissions' },
       { status: 500 }
     );
   }

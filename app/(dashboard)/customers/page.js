@@ -121,6 +121,18 @@ export default function CustomersPage() {
     }
   }, [account?.id, fetchCustomers]);
 
+  // Auto-refetch customers when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && account?.id) {
+        console.log("[Customers] Page visible - refetching customers");
+        setCurrentPage(1);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [account?.id]);
+
   const handleCustomerClick = (customer) => {
     setSelectedCustomer(customer);
     setShowDrawer(true);

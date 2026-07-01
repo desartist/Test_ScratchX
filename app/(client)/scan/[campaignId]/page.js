@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import confetti from "canvas-confetti";
 import styles from "./page.module.css";
 
@@ -36,6 +37,7 @@ export default function ScanClientPage() {
   const [locationVerified, setLocationVerified] = useState(false);
 
   // Coupon & Reward State
+  const [coupons, setCoupons] = useState([]); // All coupons for all ranges
   const [selectedCouponIndex, setSelectedCouponIndex] = useState(null);
   const [assignedReward, setAssignedReward] = useState(null);
   const [scratched, setScratched] = useState(false);
@@ -55,8 +57,50 @@ export default function ScanClientPage() {
           setError(result.message || "Failed to load campaign");
           return;
         }
-        setCampaign(result.data.campaign);
+
+        const campaignData = result.data.campaign;
+
+        // Check if campaign has ended
+        if (campaignData?.endDate && new Date(campaignData.endDate) < new Date()) {
+          setStep("ENDED");
+          setCampaign(campaignData);
+          return;
+        }
+
+        setCampaign(campaignData);
         setRanges(result.data.ranges || []);
+
+        // Fetch coupons for this campaign
+        const couponsResponse = await fetch(`/api/customer/campaign/${campaignId}/coupons`);
+        const couponsResult = await couponsResponse.json();
+        console.log("[Coupons] Full API response:", JSON.stringify(couponsResult, null, 2));
+        console.log("[Coupons] couponsResult.data:", couponsResult.data);
+        console.log("[Coupons] couponsResult.data.coupons:", couponsResult.data?.coupons);
+
+        if (couponsResult.success) {
+          // API returns data structure: { campaign: {...}, coupons: [...] }
+          let couponsArray = [];
+
+          // Try to extract coupons array
+          if (Array.isArray(couponsResult.data?.coupons)) {
+            couponsArray = couponsResult.data.coupons;
+          } else if (Array.isArray(couponsResult.data)) {
+            couponsArray = couponsResult.data;
+          }
+
+          console.log("[Coupons] Extracted array:", couponsArray);
+          console.log("[Coupons] Array is array?:", Array.isArray(couponsArray));
+          console.log("[Coupons] Total coupons:", couponsArray.length);
+          if (couponsArray.length > 0) {
+            console.log("[Coupons] Sample coupon:", JSON.stringify(couponsArray[0], null, 2));
+            console.log("[Coupons] Sample coupon.rangeId:", couponsArray[0].rangeId);
+            console.log("[Coupons] All coupons with rangeIds:");
+            couponsArray.forEach((c, idx) => {
+              console.log(`  [${idx}] id: ${c.id}, rangeId: ${c.rangeId}`);
+            });
+          }
+          setCoupons(couponsArray);
+        }
       } catch (err) {
         setError("Error loading campaign: " + err.message);
         console.error(err);
@@ -258,6 +302,23 @@ export default function ScanClientPage() {
     setStep("REVEAL");
   };
 
+  // ===== CLEAR SESSION DATA =====
+  const clearSessionData = () => {
+    // Clear all browser storage
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Clear form data
+    setFormData({ customerName: "", customerMobile: "", selectedRange: "" });
+    setAssignedReward(null);
+    setParticipationId(null);
+    setScratchCardId(null);
+    setSelectedCouponIndex(null);
+    setLocationVerified(false);
+
+    console.log("[Session] Cleared all session data");
+  };
+
   // ===== SCRATCH REVEAL (STEP 3) =====
   const handleScratch = () => {
     if (scratched) return;
@@ -271,7 +332,78 @@ export default function ScanClientPage() {
       origin: { y: 0.6 },
       colors: ["#ff0055", "#00ccff", "#ff9900", "#cc00ff"],
     });
+
+    // Set 5-minute session timeout (300,000 ms = 5 minutes)
+    const sessionTimer = setTimeout(() => {
+      console.log("[Session] Session expired after 5 minutes");
+      clearSessionData();
+      setStep("EXPIRED"); // Show expired state
+    }, 300000); // 5 minutes
+
+    // Cleanup timer if component unmounts
+    return () => clearTimeout(sessionTimer);
   };
+
+  // ===== ENDED CAMPAIGN STATE =====
+  if (step === "ENDED") {
+    const campaignName = campaign?.campaignName || "Campaign";
+    const endDate = campaign?.endDate ? new Date(campaign.endDate).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    }) : "";
+
+    return (
+      <div className={styles.container}>
+        <div className={styles.revealContainer}>
+          <div className={styles.endedLogoWrapper}>
+            <Image
+              src="/horizontal_logo.webp"
+              alt="ScratchX"
+              width={140}
+              height={50}
+              className={styles.endedLogo}
+              priority
+            />
+          </div>
+          <div className={styles.endedCard}>
+            <div className={styles.endedIcon}>🎉</div>
+            <h2 className={styles.endedTitle}>Campaign Ended</h2>
+            <p className={styles.endedSubtitle}>{campaignName}</p>
+            <p className={styles.endedMessage}>
+              Thank you for participating! This campaign ended on {endDate}.
+            </p>
+            <div className={styles.endedInfo}>
+              <p>We appreciate your interest. Stay tuned for our upcoming campaigns and special offers!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== EXPIRED SESSION STATE =====
+  if (step === "EXPIRED") {
+    return (
+      <div className={styles.container}>
+        <div className={styles.revealContainer}>
+          <div className={styles.expiredCard}>
+            <div className={styles.expiredIcon}>⏰</div>
+            <h2 className={styles.expiredTitle}>Session Expired</h2>
+            <p className={styles.expiredMessage}>
+              Your reward session has timed out. Each scratch session is valid for 5 minutes after revealing your reward.
+            </p>
+            <button
+              className={styles.expiredButton}
+              onClick={() => window.location.href = `/customer/campaign/${campaignId}/scan`}
+            >
+              Please visit the store again to get a new coupon.
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ===== RENDER LOADING STATE =====
   if (loading) {
@@ -401,6 +533,7 @@ export default function ScanClientPage() {
                         value={range._id}
                         checked={formData.selectedRange === range._id}
                         onChange={() => {
+                          console.log("[Range Select] Selected range ID:", range._id, "Range object:", range);
                           setFormData({ ...formData, selectedRange: range._id });
                           if (validationErrors.selectedRange)
                             setValidationErrors({ ...validationErrors, selectedRange: null });
@@ -463,40 +596,103 @@ export default function ScanClientPage() {
 
   // STEP 2: PICK COUPON
   if (step === "PICK") {
+    console.clear();
+    console.log("========== PICK STEP STARTED ==========");
+    // Filter coupons by selected range
+    const selectedRangeObj = ranges.find(r => r._id === formData.selectedRange);
+    console.error("[PICK] Selected range:", formData.selectedRange);
+    console.error("[PICK] Selected range object:", selectedRangeObj);
+    console.error("[PICK] Total coupons available:", coupons.length);
+    console.error("[PICK] Coupons array:", coupons);
+
+    // Show rangeIds of all coupons
+    console.error("[PICK] === FILTERING DETAILS ===");
+    const rangeIdMap = {};
+    coupons.forEach(c => {
+      const rid = c.rangeId || c.range_id || c.billingRangeId || c.billing_range_id || 'NO_RANGE_ID';
+      if (!rangeIdMap[rid]) rangeIdMap[rid] = [];
+      rangeIdMap[rid].push(c.id);
+    });
+    Object.entries(rangeIdMap).forEach(([rid, ids]) => {
+      console.error(`  RangeId "${rid}": ${ids.length} coupons`);
+    });
+
+    // Filter coupons by selected range - handle multiple field name possibilities
+    const rangeBasedCoupons = coupons.filter(coupon => {
+      // Try different field names that might contain the range ID
+      const couponRangeId = coupon.rangeId || coupon.range_id || coupon.billingRangeId || coupon.billing_range_id;
+      const selectedRangeId = formData.selectedRange;
+
+      const matches = String(couponRangeId) === String(selectedRangeId);
+      console.error(`  Coupon ${coupon.id}: "${couponRangeId}" vs "${selectedRangeId}" => ${matches ? "✅ MATCH" : "❌ NO MATCH"}`);
+
+      return matches;
+    });
+
+    console.log(`[PICK] Filtering complete: ${coupons.length} total => ${rangeBasedCoupons.length} filtered for range ${formData.selectedRange}`);
+
+    // Display message if no coupons available for this range
+    const availableCoupons = rangeBasedCoupons.length > 0 ? rangeBasedCoupons : [1, 2, 3, 4, 5, 6];
+    const noCouponsMessage = rangeBasedCoupons.length === 0;
+
     return (
       <div className={styles.container}>
         <div className={styles.gridContainer}>
           <h1 className={styles.title}>Pick your lucky coupon</h1>
-          <p className={styles.subtitle}>You can scratch only one</p>
+          <p className={styles.subtitle}>
+            {selectedRangeObj ? `₹${selectedRangeObj.minAmount.toLocaleString("en-IN")} - ₹${selectedRangeObj.maxAmount.toLocaleString("en-IN")}` : ''} range - You can scratch only one
+          </p>
 
-          <div className={styles.grid}>
-            {[1, 2, 3, 4, 5, 6].map((item, idx) => (
-              <div
-                key={item}
-                className={styles.couponCard}
-                onClick={() => handlePickCoupon(idx)}
+          {noCouponsMessage && (
+            <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
+              <p>No coupons available for this range. Please select a different range.</p>
+              <button
+                onClick={() => setStep("FORM")}
+                style={{
+                  padding: "10px 20px",
+                  background: "#ff9800",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  marginTop: "10px"
+                }}
               >
-                <div className={styles.giftIcon}>
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#fff"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 12 20 22 4 22 4 12"></polyline>
-                    <rect x="2" y="7" width="20" height="5"></rect>
-                    <line x1="12" y1="22" x2="12" y2="7"></line>
-                    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-                  </svg>
+                Back to Select Range
+              </button>
+            </div>
+          )}
+
+          {!noCouponsMessage && (
+            <div className={styles.grid}>
+              {availableCoupons.map((item, idx) => (
+                <div
+                  key={idx}
+                  className={styles.couponCard}
+                  onClick={() => handlePickCoupon(idx)}
+                >
+                  <div className={styles.giftIcon}>
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#fff"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                      <rect x="2" y="7" width="20" height="5"></rect>
+                      <line x1="12" y1="22" x2="12" y2="7"></line>
+                      <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                      <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                    </svg>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );

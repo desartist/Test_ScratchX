@@ -301,7 +301,7 @@
 
 .dateInput {
   width: 100%;
-  padding: 13px 36px 13px 13px;
+  padding: 13px 40px 13px 16px;
   border: 1.5px solid #e0e4ff;
   border-radius: 12px;
   font-size: 0.88rem;
@@ -312,6 +312,7 @@
   font-family: var(--font-afacad), system-ui, sans-serif;
   box-sizing: border-box;
   cursor: pointer;
+  text-align: left;
 }
 
 .dateInput:focus {
@@ -470,7 +471,7 @@
 
   .dateInput {
     font-size: 0.78rem;
-    padding: 11px 10px 11px 34px;
+    padding: 11px 10px 11px 12px;
   }
 
   .buttonRow {

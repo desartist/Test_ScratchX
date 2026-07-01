@@ -4,6 +4,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import styles from "./checkout.module.css";
 
 export default function CheckoutPage() {
@@ -18,6 +19,7 @@ function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refreshAccount } = useAuthContext();
+  const { updatePlan } = useSubscription();
 
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,8 +28,16 @@ function CheckoutContent() {
   const [success, setSuccess] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
-  // Load Razorpay script on mount
+  // Load Razorpay script on mount (skip in test mode)
   useEffect(() => {
+    const isTestMode = process.env.NEXT_PUBLIC_PAYMENT_TEST_MODE === 'true';
+
+    if (isTestMode) {
+      console.log('[Checkout] Test mode enabled - skipping Razorpay script');
+      setRazorpayLoaded(true); // Pretend it's loaded
+      return;
+    }
+
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -93,7 +103,7 @@ function CheckoutContent() {
 
   const handleConfirmPurchase = async () => {
     if (!razorpayLoaded) {
-      setError("Razorpay payment system is not ready. Please try again.");
+      setError("Payment system is not ready. Please try again.");
       return;
     }
 
@@ -101,7 +111,9 @@ function CheckoutContent() {
     setError(null);
 
     try {
-      // Step 1: Create Razorpay order
+      const isTestMode = process.env.NEXT_PUBLIC_PAYMENT_TEST_MODE === 'true';
+
+      // Step 1: Create order
       const orderRes = await fetch("/api/subscription/activate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,9 +131,52 @@ function CheckoutContent() {
         return;
       }
 
-      const { orderId, amount, currency, razorpayKeyId, description, planName, merchantEmail } = orderData.data;
+      const { orderId, amount, currency, razorpayKeyId, description, planName, merchantEmail, mockPayment, testMode } = orderData.data;
 
-      // Step 2: Open Razorpay checkout modal
+      // Step 2: In TEST MODE - simulate successful payment
+      if (isTestMode || testMode) {
+        console.log('✓ [Checkout TEST MODE] Simulating successful payment...');
+
+        // Use mock payment data from backend (valid signature)
+        const mockResponse = mockPayment || {
+          razorpay_order_id: orderId,
+          razorpay_payment_id: 'pay_' + Math.random().toString(36).substr(2, 20),
+          razorpay_signature: 'mock_sig_' + Math.random().toString(36).substr(2, 20),
+        };
+
+        // Verify the mock payment
+        try {
+          const verifyRes = await fetch("/api/payment/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(mockResponse),
+          });
+
+          const verifyData = await verifyRes.json();
+
+          if (!verifyRes.ok || !verifyData.success) {
+            setError(verifyData.error || "Payment verification failed.");
+            setSubmitting(false);
+            return;
+          }
+
+          // Payment successful — refresh account and plan data
+          await refreshAccount();
+          await updatePlan();
+          setSuccess(true);
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 2000);
+        } catch (err) {
+          console.error("[Checkout TEST MODE] Verification error:", err);
+          setError("Payment verification failed. Please contact support.");
+          setSubmitting(false);
+        }
+        return;
+      }
+
+      // Step 2: PRODUCTION - Open real Razorpay checkout modal
       const options = {
         key: razorpayKeyId,
         amount: amount, // in paise
@@ -157,8 +212,9 @@ function CheckoutContent() {
               return;
             }
 
-            // Payment successful — refresh account so sidebar + dashboard reflect new plan
+            // Payment successful — refresh account and plan data so sidebar + dashboard reflect new plan
             await refreshAccount();
+            await updatePlan();
             setSuccess(true);
             setTimeout(() => {
               router.push("/dashboard");

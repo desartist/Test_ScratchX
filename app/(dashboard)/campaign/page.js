@@ -19,6 +19,26 @@ function getAllocated(campaign) {
   );
 }
 
+// Calculate campaign status based on dates
+function getCalculatedStatus(campaign) {
+  const now = new Date();
+  const startDate = new Date(campaign.startDate);
+  const endDate = new Date(campaign.endDate);
+
+  // If end date has passed, campaign is ended
+  if (endDate < now) {
+    return "ended";
+  }
+
+  // If start date hasn't arrived yet, campaign is draft
+  if (startDate > now) {
+    return "draft";
+  }
+
+  // Otherwise use the stored status (active, paused, etc.)
+  return campaign.status || "active";
+}
+
 function getRemaining(campaign) {
   const allocated = getAllocated(campaign);
   return Number(
@@ -71,6 +91,18 @@ export default function CampaignPage() {
       fetchCampaigns();
     }
   }, [authLoading, account?.id, fetchCampaigns]);
+
+  // Auto-refetch campaigns when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && account?.id) {
+        console.log("[Campaigns] Page visible - refetching campaigns");
+        fetchCampaigns();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [account?.id, fetchCampaigns]);
 
   // Pause / resume via existing PUT endpoint.
   const togglePause = useCallback(
@@ -286,7 +318,7 @@ export default function CampaignPage() {
                 name={campaignName}
                 startDate={campaign.startDate}
                 endDate={campaign.endDate}
-                status={campaign.status}
+                status={getCalculatedStatus(campaign)}
                 storesCount={storeCount}
                 scratchesLeft={remainingCards}
                 scratchesAllocated={allocatedCards}

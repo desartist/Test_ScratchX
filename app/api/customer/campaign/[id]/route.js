@@ -40,26 +40,34 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Validate campaign.status === 'active' (return 400 if not)
-    if (campaign.status !== "active") {
-      return NextResponse.json(
-        { success: false, error: "Campaign is not active" },
-        { status: 400 },
-      );
-    }
-
-    // Check now is between startDate and endDate (return 400 if not)
+    // Check campaign dates - allow ended campaigns to show nice message to customers
     const now = new Date();
+    const isStarted = now >= campaign.startDate;
+    const hasEnded = now > campaign.endDate;
+
     console.log(
       "Campaign dates:",
       campaign.startDate,
       campaign.endDate,
       "Now:",
       now,
+      "HasEnded:",
+      hasEnded,
     );
-    if (now < campaign.startDate || now > campaign.endDate) {
+
+    // If campaign hasn't started yet, reject with error
+    if (!isStarted) {
       return NextResponse.json(
-        { success: false, error: "Campaign is not currently running" },
+        { success: false, error: "Campaign has not started yet" },
+        { status: 400 },
+      );
+    }
+
+    // Allow ended campaigns to return data so frontend can show nice ended message
+    // Only reject if campaign status is not active AND hasn't ended (e.g., paused, draft)
+    if (campaign.status !== "active" && !hasEnded) {
+      return NextResponse.json(
+        { success: false, error: "Campaign is not active" },
         { status: 400 },
       );
     }
