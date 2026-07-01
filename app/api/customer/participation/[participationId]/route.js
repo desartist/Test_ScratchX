@@ -72,16 +72,23 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Only enforce 5-min expiry for sessions not yet revealed/redeemed
+    // Only enforce 5-min expiry for sessions in "verified" status that haven't been revealed yet
+    // Revealed/redeemed sessions should always be accessible
     if (participation.status === 'verified') {
       const createdAt = new Date(participation.createdAt);
       const ageInSeconds = (Date.now() - createdAt.getTime()) / 1000;
+      // 5-minute (300 second) window to reveal the reward
       if (ageInSeconds > 300) {
+        console.log(`[Participation Expiry] Status: ${participation.status}, Age: ${ageInSeconds}s, Expired: true`);
         return NextResponse.json(
           { success: false, error: 'Reward session has expired', expired: true },
           { status: 410 }
         );
       }
+    } else if (participation.status === 'revealed' || participation.status === 'redeemed') {
+      // Already revealed/redeemed sessions have a longer expiry - allow indefinite access
+      // User can show coupon to cashier for a reasonable period (no hard expiry on access)
+      console.log(`[Participation Status] Status: ${participation.status}, allowing access`);
     }
 
     // Fetch the ScratchCardRecord which holds the actual assigned reward
