@@ -499,7 +499,9 @@
       "Bash(pkill -f \"node.*next\")",
       "Bash(echo \" *)",
       "Bash(sed 's|/horizontal_logo.webp|/horizontal_logo.svg|g')",
-      "Bash(cp /tmp/scan.js.tmp \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(client\\)/scan/[campaignId]/page.js\")"
+      "Bash(cp /tmp/scan.js.tmp \"/Users/abhishekpratapsingh/Desktop/coupon_campaigns/app/\\(client\\)/scan/[campaignId]/page.js\")",
+      "Bash(git merge beta_app -m 'Merge beta_app into main - production deployment *)",
+      "Bash(git pull *)"
     ]
   }
 }
