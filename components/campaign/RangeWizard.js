@@ -251,8 +251,8 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
         return;
       }
 
-      if (typeof onDone === "function") { onDone(); return; }
-      if (typeof onComplete === "function") onComplete();
+      if (typeof onDone === "function") { onDone(data?.range); return; }
+      if (typeof onComplete === "function") onComplete(data?.range);
     } catch {
       setFormError("Failed to save range.");
     } finally {

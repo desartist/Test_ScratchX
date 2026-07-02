@@ -117,11 +117,21 @@ export default function CampaignRangesStepPage() {
   }, []);
 
   // Wizard finished (saved or cancelled): return to listing + refetch.
-  const handleWizardDone = useCallback(() => {
+  const handleWizardDone = useCallback((newRange) => {
     setMode("list");
     setEditRange(null);
+
+    // If a new range was created, add it immediately to state for instant feedback
+    if (newRange && !newRange._id) {
+      setRanges(prev => [...prev, newRange]);
+    } else if (newRange && newRange._id && !ranges.some(r => r._id === newRange._id)) {
+      // New range created - add it to the list
+      setRanges(prev => [...prev, newRange]);
+    }
+
+    // Refetch to ensure we have the latest data
     fetchRanges();
-  }, [fetchRanges]);
+  }, [fetchRanges, ranges]);
 
   const openLaunch = useCallback(() => setLaunchOpen(true), []);
   const closeLaunch = useCallback(() => setLaunchOpen(false), []);
