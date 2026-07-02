@@ -484,7 +484,7 @@ export default function CreateStorePage() {
 
       await response.json();
       // Hard navigate so the merchantHasStore cookie is picked up by middleware
-      window.location.href = '/dashboard';
+      window.location.href = '/stores';
     } catch (err) {
       setError(err.message || 'Failed to create store');
     } finally {
