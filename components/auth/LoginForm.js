@@ -269,7 +269,7 @@ export default function LoginForm() {
       )}
 
       {/* Auth Method Tabs */}
-      <div className={styles.tabsContainer}>
+      {/* <div className={styles.tabsContainer}>
         <button
           type="button"
           className={`${styles.tab} ${activeTab === 'email' ? styles.tabActive : ''}`}
@@ -286,7 +286,7 @@ export default function LoginForm() {
           <Smartphone size={16} />
           <span>Phone OTP</span>
         </button>
-      </div>
+      </div> */}
 
       {/* Email Login Tab */}
       {activeTab === 'email' && (
@@ -323,7 +323,7 @@ export default function LoginForm() {
               onChange={handleEmailChange}
               onBlur={() => handleFieldBlur('email')}
               className={`${styles.inputField} ${validationErrors.email ? styles.error : ''}`}
-              placeholder="name@company.com"
+              placeholder="Enter Email ID"
               autoComplete="email"
               disabled={isLoading}
               required
@@ -395,8 +395,8 @@ export default function LoginForm() {
         </div>
       )}
 
-      {/* OTP Tab */}
-      {activeTab === 'otp' && (
+      {/* OTP Tab - Commented out for future implementation */}
+      {/* {activeTab === 'otp' && (
         <div className={styles.tabContent}>
           {!otpVerificationSent ? (
             <>
@@ -486,7 +486,7 @@ export default function LoginForm() {
             </>
           )}
         </div>
-      )}
+      )} */}
 
       {/* Divider - Hidden until Google OAuth is configured */}
       {/* <div className={styles.divider}>

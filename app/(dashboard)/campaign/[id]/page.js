@@ -675,6 +675,10 @@ export default function CampaignDetailsPage({ params }) {
               <CampaignQrStudio
                 campaignId={campaignId}
                 defaultBrandName={assignedStores?.[0]?.storeName || ""}
+                storeName={assignedStores?.[0]?.storeName || ""}
+                campaignName={campaign?.campaignName || ""}
+                startDate={campaign?.startDate}
+                endDate={campaign?.endDate}
               />
             ) : (
               <>

@@ -106,8 +106,8 @@ export default function RegisterPage() {
 
       <div className={styles.card}>
         <div className={styles.cardHeader}>
-          <h1 className={styles.title}>Create your account</h1>
-          <p className={styles.subtitle}>Join ScratchX and start rewarding your customers.</p>
+          <h1 className={styles.title}>Register</h1>
+          <p className={styles.subtitle}>Please register to login.</p>
         </div>
 
         {error && !/(phone|mobile|email|password)/i.test(error) && (
@@ -138,7 +138,7 @@ export default function RegisterPage() {
             <input
               type="email"
               className={`${styles.input} ${validationErrors.email ? styles.inputError : ''}`}
-              placeholder="you@example.com"
+              placeholder="Enter Email ID"
               value={form.email}
               onChange={set('email')}
               disabled={isLoading}
