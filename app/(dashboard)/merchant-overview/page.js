@@ -56,8 +56,14 @@ export default function MerchantOverviewPage() {
           "[FETCH] Setting data with metrics.totalStores:",
           json.data?.metrics?.totalStores,
         );
-        setUserRole(json.role);
-        setDashboardData(json.data);
+        if (json.data?.metrics?.totalStores > 0) {
+          setUserRole(json.role);
+          setDashboardData(json.data);
+        }else{
+          setDashboardData(null);
+          router.push("/stores/create");
+        }
+        
       } catch (err) {
         console.error("Dashboard fetch error:", err);
         setError("Failed to load dashboard data");

@@ -34,9 +34,9 @@ export const metadata = {
     images: ["/ScratchX.webp"],
   },
   icons: {
-    icon: "/ScratchX.webp",
-    shortcut: "/ScratchX.webp",
-    apple: "/ScratchX.webp",
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
   },
   keywords: [
     "scratch card campaigns",
