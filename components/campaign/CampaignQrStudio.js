@@ -44,9 +44,32 @@ export default function CampaignQrStudio({
   defaultBrandName,
   initialStyle,
   persist = false,
+  storeName,
+  campaignName,
+  startDate,
+  endDate,
 }) {
   const canvasRef = useRef(null);
   const { account } = useAuthContext();
+
+  // Format date to "30 july 2026"
+  const formatDate = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const monthNames = [
+      "january", "february", "march", "april", "may", "june",
+      "july", "august", "september", "october", "november", "december"
+    ];
+    const day = d.getDate();
+    const month = monthNames[d.getMonth()];
+    const year = d.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
+
+  const dateRange =
+    startDate && endDate
+      ? `${formatDate(startDate)} - ${formatDate(endDate)}`
+      : "";
 
   // Read the origin once, client-only, via a lazy initializer (never at
   // module/render top-level; returns "" during SSR so markup is stable).
@@ -208,9 +231,8 @@ export default function CampaignQrStudio({
     }
   }, [campaignId, saving, account, fgColor, bgColor, brandName, logoSrc]);
 
-  // Build a composite export canvas: [brand name text] above [QR + logo].
-  // Returns null if the live canvas isn't ready. Resolves once the logo
-  // (if any) has been drawn so callers get a complete image.
+  // Build a composite export canvas: [logo] [store name] [QR] [campaign details]
+  // Returns null if the live canvas isn't ready. Resolves once the logo has been drawn.
   const buildExportCanvas = useCallback(() => {
     return new Promise((resolve) => {
       const src = canvasRef.current;
@@ -219,11 +241,14 @@ export default function CampaignQrStudio({
         return;
       }
 
+      const padding = 28;
       const LOGO_HEADER_H = 48;
-      const padding = 24;
+      const STORE_NAME_H = storeName ? 50 : 0;
+      const DETAILS_SECTION_H = (campaignName || dateRange) ? 90 : 0;
+
       const out = document.createElement("canvas");
       out.width = src.width + padding * 2;
-      out.height = src.height + LOGO_HEADER_H + padding * 2;
+      out.height = src.height + LOGO_HEADER_H + STORE_NAME_H + DETAILS_SECTION_H + padding * 3;
 
       const ctx = out.getContext("2d");
       if (!ctx) {
@@ -231,26 +256,77 @@ export default function CampaignQrStudio({
         return;
       }
 
+      // Background
       ctx.fillStyle = bgColor || "#ffffff";
       ctx.fillRect(0, 0, out.width, out.height);
 
-      const qrY = padding + LOGO_HEADER_H;
-      ctx.drawImage(src, padding, qrY);
+      let currentY = padding;
 
-      // Draw ScratchX horizontal logo above the QR.
+      // Draw ScratchX horizontal logo
       const logoImg = new Image();
       logoImg.onload = () => {
         const logoH = 28;
         const logoW = (logoImg.naturalWidth / logoImg.naturalHeight) * logoH;
         const logoX = (out.width - logoW) / 2;
-        const logoY = padding + (LOGO_HEADER_H - logoH) / 2;
-        ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+        ctx.drawImage(logoImg, logoX, currentY, logoW, logoH);
+        currentY += LOGO_HEADER_H;
+
+        // Draw store name
+        if (storeName) {
+          ctx.font = "bold 24px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+          ctx.fillStyle = "#010f44";
+          ctx.textAlign = "center";
+          ctx.fillText(storeName, out.width / 2, currentY + 28);
+          currentY += STORE_NAME_H;
+        }
+
+        // Draw QR code
+        currentY += padding / 2;
+        ctx.drawImage(src, padding, currentY);
+        currentY += src.height + padding;
+
+        // Draw campaign details box
+        if (campaignName || dateRange) {
+          const detailsX = padding;
+          const detailsY = currentY;
+          const detailsW = out.width - padding * 2;
+          const detailsH = DETAILS_SECTION_H - padding / 2;
+
+          // Details background
+          ctx.fillStyle = "#fef8f1";
+          ctx.strokeStyle = "#f2dcc0";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(detailsX, detailsY, detailsW, detailsH, 12);
+          ctx.fill();
+          ctx.stroke();
+
+          let detailsTextY = detailsY + 28;
+
+          // Campaign name
+          if (campaignName) {
+            ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+            ctx.fillStyle = "#010f44";
+            ctx.textAlign = "center";
+            ctx.fillText(campaignName, out.width / 2, detailsTextY);
+            detailsTextY += 32;
+          }
+
+          // Date range
+          if (dateRange) {
+            ctx.font = "bold 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+            ctx.fillStyle = "#ef9e1b";
+            ctx.textAlign = "center";
+            ctx.fillText(dateRange, out.width / 2, detailsTextY);
+          }
+        }
+
         resolve(out);
       };
       logoImg.onerror = () => resolve(out);
       logoImg.src = "/horizontal_logo.webp";
     });
-  }, [bgColor]);
+  }, [bgColor, storeName, campaignName, dateRange]);
 
   const triggerDownload = useCallback((href, filename, revoke) => {
     const a = document.createElement("a");
@@ -291,11 +367,13 @@ export default function CampaignQrStudio({
       return;
     }
 
+    const padding = 28;
     const LOGO_HEADER_H = 48;
-    const padding = 24;
+    const STORE_NAME_H = storeName ? 50 : 0;
+    const DETAILS_SECTION_H = (campaignName || dateRange) ? 90 : 0;
     const qrBox = QR_SIZE;
     const outW = qrBox + padding * 2;
-    const outH = qrBox + LOGO_HEADER_H + padding * 2;
+    const outH = qrBox + LOGO_HEADER_H + STORE_NAME_H + DETAILS_SECTION_H + padding * 3;
     const qrY = padding + LOGO_HEADER_H;
 
     // Re-scale the inner QR svg to QR_SIZE via a nested viewport.
@@ -326,20 +404,60 @@ export default function CampaignQrStudio({
       `<image href="/horizontal_logo.webp" x="${headerLogoX}" y="${headerLogoY}" ` +
       `width="${headerLogoW}" height="${headerLogoH}"/>`;
 
+    // Build store name markup
+    let storeNameMarkup = "";
+    if (storeName) {
+      const storeNameY = padding + LOGO_HEADER_H + 28;
+      storeNameMarkup =
+        `<text x="${outW / 2}" y="${storeNameY}" font-size="24" font-weight="bold" ` +
+        `text-anchor="middle" fill="#010f44" font-family="system-ui, sans-serif">${escapeXml(storeName)}</text>`;
+    }
+
+    // Build campaign details markup
+    let detailsMarkup = "";
+    if (campaignName || dateRange) {
+      const detailsX = padding;
+      const detailsY = qrY + qrBox + padding;
+      const detailsW = outW - padding * 2;
+      const detailsH = DETAILS_SECTION_H - padding / 2;
+
+      detailsMarkup =
+        `<rect x="${detailsX}" y="${detailsY}" width="${detailsW}" height="${detailsH}" ` +
+        `rx="12" fill="#fef8f1" stroke="#f2dcc0" stroke-width="2"/>`;
+
+      let detailsTextY = detailsY + 28;
+
+      if (campaignName) {
+        detailsMarkup +=
+          `<text x="${outW / 2}" y="${detailsTextY}" font-size="20" font-weight="bold" ` +
+          `text-anchor="middle" fill="#010f44" font-family="system-ui, sans-serif">${escapeXml(campaignName)}</text>`;
+        detailsTextY += 32;
+      }
+
+      if (dateRange) {
+        detailsMarkup +=
+          `<text x="${outW / 2}" y="${detailsTextY}" font-size="16" font-weight="bold" ` +
+          `text-anchor="middle" fill="#ef9e1b" font-family="system-ui, sans-serif">${escapeXml(dateRange)}</text>`;
+      }
+    }
+
     const svgString =
       `<svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${outH}" ` +
       `viewBox="0 0 ${outW} ${outH}">` +
+      `<defs><style>text { font-family: system-ui, -apple-system, sans-serif; }</style></defs>` +
       `<rect width="${outW}" height="${outH}" fill="${escapeXml(bgColor || "#ffffff")}"/>` +
       headerMarkup +
+      storeNameMarkup +
       `<svg x="${padding}" y="${qrY}" width="${qrBox}" height="${qrBox}" ` +
       `viewBox="0 0 ${qrBox} ${qrBox}" preserveAspectRatio="xMidYMid meet">${inner}</svg>` +
       logoMarkup +
+      detailsMarkup +
       `</svg>`;
 
     const blob = new Blob([svgString], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
     triggerDownload(url, `${fileBase}-qr.svg`, true);
-  }, [scanUrl, bgColor, fgColor, logoSrc, triggerDownload, fileBase]);
+  }, [scanUrl, bgColor, fgColor, logoSrc, storeName, campaignName, dateRange, triggerDownload, fileBase]);
 
   return (
     <div className={styles.studio}>
@@ -351,6 +469,14 @@ export default function CampaignQrStudio({
             alt="ScratchX"
             className={styles.brandLogo}
           />
+
+          {/* Store Name Above QR */}
+          {storeName && (
+            <div className={styles.storeNameContainer}>
+              <h3 className={styles.storeName}>{storeName}</h3>
+            </div>
+          )}
+
           <canvas
             ref={canvasRef}
             width={QR_SIZE}
@@ -358,6 +484,16 @@ export default function CampaignQrStudio({
             className={styles.canvas}
             aria-label="Campaign QR code preview"
           />
+
+          {/* Campaign Details Below QR */}
+          <div className={styles.campaignDetailsContainer}>
+            {campaignName && (
+              <h4 className={styles.campaignName}>{campaignName}</h4>
+            )}
+            {dateRange && (
+              <p className={styles.dateRange}>{dateRange}</p>
+            )}
+          </div>
         </div>
       </div>
 

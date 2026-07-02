@@ -24,13 +24,14 @@
   flex-direction: column;
   align-items: center;
   gap: 0px;
-  padding: 20px;
+  padding: 32px 28px;
   width: 100%;
-  max-width: 380px;
-  background: #ffffff;
-  border: 1px solid #e8e8e8;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  max-width: 440px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 50%, #f8fafc 100%);
+  border: 1.5px solid #dce4ef;
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(1, 15, 68, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 
 
@@ -45,18 +46,22 @@
 }
 
 .brandLogo {
-  height: 32px;
+  height: 36px;
   width: auto;
   object-fit: contain;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
 }
-
 
 .canvas {
   width: 100%;
   max-width: 320px;
   height: auto;
-  border-radius: 12px;
-  padding: 22px;
+  border-radius: 16px;
+  padding: 24px;
+  margin: 12px 0 8px 0;
+  background: white;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 /* ===== Controls ===== */
@@ -273,4 +278,83 @@
   font-weight: 400;
   color: #00b0b1;
   line-height: 1.4;
+}
+
+/* Store Name Container */
+.storeNameContainer {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 24px;
+  padding: 0 8px;
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.storeName {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #010f44;
+  line-height: 1.25;
+  word-break: break-word;
+  letter-spacing: -0.6px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Campaign Details Container */
+.campaignDetailsContainer {
+  width: 100%;
+  text-align: center;
+  margin-top: 32px;
+  padding: 24px 20px;
+  background: linear-gradient(135deg, #fef8f1 0%, #fefcfb 50%, #f7f9fc 100%);
+  border-radius: 18px;
+  border: 2px solid #f2dcc0;
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  animation: slideUp 0.4s ease-out 0.1s both;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.campaignName {
+  margin: 0 0 12px 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #010f44;
+  line-height: 1.3;
+  word-break: break-word;
+  letter-spacing: -0.3px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+.dateRange {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #ef9e1b;
+  line-height: 1.4;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 }
