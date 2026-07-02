@@ -72,7 +72,7 @@ export default function OTPRequestForm() {
             setValidationErrors(prev => ({ ...prev, phone: '' }));
           }
         }}
-        placeholder="+91 98765 43210"
+        placeholder="Enter phone number"
         error={validationErrors.phone}
         helpText="We'll send an OTP to this number"
         required

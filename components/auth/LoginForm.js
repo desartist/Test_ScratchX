@@ -269,7 +269,7 @@ export default function LoginForm() {
       )}
 
       {/* Auth Method Tabs */}
-      <div className={styles.tabsContainer}>
+      {/* <div className={styles.tabsContainer}>
         <button
           type="button"
           className={`${styles.tab} ${activeTab === 'email' ? styles.tabActive : ''}`}
@@ -278,15 +278,15 @@ export default function LoginForm() {
           <Mail size={16} />
           <span>Email</span>
         </button>
-        {/* <button
+        <button
           type="button"
           className={`${styles.tab} ${activeTab === 'otp' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('otp')}
         >
           <Smartphone size={16} />
           <span>Phone OTP</span>
-        </button> */}
-      </div>
+        </button>
+      </div> */}
 
       {/* Email Login Tab */}
       {activeTab === 'email' && (
@@ -323,7 +323,7 @@ export default function LoginForm() {
               onChange={handleEmailChange}
               onBlur={() => handleFieldBlur('email')}
               className={`${styles.inputField} ${validationErrors.email ? styles.error : ''}`}
-              placeholder="name@company.com"
+              placeholder="Enter Email ID"
               autoComplete="email"
               disabled={isLoading}
               required

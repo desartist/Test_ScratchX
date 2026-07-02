@@ -16,8 +16,8 @@ export default function LoginPage() {
       <div className={styles.card}>
         {/* Header */}
         <div className={styles.cardHeader}>
-          <h1 className={styles.title}>Sign in to your account</h1>
-          <p className={styles.subtitle}>Enter your credentials to continue</p>
+          <h1 className={styles.title}>Login</h1>
+          <p className={styles.subtitle}>Please sign in to continue.</p>
         </div>
 
         {/* Form */}
