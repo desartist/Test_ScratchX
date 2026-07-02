@@ -278,14 +278,14 @@ export default function LoginForm() {
           <Mail size={16} />
           <span>Email</span>
         </button>
-        <button
+        {/* <button
           type="button"
           className={`${styles.tab} ${activeTab === 'otp' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('otp')}
         >
           <Smartphone size={16} />
           <span>Phone OTP</span>
-        </button>
+        </button> */}
       </div>
 
       {/* Email Login Tab */}
@@ -395,8 +395,8 @@ export default function LoginForm() {
         </div>
       )}
 
-      {/* OTP Tab */}
-      {activeTab === 'otp' && (
+      {/* OTP Tab - Commented out for future implementation */}
+      {/* {activeTab === 'otp' && (
         <div className={styles.tabContent}>
           {!otpVerificationSent ? (
             <>
@@ -486,7 +486,7 @@ export default function LoginForm() {
             </>
           )}
         </div>
-      )}
+      )} */}
 
       {/* Divider - Hidden until Google OAuth is configured */}
       {/* <div className={styles.divider}>
