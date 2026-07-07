@@ -31,6 +31,7 @@ export default function ScanClientPage() {
   const [customerLocation, setCustomerLocation] = useState({
     latitude: null,
     longitude: null,
+    accuracy: null,
   });
   const [locationVerifying, setLocationVerifying] = useState(false);
   const [locationError, setLocationError] = useState(null);
@@ -171,9 +172,10 @@ export default function ScanClientPage() {
       }
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          const { latitude, longitude } = pos.coords;
-          setCustomerLocation({ latitude, longitude });
-          resolve({ success: true, latitude, longitude });
+          const { latitude, longitude, accuracy } = pos.coords;
+          const acc = Number.isFinite(accuracy) ? Math.round(accuracy) : null;
+          setCustomerLocation({ latitude, longitude, accuracy: acc });
+          resolve({ success: true, latitude, longitude, accuracy: acc });
         },
         (err) => {
           const code = err.code === 1 ? "denied" : err.code === 3 ? "timeout" : "unavailable";
@@ -198,6 +200,7 @@ export default function ScanClientPage() {
     // Step 1: get GPS (use cached if available)
     let lat = customerLocation.latitude;
     let lng = customerLocation.longitude;
+    let acc = customerLocation.accuracy;
 
     if (!lat || !lng) {
       const loc = await getCustomerLocation();
@@ -214,6 +217,7 @@ export default function ScanClientPage() {
       }
       lat = loc.latitude;
       lng = loc.longitude;
+      acc = loc.accuracy;
     }
 
     // Step 2: verify with store
@@ -228,7 +232,7 @@ export default function ScanClientPage() {
       const response = await fetch(`/api/customer/location-verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ campaignId, storesList, customerLatitude: lat, customerLongitude: lng }),
+        body: JSON.stringify({ campaignId, storesList, customerLatitude: lat, customerLongitude: lng, customerAccuracy: acc }),
       });
       const result = await response.json();
 
@@ -251,14 +255,14 @@ export default function ScanClientPage() {
       setLocationVerifying(false);
 
       // Step 3: submit participation
-      submitParticipation(verifiedStoreData, lat, lng);
+      submitParticipation(verifiedStoreData, lat, lng, acc);
     } catch {
       setLocationError({ emoji: "🌐", title: "Connection issue", body: "We couldn't reach our servers to verify your location.", tip: "Check your internet connection and try again." });
       setLocationVerifying(false);
     }
   };
 
-  const submitParticipation = async (verifiedStoreData, lat, lng) => {
+  const submitParticipation = async (verifiedStoreData, lat, lng, acc) => {
     try {
       setSubmitting(true);
       setError(null);
@@ -304,6 +308,7 @@ export default function ScanClientPage() {
           billAmount: 0,
           customerLatitude: lat ?? customerLocation.latitude,
           customerLongitude: lng ?? customerLocation.longitude,
+          customerAccuracy: acc ?? customerLocation.accuracy,
           customerConsent: true,
           verifiedStore: verifiedStoreData,
         }),
@@ -312,6 +317,19 @@ export default function ScanClientPage() {
       const result = await response.json();
 
       if (!result.success) {
+        // /api/customer/participate enforces the same cooldown as a
+        // defense-in-depth backstop (in case the earlier check-participation
+        // call missed it) — show the same "Try Again Later" screen instead
+        // of a generic inline error so the user doesn't just see nothing.
+        if (result.data?.cooldown) {
+          setCooldownInfo({
+            date: result.data.lastParticipationAt,
+            remainingMinutes: result.data.remainingMinutes,
+            message: result.error,
+          });
+          setStep("COOLDOWN");
+          return;
+        }
         setError(result.error || "Failed to participate");
         return;
       }
@@ -728,7 +746,7 @@ export default function ScanClientPage() {
     console.log(`[PICK] Filtering complete: ${coupons.length} total => ${rangeBasedCoupons.length} filtered for range ${formData.selectedRange}`);
 
     // Display message if no coupons available for this range
-    const availableCoupons = rangeBasedCoupons.length > 0 ? rangeBasedCoupons : [1, 2, 3, 4, 5, 6];
+    const availableCoupons = rangeBasedCoupons;
     const noCouponsMessage = rangeBasedCoupons.length === 0;
 
     return (

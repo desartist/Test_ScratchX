@@ -119,8 +119,10 @@ export default function SettingsPage() {
           {/* Account Information Card */}
           <SettingsAccountCard merchant={merchant} />
 
-          {/* Subscription Card */}
-          <SettingsSubscriptionCard merchant={merchant} />
+          {/* Subscription Card - not applicable to distributor accounts */}
+          {merchant?.role !== "Distributor" && (
+            <SettingsSubscriptionCard merchant={merchant} />
+          )}
 
           {/* Security Card */}
           <SettingsSecurityCard />

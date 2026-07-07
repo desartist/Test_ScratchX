@@ -130,9 +130,12 @@ export async function POST(request) {
     }
 
     // Count existing active stores (using same field name as platformAccessService)
+    // Also excludes status: 'deleted' to catch stores soft-deleted before
+    // isDeleted/deletedAt existed on the schema (see storeService.js).
     const existingStoreCount = await Store.countDocuments({
       merchant_id: userId,
-      isDeleted: { $ne: true }
+      isDeleted: { $ne: true },
+      status: { $ne: 'deleted' }
     });
 
     // FIRST STORE EXCEPTION: Always allowed
@@ -161,7 +164,7 @@ export async function POST(request) {
 
     // Get request body
     const body = await request.json();
-    const { store_name, address, city, state, pincode, contact_person, contact_number, latitude, longitude } = body;
+    const { store_name, address, city, state, pincode, contact_person, contact_number, latitude, longitude, location_accuracy } = body;
 
     // Determine merchant ID (Super_Admin can specify, Merchant uses their own ID)
     let merchantId = userId;
@@ -226,6 +229,7 @@ export async function POST(request) {
         contact_number,
         latitude,
         longitude,
+        location_accuracy: location_accuracy != null ? Number(location_accuracy) : null,
         // Set isMainStore flag for first store
         is_main_store: isFirstStore,
         isMainStore: isFirstStore,

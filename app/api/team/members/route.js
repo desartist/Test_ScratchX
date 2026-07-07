@@ -22,12 +22,14 @@ export async function GET() {
       query = {
         parentId: account._id,
         role: "Manager",
+        status: { $ne: "deactivated" },
       };
     } else if (account.role === "Manager") {
       // Fetch staff created by this manager
       query = {
         parentId: account._id,
         role: { $in: ["Store_Manager", "Store_Staff"] },
+        status: { $ne: "deactivated" },
       };
     } else {
       // Not authorized to manage team
@@ -271,8 +273,16 @@ export async function DELETE(request) {
       );
     }
 
-    // Delete the member
-    await Account.deleteOne({ _id: memberId });
+    // Soft-delete: deactivate rather than hard-delete. Hard-deleting would
+    // orphan every reference to this account (any staff created under it
+    // via parentId, campaign assignedStores[].assignedBy/lastModifiedBy,
+    // sessions, notifications, audit log entries). Deactivated accounts
+    // are blocked from logging in (lib/auth.js requires status "active")
+    // and are excluded from the team listing below.
+    await Account.updateOne(
+      { _id: memberId },
+      { status: "deactivated" }
+    );
 
     return Response.json(
       {

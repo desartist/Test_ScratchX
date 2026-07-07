@@ -107,6 +107,14 @@ const customerParticipationSchema = new mongoose.Schema(
       min: [0, 'Distance cannot be negative']
     },
 
+    // True when this mobile number already has a prior participation in this
+    // campaign (i.e. this is a returning customer, past cooldown).
+    is_repeat_customer: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
+
     // Status Tracking
     status: {
       type: String,

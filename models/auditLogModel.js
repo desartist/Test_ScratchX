@@ -21,6 +21,7 @@ const auditLogSchema = new mongoose.Schema({
       "LOGOUT_ALL_DEVICES",
       "ACCOUNT_DELETE",
       "ACCOUNT_RESTORE",
+      "PLATFORM_NOTICE_ACCEPTED",
     ],
     required: true,
     index: true,

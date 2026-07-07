@@ -13,6 +13,8 @@
     "test:unit": "jest __tests__/unit",
     "test:integration": "jest __tests__/integration",
     "migrate:subscriptions": "node scripts/migrate-subscription-ownership.js",
+    "migrate:platform-notice": "node scripts/migrations/addPlatformNoticeConsent.js",
+    "migrate:store-soft-delete": "node scripts/migrations/backfillStoreSoftDelete.js",
     "seed:distributor-data": "node lib/seeds/seedDistributorData.mjs",
     "seed:plans": "node scripts/seed-subscription-plans.js",
     "seed:accounts": "node scripts/seed-test-accounts.js"

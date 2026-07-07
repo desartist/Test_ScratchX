@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Store from '@/models/storeModel';
-import mainStoreService from '@/lib/mainStoreService';
+import StoreService from '@/lib/storeService';
 import { hasPermission } from '@/lib/permissions';
+import { ValidationError, NotFoundError } from '@/lib/errors';
 
 /**
  * DELETE /api/stores/delete
- * Protected delete endpoint for stores with main store protection
+ * Thin wrapper around StoreService.deleteStore — the same cascade/guard
+ * logic used by /api/stores/[id] DELETE, so both entry points in the UI
+ * (store list page vs. store detail page) behave identically.
  *
  * Request body: { storeId: "..." }
  */
@@ -16,7 +18,6 @@ export async function POST(request) {
 
     // Get user info
     const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
 
     // Authorization check
     if (!hasPermission(userRole, 'store:delete')) {
@@ -35,37 +36,7 @@ export async function POST(request) {
       );
     }
 
-    // Check if this is the main store
-    const canDelete = await mainStoreService.canDeleteStore(storeId, userId);
-
-    if (!canDelete.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: canDelete.message,
-          isMainStore: canDelete.isMainStore,
-        },
-        { status: 403 }
-      );
-    }
-
-    // Perform soft delete
-    const store = await Store.findByIdAndUpdate(
-      storeId,
-      {
-        isDeleted: true,
-        deletedAt: new Date(),
-        status: 'deleted',
-      },
-      { new: true }
-    );
-
-    if (!store) {
-      return NextResponse.json(
-        { success: false, error: 'Store not found' },
-        { status: 404 }
-      );
-    }
+    const store = await StoreService.deleteStore(storeId);
 
     return NextResponse.json(
       {
@@ -77,6 +48,21 @@ export async function POST(request) {
     );
   } catch (error) {
     console.error('[Stores Delete API] Error:', error);
+
+    if (error instanceof NotFoundError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 404 }
+      );
+    }
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,

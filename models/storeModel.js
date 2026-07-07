@@ -61,6 +61,15 @@ const storeSchema = new mongoose.Schema(
       min: [-180, 'Longitude must be between -180 and 180'],
       max: [180, 'Longitude must be between -180 and 180']
     },
+    // GPS uncertainty radius (meters) reported by the browser when
+    // latitude/longitude were captured. Surfaced to merchants at store
+    // creation so a bad indoor/off-site fix doesn't silently become the
+    // store's permanent, uncorrectable location.
+    location_accuracy: {
+      type: Number,
+      default: null,
+      min: [0, 'Location accuracy cannot be negative']
+    },
     location: {
       type: {
         type: String,
@@ -111,11 +120,20 @@ const storeSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['active', 'inactive', 'suspended'],
-        message: 'Invalid status. Must be: active, inactive, or suspended'
+        values: ['active', 'inactive', 'suspended', 'deleted'],
+        message: 'Invalid status. Must be: active, inactive, suspended, or deleted'
       },
       default: 'active',
       index: true
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
+    deletedAt: {
+      type: Date,
+      default: null
     },
     // Inventory tracking at store level
     total_scratch_cards: {

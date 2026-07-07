@@ -7,11 +7,9 @@ import {
   Clock,
   Megaphone,
   IndianRupee,
-  Infinity as InfinityIcon,
   Trash2,
 } from 'lucide-react';
 import Badge from '../dashboard/Badge';
-import ProgressBar from '../dashboard/ProgressBar';
 import styles from './StoreCard.module.css';
 
 /**
@@ -58,11 +56,7 @@ export default function StoreCard({
   scans = 0,
   priceRange = null,
   managerName = '',
-  scratchTotal = 0,
-  scratchUsed = 0,
-  scratchRemaining = 0,
   hasPendingRequest = false,
-  unlimited = false,
   isMainStore = false,
   onView = () => {},
   onAssign = () => {},
@@ -78,15 +72,6 @@ export default function StoreCard({
 
   const initials = useMemo(() => getInitials(managerName), [managerName]);
   const hasManager = Boolean(managerName && managerName.trim() && managerName !== 'Unknown');
-
-  // Scratch math (guard divide-by-zero)
-  const total = Number(scratchTotal || 0);
-  const used = Number(scratchUsed || 0);
-  const remaining = Number(
-    scratchRemaining !== undefined && scratchRemaining !== null
-      ? scratchRemaining
-      : Math.max(0, total - used),
-  );
 
   const location = [city, state].filter(Boolean).join(', ');
 
@@ -192,32 +177,6 @@ export default function StoreCard({
         )}
       </div>
 
-      {/* Scratch line — unlimited vs allocation */}
-      {unlimited ? (
-        <div className={styles.scratchSection}>
-          <div className={styles.scratchHeader}>
-            <span className={styles.unlimitedLabel}>
-              <InfinityIcon size={15} className={styles.unlimitedIcon} />
-              Unlimited Active
-            </span>
-            <span className={styles.scratchCount}>{used.toLocaleString()} Used</span>
-          </div>
-        </div>
-      ) : (
-        <div className={styles.scratchSection}>
-          <div className={styles.scratchHeader}>
-            <span className={styles.scratchLabel}>Scratch Allocation</span>
-            <span className={styles.scratchCount}>
-              {used.toLocaleString()} / {total.toLocaleString()}
-            </span>
-          </div>
-          <ProgressBar current={used} total={total} showLabel={false} />
-          <div className={styles.scratchRemaining}>
-            {remaining.toLocaleString()} left
-          </div>
-        </div>
-      )}
-
       {/* Actions */}
       <div className={styles.actions}>
         <button type="button" className={styles.viewBtn} onClick={handleView}>
@@ -245,11 +204,7 @@ StoreCard.propTypes = {
   scans: PropTypes.number,
   priceRange: PropTypes.string,
   managerName: PropTypes.string,
-  scratchTotal: PropTypes.number,
-  scratchUsed: PropTypes.number,
-  scratchRemaining: PropTypes.number,
   hasPendingRequest: PropTypes.bool,
-  unlimited: PropTypes.bool,
   isMainStore: PropTypes.bool,
   onView: PropTypes.func,
   onAssign: PropTypes.func,

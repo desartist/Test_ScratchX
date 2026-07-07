@@ -280,6 +280,23 @@ const accountSchema = new mongoose.Schema(
       },
     },
 
+    // Platform Usage & Subscription Notice consent (Merchant/Distributor).
+    // `version` lets us force re-acceptance if the notice text changes later.
+    platformNotice: {
+      accepted: {
+        type: Boolean,
+        default: false,
+      },
+      acceptedAt: {
+        type: Date,
+        default: null,
+      },
+      version: {
+        type: String,
+        default: null,
+      },
+    },
+
     // Account Deletion (Soft Delete)
     isDeleted: {
       type: Boolean,

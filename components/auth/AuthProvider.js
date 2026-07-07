@@ -1,14 +1,28 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { AuthContext } from './AuthContext';
 import { tokenService } from '@/lib/tokenService';
 import { authService } from '@/lib/authService';
 import { dashboardCache } from '@/lib/dashboardCache';
 
+// Public, unauthenticated customer-facing routes (QR scan, scratch card
+// reveal, coupon view). These pages never call useAuthContext() and have no
+// concept of a logged-in merchant/distributor session. Running session
+// validation here was actively harmful: a customer scanning a QR code on a
+// device/browser that happens to have a stale merchant login token (e.g. the
+// merchant's own phone, or a shared device) would get force-logged-out and
+// redirected to /auth/login mid-flow, repeatedly, since every redirect
+// remounts the app and re-triggers the same check.
+const PUBLIC_CUSTOMER_ROUTE_PREFIXES = ['/scan', '/customer', '/coupon'];
+
 export function AuthProvider({ children }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isPublicCustomerRoute = PUBLIC_CUSTOMER_ROUTE_PREFIXES.some((p) =>
+    pathname?.startsWith(p),
+  );
   const [account, setAccount] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [refreshToken, setRefreshToken] = useState(null);
@@ -53,6 +67,11 @@ export function AuthProvider({ children }) {
   forceLogoutRef.current = forceLogout;
 
   useEffect(() => {
+    if (isPublicCustomerRoute) {
+      setIsLoading(false);
+      return;
+    }
+
     const initializeAuth = async () => {
       try {
         const storedAccessToken = tokenService.getAccessToken();

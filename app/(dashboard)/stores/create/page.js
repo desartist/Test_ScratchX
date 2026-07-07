@@ -44,6 +44,7 @@ export default function CreateStorePage() {
     // Step 2: Location
     latitude: null,
     longitude: null,
+    location_accuracy: null,
     address: '',
     city: '',
     state: '',
@@ -146,10 +147,11 @@ export default function CreateStorePage() {
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude, accuracy } = position.coords;
         const lat = parseFloat(latitude.toFixed(6));
         const lng = parseFloat(longitude.toFixed(6));
-        setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng, _geoSource: 'gps' }));
+        const acc = Number.isFinite(accuracy) ? Math.round(accuracy) : null;
+        setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng, location_accuracy: acc, _geoSource: 'gps' }));
 
         // Reverse geocode via Nominatim
         try {
@@ -210,7 +212,11 @@ export default function CreateStorePage() {
           setGeoError('Unable to access your location.');
         }
       },
-      { timeout: 15000, enableHighAccuracy: false, maximumAge: 60000 }
+      // High accuracy + no cached fix: this coordinate becomes the store's
+      // permanent location and every future customer is measured against it,
+      // so a fast-but-imprecise (cell/WiFi) fix here causes recurring false
+      // "you're too far from the store" rejections for real, on-site customers.
+      { timeout: 15000, enableHighAccuracy: true, maximumAge: 0 }
     );
   };
 
@@ -245,7 +251,7 @@ export default function CreateStorePage() {
         if (results && results[0]) {
           const lat = parseFloat(parseFloat(results[0].lat).toFixed(6));
           const lng = parseFloat(parseFloat(results[0].lon).toFixed(6));
-          setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng, _geoSource: 'address' }));
+          setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng, location_accuracy: null, _geoSource: 'address' }));
           setLocationStatus('detected');
           setLocationInfo({ display: results[0].display_name?.split(',').slice(0, 3).join(',') });
           return;
@@ -308,6 +314,7 @@ export default function CreateStorePage() {
             pincode: locationModalData.pincode,
             latitude: lat,
             longitude: lng,
+            location_accuracy: null,
             _geoSource: 'address',
           }));
 
@@ -474,6 +481,7 @@ export default function CreateStorePage() {
           business_type: formData.business_type,
           latitude: formData.latitude,
           longitude: formData.longitude,
+          location_accuracy: formData.location_accuracy,
         }),
       });
 
@@ -749,6 +757,16 @@ export default function CreateStorePage() {
                       <p className={styles.locationArea}>{locationInfo.display}</p>
                     ) : (
                       <p className={styles.locationArea}>Location detected</p>
+                    )}
+                    {formData.location_accuracy != null && (
+                      <p
+                        className={styles.locationArea}
+                        style={formData.location_accuracy > 50 ? { color: '#b45309' } : undefined}
+                      >
+                        Accurate to ±{formData.location_accuracy}m
+                        {formData.location_accuracy > 50 &&
+                          ' — this seems imprecise. Stand outside the store and retake for a better fix.'}
+                      </p>
                     )}
                   </div>
                   <button

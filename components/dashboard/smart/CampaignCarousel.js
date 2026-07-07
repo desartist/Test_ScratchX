@@ -171,19 +171,20 @@ export default function CampaignCarousel({ campaigns, storeCount, viewAllHref })
   const [exitDir, setExitDir] = useState("left");
   const touchStartX = useRef(null);
   const total = campaigns.length;
+  const safeCurrent = total > 0 ? Math.min(current, total - 1) : 0;
 
   const goTo = useCallback((idx) => {
-    if (idx === current || animating) return;
-    setExitDir(idx > current ? "left" : "right");
+    if (idx === safeCurrent || animating) return;
+    setExitDir(idx > safeCurrent ? "left" : "right");
     setAnimating(true);
     setTimeout(() => {
       setCurrent(idx);
       setAnimating(false);
     }, 300);
-  }, [current, animating]);
+  }, [safeCurrent, animating]);
 
-  const next = () => goTo((current + 1) % total);
-  const prev = () => goTo((current - 1 + total) % total);
+  const next = () => goTo((safeCurrent + 1) % total);
+  const prev = () => goTo((safeCurrent - 1 + total) % total);
 
   const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
   const onTouchEnd = (e) => {
@@ -219,9 +220,9 @@ export default function CampaignCarousel({ campaigns, storeCount, viewAllHref })
 
         <div className={`${styles.frontCard} ${animating ? (exitDir === "left" ? styles.exitLeft : styles.exitRight) : ""}`}>
           <CampaignCard
-            campaign={campaigns[current]}
+            campaign={campaigns[safeCurrent]}
             storeCount={storeCount}
-            onClick={() => router.push(`/campaign/${campaigns[current]._id}`)}
+            onClick={() => router.push(`/campaign/${campaigns[safeCurrent]._id}`)}
           />
         </div>
       </div>
@@ -234,7 +235,7 @@ export default function CampaignCarousel({ campaigns, storeCount, viewAllHref })
           </button>
           <div className={styles.dots}>
             {campaigns.map((_, i) => (
-              <button key={i} className={`${styles.dotBtn} ${i === current ? styles.dotActive : ""}`} onClick={() => goTo(i)} />
+              <button key={i} className={`${styles.dotBtn} ${i === safeCurrent ? styles.dotActive : ""}`} onClick={() => goTo(i)} />
             ))}
           </div>
           <button className={styles.navBtn} onClick={next} aria-label="Next">

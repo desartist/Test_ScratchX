@@ -121,17 +121,22 @@ export default function CampaignRangesStepPage() {
     setMode("list");
     setEditRange(null);
 
-    // If a new range was created, add it immediately to state for instant feedback
-    if (newRange && !newRange._id) {
-      setRanges(prev => [...prev, newRange]);
-    } else if (newRange && newRange._id && !ranges.some(r => r._id === newRange._id)) {
-      // New range created - add it to the list
-      setRanges(prev => [...prev, newRange]);
+    if (newRange && newRange._id) {
+      setRanges((prev) => {
+        const exists = prev.some((r) => r._id === newRange._id);
+        // Existing range was edited — replace it in place for instant feedback.
+        if (exists) return prev.map((r) => (r._id === newRange._id ? newRange : r));
+        // New range was created — append it.
+        return [...prev, newRange];
+      });
     }
 
-    // Refetch to ensure we have the latest data
+    // criticalFetchService caches GET responses by page key; without
+    // invalidating it here, this refetch would just return the pre-edit
+    // data again until the cache naturally goes stale.
+    criticalFetchService.clearPageCache(`campaign-ranges-${campaignId}`);
     fetchRanges();
-  }, [fetchRanges, ranges]);
+  }, [fetchRanges, campaignId]);
 
   const openLaunch = useCallback(() => setLaunchOpen(true), []);
   const closeLaunch = useCallback(() => setLaunchOpen(false), []);

@@ -34,7 +34,7 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { campaignId, customerLatitude, customerLongitude, storesList } =
+    const { campaignId, customerLatitude, customerLongitude, customerAccuracy, storesList } =
       body;
 
     // CRITICAL: Validate coordinates are provided
@@ -152,12 +152,24 @@ export async function POST(request) {
     // Allowed radius: 250 meters
     const ALLOWED_RADIUS_METERS = 250;
 
+    // The browser's own GPS uncertainty radius (position.coords.accuracy) is
+    // added on top of the base radius, capped, so a customer with a
+    // genuinely imprecise fix (common indoors/near tall buildings) isn't
+    // rejected while actually standing at the store. Capped to prevent a
+    // spoofed/huge accuracy value from defeating the check entirely.
+    const MAX_ACCURACY_BONUS_METERS = 200;
+    const accuracyBonus =
+      typeof customerAccuracy === "number" && customerAccuracy > 0
+        ? Math.min(customerAccuracy, MAX_ACCURACY_BONUS_METERS)
+        : 0;
+    const effectiveRadiusMeters = ALLOWED_RADIUS_METERS + accuracyBonus;
+
     // Validate customer location against all stores (with fresh coordinates)
     const validationResult = validateCustomerLocation(
       customerLatitude,
       customerLongitude,
       updatedStoresList,
-      ALLOWED_RADIUS_METERS,
+      effectiveRadiusMeters,
     );
 
     console.log("🔍 Validation Result:", {
@@ -171,7 +183,7 @@ export async function POST(request) {
     // If no valid store found
     if (!validationResult.isValid) {
       // Build detailed error message with all store distances
-      let detailedMessage = `You must be within ${ALLOWED_RADIUS_METERS} meters of an assigned store.`;
+      let detailedMessage = `You must be within ${effectiveRadiusMeters} meters of an assigned store.`;
 
       if (validationResult.allDistances && validationResult.allDistances.length > 0) {
         const distances = validationResult.allDistances
@@ -186,12 +198,12 @@ export async function POST(request) {
           error:
             validationResult.error ||
             detailedMessage ||
-            `You must be within ${ALLOWED_RADIUS_METERS} meters of an assigned store.`,
+            `You must be within ${effectiveRadiusMeters} meters of an assigned store.`,
           data: {
             isValid: false,
             matchedStore: null,
             distance: validationResult.distance,
-            allowedRadius: ALLOWED_RADIUS_METERS,
+            allowedRadius: effectiveRadiusMeters,
             message: detailedMessage,
             allStoreDistances: validationResult.allDistances,
             debugInfo: validationResult.debugInfo,

@@ -17,7 +17,7 @@ const VALID_TYPES = new Set(REWARD_TYPES.map((t) => t.value));
 
 function makeCoupons(count) {
   const safe = Number(count) > 0 ? Number(count) : DEFAULT_COUPONS;
-  return Array.from({ length: safe }, () => ({ type: "flat", amount: "" }));
+  return Array.from({ length: safe }, () => ({ type: "flat", amount: "", description: "" }));
 }
 
 function couponsFromRange(rewards, min) {
@@ -25,10 +25,14 @@ function couponsFromRange(rewards, min) {
   const mapped = list.map((r) => {
     const type = VALID_TYPES.has(r?.type) ? r.type : "flat";
     const raw  = r?.value ?? r?.amount ?? "";
-    return { type, amount: raw === "" || raw == null ? "" : String(raw) };
+    return {
+      type,
+      amount: raw === "" || raw == null ? "" : String(raw),
+      description: r?.description || "",
+    };
   });
   const target = Math.max(Number(min) > 0 ? Number(min) : DEFAULT_COUPONS, mapped.length);
-  while (mapped.length < target) mapped.push({ type: "flat", amount: "" });
+  while (mapped.length < target) mapped.push({ type: "flat", amount: "", description: "" });
   return mapped;
 }
 
@@ -99,7 +103,9 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
     isEdit && range?.maxAmount != null ? String(range.maxAmount) : "",
   );
   const [coupons, setCoupons] = useState(() =>
-    isEdit && displayCoupons ? couponsFromRange(range?.rewards, displayCoupons) : makeCoupons(DEFAULT_COUPONS),
+    isEdit
+      ? couponsFromRange(range?.rewards, range?.rewards?.length)
+      : makeCoupons(DEFAULT_COUPONS),
   );
 
   const [saving,     setSaving]     = useState(false);
@@ -169,7 +175,7 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
   // When user switches type, clear the amount to avoid stale values
   const handleTypeChange = useCallback((index, newType) => {
     setCoupons((prev) =>
-      prev.map((c, i) => (i === index ? { type: newType, amount: "" } : c)),
+      prev.map((c, i) => (i === index ? { type: newType, amount: "", description: "" } : c)),
     );
   }, []);
 
@@ -217,7 +223,7 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
     for (const c of coupons) {
       if (c.type === "gift") {
         if (c.amount && c.amount.startsWith("data:image/")) {
-          rewards.push({ type: "gift", value: c.amount });
+          rewards.push({ type: "gift", value: c.amount, description: (c.description || "").trim() });
         }
         continue;
       }
@@ -375,6 +381,17 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
 
                 {coupon.type === "gift" && (
                   <>
+                    <label className={styles.label} htmlFor={`rw-gift-desc-${index}`}>
+                      Description
+                    </label>
+                    <textarea
+                      id={`rw-gift-desc-${index}`}
+                      className={styles.input}
+                      placeholder="Describe the gift, e.g. Free Coffee Mug"
+                      rows={2}
+                      value={coupon.description || ""}
+                      onChange={(e) => handleCouponChange(index, "description", e.target.value)}
+                    />
                     <label className={styles.label}>Gift Image</label>
                     <input
                       ref={(el) => { fileRefs.current[index] = el; }}

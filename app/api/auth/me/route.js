@@ -35,6 +35,7 @@ export async function GET() {
         activePlan: account.activePlan || null,
         subscriptionId: account.subscriptionId || null,
         planPurchaseDate: account.planPurchaseDate || null,
+        platformNotice: account.platformNotice || null,
         lastLoginAt: account.lastLoginAt,
         lastLoginIP: account.lastLoginIP,
         createdAt: account.createdAt,
