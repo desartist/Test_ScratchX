@@ -363,7 +363,15 @@ export default function SmartDashboard() {
   }));
   const storeWiseTotal = storeWiseItems.reduce((sum, s) => sum + s.value, 0);
 
-  const topCampaigns = campaigns.slice(0, 3);
+  const activeCampaigns = campaigns.filter((c) => {
+    const now = Date.now();
+    const start = new Date(c.startDate).getTime();
+    const end = new Date(c.endDate).getTime();
+    if (Number.isFinite(end) && end < now) return false; // ended
+    if (Number.isFinite(start) && start > now) return false; // not started yet
+    return (c.status || "active").toLowerCase() === "active";
+  });
+  const topCampaigns = activeCampaigns.slice(0, 3);
 
   const quickActions = [
     {
@@ -408,9 +416,9 @@ export default function SmartDashboard() {
       <KpiTileGrid kpi={kpi} />
 
       {/* Top Campaigns — stacked carousel */}
-      {campaigns.length > 0 && (
+      {topCampaigns.length > 0 && (
         <CampaignCarousel
-          campaigns={campaigns}
+          campaigns={topCampaigns}
           storeCount={stores.length}
           viewAllHref="/campaign"
         />

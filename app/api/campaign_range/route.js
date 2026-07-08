@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth.js";
 import { enforceFeatureLimit } from "@/lib/subscriptionGuard.js";
 import Range from "@/models/rangeModel.js";
 import Campaign from "@/models/campaignModel.js";
+import ScratchCardRecord from "@/models/scratchCardRecordModel.js";
+import CustomerParticipation from "@/models/customerParticipationModel.js";
 
 export async function GET(request) {
   try {
@@ -99,6 +101,22 @@ export async function DELETE(request) {
     if (!rangeId) {
       return Response.json(
         { success: false, error: "rangeId is required" },
+        { status: 400 },
+      );
+    }
+
+    // Guard: refuse to delete a range that customers have already used —
+    // deleting it would orphan their scratch card / participation history.
+    const [scratchRecords, participations] = await Promise.all([
+      ScratchCardRecord.countDocuments({ range_id: rangeId }),
+      CustomerParticipation.countDocuments({ range_id: rangeId }),
+    ]);
+    if (scratchRecords + participations > 0) {
+      return Response.json(
+        {
+          success: false,
+          error: "Cannot delete a range that customers have already scratched or participated in.",
+        },
         { status: 400 },
       );
     }

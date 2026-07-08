@@ -8,12 +8,14 @@ import {
   getAccountInitials,
 } from "@/lib/accountDisplay";
 import PlanStatusCard from "@/components/sidebar/PlanStatusCard";
+import PlatformNoticeModal from "@/components/policy/PlatformNoticeModal";
 import {
   IconChart,
   IconDashboard,
   IconLogout,
   IconReceipt,
   IconSettings,
+  IconShield,
   IconStore,
   IconUsers,
   IconWallet,
@@ -36,7 +38,12 @@ const NAV_ICONS = {
   stores: IconStore,
   studio: IconDashboard,
   support: IconUsers,
+  notice: IconShield,
 };
+
+function isNavItemActive(pathname, href) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 function readMerchantHasStoreCookie() {
   if (typeof document === "undefined") return null; // SSR — unknown
@@ -70,7 +77,7 @@ export default function DashboardLayout({ children, role }) {
   }, [hasStore, role, account?.id]);
 
   // Cookie says no store OR API confirmed no store → bare page, no chrome.
-  if (hasStore === false) return <>{children}</>;
+  if (hasStore === false) return <><PlatformNoticeModal />{children}</>;
   // Still checking (null) → render nothing briefly to avoid wrong chrome flash.
   if (hasStore === null) return null;
 
@@ -167,6 +174,11 @@ export default function DashboardLayout({ children, role }) {
               iconKey: "commission",
             },
             { label: "Settings", href: "/settings", iconKey: "settings" },
+            {
+              label: "Privacy Policy",
+              href: "/privacy-policy",
+              iconKey: "notice",
+            },
           ],
         };
       case "Merchant":
@@ -194,6 +206,11 @@ export default function DashboardLayout({ children, role }) {
             { label: "Team Access", href: "/team", iconKey: "users" },
             { label: "Help & Support", href: "/support", iconKey: "support" },
             { label: "Settings", href: "/settings", iconKey: "settings" },
+            {
+              label: "Privacy Policy",
+              href: "/privacy-policy",
+              iconKey: "notice",
+            },
           ],
         };
       case "Manager":
@@ -252,10 +269,12 @@ export default function DashboardLayout({ children, role }) {
   const navItems = getNavItems();
   const displayName = account ? getAccountDisplayName(account) : "";
   const initials = account ? getAccountInitials(account) : "?";
+  const canManageSubscription = role === "Merchant" || role === "Manager";
 
 
   return (
     <div className={styles.container}>
+      <PlatformNoticeModal />
       {sidebarOpen && (
         <div
           className={styles.backdrop}
@@ -310,12 +329,12 @@ export default function DashboardLayout({ children, role }) {
                 </span>
               </div>
             </div>
-            <PlanStatusCard />
+            {canManageSubscription && <PlanStatusCard />}
           </div>
 
           <nav className={styles.nav} aria-label="Main navigation">
             {navItems.primary.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = isNavItemActive(pathname, item.href);
               const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
               return (
                 <Link
@@ -335,7 +354,7 @@ export default function DashboardLayout({ children, role }) {
               <>
                 <div className={styles.navDivider}></div>
                 {navItems.secondary.map((item) => {
-                  const isActive = pathname === item.href;
+                  const isActive = isNavItemActive(pathname, item.href);
                   const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
                   return (
                     <Link
@@ -400,12 +419,14 @@ export default function DashboardLayout({ children, role }) {
               <h1 className={styles.roleTitle}>{displayName || account?.email}</h1>
             </div>
             <div className={styles.userInfo}>
-              <Link href="/campaign/new" className={styles.createCampaignBtn}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Create Campaign
-              </Link>
+              {canManageSubscription && (
+                <Link href="/campaign/new" className={styles.createCampaignBtn}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  Create Campaign
+                </Link>
+              )}
               <Link href="/notifications" className={styles.notificationBtn} aria-label="Notifications">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>

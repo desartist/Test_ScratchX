@@ -159,11 +159,21 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    const retailer = await Account.findOneAndDelete({
-      _id: retailerId,
-      distributorId: account._id,
-      role: 'Retailer',
-    });
+    // Soft-delete: deactivate rather than hard-delete. Retailer accounts
+    // are the subject of financial/commission ledger rows (RetailerProfile,
+    // distributor commission/transaction/order/payout records) — hard
+    // deleting would leave those historical rows pointing at an account
+    // that no longer exists. Deactivated accounts are blocked from
+    // logging in (lib/auth.js requires status "active").
+    const retailer = await Account.findOneAndUpdate(
+      {
+        _id: retailerId,
+        distributorId: account._id,
+        role: 'Retailer',
+      },
+      { status: 'deactivated' },
+      { new: true }
+    );
 
     if (!retailer) {
       return NextResponse.json(

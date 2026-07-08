@@ -25,6 +25,7 @@ export default function StoreForm({
       contact_number: '',
       latitude: null,
       longitude: null,
+      location_accuracy: null,
     }
   );
 
@@ -74,10 +75,14 @@ export default function StoreForm({
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude, accuracy } = position.coords;
         const lat = parseFloat(latitude.toFixed(6));
         const lng = parseFloat(longitude.toFixed(6));
-        setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+        // Accuracy is the GPS uncertainty radius in meters — surfaced to the
+        // merchant so a bad indoor/off-site fix doesn't silently become the
+        // store's permanent location (see location-verify false-rejection issue).
+        const acc = Number.isFinite(accuracy) ? Math.round(accuracy) : null;
+        setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng, location_accuracy: acc }));
         setLocationStatus('detected');
         setLocationError(null);
 
@@ -308,6 +313,16 @@ export default function StoreForm({
                 {(locationInfo?.area || locationInfo?.city) && (
                   <p className={styles.locationArea}>
                     {[locationInfo.area, locationInfo.city, locationInfo.state].filter(Boolean).join(', ')}
+                  </p>
+                )}
+                {formData.location_accuracy != null && (
+                  <p
+                    className={styles.locationArea}
+                    style={formData.location_accuracy > 50 ? { color: '#b45309' } : undefined}
+                  >
+                    Accurate to ±{formData.location_accuracy}m
+                    {formData.location_accuracy > 50 &&
+                      ' — this seems imprecise. Stand outside the store and retake for a better fix.'}
                   </p>
                 )}
               </div>

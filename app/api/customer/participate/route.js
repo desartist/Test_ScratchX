@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/connectDB";
 import Campaign from "@/models/campaignModel";
 import Range from "@/models/rangeModel";
+import Store from "@/models/storeModel";
 import CustomerParticipation from "@/models/customerParticipationModel";
 import ScratchCardRecord from "@/models/scratchCardRecordModel";
 import { consumeInventory } from "@/lib/services/inventoryManagementService";
@@ -40,6 +41,7 @@ export async function POST(request) {
       billAmount,
       customerLatitude,
       customerLongitude,
+      customerAccuracy,
       customerConsent,
       verifiedStore,
     } = body;
@@ -185,26 +187,50 @@ export async function POST(request) {
       longitude: verifiedStore.longitude,
     });
 
-    // ===== DUPLICATE PARTICIPATION CHECK =====
-    const existingParticipation = await CustomerParticipation.findOne({
+    // ===== REPEAT CUSTOMER / COOLDOWN CHECK =====
+    // This is a time-based cooldown, not a permanent one-participation-ever
+    // block — the same mobile number can participate again once the cooldown
+    // window has passed, since customers may visit the store multiple times
+    // in a single day. (The frontend already gates this via
+    // /api/customer/check-participation before reaching here; this check is
+    // a defense-in-depth backup against direct API calls.)
+    // Reveal/redeem window is 5 minutes (see expires_at below); cooldown is
+    // an additional 10 minutes on top of that — 15 minutes total from the
+    // original scan before the same number can participate again.
+    const REVEAL_WINDOW_MINUTES = 5;
+    const POST_REVEAL_COOLDOWN_MINUTES = 10;
+    const PARTICIPATION_COOLDOWN_MINUTES = REVEAL_WINDOW_MINUTES + POST_REVEAL_COOLDOWN_MINUTES;
+
+    const lastParticipation = await CustomerParticipation.findOne({
       campaign_id: campaignId,
       customer_mobile: customerMobile,
-      status: { $nin: ['expired', 'failed'] },
-    }).lean();
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
-    if (existingParticipation) {
-      const scratchUrl = `/customer/campaign/${campaignId}/scratch/${existingParticipation._id.toString()}`;
-      return NextResponse.json(
-        {
-          success: true,
-          data: {
-            participationId: existingParticipation._id.toString(),
-            rewardScreenUrl: scratchUrl,
-            alreadyParticipated: true,
+    const isRepeatCustomer = !!lastParticipation;
+
+    if (lastParticipation) {
+      const minutesSinceLast =
+        (Date.now() - new Date(lastParticipation.createdAt).getTime()) / 60000;
+
+      if (minutesSinceLast < PARTICIPATION_COOLDOWN_MINUTES) {
+        const remainingMinutes = Math.ceil(
+          PARTICIPATION_COOLDOWN_MINUTES - minutesSinceLast,
+        );
+        return NextResponse.json(
+          {
+            success: false,
+            error: `You can participate again in ${remainingMinutes} minute${remainingMinutes === 1 ? "" : "s"}.`,
+            data: {
+              cooldown: true,
+              remainingMinutes,
+              lastParticipationAt: lastParticipation.createdAt,
+            },
           },
-        },
-        { status: 200 },
-      );
+          { status: 429 },
+        );
+      }
     }
 
     // ===== FETCH & VALIDATE CAMPAIGN =====
@@ -243,23 +269,38 @@ export async function POST(request) {
 
     // ===== RE-VALIDATE LOCATION =====
     const ALLOWED_RADIUS_METERS = 250;
+    // Same accuracy-aware widening as /api/customer/location-verify — a
+    // customer's own GPS uncertainty is added to the base radius (capped),
+    // so a genuinely imprecise-but-honest fix isn't rejected here.
+    const MAX_ACCURACY_BONUS_METERS = 200;
+    const accuracyBonus =
+      typeof customerAccuracy === "number" && customerAccuracy > 0
+        ? Math.min(customerAccuracy, MAX_ACCURACY_BONUS_METERS)
+        : 0;
+    const effectiveRadiusMeters = ALLOWED_RADIUS_METERS + accuracyBonus;
+
     const { calculateDistance } = require("@/lib/utils/distanceCalculator");
+
+    // Re-fetch the store's live coordinates from the DB rather than trusting
+    // whatever the client submitted in verifiedStore — otherwise a merchant
+    // editing the store's location between the location-verify call and this
+    // submission could let this check disagree with that one.
+    const liveStore = await Store.findById(verifiedStore.storeId).lean();
+    const storeLat = liveStore?.latitude ?? verifiedStore.latitude;
+    const storeLon = liveStore?.longitude ?? verifiedStore.longitude;
 
     console.log("🔍 Re-validating location with verified store:", {
       customerLat: customerLatitude,
       customerLon: customerLongitude,
-      storeLat: verifiedStore.latitude,
-      storeLon: verifiedStore.longitude,
+      storeLat,
+      storeLon,
     });
 
     let distanceFromStore;
     try {
-      if (
-        typeof verifiedStore.latitude !== "number" ||
-        typeof verifiedStore.longitude !== "number"
-      ) {
+      if (typeof storeLat !== "number" || typeof storeLon !== "number") {
         throw new Error(
-          `Invalid store coordinates: lat=${verifiedStore.latitude}, lon=${verifiedStore.longitude}`,
+          `Invalid store coordinates: lat=${storeLat}, lon=${storeLon}`,
         );
       }
 
@@ -267,8 +308,8 @@ export async function POST(request) {
         calculateDistance(
           customerLatitude,
           customerLongitude,
-          verifiedStore.latitude,
-          verifiedStore.longitude,
+          storeLat,
+          storeLon,
         ),
       );
     } catch (err) {
@@ -285,15 +326,15 @@ export async function POST(request) {
 
     console.log("📏 Distance calculated:", {
       distance: distanceFromStore,
-      allowedRadius: ALLOWED_RADIUS_METERS,
-      isValid: distanceFromStore <= ALLOWED_RADIUS_METERS,
+      allowedRadius: effectiveRadiusMeters,
+      isValid: distanceFromStore <= effectiveRadiusMeters,
     });
 
-    if (distanceFromStore > ALLOWED_RADIUS_METERS) {
+    if (distanceFromStore > effectiveRadiusMeters) {
       return NextResponse.json(
         {
           success: false,
-          error: `You must be within ${ALLOWED_RADIUS_METERS}m of the store. You are ${distanceFromStore}m away.`,
+          error: `You must be within ${effectiveRadiusMeters}m of the store. You are ${distanceFromStore}m away.`,
           data: null,
         },
         { status: 400 },
@@ -411,6 +452,7 @@ export async function POST(request) {
       bill_amount: billAmount,
       customer_latitude: customerLatitude,
       customer_longitude: customerLongitude,
+      is_repeat_customer: isRepeatCustomer,
       status: "verified",
       expires_at: new Date(Date.now() + 5 * 60 * 1000),
     });

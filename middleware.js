@@ -31,7 +31,7 @@ export function middleware(request) {
     pathname.startsWith('/auth/signup')
   ) {
     if (authToken) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/merchant-overview', request.url));
     }
     return NextResponse.next(withHeaders);
   }
@@ -39,12 +39,12 @@ export function middleware(request) {
   // ── Merchant subscription + store onboarding gates ────────────────────
   // Routes that require an active subscription
   const SUBSCRIPTION_REQUIRED_ROUTES = [
-    '/dashboard', '/campaign', '/stores', '/customers',
+    '/merchant-overview', '/campaign', '/stores', '/customers',
     '/analytics', '/team', '/studio',
   ];
   // Routes that additionally require at least one store
   const STORE_REQUIRED_ROUTES = [
-    '/dashboard', '/campaign', '/customers', '/analytics', '/team', '/studio',
+    '/merchant-overview', '/campaign', '/customers', '/analytics', '/team', '/studio',
   ];
   // Pages that are part of the onboarding/recovery flow — never redirect these
   // These routes are exempt from the subscription/store gates so merchants
@@ -78,11 +78,11 @@ export function middleware(request) {
     }
   }
 
-  // ── Protect all dashboard / store / campaign / subscription pages ──────
+  // ── Protect all merchant-overview / store / campaign / subscription pages ──────
   const isProtectedPage =
     pathname === '/subscription-required' ||
     pathname.startsWith('/onboarding') ||
-    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/merchant-overview') ||
     pathname.startsWith('/stores') ||
     pathname.startsWith('/campaign') ||
     pathname.startsWith('/campaigns') ||
@@ -92,7 +92,8 @@ export function middleware(request) {
     pathname.startsWith('/subscription') ||
     pathname.startsWith('/settings') ||
     pathname.startsWith('/billing') ||
-    pathname.startsWith('/studio');
+    pathname.startsWith('/studio') ||
+    pathname.startsWith('/privacy-policy');
 
   const isProtectedApi =
     pathname.startsWith('/api/dashboard') ||
@@ -128,6 +129,8 @@ export const config = {
     '/auth/signup/:path*',
     '/dashboard',
     '/dashboard/:path*',
+    '/merchant-overview',
+    '/merchant-overview/:path*',
     '/subscription-required',
     '/onboarding/:path*',
     '/stores/:path*',
@@ -141,6 +144,8 @@ export const config = {
     '/settings/:path*',
     '/billing/:path*',
     '/studio/:path*',
+    '/privacy-policy',
+    '/privacy-policy/:path*',
     '/api/dashboard/:path*',
     '/api/campaigns/:path*',
     '/api/ranges/:path*',

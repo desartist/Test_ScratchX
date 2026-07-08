@@ -306,6 +306,13 @@ export async function DELETE(request, { params }) {
       );
     }
 
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, error: error.message, data: null },
+        { status: 400 },
+      );
+    }
+
     return NextResponse.json(
       { success: false, error: "Internal server error", data: null },
       { status: 500 },

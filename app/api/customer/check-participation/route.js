@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 import Participation from "@/models/customerParticipationModel";
 
-// Cooldown period in hours (user can participate again after this many hours)
-const PARTICIPATION_COOLDOWN_HOURS = 2;
+// The customer's reveal/redeem window is 5 minutes (see expires_at in
+// /api/customer/participate). Cooldown is an additional 10 minutes on top of
+// that, so a customer can participate again 15 minutes after their original
+// scan — short on purpose, since customers can visit the store multiple
+// times in a single day.
+const REVEAL_WINDOW_MINUTES = 5;
+const POST_REVEAL_COOLDOWN_MINUTES = 10;
+const PARTICIPATION_COOLDOWN_MINUTES = REVEAL_WINDOW_MINUTES + POST_REVEAL_COOLDOWN_MINUTES;
 
 /**
  * POST /api/customer/check-participation
@@ -22,10 +28,13 @@ export async function POST(request) {
       );
     }
 
-    // Check if there's a recent participation for this customer and campaign
+    // Check if there's a recent participation for this customer and campaign.
+    // Field names must match the model exactly (campaign_id / customer_mobile,
+    // snake_case) — this previously queried camelCase fields that don't exist
+    // on the schema, so it silently never found a match.
     const lastParticipation = await Participation.findOne({
-      campaignId: campaignId,
-      customerMobile: customerMobile.trim(),
+      campaign_id: campaignId,
+      customer_mobile: customerMobile.trim(),
     })
       .sort({ createdAt: -1 })
       .lean();
@@ -33,21 +42,20 @@ export async function POST(request) {
     if (lastParticipation) {
       const now = new Date();
       const lastParticipationTime = new Date(lastParticipation.createdAt);
-      const timeDiffMs = now - lastParticipationTime;
-      const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
+      const timeDiffMinutes = (now - lastParticipationTime) / (1000 * 60);
 
       // If last participation was within cooldown period, prevent new participation
-      if (timeDiffHours < PARTICIPATION_COOLDOWN_HOURS) {
+      if (timeDiffMinutes < PARTICIPATION_COOLDOWN_MINUTES) {
         const remainingMinutes = Math.ceil(
-          (PARTICIPATION_COOLDOWN_HOURS - timeDiffHours) * 60
+          PARTICIPATION_COOLDOWN_MINUTES - timeDiffMinutes
         );
         return NextResponse.json({
           success: true,
           canParticipate: false,
-          participantName: lastParticipation.customerName,
+          participantName: lastParticipation.customer_name,
           participationDate: lastParticipation.createdAt,
           remainingMinutes: remainingMinutes,
-          message: `You can participate again in ${remainingMinutes} minutes`,
+          message: `You can participate again in ${remainingMinutes} minute${remainingMinutes === 1 ? "" : "s"}`,
         });
       }
     }
@@ -56,6 +64,7 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       canParticipate: true,
+      isRepeatCustomer: !!lastParticipation,
     });
   } catch (error) {
     console.error("Error checking participation:", error);
