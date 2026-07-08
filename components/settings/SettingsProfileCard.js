@@ -19,8 +19,9 @@ export default function SettingsProfileCard({ merchant }) {
     "Salon & Beauty", "Fitness & Gyms", "Supermarkets / Hypermarkets",
     "Pharmacy / Medical", "Home & Lifestyle", "Other",
   ];
+  const hasSubscription = (merchant?.role || "Merchant") === "Merchant";
   const [planDisplayName, setPlanDisplayName] = useState(null);
-  const [loadingSubscription, setLoadingSubscription] = useState(true);
+  const [loadingSubscription, setLoadingSubscription] = useState(hasSubscription);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState(null);
 
@@ -39,6 +40,8 @@ export default function SettingsProfileCard({ merchant }) {
   const profileImage = account?.profileImage || merchant?.profileImage || null;
 
   useEffect(() => {
+    if (!hasSubscription) return;
+
     const fetchSubscription = async () => {
       try {
         const response = await fetch("/api/subscription/current", {
@@ -55,7 +58,7 @@ export default function SettingsProfileCard({ merchant }) {
       }
     };
     fetchSubscription();
-  }, []);
+  }, [hasSubscription]);
 
   useEffect(() => {
     if (merchant && !formData.name && !formData.phone) {
@@ -218,7 +221,9 @@ export default function SettingsProfileCard({ merchant }) {
         <div className={styles.profileInfo}>
           <h3 className={styles.profileName}>{formData.name}</h3>
           <p className={styles.profileEmail}>{merchant?.email}</p>
-          <span className={styles.planBadge}>{getPlanDisplay()}</span>
+          {hasSubscription && (
+            <span className={styles.planBadge}>{getPlanDisplay()}</span>
+          )}
 
           {/* Remove photo link — only when image exists */}
           {profileImage && (

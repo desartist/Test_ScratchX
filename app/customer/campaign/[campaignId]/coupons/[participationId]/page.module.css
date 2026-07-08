@@ -102,7 +102,7 @@
 /* 3-column grid — compact on mobile */
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   padding: 0 16px 16px;
   width: 100%;
@@ -262,7 +262,7 @@
 
 /* Reward card */
 .rewardCard {
-  width: calc(50% - 32px);
+  width: calc(72% - 32px);
   border-radius: 22px;
   background: linear-gradient(150deg, #ffc107 0%, #ff9800 100%);
   overflow: hidden;

@@ -167,7 +167,7 @@ export default function CouponPage() {
         // Filter coupons by selected range
         let filteredCoupons = [];
         if (cJson.success && cJson.data?.coupons?.length > 0) {
-          const selectedRangeId = pJson.data?.range_id?._id;
+          const selectedRangeId = pJson.data?.billingRange?._id;
           console.error("[COUPONS PAGE] Selected range ID:", selectedRangeId);
           console.error("[COUPONS PAGE] Total coupons from API:", cJson.data.coupons.length);
 
@@ -181,11 +181,7 @@ export default function CouponPage() {
           console.error("[COUPONS PAGE] Filtered coupons:", filteredCoupons.length);
         }
 
-        setCoupons(
-          filteredCoupons.length > 0
-            ? filteredCoupons
-            : Array.from({ length: 6 }, (_, i) => ({ id: String(i + 1) }))
-        );
+        setCoupons(filteredCoupons);
       } catch (_) {
         setError("Failed to load. Please try again.");
       } finally {
@@ -335,31 +331,39 @@ export default function CouponPage() {
             <p className={styles.pageSubtitle}>Tap one to scratch — <em>only one</em></p>
           </div>
 
-          <div className={styles.grid}>
-            {coupons.map((coupon, index) => (
-              <button
-                key={coupon.id || index}
-                type="button"
-                className={styles.card}
-                onClick={() => {
-                  setSelectedCoupon(coupon);
-                  setPhase("scratch");
-                }}
-                aria-label="Select coupon"
-              >
-                <span className={`${styles.dot} ${styles.dot1}`} />
-                <span className={`${styles.dot} ${styles.dot2}`} />
-                <span className={`${styles.dot} ${styles.dot3}`} />
-                <span className={`${styles.dot} ${styles.dot4}`} />
-                <span className={`${styles.dot} ${styles.dot5}`} />
-                <div className={styles.cardContent}>
-                  <div className={styles.giftCircle}><GiftSvg /></div>
-                </div>
-              </button>
-            ))}
-          </div>
+          {coupons.length === 0 ? (
+            <p className={styles.countHint}>
+              No coupons available for this range. Please contact the store.
+            </p>
+          ) : (
+            <>
+              <div className={styles.grid}>
+                {coupons.map((coupon, index) => (
+                  <button
+                    key={coupon.id || index}
+                    type="button"
+                    className={styles.card}
+                    onClick={() => {
+                      setSelectedCoupon(coupon);
+                      setPhase("scratch");
+                    }}
+                    aria-label="Select coupon"
+                  >
+                    <span className={`${styles.dot} ${styles.dot1}`} />
+                    <span className={`${styles.dot} ${styles.dot2}`} />
+                    <span className={`${styles.dot} ${styles.dot3}`} />
+                    <span className={`${styles.dot} ${styles.dot4}`} />
+                    <span className={`${styles.dot} ${styles.dot5}`} />
+                    <div className={styles.cardContent}>
+                      <div className={styles.giftCircle}><GiftSvg /></div>
+                    </div>
+                  </button>
+                ))}
+              </div>
 
-          <p className={styles.countHint}>{coupons.length} coupons available</p>
+              <p className={styles.countHint}>{coupons.length} coupons available</p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -431,9 +435,9 @@ export default function CouponPage() {
             ) : (
               <div className={styles.rewardValue}>{rewardDisplay}</div>
             )}
-            {reward?.description && (
+            {/* {reward?.description && (
               <div className={styles.rewardDesc}>{reward.description}</div>
-            )}
+            )} */}
           </div>
         </div>
 
