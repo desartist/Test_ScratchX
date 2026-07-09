@@ -93,12 +93,25 @@ export default function StoreForm({
           );
           const geo = await res.json();
           const a = geo.address || {};
+          const city = a.city || a.town || a.village || a.county || null;
+          const state = a.state || null;
+          const pincode = a.postcode ? a.postcode.replace(/\D/g, '').slice(0, 6) : null;
           setLocationInfo({
             landmark: a.amenity || a.shop || a.tourism || a.building || a.road || a.pedestrian || null,
             area: a.suburb || a.neighbourhood || a.village || a.town || null,
-            city: a.city || a.town || a.village || a.county || null,
-            state: a.state || null,
+            city,
+            state,
           });
+          // Retaking location is a deliberate "this store actually moved"
+          // action, so sync the stored city/state/pincode fields too —
+          // otherwise the store list and assign-store views keep showing the
+          // old address while only the map coordinates silently update.
+          setFormData((prev) => ({
+            ...prev,
+            city: city || prev.city,
+            state: state || prev.state,
+            pincode: pincode || prev.pincode,
+          }));
         } catch { setLocationInfo(null); }
       },
       (error) => {

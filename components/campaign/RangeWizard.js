@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Gift, ImageIcon, X } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { useCampaignQuery, useCampaignRangesQuery } from "@/hooks/queries/useCampaignQuery";
 import styles from "./RangeWizard.module.css";
 
 const DEFAULT_COUPONS = 6;
@@ -92,9 +93,13 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
 
   const isEdit = !!range;
 
-  const [loading,       setLoading]       = useState(true);
+  // Shares the same cached campaign + ranges responses as
+  // campaign/[id]/page.js, campaign/[id]/ranges/page.js, and RewardRanges.js.
+  const { data: campaignJson, isPending: campaignLoading } = useCampaignQuery(campaignId);
+  const { data: rangesJson, isPending: rangesLoading } = useCampaignRangesQuery(campaignId);
+  const loading = campaignLoading || rangesLoading;
   const [existingCount, setExistingCount] = useState(0);
-  const [displayCoupons, setDisplayCoupons] = useState(null); // Fetch from campaign
+  const [displayCoupons, setDisplayCoupons] = useState(null); // Derived from campaign
 
   const [minAmount, setMinAmount] = useState(
     isEdit && range?.minAmount != null ? String(range.minAmount) : "",
@@ -125,42 +130,31 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
     [userId, userRole],
   );
 
+  // Seed displayCoupons/coupons/existingCount once both queries resolve — a
+  // ref guard stops a background refetch from clobbering in-progress edits.
+  const seededRef = useRef(false);
   useEffect(() => {
-    if (!campaignId || !userId) return;
-    let active = true;
-    (async () => {
-      const readHeaders = { "x-user-id": userId, "x-user-role": userRole };
-      let coupCount = DEFAULT_COUPONS;
-      let rangeLen  = 0;
-      try {
-        const res  = await fetch(`/api/campaigns/${campaignId}`, { headers: readHeaders });
-        const data = await res.json().catch(() => ({}));
-        const c    = data?.data || data?.campaign || data;
-        const dc   = Number(c?.displayCoupons);
-        coupCount  = Number.isFinite(dc) && dc > 0 ? dc : DEFAULT_COUPONS;
-      } catch { coupCount = DEFAULT_COUPONS; }
-      try {
-        const res  = await fetch(`/api/campaign_range?id=${campaignId}`, { headers: readHeaders });
-        const data = await res.json().catch(() => ({}));
-        rangeLen   = Array.isArray(data?.ranges) ? data.ranges.length : 0;
-      } catch { rangeLen = 0; }
-      if (!active) return;
-      setDisplayCoupons(coupCount); // Update the display coupons count
-      if (isEdit) {
-        setCoupons((prev) => {
-          if (prev.length >= coupCount) return prev;
-          const next = prev.slice();
-          while (next.length < coupCount) next.push({ type: "flat", amount: "" });
-          return next;
-        });
-      } else {
-        setCoupons(makeCoupons(coupCount));
-      }
-      setExistingCount(rangeLen);
-      setLoading(false);
-    })();
-    return () => { active = false; };
-  }, [campaignId, userId, userRole, isEdit]);
+    if (loading || seededRef.current) return;
+    seededRef.current = true;
+
+    const c = campaignJson?.data;
+    const dc = Number(c?.displayCoupons);
+    const coupCount = Number.isFinite(dc) && dc > 0 ? dc : DEFAULT_COUPONS;
+    const rangeLen = Array.isArray(rangesJson?.ranges) ? rangesJson.ranges.length : 0;
+
+    setDisplayCoupons(coupCount);
+    if (isEdit) {
+      setCoupons((prev) => {
+        if (prev.length >= coupCount) return prev;
+        const next = prev.slice();
+        while (next.length < coupCount) next.push({ type: "flat", amount: "" });
+        return next;
+      });
+    } else {
+      setCoupons(makeCoupons(coupCount));
+    }
+    setExistingCount(rangeLen);
+  }, [loading, campaignJson, rangesJson, isEdit]);
 
   const currentRangeNumber = existingCount + 1;
 
@@ -229,7 +223,11 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
       }
       const value = Number(parseIndian(c.amount));
       if (c.amount === "" || !Number.isFinite(value) || value <= 0) continue;
-      rewards.push({ type: c.type, value });
+      if (c.type === "percentage") {
+        rewards.push({ type: c.type, value, description: (c.description || "").trim() });
+      } else {
+        rewards.push({ type: c.type, value });
+      }
     }
 
     if (rewards.length === 0) {
@@ -376,22 +374,23 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
                       />
                       <span className={styles.inputSuffix}>%</span>
                     </div>
+                    <label className={styles.label} htmlFor={`rw-pct-desc-${index}`}>
+                      Description
+                    </label>
+                    <textarea
+                      id={`rw-pct-desc-${index}`}
+                      className={styles.input}
+                      placeholder="Describe the offer, e.g. 10% off on your next purchase"
+                      rows={2}
+                      value={coupon.description || ""}
+                      onChange={(e) => handleCouponChange(index, "description", e.target.value)}
+                    />
                   </>
                 )}
 
                 {coupon.type === "gift" && (
                   <>
-                    <label className={styles.label} htmlFor={`rw-gift-desc-${index}`}>
-                      Description
-                    </label>
-                    <textarea
-                      id={`rw-gift-desc-${index}`}
-                      className={styles.input}
-                      placeholder="Describe the gift, e.g. Free Coffee Mug"
-                      rows={2}
-                      value={coupon.description || ""}
-                      onChange={(e) => handleCouponChange(index, "description", e.target.value)}
-                    />
+                   
                     <label className={styles.label}>Gift Image</label>
                     <input
                       ref={(el) => { fileRefs.current[index] = el; }}
@@ -431,6 +430,17 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
                         {uploading[index] ? "Processing…" : "Upload Image"}
                       </button>
                     )}
+                     <label className={styles.label} htmlFor={`rw-gift-desc-${index}`}>
+                      Description
+                    </label>
+                    <textarea
+                      id={`rw-gift-desc-${index}`}
+                      className={styles.input}
+                      placeholder="Describe the gift, e.g. Free Coffee Mug"
+                      rows={2}
+                      value={coupon.description || ""}
+                      onChange={(e) => handleCouponChange(index, "description", e.target.value)}
+                    />
                   </>
                 )}
               </div>

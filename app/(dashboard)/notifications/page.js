@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Bell,
   Trash2,
@@ -17,74 +17,32 @@ import {
   Gift,
   Users,
 } from 'lucide-react';
+import {
+  useNotificationsQuery,
+  useMarkNotificationReadMutation,
+  useDeleteNotificationMutation,
+} from '@/hooks/queries/useNotificationsQuery';
 import styles from './notifications.module.css';
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { data, isPending: loading, error: queryError, refetch } = useNotificationsQuery();
+  const notifications = data?.notifications || [];
+  const unreadCount = data?.unread || 0;
+  const error = queryError ? queryError.message : null;
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  const markReadMutation = useMarkNotificationReadMutation();
+  const deleteMutation = useDeleteNotificationMutation();
 
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/distributor/notifications?limit=100`, {
-        credentials: 'include',
-      });
-      const json = await res.json();
-
-      if (!json.success) throw new Error(json.error);
-
-      setNotifications(json.data.notifications || []);
-      setUnreadCount(json.data.unread || 0);
-      setError(null);
-    } catch (err) {
-      console.error('[Notifications] Error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleMarkAsRead = (notificationId) => {
+    markReadMutation.mutate(notificationId, {
+      onError: (err) => alert(`Error: ${err.message}`),
+    });
   };
 
-  const handleMarkAsRead = async (notificationId) => {
-    try {
-      const res = await fetch(`/api/distributor/notifications/${notificationId}/read`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      const json = await res.json();
-
-      if (json.success) {
-        setNotifications(
-          notifications.map((n) =>
-            n._id === notificationId ? { ...n, read: true } : n
-          )
-        );
-        setUnreadCount(Math.max(0, unreadCount - 1));
-      }
-    } catch (err) {
-      alert(`Error: ${err.message}`);
-    }
-  };
-
-  const handleDelete = async (notificationId) => {
-    try {
-      const res = await fetch(`/api/distributor/notifications/${notificationId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      const json = await res.json();
-
-      if (json.success) {
-        setNotifications(notifications.filter((n) => n._id !== notificationId));
-      }
-    } catch (err) {
-      alert(`Error: ${err.message}`);
-    }
+  const handleDelete = (notificationId) => {
+    deleteMutation.mutate(notificationId, {
+      onError: (err) => alert(`Error: ${err.message}`),
+    });
   };
 
   const getNotificationIcon = (type) => {
@@ -137,7 +95,7 @@ export default function NotificationsPage() {
           <div className={styles.errorState}>
             <AlertCircle size={48} />
             <p>{error}</p>
-            <button onClick={fetchNotifications} className={styles.retryButton}>
+            <button onClick={() => refetch()} className={styles.retryButton}>
               Try Again
             </button>
           </div>

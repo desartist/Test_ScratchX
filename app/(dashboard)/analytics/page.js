@@ -1,67 +1,26 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAuthContext } from "@/components/auth/AuthContext";
-import { criticalFetchService } from "@/lib/criticalFetchService";
+import { useCampaignsListQuery } from "@/hooks/queries/useCampaignsListQuery";
+import { useCustomersQuery } from "@/hooks/queries/useCustomersQuery";
 import { QrCode, Users, Gift, ShoppingBag, TrendingUp, Store, UserPlus, Repeat2 } from "lucide-react";
 import styles from "./page.module.css";
 
 export default function AnalyticsPage() {
   const router = useRouter();
-  const { account, loading: authLoading } = useAuthContext();
 
-  const [campaigns, setCampaigns] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Shares the same cached /api/campaigns response as campaign/page.js and
+  // AssignCampaignsModal.js instead of firing its own request.
+  const { data: campaignsJson, isPending: campaignsLoading } = useCampaignsListQuery();
+  const campaigns = campaignsJson?.data || [];
 
-  useEffect(() => {
-    if (authLoading || !account?.id) return;
+  // Unfiltered customers list — same underlying endpoint as
+  // customers/page.js, just a different (empty) filter combo/cache entry.
+  const { data: customersJson, isPending: customersLoading } = useCustomersQuery({});
+  const customers = customersJson?.data || [];
 
-    async function fetchData() {
-      try {
-        const result = await criticalFetchService.fetchCriticalFirst(
-          'analytics-campaigns',
-          [
-            {
-              key: 'campaigns',
-              url: '/api/campaigns',
-              options: {
-                headers: {
-                  'x-user-id': account.id,
-                  'x-user-role': account.role || 'merchant',
-                  'x-user-email': account.email || '',
-                },
-              },
-            },
-            {
-              key: 'customers',
-              url: '/api/customers',
-              options: {
-                headers: {
-                  'x-user-id': account.id,
-                  'x-user-role': account.role || 'merchant',
-                },
-              },
-            },
-          ],
-          []
-        );
-
-        const campaignsData = result.critical?.campaigns;
-        const customersData = result.critical?.customers;
-        setCampaigns(campaignsData?.data || []);
-        setCustomers(customersData?.data || []);
-      } catch {
-        setCampaigns([]);
-        setCustomers([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [account, authLoading]);
+  const loading = campaignsLoading || customersLoading;
 
   // Calculate new vs repeat customers
   const customerStats = (() => {

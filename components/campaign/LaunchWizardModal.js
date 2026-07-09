@@ -12,6 +12,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { useCampaignQuery, useInvalidateCampaignCluster } from "@/hooks/queries/useCampaignQuery";
+import { useStoresQuery } from "@/hooks/queries/useStoresQuery";
+import { useSubscriptionStatusQuery } from "@/hooks/queries/useSubscriptionQuery";
 import styles from "./LaunchWizardModal.module.css";
 
 // Quick-select chip presets. "No Cap" is intentionally NOT a real "infinite"
@@ -68,13 +71,6 @@ export default function LaunchWizardModal({
 
   const [step, setStep] = useState("allocate");
 
-  // Loaded context.
-  const [campaignName, setCampaignName] = useState("");
-  const [subscription, setSubscription] = useState(null);
-  const [stores, setStores] = useState([]);
-  const [assignedIds, setAssignedIds] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   // Allocate step state.
   const [allocation, setAllocation] = useState(DEFAULT_ALLOCATION);
   const [allocating, setAllocating] = useState(false);
@@ -89,14 +85,6 @@ export default function LaunchWizardModal({
 
   const [error, setError] = useState(null);
 
-  const readHeaders = useMemo(
-    () => ({
-      "x-user-id": userId || "",
-      "x-user-role": userRole,
-    }),
-    [userId, userRole],
-  );
-
   const writeHeaders = useMemo(
     () => ({
       "Content-Type": "application/json",
@@ -106,77 +94,36 @@ export default function LaunchWizardModal({
     [userId, userRole],
   );
 
-  // Reset everything when the modal opens, then load context.
-  useEffect(() => {
-    if (!open || !campaignId || !userId) return;
-    let active = true;
+  // Shares the same cached responses as campaign/[id]/page.js (campaign),
+  // stores/page.js and StoreAssignment.js (stores), and stores/page.js /
+  // campaign/[id]/page.js (subscription status) — only enabled while open.
+  const { data: campaignJson, isPending: campaignLoading } = useCampaignQuery(campaignId, { enabled: open });
+  const campaignName = campaignJson?.data?.campaignName || "";
+  const assignedIds = useMemo(() => {
+    const c = campaignJson?.data;
+    return (c?.assignedStores || [])
+      .filter((s) => s && s.status === "active" && (s.storeId || s._id))
+      .map((s) => String(s.storeId || s._id));
+  }, [campaignJson]);
 
+  const { data: storesJson, isPending: storesLoading } = useStoresQuery({ enabled: open });
+  const stores = useMemo(() => storesJson?.data || [], [storesJson]);
+
+  const { data: subscription, isPending: subLoading } = useSubscriptionStatusQuery({ enabled: open });
+
+  const invalidateCluster = useInvalidateCampaignCluster();
+  const loading = campaignLoading || storesLoading || subLoading;
+
+  // Reset transient wizard state whenever the modal opens.
+  useEffect(() => {
+    if (!open) return;
     setStep(initialStep || "allocate");
     setError(null);
     setAllocation(DEFAULT_ALLOCATION);
     setSelected([]);
     setQrCodeUrl("");
     setCopied(false);
-    setLoading(true);
-
-    (async () => {
-      // Campaign (name + assigned stores).
-      try {
-        const res = await fetch(`/api/campaigns/${campaignId}`, {
-          credentials: "include",
-          headers: readHeaders,
-        });
-        const data = await res.json().catch(() => ({}));
-        const c = data?.data || data?.campaign || data || {};
-        if (active) {
-          setCampaignName(c?.campaignName || "");
-          const ids = (c?.assignedStores || [])
-            .filter((s) => s && s.status === "active" && (s.storeId || s._id))
-            .map((s) => String(s.storeId || s._id));
-          setAssignedIds(ids);
-        }
-      } catch {
-        if (active) {
-          setCampaignName("");
-          setAssignedIds([]);
-        }
-      }
-
-      // Subscription status.
-      try {
-        const res = await fetch("/api/subscription/status", {
-          credentials: "include",
-          headers: readHeaders,
-        });
-        const data = await res.json().catch(() => ({}));
-        if (active) setSubscription(data || null);
-      } catch {
-        if (active) setSubscription(null);
-      }
-
-      // Stores.
-      try {
-        const res = await fetch("/api/stores", {
-          credentials: "include",
-          headers: readHeaders,
-        });
-        const data = await res.json().catch(() => ({}));
-        if (active) {
-          setStores(
-            data?.success && Array.isArray(data.data) ? data.data : [],
-          );
-        }
-      } catch {
-        if (active) setStores([]);
-      }
-
-      if (active) setLoading(false);
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [open, campaignId, userId, readHeaders, initialStep]);
+  }, [open, initialStep]);
 
   // Pre-select already-assigned stores (or auto-select the single store) once
   // both stores and assignment data have loaded.
@@ -225,6 +172,7 @@ export default function LaunchWizardModal({
       );
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.success) {
+        invalidateCluster(campaignId);
         setStep("stores");
       } else {
         setError(
@@ -236,7 +184,7 @@ export default function LaunchWizardModal({
     } finally {
       setAllocating(false);
     }
-  }, [allocation, campaignId, writeHeaders]);
+  }, [allocation, campaignId, writeHeaders, invalidateCluster]);
 
   // Step 2 -> Step 3: assign stores then generate QR.
   const handleLaunch = useCallback(async () => {
@@ -268,6 +216,7 @@ export default function LaunchWizardModal({
       });
       const qrData = await qrRes.json().catch(() => ({}));
       if (qrRes.ok && qrData?.success && qrData?.data?.qrCodeUrl) {
+        invalidateCluster(campaignId);
         setQrCodeUrl(qrData.data.qrCodeUrl);
         setStep("qr");
       } else {
@@ -282,7 +231,7 @@ export default function LaunchWizardModal({
     } finally {
       setLaunching(false);
     }
-  }, [selected, campaignId, writeHeaders]);
+  }, [selected, campaignId, writeHeaders, invalidateCluster]);
 
   const handleCopyLink = useCallback(() => {
     if (typeof window === "undefined") return;

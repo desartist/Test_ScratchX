@@ -2,20 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthContext } from "@/components/auth/AuthContext";
 import SmartDashboard from "@/components/dashboards/SmartDashboard";
 import DistributorDashboard from "@/components/dashboards/DistributorDashboard";
 import AdminDashboard from "@/components/dashboards/AdminDashboard";
 import PreSubscriptionDashboard from "@/components/dashboards/PreSubscriptionDashboard";
+import { useDashboardQuery } from "@/hooks/queries/useDashboardQuery";
 import styles from "./merchant.module.css";
 
 export default function MerchantOverviewPage() {
   const router = useRouter();
-  const { account, token } = useAuthContext();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [dashboardData, setDashboardData] = useState(null);
-  const [userRole, setUserRole] = useState(null);
   const [mounted, setMounted] = useState(false);
 
   // Set mounted flag to prevent hydration mismatch
@@ -23,57 +18,25 @@ export default function MerchantOverviewPage() {
     setMounted(true);
   }, []);
 
-  // Fetch dashboard data
+  const {
+    data: dashboardJson,
+    isPending: queryLoading,
+    error: queryError,
+  } = useDashboardQuery();
+
+  const loading = !mounted || queryLoading;
+  const error = queryError ? queryError.message || "Failed to load dashboard" : null;
+  const totalStores = dashboardJson?.data?.metrics?.totalStores || 0;
+  const dashboardData = mounted && dashboardJson && totalStores > 0 ? dashboardJson.data : null;
+  const userRole = dashboardData ? dashboardJson.role : null;
+
+  // Redirect merchants with zero stores into onboarding, same as the old
+  // fetch-effect used to — now reacting to the shared query result instead.
   useEffect(() => {
-    if (!mounted || !account) return;
-
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
-        console.log(
-          "[FETCH] Starting dashboard fetch with account:",
-          account?.id || account?._id,
-        );
-
-        const res = await fetch("/api/dashboard", {
-          headers: {
-            "x-user-id": account?.id || account?._id,
-            "x-user-role": account?.role,
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        });
-
-        console.log("[FETCH] Response status:", res.status);
-        const json = await res.json();
-        console.log("[FETCH] API Response:", JSON.stringify(json, null, 2));
-
-        if (!json.success) {
-          setError(json.error || "Failed to load dashboard");
-          return;
-        }
-
-        console.log(
-          "[FETCH] Setting data with metrics.totalStores:",
-          json.data?.metrics?.totalStores,
-        );
-        if (json.data?.metrics?.totalStores > 0) {
-          setUserRole(json.role);
-          setDashboardData(json.data);
-        }else{
-          setDashboardData(null);
-          router.push("/stores/create");
-        }
-        
-      } catch (err) {
-        console.error("Dashboard fetch error:", err);
-        setError("Failed to load dashboard data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboard();
-  }, [mounted, account, token]);
+    if (mounted && dashboardJson && totalStores === 0) {
+      router.push("/stores/create");
+    }
+  }, [mounted, dashboardJson, totalStores, router]);
 
   if (loading) {
     return (
@@ -103,18 +66,6 @@ export default function MerchantOverviewPage() {
     );
   }
 
-  // Only render after client mount to prevent hydration mismatch
-  if (!mounted) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner}></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (!dashboardData) {
     return (
       <div className={styles.container}>
@@ -129,7 +80,6 @@ export default function MerchantOverviewPage() {
   const hasSubscription = ["active", "trial", "past_due"].includes(
     dashboardData?.subscription?.status,
   );
-  const totalStores = dashboardData?.metrics?.totalStores || 0;
 
   // Pre-subscription: has stores but no plan purchased yet
   const shouldShowPreSubscriptionDashboard = !hasSubscription && totalStores > 0;

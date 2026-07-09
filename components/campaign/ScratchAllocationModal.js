@@ -3,6 +3,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { X, Ticket, AlertCircle } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { useInvalidateCampaignCluster } from "@/hooks/queries/useCampaignQuery";
+import { useSubscriptionStatusQuery } from "@/hooks/queries/useSubscriptionQuery";
 import { smartCacheService } from "@/lib/smartCacheService";
 import styles from "./ScratchAllocationModal.module.css";
 
@@ -40,8 +42,6 @@ export default function ScratchAllocationModal({
 
   const [allocation, setAllocation] = useState(DEFAULT_ALLOCATION);
   const [customAmount, setCustomAmount] = useState("");
-  const [subscription, setSubscription] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [allocating, setAllocating] = useState(false);
   const [error, setError] = useState(null);
 
@@ -54,36 +54,18 @@ export default function ScratchAllocationModal({
     [userId, userRole]
   );
 
-  // Load subscription status when modal opens
+  // Shares the same cached subscription-status response as stores/page.js,
+  // campaign/[id]/page.js, and LaunchWizardModal.js — only enabled while open.
+  const { data: subscription, isPending: loading } = useSubscriptionStatusQuery({ enabled: open });
+  const invalidateCluster = useInvalidateCampaignCluster();
+
+  // Reset transient form state whenever the modal opens.
   useEffect(() => {
     if (!open) return;
-    let active = true;
-
     setAllocation(DEFAULT_ALLOCATION);
     setCustomAmount("");
     setError(null);
-    setLoading(true);
-
-    (async () => {
-      try {
-        const res = await fetch("/api/subscription/status", {
-          credentials: "include",
-          headers,
-        });
-        const data = await res.json().catch(() => ({}));
-        if (active) setSubscription(data?.success ? data : null);
-      } catch (err) {
-        console.error("Failed to fetch subscription:", err);
-        if (active) setSubscription(null);
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [open, headers]);
+  }, [open]);
 
   const handleSelectChip = useCallback((value) => {
     setAllocation(value);
@@ -122,11 +104,10 @@ export default function ScratchAllocationModal({
         return;
       }
 
-      // Success - clear related caches to reflect updated allocations
-      smartCacheService.invalidateRelated({
-        'campaigns-list': true,
-        [`campaign-detail-${campaignId}`]: true,
-      });
+      // Clear the campaign's own React Query cache (campaign/[id]/page.js and
+      // its children) plus the campaigns-list page's separate cache system.
+      invalidateCluster(campaignId);
+      smartCacheService.invalidateRelated({ 'campaigns-list': true });
 
       if (typeof onAllocated === "function") {
         onAllocated();
@@ -137,7 +118,7 @@ export default function ScratchAllocationModal({
     } finally {
       setAllocating(false);
     }
-  }, [campaignId, userId, allocation, headers, onAllocated]);
+  }, [campaignId, userId, allocation, headers, onAllocated, invalidateCluster]);
 
   const isUnlimited = subscription?.unlimitedScratches === true ||
                       subscription?.scratchRemaining === "UNLIMITED";
