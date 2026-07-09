@@ -1,37 +1,16 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { TrendingUp, AlertCircle } from "lucide-react";
+import { useSubscriptionCurrentQuery } from "@/hooks/queries/useSubscriptionQuery";
 import styles from "./SubscriptionSummaryCard.module.css";
 
 export default function SubscriptionSummaryCard() {
   const router = useRouter();
-  const [subscription, setSubscription] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const response = await fetch("/api/subscription/current", {
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch subscription");
-        }
-
-        const data = await response.json();
-        setSubscription(data.subscription);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSubscription();
-  }, []);
+  // Shares the same cached response as the settings cards instead of
+  // firing its own request.
+  const { data, isPending: loading, error } = useSubscriptionCurrentQuery();
+  const subscription = data?.subscription;
 
   if (loading) {
     return (

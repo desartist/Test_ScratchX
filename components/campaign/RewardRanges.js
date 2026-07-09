@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Tag,
@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { useCampaignRangesQuery, useInvalidateCampaignCluster } from "@/hooks/queries/useCampaignQuery";
 import styles from "./RewardRanges.module.css";
 
 // Ranges are uncapped per product rule ("create as many ranges as we want").
@@ -52,8 +53,11 @@ export default function RewardRanges({ campaignId, onChanged, manageHref }) {
 
   const manageMode = !!manageHref;
 
-  const [ranges, setRanges] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Shares the same cached /api/campaign_range response as
+  // campaign/[id]/page.js and campaign/[id]/ranges/page.js.
+  const { data: rangesJson, isPending: loading } = useCampaignRangesQuery(campaignId);
+  const ranges = useMemo(() => rangesJson?.ranges || [], [rangesJson]);
+  const invalidateCluster = useInvalidateCampaignCluster();
   const [error, setError] = useState(null);
 
   // Form state (shared between add + edit). editingId === null => create.
@@ -74,35 +78,6 @@ export default function RewardRanges({ campaignId, onChanged, manageHref }) {
     }),
     [userId, userRole],
   );
-
-  const fetchRanges = useCallback(async () => {
-    if (!campaignId || !userId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/campaign_range?id=${campaignId}`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "x-user-id": userId, "x-user-role": userRole },
-      });
-      const data = await res.json();
-      if (data?.success && Array.isArray(data.ranges)) {
-        setRanges(data.ranges);
-      } else {
-        setRanges([]);
-      }
-    } catch (err) {
-      console.error("Failed to fetch ranges:", err);
-      setError("Failed to load reward ranges");
-      setRanges([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [campaignId, userId, userRole]);
-
-  useEffect(() => {
-    fetchRanges();
-  }, [fetchRanges]);
 
   const limitReached = ranges.length >= MAX_RANGES;
 
@@ -239,7 +214,7 @@ export default function RewardRanges({ campaignId, onChanged, manageHref }) {
         }
 
         closeForm();
-        await fetchRanges();
+        invalidateCluster(campaignId);
         if (typeof onChanged === "function") onChanged();
       } catch (err) {
         console.error("Failed to save range:", err);
@@ -256,7 +231,7 @@ export default function RewardRanges({ campaignId, onChanged, manageHref }) {
       editingId,
       authHeaders,
       closeForm,
-      fetchRanges,
+      invalidateCluster,
       onChanged,
     ],
   );
@@ -279,7 +254,7 @@ export default function RewardRanges({ campaignId, onChanged, manageHref }) {
         if (!res.ok || data?.success === false) {
           throw new Error(data?.error || "Failed to delete range");
         }
-        await fetchRanges();
+        invalidateCluster(campaignId);
         if (typeof onChanged === "function") onChanged();
       } catch (err) {
         console.error("Failed to delete range:", err);
@@ -288,7 +263,7 @@ export default function RewardRanges({ campaignId, onChanged, manageHref }) {
         setDeletingId(null);
       }
     },
-    [userId, userRole, fetchRanges, onChanged],
+    [campaignId, userId, userRole, invalidateCluster, onChanged],
   );
 
   return (

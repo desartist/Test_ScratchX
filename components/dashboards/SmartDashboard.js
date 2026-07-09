@@ -11,8 +11,10 @@ import {
   BarChart3,
 } from "lucide-react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import { dashboardCache } from "@/lib/dashboardCache";
+import { dashboardQueryKey, fetchDashboard } from "@/hooks/queries/useDashboardQuery";
 import DashboardHeader from "@/components/dashboard/smart/DashboardHeader";
 import SubscriptionHero from "@/components/dashboard/smart/SubscriptionHero";
 import KpiTileGrid from "@/components/dashboard/smart/KpiTileGrid";
@@ -95,6 +97,8 @@ export default function SmartDashboard() {
   const [notifications, setNotifications] = useState([]);
   const [busyRequestId, setBusyRequestId] = useState(null);
 
+  const queryClient = useQueryClient();
+
   // Build the auth headers the existing dashboard page uses, plus cookie creds.
   const buildFetcher = useCallback(() => {
     const headers = {
@@ -104,6 +108,24 @@ export default function SmartDashboard() {
     };
 
     return async (url) => {
+      // merchant-overview/page.js (this component's parent) already fetches
+      // /api/dashboard via useDashboardQuery before SmartDashboard ever
+      // mounts. Routing this specific URL through the same React Query
+      // cache/key means it resolves from that already-fetched data instead
+      // of firing a second identical network request.
+      if (url === "/api/dashboard") {
+        try {
+          const accountId = account?.id || account?._id;
+          const json = await queryClient.fetchQuery({
+            queryKey: dashboardQueryKey(accountId),
+            queryFn: () => fetchDashboard({ accountId, role: account?.role, token }),
+          });
+          return { ok: true, data: json.data ?? null, error: null, raw: json };
+        } catch (err) {
+          return { ok: false, data: null, error: err?.message || "Network error" };
+        }
+      }
+
       try {
         const res = await fetch(url, { headers, credentials: "include" });
         const json = await res.json().catch(() => null);
@@ -120,7 +142,7 @@ export default function SmartDashboard() {
         return { ok: false, data: null, error: err?.message || "Network error" };
       }
     };
-  }, [account, token]);
+  }, [account, token, queryClient]);
 
   const loadPending = useCallback(async () => {
     const fetcher = buildFetcher();

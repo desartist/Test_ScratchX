@@ -43,7 +43,18 @@
       "Bash(ps -p 73176 -o pid,command)",
       "Bash(xargs -r kill)",
       "Bash(MONGODB_URI=\"mongodb+srv://ventures_db_user:1a3j5pxrRqXQ8TG5@scratchx-dev.v8pppjg.mongodb.net/scratchx_pro?appName=ScratchX-Dev\" npm run migrate:platform-notice)",
-      "Bash(MONGODB_URI=\"mongodb+srv://ventures_db_user:1a3j5pxrRqXQ8TG5@scratchx-dev.v8pppjg.mongodb.net/scratchx_pro?appName=ScratchX-Dev\" npm run migrate:store-soft-delete)"
+      "Bash(MONGODB_URI=\"mongodb+srv://ventures_db_user:1a3j5pxrRqXQ8TG5@scratchx-dev.v8pppjg.mongodb.net/scratchx_pro?appName=ScratchX-Dev\" npm run migrate:store-soft-delete)",
+      "Bash(npm ls *)",
+      "Bash(npm install *)",
+      "Bash(mkdir -p /tmp/lintcheck 2>/dev/null; git show HEAD:\"app/\\(dashboard\\)/merchant-overview/page.js\" > /private/tmp/claude-501/-Users-abhishekpratapsingh-Desktop-coupon-campaigns/23e81c15-2df5-4a0c-a3ad-ff8fcb24e11e/scratchpad/old-merchant-overview.js *)",
+      "Bash(xargs -I{} sh -c 'grep -B2 \"setMounted\\(true\\)\" \"{}\" | grep -q \"useEffect\" && echo {}')",
+      "Bash(kill 80489)",
+      "Bash(MONGODB_URI=\"mongodb+srv://ventures_db_user:1a3j5pxrRqXQ8TG5@scratchx-dev.v8pppjg.mongodb.net/scratchx_dev?appName=ScratchX-Dev\" npm run seed:plans)",
+      "Bash(MONGODB_URI=\"mongodb+srv://ventures_db_user:1a3j5pxrRqXQ8TG5@scratchx-dev.v8pppjg.mongodb.net/scratchx_dev?appName=ScratchX-Dev\" npm run seed:accounts)",
+      "Bash(chmod u+w /Users/abhishekpratapsingh/Desktop/coupon_campaigns/scripts)",
+      "Bash(sed -i '' \"s#/Users/abhishekpratapsingh/Desktop/coupon_campaigns/##g\" /Users/abhishekpratapsingh/Desktop/coupon_campaigns/scripts/_tmp-quick-seed-store.mjs)",
+      "Bash(sed -i '' \"s#await import\\('lib/connectDB.js'\\)#await import\\('../lib/connectDB.js'\\)#; s#await import\\('models/accountModel.js'\\)#await import\\('../models/accountModel.js'\\)#; s#await import\\('models/storeModel.js'\\)#await import\\('../models/storeModel.js'\\)#\" /Users/abhishekpratapsingh/Desktop/coupon_campaigns/scripts/_tmp-quick-seed-store.mjs)",
+      
     ]
   }
 }

@@ -1,19 +1,21 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Search, Filter, ChevronDown } from 'lucide-react';
-import { useAuthContext } from '@/components/auth/AuthContext';
-import { criticalFetchService } from '@/lib/criticalFetchService';
+import { useCustomersQuery } from '@/hooks/queries/useCustomersQuery';
 import CustomerStatsCard from '@/components/customers/CustomerStatsCard';
 import CustomerDetailDrawer from '@/components/customers/CustomerDetailDrawer';
 import styles from './customers.module.css';
 
-export default function CustomersPage() {
-  const { account } = useAuthContext();
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const DEFAULT_STATS = {
+  totalCustomers: 0,
+  todaysCustomers: 0,
+  rewardsAwarded: 0,
+  rewardsClaimed: 0,
+  activeParticipants: 0,
+};
 
+export default function CustomersPage() {
   // Filters state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCampaign, setSelectedCampaign] = useState('all');
@@ -24,114 +26,34 @@ export default function CustomersPage() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
+  const pageSize = 20;
 
   // Drawer state
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showDrawer, setShowDrawer] = useState(false);
 
-  // Data for filters
-  const [campaigns, setCampaigns] = useState([]);
-  const [stores, setStores] = useState([]);
-  const [stats, setStats] = useState({
-    totalCustomers: 0,
-    todaysCustomers: 0,
-    rewardsAwarded: 0,
-    rewardsClaimed: 0,
-    activeParticipants: 0,
-  });
+  // Each unique filter/pagination combo gets its own cache entry
+  // automatically — no more manual "cache page 1 only" special-casing.
+  const params = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      search: searchQuery,
+      campaign: selectedCampaign,
+      store: selectedStore,
+      status: selectedStatus,
+      dateRange,
+      sortBy,
+    }),
+    [currentPage, pageSize, searchQuery, selectedCampaign, selectedStore, selectedStatus, dateRange, sortBy],
+  );
 
-  // Fetch customers with cache for first page, bypass for subsequent pages
-  const fetchCustomers = useCallback(async () => {
-    if (!account?.id) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams({
-        page: currentPage,
-        limit: pageSize,
-        search: searchQuery,
-        campaign: selectedCampaign,
-        store: selectedStore,
-        status: selectedStatus,
-        dateRange: dateRange,
-        sortBy: sortBy,
-      });
-
-      // Use cache only for first page, bypass for pagination
-      const useCache = currentPage === 1;
-      const cacheKey = `customers-list-page${currentPage}`;
-
-      if (useCache) {
-        const result = await criticalFetchService.fetchCriticalFirst(
-          cacheKey,
-          [
-            {
-              key: 'customers',
-              url: `/api/customers?${params}`,
-              options: {
-                headers: {
-                  'x-user-id': account.id,
-                  'x-user-role': account.role || 'merchant',
-                },
-              },
-            },
-          ],
-          []
-        );
-
-        const data = result.critical?.customers || result.customers;
-        setCustomers(data?.data || []);
-        setStats(data?.stats || {});
-        setCampaigns(data?.filters?.campaigns || []);
-        setStores(data?.filters?.stores || []);
-      } else {
-        // For pagination, fetch without cache
-        const response = await fetch(`/api/customers?${params}`, {
-          headers: {
-            'x-user-id': account.id,
-            'x-user-role': account.role || 'merchant',
-          },
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch customers');
-
-        const data = await response.json();
-        setCustomers(data.data || []);
-        setStats(data.stats || {});
-        setCampaigns(data.filters?.campaigns || []);
-        setStores(data.filters?.stores || []);
-      }
-    } catch (err) {
-      setError(err.message);
-      console.error('Error fetching customers:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [account?.id, account?.role, currentPage, pageSize, searchQuery, selectedCampaign, selectedStore, selectedStatus, dateRange, sortBy]);
-
-  useEffect(() => {
-    if (account?.id) {
-      fetchCustomers();
-    }
-  }, [account?.id, fetchCustomers]);
-
-  // Auto-refetch customers when page becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && account?.id) {
-        console.log("[Customers] Page visible - refetching customers");
-        setCurrentPage(1);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [account?.id]);
+  const { data, isPending: loading, error: queryError } = useCustomersQuery(params);
+  const customers = data?.data || [];
+  const stats = data?.stats || DEFAULT_STATS;
+  const campaigns = data?.filters?.campaigns || [];
+  const stores = data?.filters?.stores || [];
+  const error = queryError ? queryError.message : null;
 
   const handleCustomerClick = (customer) => {
     setSelectedCustomer(customer);

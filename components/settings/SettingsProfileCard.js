@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Edit2, Save, X, Camera, Trash2 } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { useSubscriptionCurrentQuery } from "@/hooks/queries/useSubscriptionQuery";
 import styles from "./SettingsProfileCard.module.css";
 
 export default function SettingsProfileCard({ merchant }) {
@@ -20,8 +21,12 @@ export default function SettingsProfileCard({ merchant }) {
     "Pharmacy / Medical", "Home & Lifestyle", "Other",
   ];
   const hasSubscription = (merchant?.role || "Merchant") === "Merchant";
-  const [planDisplayName, setPlanDisplayName] = useState(null);
-  const [loadingSubscription, setLoadingSubscription] = useState(hasSubscription);
+  // Shares the same cached response as SettingsAccountCard and
+  // SettingsSubscriptionCard instead of firing its own request.
+  const { data: subData, isPending: loadingSubscription } = useSubscriptionCurrentQuery({
+    enabled: hasSubscription,
+  });
+  const planDisplayName = subData?.subscription ? subData.displayName : null;
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState(null);
 
@@ -38,27 +43,6 @@ export default function SettingsProfileCard({ merchant }) {
   // Prefer live AuthContext account (updated by refreshAccount after upload),
   // fall back to the merchant prop for the initial render.
   const profileImage = account?.profileImage || merchant?.profileImage || null;
-
-  useEffect(() => {
-    if (!hasSubscription) return;
-
-    const fetchSubscription = async () => {
-      try {
-        const response = await fetch("/api/subscription/current", {
-          credentials: "include",
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.subscription) setPlanDisplayName(data.displayName);
-        }
-      } catch (err) {
-        console.error("Failed to fetch subscription:", err);
-      } finally {
-        setLoadingSubscription(false);
-      }
-    };
-    fetchSubscription();
-  }, [hasSubscription]);
 
   useEffect(() => {
     if (merchant && !formData.name && !formData.phone) {

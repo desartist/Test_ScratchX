@@ -216,19 +216,22 @@ storeSchema.index({ merchant_id: 1, is_main_store: 1 });
 
 // Sync and validate store locations and inventory
 storeSchema.pre('validate', function () {
-  // Sync latitude/longitude with location coordinates
-  if (this.location && Array.isArray(this.location.coordinates) && this.location.coordinates.length === 2) {
-    if (this.longitude === undefined || this.longitude === null) {
-      this.longitude = this.location.coordinates[0];
-    }
-    if (this.latitude === undefined || this.latitude === null) {
-      this.latitude = this.location.coordinates[1];
-    }
-  } else if (this.latitude !== undefined && this.latitude !== null && this.longitude !== undefined && this.longitude !== null) {
+  // latitude/longitude are the fields the app edits directly (e.g. "Retake
+  // Location"), so they're the source of truth whenever both are present —
+  // rebuild the GeoJSON point from them every time rather than only
+  // backfilling when `location` is missing. Otherwise an update that sets
+  // new latitude/longitude on a store that already has a `location` from
+  // creation leaves `location.coordinates` stuck at the old point, which
+  // silently breaks 2dsphere queries and locationVerificationService's
+  // distance checks even though latitude/longitude look correct.
+  if (this.latitude !== undefined && this.latitude !== null && this.longitude !== undefined && this.longitude !== null) {
     this.location = {
       type: 'Point',
       coordinates: [this.longitude, this.latitude]
     };
+  } else if (this.location && Array.isArray(this.location.coordinates) && this.location.coordinates.length === 2) {
+    this.longitude = this.location.coordinates[0];
+    this.latitude = this.location.coordinates[1];
   }
 
   // Fallback for missing coordinates (e.g. in legacy tests)

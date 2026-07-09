@@ -1,8 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
-import { criticalFetchService } from "@/lib/criticalFetchService";
+import {
+  useSubscriptionCurrentQuery,
+  useSubscriptionPlansQuery,
+  useSubscriptionStatusQuery,
+} from "@/hooks/queries/useSubscriptionQuery";
 import styles from "./subscription.module.css";
 import { AlertCircle } from "lucide-react";
 
@@ -68,60 +72,18 @@ function FeatureList({ features, limits }) {
 
 export default function SubscriptionPage() {
   const router = useRouter();
-  const [subscription, setSubscription] = useState(null);
-  const [plans, setPlans] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
 
-  // Fetch current subscription and plans with caching
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const result = await criticalFetchService.fetchCriticalFirst(
-          'subscription-page',
-          [
-            {
-              key: 'current',
-              url: '/api/subscription/current',
-            },
-            {
-              key: 'plans',
-              url: '/api/subscription/plans',
-            },
-            {
-              key: 'status',
-              url: '/api/subscription/status',
-            },
-          ],
-          []
-        );
+  // Shares the same cached responses as the settings cards, team page,
+  // and billing/plans page instead of firing independent requests.
+  const { data: currentJson, isPending: currentLoading, error: currentError } = useSubscriptionCurrentQuery();
+  const { data: plansJson, isPending: plansLoading } = useSubscriptionPlansQuery();
+  const { data: statusJson, isPending: statusLoading } = useSubscriptionStatusQuery();
 
-        const subData = result.critical?.current;
-        const plansData = result.critical?.plans;
-        const statusData = result.critical?.status;
-
-        if (subData?.success) {
-          setSubscription(subData.subscription);
-        }
-        if (plansData?.success) {
-          setPlans(plansData.data || []);
-        }
-        if (statusData?.success) {
-          setSubscriptionStatus(statusData);
-        }
-        setError(null);
-      } catch (err) {
-        console.error("[SubscriptionPage] Error fetching data:", err);
-        setError("Failed to load subscription information");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const subscription = currentJson?.success ? currentJson.subscription : null;
+  const plans = plansJson?.success ? plansJson.data || [] : [];
+  const subscriptionStatus = statusJson?.success ? statusJson : null;
+  const loading = currentLoading || plansLoading || statusLoading;
+  const error = currentError ? "Failed to load subscription information" : null;
 
   const handleGetPlan = (planId, planName) => {
     router.push(`/billing/checkout?planId=${planId}&planName=${planName}`);

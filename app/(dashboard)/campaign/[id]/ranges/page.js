@@ -1,10 +1,15 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Tag, Pencil, Plus, QrCode } from "lucide-react";
-import { useAuthContext } from "@/components/auth/AuthContext";
-import { criticalFetchService } from "@/lib/criticalFetchService";
+import {
+  campaignRangesQueryKey,
+  useCampaignQuery,
+  useCampaignRangesQuery,
+  useInvalidateCampaignCluster,
+} from "@/hooks/queries/useCampaignQuery";
 import RangeWizard from "@/components/campaign/RangeWizard";
 import LaunchWizardModal from "@/components/campaign/LaunchWizardModal";
 import styles from "./ranges.module.css";
@@ -22,17 +27,18 @@ export default function CampaignRangesStepPage() {
   const router = useRouter();
   const params = useParams();
   const campaignId = params?.id;
-  const { account, token } = useAuthContext();
 
-  const userId = account?.id || account?._id;
-  const userRole = account?.role || "Merchant";
+  // Shares the same cached responses as campaign/[id]/page.js and
+  // RewardRanges.js instead of firing its own requests.
+  const { data: rangesJson, isPending: loading, error: rangesError } = useCampaignRangesQuery(campaignId);
+  const ranges = rangesJson?.ranges || [];
+  const error = rangesError ? rangesError.message || "Failed to load reward ranges" : null;
 
-  const [ranges, setRanges] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { data: campaignJson } = useCampaignQuery(campaignId);
+  const campaign = campaignJson?.data || null;
 
-  // Campaign data (scratch allocation + QR state).
-  const [campaign, setCampaign] = useState(null);
+  const queryClient = useQueryClient();
+  const invalidateCluster = useInvalidateCampaignCluster();
 
   // mode: 'list' | 'edit'. editRange null => create.
   const [mode, setMode] = useState("list");
@@ -40,71 +46,6 @@ export default function CampaignRangesStepPage() {
 
   // Launch wizard modal (allocate scratches -> assign stores -> QR).
   const [launchOpen, setLaunchOpen] = useState(false);
-
-  const fetchRanges = useCallback(async () => {
-    if (!campaignId || !userId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const headers = {
-        "x-user-id": userId,
-        "x-user-role": userRole,
-        Authorization: token ? `Bearer ${token}` : "",
-      };
-
-      const result = await criticalFetchService.fetchCriticalFirst(
-        `campaign-ranges-${campaignId}`,
-        [
-          {
-            key: 'ranges',
-            url: `/api/campaign_range?id=${campaignId}`,
-            options: { method: "GET", credentials: "include", headers },
-          },
-          {
-            key: 'campaign',
-            url: `/api/campaigns/${campaignId}`,
-            options: { credentials: "include", headers },
-          },
-        ],
-        []
-      );
-
-      const rangesData = result.critical?.ranges;
-      if (rangesData?.success && Array.isArray(rangesData.ranges)) {
-        setRanges(rangesData.ranges);
-      } else {
-        setRanges([]);
-      }
-
-      const campaignData = result.critical?.campaign;
-      setCampaign(campaignData?.data || campaignData?.campaign || campaignData || null);
-    } catch (err) {
-      console.error("Failed to fetch ranges:", err);
-      setError("Failed to load reward ranges");
-      setRanges([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [campaignId, userId, userRole, token]);
-
-  useEffect(() => {
-    fetchRanges();
-  }, [fetchRanges]);
-
-  /**
-   * Auto-refetch ranges when page becomes visible (e.g., returning from edit)
-   */
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && campaignId && userId) {
-        console.log("[Ranges] Page visible - refetching ranges");
-        fetchRanges();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [campaignId, userId, fetchRanges]);
 
   const openCreate = useCallback(() => {
     setEditRange(null);
@@ -122,21 +63,20 @@ export default function CampaignRangesStepPage() {
     setEditRange(null);
 
     if (newRange && newRange._id) {
-      setRanges((prev) => {
-        const exists = prev.some((r) => r._id === newRange._id);
-        // Existing range was edited — replace it in place for instant feedback.
-        if (exists) return prev.map((r) => (r._id === newRange._id ? newRange : r));
-        // New range was created — append it.
-        return [...prev, newRange];
+      // Instant feedback: patch the cached list in place before the
+      // invalidated refetch below resolves.
+      queryClient.setQueryData(campaignRangesQueryKey(campaignId), (prev) => {
+        const prevRanges = prev?.ranges || [];
+        const exists = prevRanges.some((r) => r._id === newRange._id);
+        const nextRanges = exists
+          ? prevRanges.map((r) => (r._id === newRange._id ? newRange : r))
+          : [...prevRanges, newRange];
+        return { ...(prev || { success: true }), ranges: nextRanges };
       });
     }
 
-    // criticalFetchService caches GET responses by page key; without
-    // invalidating it here, this refetch would just return the pre-edit
-    // data again until the cache naturally goes stale.
-    criticalFetchService.clearPageCache(`campaign-ranges-${campaignId}`);
-    fetchRanges();
-  }, [fetchRanges, campaignId]);
+    invalidateCluster(campaignId);
+  }, [queryClient, invalidateCluster, campaignId]);
 
   const openLaunch = useCallback(() => setLaunchOpen(true), []);
   const closeLaunch = useCallback(() => setLaunchOpen(false), []);

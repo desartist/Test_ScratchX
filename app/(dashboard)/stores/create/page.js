@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/components/auth/AuthContext';
+import { useStoresQuery } from '@/hooks/queries/useStoresQuery';
 import Link from 'next/link';
 import { AlertCircle } from 'lucide-react';
 import StoreWelcomeScreen from '@/components/stores/StoreWelcomeScreen';
@@ -15,7 +16,7 @@ export default function CreateStorePage() {
   // Step management (0 = welcome screen, 1-3 = form steps)
   const [currentStep, setCurrentStep] = useState(null); // null = loading/checking
   const [hasExistingStores, setHasExistingStores] = useState(false);
-  const [isCheckingStores, setIsCheckingStores] = useState(true);
+  const { data: storesJson, isPending: isCheckingStores } = useStoresQuery();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -56,68 +57,25 @@ export default function CreateStorePage() {
   const [touched, setTouched] = useState({});
   const formRef = useRef(null);
 
-  // Check if user has existing stores and skip welcome screen if they do
+  // Check if user has existing stores and skip welcome screen if they do.
+  // Shares the same cached /api/stores response as stores/page.js instead
+  // of firing its own request.
   useEffect(() => {
-    const checkExistingStores = async () => {
-      if (!account || !account.id) {
-        console.log('[CreateStorePage] No account info, showing welcome screen');
-        setCurrentStep(0);
-        setIsCheckingStores(false);
-        return;
-      }
+    if (!account || !account.id) {
+      setCurrentStep(0);
+      return;
+    }
+    if (isCheckingStores) return;
 
-      setIsCheckingStores(true);
-      try {
-        console.log('[CreateStorePage] Checking for existing stores...');
-        console.log('[CreateStorePage] Account:', { id: account.id, role: account.role });
-
-        const response = await fetch('/api/stores', {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': account.id,
-            'x-user-role': account.role || 'Merchant',
-          },
-        });
-
-        console.log('[CreateStorePage] API Response Status:', response.status);
-
-        if (response.ok) {
-          const responseData = await response.json();
-          console.log('[CreateStorePage] API Response:', responseData);
-
-          const stores = responseData.data || responseData.stores || [];
-          console.log('[CreateStorePage] Found', stores.length, 'store(s)');
-
-          if (Array.isArray(stores) && stores.length > 0) {
-            // User has existing stores - skip welcome screen, go directly to form
-            console.log('[CreateStorePage] User has stores - going to form (Step 1)');
-            setHasExistingStores(true);
-            setCurrentStep(1);
-          } else {
-            // No existing stores - show welcome screen
-            console.log('[CreateStorePage] No stores found - showing welcome screen');
-            setHasExistingStores(false);
-            setCurrentStep(0);
-          }
-        } else {
-          console.warn('[CreateStorePage] API error status:', response.status);
-          const errorData = await response.json().catch(() => ({}));
-          console.warn('[CreateStorePage] API error data:', errorData);
-          // Default to welcome screen on error
-          setCurrentStep(0);
-        }
-      } catch (err) {
-        console.error('[CreateStorePage] Error checking stores:', err);
-        // Default to welcome screen on error
-        setCurrentStep(0);
-      } finally {
-        setIsCheckingStores(false);
-      }
-    };
-
-    checkExistingStores();
-  }, [account]);
+    const stores = storesJson?.data || storesJson?.stores || [];
+    if (Array.isArray(stores) && stores.length > 0) {
+      setHasExistingStores(true);
+      setCurrentStep(1);
+    } else {
+      setHasExistingStores(false);
+      setCurrentStep(0);
+    }
+  }, [account, isCheckingStores, storesJson]);
 
   // Scroll to first error field whenever errors change
   useEffect(() => {

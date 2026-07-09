@@ -329,7 +329,9 @@ export default function DashboardLayout({ children, role }) {
                 </span>
               </div>
             </div>
-            {canManageSubscription && <PlanStatusCard />}
+            {canManageSubscription && (
+              <PlanStatusCard onNavigate={() => setSidebarOpen(false)} />
+            )}
           </div>
 
           <nav className={styles.nav} aria-label="Main navigation">

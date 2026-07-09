@@ -8,7 +8,6 @@ import styles from "./team.module.css";
 export default function TeamPage() {
   const { account } = useAuthContext();
   const [teamMembers, setTeamMembers] = useState([]);
-  const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -36,16 +35,6 @@ export default function TeamPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // Fetch subscription details
-        const subResponse = await fetch("/api/subscription/current", {
-          credentials: "include",
-        });
-
-        if (subResponse.ok) {
-          const subData = await subResponse.json();
-          setSubscription(subData.subscription);
-        }
 
         // Fetch team members
         const teamResponse = await fetch("/api/team/members", {

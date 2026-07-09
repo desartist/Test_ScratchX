@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Store, CheckCircle2, Hourglass, QrCode } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import { useStoreValidation } from "@/lib/hooks/useStoreValidation";
-import { criticalFetchService } from "@/lib/criticalFetchService";
+import { useQuery } from "@tanstack/react-query";
+import { useStoresQuery, useDeleteStoreMutation } from "@/hooks/queries/useStoresQuery";
+import { useSubscriptionStatusQuery } from "@/hooks/queries/useSubscriptionQuery";
 import StoreCard from "@/components/stores/StoreCard";
 import StatsCard from "@/components/stores/StatsCard";
 import SearchBar from "@/components/dashboard/SearchBar";
@@ -20,15 +22,36 @@ export default function StoresPage() {
   // This allows users to view empty store list and create stores
   useStoreValidation();
 
-  // State management
-  const [stores, setStores] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
-  const [mainStoreId, setMainStoreId] = useState(null);
-  const [pendingStoreIds, setPendingStoreIds] = useState(() => new Set());
-  const [unlimitedScratches, setUnlimitedScratches] = useState(false);
+
+  const {
+    data: storesJson,
+    isPending: loading,
+    error: queryError,
+  } = useStoresQuery();
+  const stores = useMemo(() => storesJson?.data || [], [storesJson]);
+  const error = queryError?.message || null;
+
+  const { data: pendingJson } = useQuery({
+    queryKey: ["merchant-scratch-requests", "pending", account?.id],
+    queryFn: async () => {
+      const res = await fetch("/api/merchant/scratch-requests?status=pending");
+      return res.json();
+    },
+    enabled: !!account?.id,
+  });
+  const pendingStoreIds = useMemo(() => {
+    const ids = (pendingJson?.data || [])
+      .map((r) => (r.storeId ? String(r.storeId) : null))
+      .filter(Boolean);
+    return new Set(ids);
+  }, [pendingJson]);
+
+  const { data: subscriptionJson } = useSubscriptionStatusQuery();
+  const unlimitedScratches = !!subscriptionJson?.unlimitedScratches;
+
+  const deleteStoreMutation = useDeleteStoreMutation();
 
   // Resolve which store is the "main" store: prefer an explicit flag, then the
   // account's mainStoreId (string-safe compare), else fall back to the first
@@ -43,83 +66,14 @@ export default function StoresPage() {
         s.storeType === "MAIN",
     );
     if (flagged) return String(flagged._id);
-    if (mainStoreId) {
-      const match = stores.find((s) => String(s._id) === String(mainStoreId));
+    if (account?.mainStoreId) {
+      const match = stores.find((s) => String(s._id) === String(account.mainStoreId));
       if (match) return String(match._id);
     }
     return String(stores[0]._id);
-  }, [stores, mainStoreId]);
+  }, [stores, account]);
 
-  /**
-   * Fetch stores with critical-first pattern
-   * Critical: stores list (needed for immediate UI)
-   * Non-critical: pending requests & subscription status (loaded in background)
-   */
-  const fetchStores = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      if (!account || !account.id) {
-        setError("No account information available");
-        setLoading(false);
-        return;
-      }
-
-      // Set main store ID from account
-      if (account.mainStoreId) {
-        setMainStoreId(account.mainStoreId);
-      }
-
-      const result = await criticalFetchService.fetchCriticalFirst(
-        'stores-list',
-        [
-          {
-            key: 'stores',
-            url: '/api/stores',
-            options: {
-              headers: {
-                'x-user-id': account.id,
-                'x-user-role': account.role,
-              },
-            },
-          },
-        ],
-        [
-          {
-            key: 'pending',
-            url: '/api/merchant/scratch-requests?status=pending',
-          },
-          {
-            key: 'subscription',
-            url: '/api/subscription/status',
-          },
-        ]
-      );
-
-      const storesData = result.critical?.stores || result.stores;
-      setStores(storesData?.data || storesData || []);
-
-      // Handle non-critical data if available
-      if (result.nonCritical?.pending?.data) {
-        const ids = new Set(
-          result.nonCritical.pending.data
-            .map((r) => (r.storeId ? String(r.storeId) : null))
-            .filter(Boolean)
-        );
-        setPendingStoreIds(ids);
-      }
-
-      if (result.nonCritical?.subscription?.unlimitedScratches) {
-        setUnlimitedScratches(true);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to load stores");
-      console.error("Error fetching stores:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [account]);
+  const [deleteError, setDeleteError] = useState(null);
 
   /**
    * Delete a store (non-main stores only)
@@ -130,56 +84,13 @@ export default function StoresPage() {
     }
 
     try {
-      const response = await fetch("/api/stores/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": account.id,
-          "x-user-role": account.role,
-        },
-        body: JSON.stringify({ storeId }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.error || "Failed to delete store");
-        return;
-      }
-
-      // Remove deleted store from list
-      setStores(stores.filter(s => s._id !== storeId));
-      setError(null);
+      await deleteStoreMutation.mutateAsync(storeId);
+      setDeleteError(null);
     } catch (err) {
-      setError(err.message || "Failed to delete store");
+      setDeleteError(err.message || "Failed to delete store");
       console.error("Error deleting store:", err);
     }
   };
-
-  /**
-   * Fetch stores on mount and when account changes
-   * Critical and non-critical data are fetched together via criticalFetchService
-   */
-  useEffect(() => {
-    if (account && account.id) {
-      fetchStores();
-    }
-  }, [account, fetchStores]);
-
-  /**
-   * Auto-refetch stores when page becomes visible (e.g., returning from create/edit)
-   */
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && account && account.id) {
-        console.log("[Stores] Page visible - refetching stores");
-        fetchStores();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [account, fetchStores]);
 
   /**
    * Redirect to store creation onboarding if merchant has no stores
@@ -245,6 +156,7 @@ export default function StoresPage() {
   };
 
   const filterTabs = ["All", "Pending Request", "No Campaign", "Low Activity"];
+  const displayError = deleteError || error;
 
   return (
     <div className={styles.container}>
@@ -326,10 +238,10 @@ export default function StoresPage() {
       </div>
 
       {/* Error Banner */}
-      {error && (
+      {displayError && (
         <div className={styles.errorBanner}>
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className={styles.closeBtn}>
+          <span>{displayError}</span>
+          <button onClick={() => setDeleteError(null)} className={styles.closeBtn}>
             ✕
           </button>
         </div>

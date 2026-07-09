@@ -3,6 +3,7 @@ import "./globals.css";
 import styles from "./layout.module.css";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { SubscriptionProvider } from "@/components/subscription/SubscriptionContext";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 export const metadata = {
   title: "ScratchX | Premium Digital Rewards & Customer Engagement Platform",
@@ -79,11 +80,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning style={{ colorScheme: 'light' }}>
       <body suppressHydrationWarning>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <main className={styles.mainContent}>{children}</main>
-          </SubscriptionProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <main className={styles.mainContent}>{children}</main>
+            </SubscriptionProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

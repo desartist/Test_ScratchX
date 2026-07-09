@@ -19,6 +19,7 @@ import {
   PlusCircle,
 } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthContext';
+import { useStoreDetailQuery, useInvalidateStoreDetail } from '@/hooks/queries/useStoreDetailQuery';
 import StoreDeleteModal from '@/components/stores/StoreDeleteModal';
 import AssignCampaignsModal from './components/AssignCampaignsModal';
 import AssignedCampaignsList from './components/AssignedCampaignsList';
@@ -32,77 +33,54 @@ export default function StoreDetailPage() {
   const { account } = useAuthContext();
   const id = params.id;
 
-  const [store, setStore] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: storeJson,
+    isPending: loading,
+    error: queryError,
+  } = useStoreDetailQuery(id);
+  const store = storeJson?.data || null;
+  const error = queryError ? queryError.message || 'Failed to load store' : null;
+  const invalidateStoreDetail = useInvalidateStoreDetail();
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const [showAssignCampaignsModal, setShowAssignCampaignsModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
   const [successDetails, setSuccessDetails] = useState(null);
   const [locationInfo, setLocationInfo] = useState(null);
 
-  const refreshStore = useCallback(async () => {
-    if (!id || !account?.id) return;
-    try {
-      const res = await fetch(`/api/stores/${id}`, {
-        headers: { 'x-user-id': account.id, 'x-user-role': account.role },
-      });
-      if (res.ok) {
-        const result = await res.json();
-        setStore(result.data);
-      }
-    } catch { /* silent */ }
-  }, [id, account]);
-
+  // Reverse-geocode the store's coordinates once loaded (display-only, not
+  // part of the shared query cache since it's a one-off external lookup).
   useEffect(() => {
-    const fetchStore = async () => {
-      try {
-        setLoading(true);
-        if (!account?.id) { setError('No account information available'); setLoading(false); return; }
-
-        const res = await fetch(`/api/stores/${id}`, {
-          headers: { 'x-user-id': account.id, 'x-user-role': account.role },
+    const { latitude, longitude } = store || {};
+    if (!latitude || !longitude) return;
+    let cancelled = false;
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1`,
+      { headers: { 'Accept-Language': 'en' } },
+    )
+      .then((res) => res.json())
+      .then((geoData) => {
+        if (cancelled) return;
+        const a = geoData.address || {};
+        setLocationInfo({
+          landmark: a.amenity || a.shop || a.tourism || a.building || a.road || a.suburb || null,
+          area: a.suburb || a.neighbourhood || a.village || a.town || null,
+          city: a.city || a.town || a.village || a.county || null,
+          state: a.state || null,
         });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Failed to load store');
-        }
-        const result = await res.json();
-        setStore(result.data);
-        setError(null);
-
-        const { latitude, longitude } = result.data || {};
-        if (latitude && longitude) {
-          try {
-            const geo = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1`,
-              { headers: { 'Accept-Language': 'en' } }
-            );
-            const geoData = await geo.json();
-            const a = geoData.address || {};
-            setLocationInfo({
-              landmark: a.amenity || a.shop || a.tourism || a.building || a.road || a.suburb || null,
-              area: a.suburb || a.neighbourhood || a.village || a.town || null,
-              city: a.city || a.town || a.village || a.county || null,
-              state: a.state || null,
-            });
-          } catch { /* silent */ }
-        }
-      } catch (err) {
-        setError(err.message || 'Failed to load store');
-        setStore(null);
-      } finally {
-        setLoading(false);
-      }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
     };
-    if (id && account) fetchStore();
-  }, [id, account]);
+  }, [store]);
 
   const handleDelete = useCallback(async () => {
     try {
       setDeleteLoading(true);
-      if (!account?.id) { setError('No account information available'); setShowDeleteModal(false); setDeleteLoading(false); return; }
+      if (!account?.id) { setDeleteError('No account information available'); setShowDeleteModal(false); setDeleteLoading(false); return; }
       const res = await fetch(`/api/stores/${id}`, {
         method: 'DELETE',
         headers: { 'x-user-id': account.id, 'x-user-role': account.role },
@@ -111,14 +89,15 @@ export default function StoreDetailPage() {
         const err = await res.json();
         throw new Error(err.error || 'Failed to delete store');
       }
+      invalidateStoreDetail(id);
       router.push('/stores');
     } catch (err) {
-      setError(err.message || 'Failed to delete store');
+      setDeleteError(err.message || 'Failed to delete store');
       setShowDeleteModal(false);
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, account, router]);
+  }, [id, account, router, invalidateStoreDetail]);
 
   const handleCampaignsAssigned = useCallback((data) => {
     setShowAssignCampaignsModal(false);
@@ -127,8 +106,8 @@ export default function StoreDetailPage() {
       setSuccessMessage(data.message || 'Campaigns assigned successfully');
       setTimeout(() => { setSuccessMessage(null); setSuccessDetails(null); }, 5000);
     }
-    refreshStore();
-  }, [refreshStore]);
+    invalidateStoreDetail(id);
+  }, [invalidateStoreDetail, id]);
 
   if (loading) return <div className={styles.container}><div className={styles.loadingContainer}>Loading store details…</div></div>;
   if (error) return (
@@ -154,6 +133,7 @@ export default function StoreDetailPage() {
     .split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
 
   const campaigns = store.assignedCampaigns || store.storeSnapshots || store.assigned_campaigns || [];
+  const assignedCampaignIds = campaigns.map((c) => String(c._id)).filter(Boolean);
 
   return (
     <div className={styles.container}>
@@ -278,7 +258,7 @@ export default function StoreDetailPage() {
           <AssignedCampaignsList
             campaigns={campaigns}
             storeId={id}
-            onCampaignRemoved={refreshStore}
+            onCampaignRemoved={() => invalidateStoreDetail(id)}
           />
 
         </div>
@@ -359,6 +339,7 @@ export default function StoreDetailPage() {
                   {isMainStore ? 'Main Store — Cannot Delete' : 'Delete Store'}
                 </button>
               </div>
+              {deleteError && <p className={styles.detailLabel} style={{ color: '#c0392b' }}>{deleteError}</p>}
             </div>
           </div>
 
@@ -372,6 +353,7 @@ export default function StoreDetailPage() {
         storeId={id}
         userId={account?.id}
         userRole={account?.role}
+        assignedCampaignIds={assignedCampaignIds}
         onCampaignsAssigned={handleCampaignsAssigned}
       />
 

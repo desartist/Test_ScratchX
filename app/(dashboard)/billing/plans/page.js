@@ -1,6 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
+import {
+  useSubscriptionCurrentQuery,
+  useSubscriptionPlansQuery,
+} from "@/hooks/queries/useSubscriptionQuery";
 import styles from "./plans.module.css";
 
 const CHECK = (
@@ -34,43 +38,19 @@ const POPULAR_PLAN = "Smart"; // Smart plan is the recommended plan
 
 export default function PlansPage() {
   const router = useRouter();
-  const [cycle, setCycle] = useState("monthly");
-  const [plans, setPlans] = useState([]);
-  const [currentPlanName, setCurrentPlanName] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        // ✅ Fetch plans - no auth required
-        const planRes = await fetch("/api/subscription/plans");
-        const planData = await planRes.json();
+  // Shares the same cached responses as subscription/page.js and the
+  // settings cards instead of firing independent requests. The current-
+  // subscription lookup is best-effort (this page also serves anonymous
+  // visitors), so it never gates the loading state — only plans do.
+  const { data: plansJson, isPending: plansLoading } = useSubscriptionPlansQuery();
+  const { data: currentJson } = useSubscriptionCurrentQuery();
 
-        console.log('[PlansPage] Plans response:', planData);
-
-        if (planData.success && planData.data) {
-          setPlans(planData.data);
-        }
-
-        // ✅ Optionally fetch current subscription if user is authenticated
-        try {
-          const subRes = await fetch("/api/subscription/current");
-          const subData = await subRes.json();
-          if (subData.success && subData.subscription) {
-            setCurrentPlanName(subData.subscription.planId?.name ?? null);
-          }
-        } catch (err) {
-          console.log('[PlansPage] No current subscription or not authenticated');
-        }
-      } catch (err) {
-        console.error('[PlansPage] Error fetching plans:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlans();
-  }, []);
+  const plans = plansJson?.success ? plansJson.data || [] : [];
+  const currentPlanName = currentJson?.success && currentJson.subscription
+    ? currentJson.subscription.planId?.name ?? null
+    : null;
+  const loading = plansLoading;
 
   function handleSelect(plan) {
     if (!plan.price?.base || plan.price.base === 0) return; // Free plan — no checkout needed

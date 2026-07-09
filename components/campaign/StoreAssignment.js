@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Store as StoreIcon, Search, Trash2, MapPin, AlertCircle, X } from "lucide-react";
 import Badge from "@/components/dashboard/Badge";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { useStoresQuery } from "@/hooks/queries/useStoresQuery";
 import styles from "./StoreAssignment.module.css";
 
 /**
@@ -29,10 +31,22 @@ export default function StoreAssignment({
 }) {
   const { account } = useAuthContext();
 
-  const [stores, setStores] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Shares the same cached /api/stores response as stores/page.js and
+  // stores/create/page.js instead of firing its own request.
+  const { data: storesJson, isPending: loading } = useStoresQuery();
+  const stores = useMemo(() => storesJson?.data || [], [storesJson]);
   const [error, setError] = useState(null);
-  const [pendingRequests, setPendingRequests] = useState([]);
+
+  // Shares the same cached pending-requests response as stores/page.js.
+  const { data: pendingJson } = useQuery({
+    queryKey: ["merchant-scratch-requests", "pending", account?.id],
+    queryFn: async () => {
+      const res = await fetch("/api/merchant/scratch-requests?status=pending");
+      return res.json();
+    },
+    enabled: !!account?.id,
+  });
+  const pendingRequests = useMemo(() => pendingJson?.data || [], [pendingJson]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selected, setSelected] = useState([]);
   const [assigning, setAssigning] = useState(false);
@@ -69,58 +83,6 @@ export default function StoreAssignment({
     });
     return map;
   }, [pendingRequests, campaignId]);
-
-  // Fetch merchant stores. Response shape: { success, data: [...] }.
-  const fetchStores = useCallback(async () => {
-    if (!userId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/stores", {
-        method: "GET",
-        credentials: "include",
-        headers: { "x-user-id": userId, "x-user-role": userRole },
-      });
-      const data = await res.json();
-      if (data?.success && Array.isArray(data.data)) {
-        setStores(data.data);
-      } else {
-        setStores([]);
-      }
-    } catch (err) {
-      console.error("Failed to fetch stores:", err);
-      setError("Failed to load stores");
-      setStores([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, userRole]);
-
-  // Fetch pending scratch-allocation requests for this campaign.
-  const fetchPending = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const res = await fetch("/api/merchant/scratch-requests?status=pending", {
-        method: "GET",
-        credentials: "include",
-        headers: { "x-user-id": userId, "x-user-role": userRole },
-      });
-      const data = await res.json();
-      if (data?.success && Array.isArray(data.data)) {
-        setPendingRequests(data.data);
-      } else {
-        setPendingRequests([]);
-      }
-    } catch (err) {
-      console.error("Failed to fetch scratch requests:", err);
-      setPendingRequests([]);
-    }
-  }, [userId, userRole]);
-
-  useEffect(() => {
-    fetchStores();
-    fetchPending();
-  }, [fetchStores, fetchPending]);
 
   // Assign one or more stores via POST /api/campaigns/{id}/assign.
   const assignStores = useCallback(
