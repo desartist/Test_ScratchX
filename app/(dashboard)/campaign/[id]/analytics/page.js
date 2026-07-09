@@ -1,20 +1,25 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuthContext } from '@/components/auth/AuthContext';
+import { useCampaignQuery } from '@/hooks/queries/useCampaignQuery';
 import CampaignAnalyticsChart from '@/components/campaigns/CampaignAnalyticsChart';
 import styles from './page.module.css';
 
 export default function CampaignAnalyticsPage() {
   const router = useRouter();
   const params = useParams();
-  const { account } = useAuthContext();
   const id = params.id;
 
-  const [campaign, setCampaign] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // Shares the same cached /api/campaigns/{id} response as the rest of the
+  // campaign detail cluster.
+  const {
+    data: campaignJson,
+    isPending: loading,
+    error: queryError,
+  } = useCampaignQuery(id);
+  const campaign = campaignJson?.data || null;
+  const error = queryError ? queryError.message || 'Failed to load campaign' : null;
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
@@ -47,47 +52,6 @@ export default function CampaignAnalyticsPage() {
     { label: 'Day 6', value: 135 },
     { label: 'Day 7', value: 155 }
   ];
-
-  // Fetch campaign
-  useEffect(() => {
-    const fetchCampaign = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        if (!account || !account._id) {
-          setError('No account information available');
-          setCampaign(null);
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(`/api/campaigns/${id}`, {
-          headers: {
-            'x-user-id': account._id,
-            'x-user-role': account.role
-          }
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to load campaign');
-        }
-
-        const data = await response.json();
-        setCampaign(data);
-      } catch (err) {
-        setError(err.message || 'Failed to load campaign');
-        setCampaign(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id && account) {
-      fetchCampaign();
-    }
-  }, [id, account]);
 
   // Loading state
   if (loading) {

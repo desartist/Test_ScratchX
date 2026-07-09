@@ -20,8 +20,8 @@ const PUBLIC_CUSTOMER_ROUTE_PREFIXES = ['/scan', '/customer', '/coupon'];
 export function AuthProvider({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const isPublicCustomerRoute = PUBLIC_CUSTOMER_ROUTE_PREFIXES.some((p) =>
-    pathname?.startsWith(p),
+  const isPublicCustomerRoute = PUBLIC_CUSTOMER_ROUTE_PREFIXES.some(
+    (p) => pathname === p || pathname?.startsWith(p + '/'),
   );
   const [account, setAccount] = useState(null);
   const [accessToken, setAccessToken] = useState(null);

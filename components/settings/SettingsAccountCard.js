@@ -1,27 +1,20 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useSubscriptionCurrentQuery } from "@/hooks/queries/useSubscriptionQuery";
 import styles from "./SettingsAccountCard.module.css";
 
 export default function SettingsAccountCard({ merchant }) {
   const role = merchant?.role || "Merchant";
   const hasSubscription = role === "Merchant";
 
-  const [planInfo, setPlanInfo] = useState(null);
-  const [loadingSubscription, setLoadingSubscription] = useState(hasSubscription);
-
-  useEffect(() => {
-    if (!hasSubscription) return;
-
-    fetch("/api/subscription/current", { credentials: "include" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data?.subscription) {
-          setPlanInfo({ displayName: data.displayName, status: data.subscription.status });
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoadingSubscription(false));
-  }, [hasSubscription]);
+  // Shares the same cached response as SettingsSubscriptionCard,
+  // SettingsProfileCard, and every other subscription/current consumer.
+  const { data, isPending: loadingSubscription } = useSubscriptionCurrentQuery({
+    enabled: hasSubscription,
+  });
+  const planInfo = data?.subscription
+    ? { displayName: data.displayName, status: data.subscription.status }
+    : null;
 
   const formatDate = (date) => {
     if (!date) return "N/A";

@@ -6,7 +6,7 @@ import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { usePathname } from "next/navigation";
 import styles from "./PlanStatusCard.module.css";
 
-export default function PlanStatusCard() {
+export default function PlanStatusCard({ onNavigate }) {
   const { planData, loading, loadPlanData } = useSubscription();
   const pathname = usePathname();
 
@@ -48,7 +48,7 @@ export default function PlanStatusCard() {
           <AlertCircle size={14} />
           <span className={styles.pillText}>No Active Plan</span>
         </div>
-        <Link href="/subscription" className={styles.pillButton}>
+        <Link href="/subscription" className={styles.pillButton} onClick={onNavigate}>
           Browse
         </Link>
       </div>
@@ -63,7 +63,7 @@ export default function PlanStatusCard() {
         </span>
       </div>
       {!isTopTier && (
-        <Link href="/subscription" className={styles.pillButton}>
+        <Link href="/subscription" className={styles.pillButton} onClick={onNavigate}>
           Upgrade Plan
         </Link>
       )}

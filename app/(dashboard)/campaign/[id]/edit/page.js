@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthContext } from '@/components/auth/AuthContext';
-import { criticalFetchService } from '@/lib/criticalFetchService';
+import { useCampaignQuery, useInvalidateCampaignCluster } from '@/hooks/queries/useCampaignQuery';
 import Link from 'next/link';
 import styles from './EditCampaign.module.css';
 
@@ -23,69 +23,37 @@ export default function EditCampaignPage() {
     rewardUnit: '',
     distributionMethod: '',
   });
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // Fetch campaign on load with caching
+  // Shares the same cached /api/campaigns/{id} response as campaign/[id]/page.js.
+  const {
+    data: campaignJson,
+    isPending: loading,
+    error: queryError,
+  } = useCampaignQuery(id);
+  const invalidateCluster = useInvalidateCampaignCluster();
+  const error = submitError || (queryError ? queryError.message || 'Failed to load campaign' : null);
+
+  // Seed the form once when the campaign first loads — a ref guard stops a
+  // background refetch from clobbering in-progress edits.
+  const seededRef = useRef(false);
   useEffect(() => {
-    const fetchCampaign = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        if (!account || !account.id) {
-          setError('No account information available');
-          setLoading(false);
-          return;
-        }
-
-        const result = await criticalFetchService.fetchCriticalFirst(
-          `campaign-edit-${id}`,
-          [
-            {
-              key: 'campaign',
-              url: `/api/campaigns/${id}`,
-              options: {
-                headers: {
-                  'x-user-id': account.id,
-                  'x-user-role': account.role,
-                },
-              },
-            },
-          ],
-          []
-        );
-
-        const data = result.critical?.campaign?.data;
-
-        if (!data) {
-          throw new Error('Failed to load campaign');
-        }
-
-        // Pre-fill form with campaign data
-        setFormData({
-          campaignName: data.campaignName || '',
-          description: data.description || '',
-          startDate: data.startDate ? data.startDate.split('T')[0] : '',
-          endDate: data.endDate ? data.endDate.split('T')[0] : '',
-          rewardType: data.rewardType || '',
-          rewardValue: data.rewardValue || '',
-          rewardUnit: data.rewardUnit || '',
-          distributionMethod: data.distributionMethod || '',
-        });
-      } catch (err) {
-        setError(err.message || 'Failed to load campaign');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id && account) {
-      fetchCampaign();
-    }
-  }, [id, account]);
+    const data = campaignJson?.data;
+    if (!data || seededRef.current) return;
+    seededRef.current = true;
+    setFormData({
+      campaignName: data.campaignName || '',
+      description: data.description || '',
+      startDate: data.startDate ? data.startDate.split('T')[0] : '',
+      endDate: data.endDate ? data.endDate.split('T')[0] : '',
+      rewardType: data.rewardType || '',
+      rewardValue: data.rewardValue || '',
+      rewardUnit: data.rewardUnit || '',
+      distributionMethod: data.distributionMethod || '',
+    });
+  }, [campaignJson]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -94,12 +62,12 @@ export default function EditCampaignPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setError(null);
+    setSubmitError(null);
     setSuccessMessage(null);
 
     try {
       if (!account || !account.id) {
-        setError('No account information available');
+        setSubmitError('No account information available');
         setSubmitting(false);
         return;
       }
@@ -119,6 +87,7 @@ export default function EditCampaignPage() {
         throw new Error(errorData.message || 'Failed to update campaign');
       }
 
+      invalidateCluster(id);
       setSuccessMessage('Campaign updated successfully!');
 
       // Redirect to campaign detail page
@@ -126,7 +95,7 @@ export default function EditCampaignPage() {
         router.push(`/campaign/${id}`);
       }, 1500);
     } catch (err) {
-      setError(err.message || 'Failed to update campaign');
+      setSubmitError(err.message || 'Failed to update campaign');
     } finally {
       setSubmitting(false);
     }

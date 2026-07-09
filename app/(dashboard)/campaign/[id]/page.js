@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   CheckCircle2,
@@ -16,7 +17,13 @@ import {
 } from "lucide-react";
 import styles from "./page.module.css";
 import { useAuthContext } from "@/components/auth/AuthContext";
-import { criticalFetchService } from "@/lib/criticalFetchService";
+import {
+  campaignQueryKey,
+  useCampaignQuery,
+  useCampaignRangesQuery,
+  useInvalidateCampaignCluster,
+} from "@/hooks/queries/useCampaignQuery";
+import { useSubscriptionStatusQuery } from "@/hooks/queries/useSubscriptionQuery";
 import Badge from "@/components/dashboard/Badge";
 import StoreAssignment from "@/components/campaign/StoreAssignment";
 import RewardRanges from "@/components/campaign/RewardRanges";
@@ -45,18 +52,6 @@ export default function CampaignDetailsPage({ params }) {
   const { account } = useAuthContext();
 
   const [campaignId, setCampaignId] = useState("");
-  const [campaign, setCampaign] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Assigned stores state
-  const [assignedStores, setAssignedStores] = useState([]);
-  const [storesLoading, setStoresLoading] = useState(false);
-
-  // Ranges + subscription state (for gating checklist)
-  const [ranges, setRanges] = useState([]);
-  const [subscription, setSubscription] = useState(null);
 
   // QR generation state
   const [generatingQr, setGeneratingQr] = useState(false);
@@ -65,139 +60,72 @@ export default function CampaignDetailsPage({ params }) {
   // Launch wizard modal state
   const [launchWizardOpen, setLaunchWizardOpen] = useState(false);
 
-  // Fetch campaign details with critical-first pattern
-  // Critical: campaign, ranges, and subscription (needed for correct UI display)
-  const fetchCampaignDetails = useCallback(
-    async (id) => {
-      if (!account?.id) {
-        setError("User authentication required");
-        return;
-      }
+  const queryClient = useQueryClient();
+  const invalidateCluster = useInvalidateCampaignCluster();
 
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Update campaign statuses first (checks if any campaigns have ended)
-        try {
-          await fetch('/api/campaigns/update-status', {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
-        } catch (err) {
-          console.warn('Failed to update campaign statuses:', err);
-        }
-
-        const result = await criticalFetchService.fetchCriticalFirst(
-          `campaign-detail-${id}`,
-          [
-            {
-              key: 'campaign',
-              url: `/api/campaigns/${id}`,
-              options: {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                  'x-user-id': account.id,
-                  'x-user-role': account.role || 'Merchant',
-                },
-              },
-            },
-            {
-              key: 'ranges',
-              url: `/api/campaign_range?id=${id}`,
-              options: {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                  'x-user-id': account.id,
-                  'x-user-role': account.role || 'Merchant',
-                },
-              },
-            },
-            {
-              key: 'subscription',
-              url: '/api/subscription/status',
-              options: {
-                method: 'GET',
-                credentials: 'include',
-              },
-            },
-          ],
-          []
-        );
-
-        // Handle critical data
-        const campaignData = result.critical?.campaign;
-        if (campaignData?.success && campaignData?.data) {
-          setCampaign(campaignData.data);
-          const activeStores = (campaignData.data.assignedStores || []).filter(
-            (s) => s.status === 'active',
-          );
-          setAssignedStores(activeStores);
-        } else {
-          setError('Campaign not found');
-          setCampaign(null);
-        }
-
-        const rangesData = result.critical?.ranges;
-        if (rangesData?.success && Array.isArray(rangesData?.ranges)) {
-          setRanges(rangesData.ranges);
-        } else {
-          setRanges([]);
-        }
-
-        // Handle subscription data (now critical)
-        const subscriptionData = result.critical?.subscription;
-        if (subscriptionData?.success) {
-          setSubscription(subscriptionData);
-        }
-      } catch (err) {
-        console.error('Failed to fetch campaign:', err);
-        setError('Failed to load campaign details');
-        setCampaign(null);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [account],
-  );
-
-  // Callback to handle status updates from CampaignStatusActions
-  const handleStatusUpdated = useCallback((updatedCampaign) => {
-    setCampaign(updatedCampaign);
-    setRefreshTrigger((prev) => prev + 1);
-  }, []);
-
-  // Unwrap params and fetch campaign details with all data
+  // Unwrap the async params once to get the campaign id.
   useEffect(() => {
-    async function unwrapParams() {
+    let cancelled = false;
+    (async () => {
       try {
         const { id } = await params;
-        setCampaignId(id);
-        // Single call handles all critical data: campaign, ranges, subscription
-        fetchCampaignDetails(id);
+        if (!cancelled) setCampaignId(id);
       } catch (err) {
         console.error("Failed to unwrap params:", err);
-        setError("Failed to load campaign");
       }
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [params]);
 
-    unwrapParams();
-  }, [
-    params,
-    fetchCampaignDetails,
-    refreshTrigger,
-  ]);
+  // Refresh campaign statuses server-side once we know the id (checks if
+  // any campaigns have ended) before reading the cached/fetched campaign.
+  useEffect(() => {
+    if (!campaignId) return;
+    fetch("/api/campaigns/update-status", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    }).catch((err) => console.warn("Failed to update campaign statuses:", err));
+  }, [campaignId]);
 
-  // Refetch everything that gates the QR checklist (campaign, ranges,
-  // subscription) after a child section changes data.
+  const {
+    data: campaignJson,
+    isPending: campaignLoading,
+    error: campaignError,
+  } = useCampaignQuery(campaignId);
+  const campaign = campaignJson?.data || null;
+  const assignedStores = (campaign?.assignedStores || []).filter(
+    (s) => s.status === "active",
+  );
+
+  const { data: rangesJson } = useCampaignRangesQuery(campaignId);
+  const ranges = rangesJson?.ranges || [];
+
+  const { data: subscription } = useSubscriptionStatusQuery();
+
+  const loading = !campaignId || campaignLoading;
+  const error = campaignError ? campaignError.message || "Failed to load campaign details" : null;
+
+  // Callback to handle status updates from CampaignStatusActions: apply the
+  // server's response immediately, then invalidate for full consistency.
+  const handleStatusUpdated = useCallback(
+    (updatedCampaign) => {
+      queryClient.setQueryData(campaignQueryKey(campaignId), (prev) => ({
+        ...(prev || { success: true }),
+        data: updatedCampaign,
+      }));
+      invalidateCluster(campaignId);
+    },
+    [campaignId, queryClient, invalidateCluster],
+  );
+
+  // Refetch everything that gates the QR checklist (campaign + ranges)
+  // after a child section changes data.
   const refetch = useCallback(() => {
     if (!campaignId) return;
-    fetchCampaignDetails(campaignId);
-  }, [campaignId, fetchCampaignDetails]);
+    invalidateCluster(campaignId);
+  }, [campaignId, invalidateCluster]);
 
   // Handle launch wizard completion
   const handleLaunchWizardClose = useCallback(() => {
@@ -212,9 +140,9 @@ export default function CampaignDetailsPage({ params }) {
   // Refetch campaign details after store assignment changes
   const handleStoresChanged = useCallback(() => {
     if (campaignId) {
-      fetchCampaignDetails(campaignId);
+      invalidateCluster(campaignId);
     }
-  }, [campaignId, fetchCampaignDetails]);
+  }, [campaignId, invalidateCluster]);
 
   // Generate QR code (server re-validates)
   const handleGenerateQr = useCallback(async () => {
@@ -233,7 +161,7 @@ export default function CampaignDetailsPage({ params }) {
       const data = await response.json();
       if (data.success) {
         // Refetch campaign to pick up qrCodeUrl + active status
-        fetchCampaignDetails(campaignId);
+        invalidateCluster(campaignId);
       } else {
         setQrError(data.message || "Failed to generate QR code");
       }
@@ -243,7 +171,7 @@ export default function CampaignDetailsPage({ params }) {
     } finally {
       setGeneratingQr(false);
     }
-  }, [campaignId, account, fetchCampaignDetails]);
+  }, [campaignId, account, invalidateCluster]);
 
   // Loading state
   if (loading) {

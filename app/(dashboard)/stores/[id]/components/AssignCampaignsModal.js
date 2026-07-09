@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Search, Calendar, DollarSign } from 'lucide-react';
+import { useCampaignsListQuery } from '@/hooks/queries/useCampaignsListQuery';
 import styles from './AssignCampaignsModal.module.css';
 
 export default function AssignCampaignsModal({
@@ -10,82 +11,32 @@ export default function AssignCampaignsModal({
   storeId,
   userId,
   userRole,
+  assignedCampaignIds = [],
   onCampaignsAssigned
 }) {
-  const [campaigns, setCampaigns] = useState([]);
+  // Shares the same cached /api/campaigns response as campaign/page.js.
+  // Only enabled while the modal is open, matching the original fetch-on-open behavior.
+  const {
+    data: campaignsJson,
+    isPending: loading,
+    error: queryError,
+  } = useCampaignsListQuery({ enabled: isOpen });
+  const campaigns = useMemo(() => campaignsJson?.data || [], [campaignsJson]);
   const [selectedCampaigns, setSelectedCampaigns] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [assignedCampaignIds, setAssignedCampaignIds] = useState([]);
 
-  // Fetch available campaigns
-  const fetchCampaigns = useCallback(async () => {
-    if (!userId) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/campaigns', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'x-user-id': userId,
-          'x-user-role': userRole || 'Merchant',
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.data) {
-        setCampaigns(Array.isArray(data.data) ? data.data : []);
-      } else {
-        setCampaigns([]);
-      }
-    } catch (err) {
-      console.error('Failed to fetch campaigns:', err);
-      setError('Failed to load campaigns');
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, userRole]);
-
-  // Fetch store's currently assigned campaigns
-  const fetchAssignedCampaigns = useCallback(async () => {
-    if (!userId || !storeId) return;
-
-    try {
-      const response = await fetch(`/api/stores/${storeId}`, {
-        headers: {
-          'x-user-id': userId,
-          'x-user-role': userRole || 'Merchant',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const assigned = (data.data?.assignedCampaigns || [])
-          .map(c => c.campaignId._id ? c.campaignId._id.toString() : c.campaignId.toString())
-          .filter(id => id);
-        setAssignedCampaignIds(assigned);
-      }
-    } catch (err) {
-      console.error('Failed to fetch assigned campaigns:', err);
-    }
-  }, [userId, storeId, userRole]);
-
-  // Load campaigns when modal opens
+  // Reset transient UI state when the modal opens.
   useEffect(() => {
     if (isOpen) {
-      fetchCampaigns();
-      fetchAssignedCampaigns();
       setSelectedCampaigns([]);
       setSearchTerm('');
       setError(null);
     }
-  }, [isOpen, fetchCampaigns, fetchAssignedCampaigns]);
+  }, [isOpen]);
+
+  const displayError = error || (isOpen && queryError ? queryError.message || 'Failed to load campaigns' : null);
 
   // Filter campaigns based on search
   const filteredCampaigns = campaigns.filter(campaign =>
@@ -188,7 +139,7 @@ export default function AssignCampaignsModal({
         </div>
 
         {/* Error message */}
-        {error && <div className={styles.errorMessage}>{error}</div>}
+        {displayError && <div className={styles.errorMessage}>{displayError}</div>}
 
         {/* Campaign list */}
         <div className={styles.campaignList}>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthContext } from '@/components/auth/AuthContext';
+import { useStoreDetailQuery, useInvalidateStoreDetail } from '@/hooks/queries/useStoreDetailQuery';
 import StoreForm from '@/components/stores/StoreForm';
 import styles from './page.module.css';
 
@@ -10,10 +11,8 @@ export default function EditStorePage() {
   const router = useRouter();
   const params = useParams();
   const { account } = useAuthContext();
-  const [store, setStore] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [id, setId] = useState(null);
 
   // Extract id from params
@@ -25,53 +24,24 @@ export default function EditStorePage() {
     resolveParams();
   }, [params]);
 
-  // Fetch store on mount
-  useEffect(() => {
-    const fetchStore = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        if (!account || !account.id) {
-          setError('No account information available');
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(`/api/stores/${id}`, {
-          headers: {
-            'x-user-id': account.id,
-            'x-user-role': account.role
-          }
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to load store');
-        }
-
-        const result = await response.json();
-        setStore(result.data);
-      } catch (err) {
-        setError(err.message || 'Failed to load store. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id && account) {
-      fetchStore();
-    }
-  }, [id, account]);
+  // Shares the same cached /api/stores/{id} response as stores/[id]/page.js.
+  const {
+    data: storeJson,
+    isPending: loading,
+    error: queryError,
+  } = useStoreDetailQuery(id);
+  const store = storeJson?.data || null;
+  const error = submitError || (queryError ? queryError.message || 'Failed to load store' : null);
+  const invalidateStoreDetail = useInvalidateStoreDetail();
 
   // Update store
   const handleSubmit = async (formData) => {
     try {
       setFormLoading(true);
-      setError(null);
+      setSubmitError(null);
 
       if (!account || !account.id) {
-        setError('No account information available');
+        setSubmitError('No account information available');
         setFormLoading(false);
         return;
       }
@@ -91,9 +61,10 @@ export default function EditStorePage() {
         throw new Error(errorData.error || 'Failed to update store');
       }
 
+      invalidateStoreDetail(id);
       router.push(`/stores/${id}`);
     } catch (err) {
-      setError(err.message || 'Failed to update store. Please try again.');
+      setSubmitError(err.message || 'Failed to update store. Please try again.');
     } finally {
       setFormLoading(false);
     }

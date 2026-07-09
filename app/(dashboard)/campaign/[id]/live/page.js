@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, CalendarDays, Store as StoreIcon } from "lucide-react";
-import { useAuthContext } from "@/components/auth/AuthContext";
-import { criticalFetchService } from "@/lib/criticalFetchService";
+import { useCampaignQuery } from "@/hooks/queries/useCampaignQuery";
 import Badge from "@/components/dashboard/Badge";
 import CampaignQrStudio from "@/components/campaign/CampaignQrStudio";
 import styles from "./page.module.css";
@@ -26,65 +25,17 @@ function statusToVariant(status) {
 
 export default function CampaignLiveViewPage() {
   const router = useRouter();
-  const params = useParams();
-  const { account } = useAuthContext();
+  const { id: campaignId } = useParams();
 
-  const [campaignId, setCampaignId] = useState("");
-  const [campaign, setCampaign] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Unwrap params and fetch campaign with caching
-  useEffect(() => {
-    const fetchCampaign = async () => {
-      try {
-        const { id } = await params;
-        setCampaignId(id);
-
-        if (!account?.id) {
-          setError("User authentication required");
-          setLoading(false);
-          return;
-        }
-
-        const result = await criticalFetchService.fetchCriticalFirst(
-          `campaign-live-${id}`,
-          [
-            {
-              key: 'campaign',
-              url: `/api/campaigns/${id}`,
-              options: {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                  "Content-Type": "application/json",
-                  "x-user-id": account.id,
-                  "x-user-role": account.role || "Merchant",
-                },
-              },
-            },
-          ],
-          []
-        );
-
-        const data = result.critical?.campaign;
-        const campaignData = data?.data || data;
-
-        if (!campaignData?._id) {
-          throw new Error("Invalid campaign data");
-        }
-
-        setCampaign(campaignData);
-      } catch (err) {
-        console.error("Failed to fetch campaign:", err);
-        setError(err.message || "Failed to load campaign");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCampaign();
-  }, [params, account]);
+  // Shares the same cached /api/campaigns/{id} response as
+  // campaign/[id]/page.js and campaign/[id]/edit/page.js.
+  const {
+    data: campaignJson,
+    isPending: loading,
+    error: queryError,
+  } = useCampaignQuery(campaignId);
+  const campaign = campaignJson?.data || null;
+  const error = queryError ? queryError.message || "Failed to load campaign" : null;
 
   // Format date helper
   const formatDate = (dateString) => {

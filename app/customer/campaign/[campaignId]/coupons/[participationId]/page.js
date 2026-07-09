@@ -435,9 +435,6 @@ export default function CouponPage() {
             ) : (
               <div className={styles.rewardValue}>{rewardDisplay}</div>
             )}
-            {/* {reward?.description && (
-              <div className={styles.rewardDesc}>{reward.description}</div>
-            )} */}
           </div>
         </div>
 
@@ -448,6 +445,11 @@ export default function CouponPage() {
               Billing Range: ₹{participation.billingRange.min?.toLocaleString("en-IN")} - ₹{participation.billingRange.max?.toLocaleString("en-IN")}
             </span>
           </div>
+        )}
+
+        {/* Reward description (gift details, offer terms, etc.) */}
+        {reward?.description && (
+          <div className={styles.rewardDesc}>{reward.description}</div>
         )}
 
         {/* 5-minute countdown */}

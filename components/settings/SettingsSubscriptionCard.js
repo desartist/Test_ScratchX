@@ -1,22 +1,15 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { Zap, Gift, ArrowRight } from "lucide-react";
+import { useSubscriptionCurrentQuery } from "@/hooks/queries/useSubscriptionQuery";
 import styles from "./SettingsSubscriptionCard.module.css";
 
 export default function SettingsSubscriptionCard() {
   const router = useRouter();
-  const [subData, setSubData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetch("/api/subscription/current", { credentials: "include" })
-      .then((r) => r.ok ? r.json() : Promise.reject("Failed"))
-      .then((data) => setSubData(data))
-      .catch((err) => setError(String(err)))
-      .finally(() => setLoading(false));
-  }, []);
+  // Shares the same cached response as SettingsAccountCard and
+  // SettingsProfileCard instead of firing its own request.
+  const { data: subData, isPending: loading, error } = useSubscriptionCurrentQuery();
 
   if (loading) {
     return (
