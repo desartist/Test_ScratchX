@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthContext } from './AuthContext';
 import FormInput from '../common/FormInput';
 import FormButton from '../common/FormButton';
@@ -9,6 +10,7 @@ import FormSuccess from '../common/FormSuccess';
 import styles from './PasswordResetRequestForm.module.css';
 
 export default function PasswordResetRequestForm() {
+  const router = useRouter();
   const { requestPasswordReset, error, isLoading, clearError } = useAuthContext();
   const [email, setEmail] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
@@ -39,10 +41,19 @@ export default function PasswordResetRequestForm() {
     }
 
     try {
-      await requestPasswordReset(email);
-      setSuccessMessage('Email sent with reset instructions');
+      const result = await requestPasswordReset(email);
       setEmail('');
       setValidationErrors({});
+
+      // Stopgap while email delivery isn't reliably configured: the API
+      // hands back a live reset token, so skip straight to the set-new-
+      // password screen instead of waiting on an email that may never arrive.
+      if (result?.resetToken) {
+        router.push(`/auth/reset-password?token=${result.resetToken}`);
+        return;
+      }
+
+      setSuccessMessage('Email sent with reset instructions');
     } catch (err) {
       // Error is handled by AuthContext
     }

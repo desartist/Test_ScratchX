@@ -27,8 +27,8 @@ export default function ResetPasswordPage() {
 
     try {
       await requestPasswordReset(email);
-      setSuccess(true);
       setEmail('');
+      setSuccess(true);
     } catch {
       // error handled by AuthContext
     }

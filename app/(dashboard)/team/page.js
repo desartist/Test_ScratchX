@@ -1,15 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useAuthContext } from "@/components/auth/AuthContext";
+import React, { useState } from "react";
 import { UserPlus, Edit2, Trash2, AlertCircle, X } from "lucide-react";
+import {
+  useTeamMembersQuery,
+  useCreateTeamMemberMutation,
+  useUpdateTeamMemberMutation,
+  useDeleteTeamMemberMutation,
+} from "@/hooks/queries/useTeamMembersQuery";
 import styles from "./team.module.css";
 
 export default function TeamPage() {
-  const { account } = useAuthContext();
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { data, isPending: loading } = useTeamMembersQuery();
+  const teamMembers = data?.members || [];
+  const createMemberMutation = useCreateTeamMemberMutation();
+  const updateMemberMutation = useUpdateTeamMemberMutation();
+  const deleteMemberMutation = useDeleteTeamMemberMutation();
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
@@ -26,41 +32,10 @@ export default function TeamPage() {
   });
   const [formError, setFormError] = useState(null);
   const [editFormError, setEditFormError] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [deleting, setDeleting] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch team members
-        const teamResponse = await fetch("/api/team/members", {
-          credentials: "include",
-        });
-
-        if (teamResponse.ok) {
-          const teamData = await teamResponse.json();
-          setTeamMembers(teamData.members || []);
-        } else if (teamResponse.status !== 404) {
-          setError("Failed to load team members");
-        }
-
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Error loading team data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (account?.id) {
-      fetchData();
-    }
-  }, [account?.id]);
+  const submitting = createMemberMutation.isPending || updateMemberMutation.isPending;
+  const deleting = deleteMemberMutation.isPending ? memberToDelete?._id : null;
 
   const canAddMore = true;
 
@@ -112,28 +87,12 @@ export default function TeamPage() {
       return;
     }
 
-    setSubmitting(true);
     try {
-      const res = await fetch("/api/team/members", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to create team member");
-      }
-
-      setTeamMembers((prev) => [data.member, ...prev]);
+      await createMemberMutation.mutateAsync(formData);
       setShowModal(false);
       setFormData({ name: "", email: "", phone: "", password: "" });
     } catch (err) {
       setFormError(err.message);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -164,37 +123,12 @@ export default function TeamPage() {
       return;
     }
 
-    setSubmitting(true);
     try {
-      const res = await fetch("/api/team/members", {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          memberId: editingMember._id,
-          ...editFormData,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update team member");
-      }
-
-      setTeamMembers((prev) =>
-        prev.map((m) =>
-          m._id === editingMember._id
-            ? { ...m, ...editFormData }
-            : m
-        )
-      );
+      await updateMemberMutation.mutateAsync({ memberId: editingMember._id, ...editFormData });
       setShowEditModal(false);
       setEditingMember(null);
     } catch (err) {
       setEditFormError(err.message);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -205,27 +139,13 @@ export default function TeamPage() {
 
   const handleConfirmDelete = async () => {
     const memberId = memberToDelete._id;
-    setDeleting(memberId);
     setShowDeleteConfirm(false);
 
     try {
-      const res = await fetch(`/api/team/members?memberId=${memberId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to delete team member");
-      }
-
-      setTeamMembers((prev) => prev.filter((m) => m._id !== memberId));
+      await deleteMemberMutation.mutateAsync(memberId);
       setMemberToDelete(null);
     } catch (err) {
       alert(`Error: ${err.message}`);
-    } finally {
-      setDeleting(null);
     }
   };
 

@@ -4,6 +4,8 @@ import React from "react";
 import { Zap, AlertCircle, TrendingUp, Clock } from "lucide-react";
 import styles from "./SubscriptionStatus.module.css";
 
+const UNLIMITED_SCRATCHES_DURATION_DAYS = 365;
+
 export default function SubscriptionStatus({ subscription, scratchEntitlement }) {
   if (!subscription) {
     return (
@@ -129,7 +131,9 @@ export default function SubscriptionStatus({ subscription, scratchEntitlement })
                     className={`${styles.progress} ${styles.safe}`}
                     style={{
                       width: `${Math.max(
-                        (scratchEntitlement.daysRemaining / 90) * 100,
+                        (scratchEntitlement.daysRemaining /
+                          UNLIMITED_SCRATCHES_DURATION_DAYS) *
+                          100,
                         5
                       )}%`,
                     }}

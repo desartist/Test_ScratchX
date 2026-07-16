@@ -198,7 +198,7 @@ export function AuthProvider({ children }) {
     setError(null);
 
     try {
-      await authService.requestPasswordReset(email);
+      return await authService.requestPasswordReset(email);
     } catch (err) {
       setError(err.message);
       throw err;
