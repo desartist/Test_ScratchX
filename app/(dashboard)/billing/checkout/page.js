@@ -314,7 +314,7 @@ function CheckoutContent() {
               <ul className={styles.featuresList}>
                 {[
                   "Unlimited Campaigns",
-                  "Unlimited scratch cards / month",
+                  "Unlimited scratch cards / year",
                   "Reward Management",
                   "Customer Database",
                   "Analytics Dashboard",

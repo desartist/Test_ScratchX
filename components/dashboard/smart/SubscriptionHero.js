@@ -65,7 +65,7 @@ export default function SubscriptionHero({
 
       {expiringSoon && (
         <div className={styles.warning}>
-          ⚠ Unlimited scratch cards / month expire in {daysRemaining} days.
+          ⚠ Unlimited scratch cards / year expire in {daysRemaining} days.
         </div>
       )}
 

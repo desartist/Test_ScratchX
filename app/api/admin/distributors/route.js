@@ -21,18 +21,45 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
   const limit = Math.min(100, parseInt(searchParams.get("limit") ?? "20"));
+  const search = searchParams.get("search") || "";
+  const status = searchParams.get("status");
   const skip = (page - 1) * limit;
 
-  const [distributors, total] = await Promise.all([
-    Account.find({ role: "Distributor" })
+  const query = { role: "Distributor" };
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { "profile.companyName": { $regex: search, $options: "i" } },
+    ];
+  }
+  if (status) {
+    query.status = status;
+  }
+
+  const [distributors, total, activeCount, suspendedCount, totalCount] = await Promise.all([
+    Account.find(query)
       .select("-password -__v")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
+    Account.countDocuments(query),
+    Account.countDocuments({ role: "Distributor", status: "active" }),
+    Account.countDocuments({ role: "Distributor", status: "suspended" }),
     Account.countDocuments({ role: "Distributor" }),
   ]);
 
-  return Response.json({ success: true, distributors, total, page, limit }, { status: 200 });
+  return Response.json(
+    {
+      success: true,
+      distributors,
+      total,
+      page,
+      limit,
+      metrics: { total: totalCount, active: activeCount, suspended: suspendedCount },
+    },
+    { status: 200 },
+  );
 }
 
 // POST /api/admin/distributors — create a distributor account
@@ -43,7 +70,7 @@ export async function POST(request) {
   const denied = superAdminOnly(account);
   if (denied) return denied;
 
-  const { name, email, password, companyName, territory, region } =
+  const { name, email, phone, password, companyName, territory, region, commissionRate } =
     await request.json();
 
   if (!name || !email || !password) {
@@ -53,15 +80,36 @@ export async function POST(request) {
     );
   }
 
+  let parsedCommissionRate = null;
+  if (commissionRate !== undefined && commissionRate !== null && commissionRate !== "") {
+    parsedCommissionRate = Number(commissionRate);
+    if (Number.isNaN(parsedCommissionRate) || parsedCommissionRate < 0 || parsedCommissionRate > 100) {
+      return Response.json(
+        { success: false, error: "commissionRate must be a number between 0 and 100" },
+        { status: 400 },
+      );
+    }
+  }
+
   try {
     const hashed = await bcrypt.hash(password, 10);
     const distributor = await Account.create({
       name,
       email,
+      phone,
       password: hashed,
       role: "Distributor",
+      status: "active",
+      // Super_Admin is both the creator and the immediate parent in the
+      // role hierarchy (Super_Admin -> Distributor -> Merchant -> ...).
       createdBy: account._id,
-      profile: { companyName, territory, region },
+      parentId: account._id,
+      isEmailVerified: true,
+      emailVerifiedAt: new Date(),
+      // commissionRate is the % of each merchant payment this distributor
+      // earns (see app/api/payment/verify/route.js) — falls back to
+      // DISTRIBUTOR_COMMISSION_RATE env if left unset.
+      profile: { companyName, territory, region, commissionRate: parsedCommissionRate },
     });
 
     return Response.json(
@@ -71,7 +119,9 @@ export async function POST(request) {
           _id: distributor._id,
           name: distributor.name,
           email: distributor.email,
+          phone: distributor.phone,
           role: distributor.role,
+          status: distributor.status,
           profile: distributor.profile,
         },
       },

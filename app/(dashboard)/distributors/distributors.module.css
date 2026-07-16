@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #ffffff 0%, #ededed 100%);
+  background: linear-gradient(135deg, #fff 0%, #ededed 100%);
   padding: 32px 24px;
 }
 
@@ -16,6 +16,7 @@
   align-items: flex-start;
   gap: 24px;
   margin-bottom: 32px;
+  flex-wrap: wrap;
 }
 
 .headerContent h1 {
@@ -43,7 +44,6 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  text-decoration: none;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(239, 158, 27, 0.3);
 }
@@ -86,12 +86,8 @@
   border-left-color: #10b981;
 }
 
-.metric-purple {
-  border-left-color: #8b5cf6;
-}
-
-.metric-orange {
-  border-left-color: #f59e0b;
+.metric-red {
+  border-left-color: #ef4444;
 }
 
 .metricIcon {
@@ -111,14 +107,9 @@
   color: #10b981;
 }
 
-.metric-purple .metricIcon {
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
-}
-
-.metric-orange .metricIcon {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+.metric-red .metricIcon {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 
 .metricContent {
@@ -254,8 +245,8 @@
   color: #010f44;
 }
 
-/* Retailer Info */
-.retailerInfo {
+/* Distributor Info */
+.distributorInfo {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -304,6 +295,11 @@
   color: #10b981;
 }
 
+.badge-suspended {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
 .badge-pending {
   background: rgba(245, 158, 11, 0.1);
   color: #f59e0b;
@@ -312,17 +308,6 @@
 .badge-inactive {
   background: rgba(107, 114, 128, 0.1);
   color: #6b7280;
-}
-
-.badge-suspended {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-/* Commission */
-.commission {
-  color: #10b981;
-  font-weight: 600;
 }
 
 /* Status toggle */
@@ -359,40 +344,6 @@
   cursor: not-allowed;
 }
 
-/* Actions */
-.actions {
-  display: flex;
-  gap: 8px;
-}
-
-.actionBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  background: #f3f4f6;
-  border: none;
-  color: #ef9e1b;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-}
-
-.actionBtn:hover {
-  background: #e5e7eb;
-  transform: translateY(-2px);
-}
-
-.actionBtn.danger {
-  color: #ef4444;
-}
-
-.actionBtn.danger:hover {
-  background: rgba(239, 68, 68, 0.1);
-}
-
 /* Empty State */
 .emptyState {
   padding: 60px 24px !important;
@@ -417,7 +368,6 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  text-decoration: none;
   transition: all 0.3s ease;
 }
 
@@ -425,44 +375,7 @@
   background: #d98e14;
 }
 
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  margin-top: 32px;
-}
-
-.paginationBtn {
-  padding: 10px 16px;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #ef9e1b;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.paginationBtn:hover:not(:disabled) {
-  background: #ef9e1b;
-  color: white;
-}
-
-.paginationBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pageInfo {
-  font-size: 14px;
-  color: #6b7280;
-  font-weight: 600;
-}
-
-/* Loading State */
+/* Loading / Error State */
 .loadingState {
   background: white;
   border-radius: 16px;
@@ -491,7 +404,6 @@
   color: #6b7280;
 }
 
-/* Error State */
 .errorState {
   background: white;
   border-radius: 16px;
@@ -526,393 +438,7 @@
   background: #d98e14;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .filterSection {
-    flex-direction: column;
-  }
-
-  .searchBox {
-    min-width: 100%;
-  }
-
-  .table th,
-  .table td {
-    padding: 12px;
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 768px) {
-  .headerContent h1 {
-    font-size: 24px;
-  }
-  .page {
-    padding: 20px 16px;
-  }
-
-  .header {
-    flex-direction: column;
-  }
-
-  .primaryButton {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .metricsGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  .metricCard {
-    padding: 12px;
-    gap: 8px;
-    border-left-width: 3px;
-  }
-
-  .metricIcon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-  }
-
-  .metricIcon svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .metricLabel {
-    font-size: 11px;
-  }
-
-  .metricValue {
-    font-size: 18px;
-  }
-
-  .tableSection {
-    overflow-x: auto;
-  }
-
-  .table {
-    min-width: 100%;
-  }
-
-  .table th,
-  .table td {
-    padding: 12px 8px;
-    font-size: 12px;
-  }
-
-  .avatar {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-  }
-
-  .name {
-    font-size: 13px;
-  }
-
-  .email {
-    font-size: 11px;
-  }
-
-  .actions {
-    gap: 4px;
-  }
-
-  .actionBtn {
-    width: 32px;
-    height: 32px;
-  }
-
-  .actionBtn svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-/* Form Styles */
-.formHeader {
-  display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 32px;
-}
-
-.backButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  color: #010f44;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.backButton:hover {
-  background: #f3f4f6;
-  border-color: #ef9e1b;
-  color: #ef9e1b;
-}
-
-.form {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.formSection {
-  margin-bottom: 40px;
-}
-
-.formSection:last-of-type {
-  margin-bottom: 32px;
-}
-
-.sectionTitle {
-  margin: 0 0 24px 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #010f44;
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 16px;
-}
-
-.formGroup {
-  margin-bottom: 20px;
-}
-
-.formRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 20px;
-}
-
-.formRow .formGroup {
-  margin-bottom: 0;
-}
-
-.formLabel {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #010f44;
-}
-
-.formInput,
-.formSelect,
-.formTextarea {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #010f44;
-  font-family: inherit;
-  transition: all 0.3s ease;
-}
-
-.formInput:focus,
-.formSelect:focus,
-.formTextarea:focus {
-  outline: none;
-  border-color: #ef9e1b;
-  box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.1);
-}
-
-.formInput:disabled,
-.formSelect:disabled,
-.formTextarea:disabled {
-  background: #f9fafb;
-  color: #9ca3af;
-  cursor: not-allowed;
-}
-
-.formInput.inputError,
-.formSelect.inputError,
-.formTextarea.inputError {
-  border-color: #ef4444;
-  background: #fef2f2;
-}
-
-.errorText {
-  display: block;
-  margin-top: 6px;
-  font-size: 12px;
-  color: #ef4444;
-  font-weight: 500;
-}
-
-/* Alert Box */
-.alertBox {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 16px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-  margin-bottom: 24px;
-}
-
-.alertBox svg {
-  color: #ef4444;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.alertTitle {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #dc2626;
-}
-
-.alertMessage {
-  margin: 0;
-  font-size: 14px;
-  color: #991b1b;
-}
-
-.closeAlert {
-  margin-left: auto;
-  padding: 0;
-  background: none;
-  border: none;
-  color: #ef4444;
-  font-size: 20px;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.closeAlert:hover {
-  color: #dc2626;
-}
-
-/* Form Actions */
-.formActions {
-  display: flex;
-  gap: 16px;
-  justify-content: flex-end;
-  margin-top: 40px;
-  padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.cancelButton,
-.submitButton {
-  padding: 12px 28px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.cancelButton {
-  background: #f3f4f6;
-  color: #010f44;
-  border: 1px solid #e5e7eb;
-}
-
-.cancelButton:hover:not(:disabled) {
-  background: #e5e7eb;
-  border-color: #d1d5db;
-}
-
-.submitButton {
-  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(239, 158, 27, 0.3);
-}
-
-.submitButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.4);
-}
-
-.cancelButton:disabled,
-.submitButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Success State */
-.successState {
-  background: white;
-  border-radius: 16px;
-  padding: 80px 24px;
-  text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-}
-
-.successIcon {
-  width: 80px;
-  height: 80px;
-  background: #f0fdf4;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 24px;
-  color: #10b981;
-}
-
-.successState h2 {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #010f44;
-}
-
-.successState p {
-  margin: 0;
-  font-size: 16px;
-  color: #6b7280;
-}
-
-/* Responsive Forms */
-@media (max-width: 768px) {
-  .form {
-    padding: 24px;
-  }
-
-  .formHeader {
-    flex-direction: column;
-  }
-
-  .backButton {
-    align-self: flex-start;
-  }
-
-  .formRow {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .formActions {
-    flex-direction: column-reverse;
-  }
-
-  .cancelButton,
-  .submitButton {
-    width: 100%;
-  }
-}
-
-/* Add Retailer Modal */
+/* Modal */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -1000,6 +526,73 @@
   font-size: 14px;
 }
 
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #010f44;
+}
+
+.formInput {
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #ef9e1b;
+  box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.1);
+}
+
+.formInput::placeholder {
+  color: #b0b8c0;
+}
+
+.passwordInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInputWrapper .formInput {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.passwordToggle:hover {
+  color: #ef9e1b;
+}
+
 .modalFooter {
   display: flex;
   gap: 12px;
@@ -1009,11 +602,45 @@
   border-radius: 0 0 16px 16px;
 }
 
-@media (max-width: 480px) {
-  .modal {
-    max-width: 100%;
-    border-radius: 16px 16px 0 0;
-  }
+.cancelButton {
+  flex: 1;
+  padding: 12px 24px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #010f44;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.submitButton {
+  flex: 1;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.3);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Suspend/Activate Confirmation Modal */
@@ -1127,5 +754,87 @@
     max-width: 100%;
     padding: 32px 20px;
     margin: 0 20px;
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .filterSection {
+    flex-direction: column;
+  }
+
+  .searchBox {
+    min-width: 100%;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerContent h1 {
+    font-size: 24px;
+  }
+  .page {
+    padding: 20px 16px;
+  }
+
+  .header {
+    flex-direction: column;
+  }
+
+  .primaryButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .metricsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .metricCard {
+    padding: 12px;
+    gap: 8px;
+    border-left-width: 3px;
+  }
+
+  .metricIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  .metricIcon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .metricLabel {
+    font-size: 11px;
+  }
+
+  .metricValue {
+    font-size: 18px;
+  }
+
+  .tableSection {
+    overflow-x: auto;
+  }
+
+  .table {
+    min-width: 640px;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
   }
 }

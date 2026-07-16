@@ -4,7 +4,16 @@ import { createHmac } from 'crypto';
 import Session from '@/models/sessionModel';
 import { connectDB } from '@/lib/connectDB';
 
-const COOKIE_NAMES = ['authToken', 'refreshToken', 'sessionId', 'accountId', 'accountRole', 'userEmail'];
+const COOKIE_NAMES = [
+  'authToken',
+  'refreshToken',
+  'sessionId',
+  'accountId',
+  'accountRole',
+  'userEmail',
+  'merchantHasStore',
+  'merchantHasSub',
+];
 
 // GET /api/auth/logout — clear all auth cookies and redirect to login.
 // Used by the server layout when a session is invalid (user not in DB).
@@ -75,9 +84,9 @@ export async function POST(request) {
       { status: 200 }
     );
 
-    response.cookies.delete('authToken');
-    response.cookies.delete('refreshToken');
-    response.cookies.delete('accountRole');
+    for (const name of COOKIE_NAMES) {
+      response.cookies.set(name, '', { maxAge: 0, path: '/' });
+    }
 
     return response;
   } catch (error) {

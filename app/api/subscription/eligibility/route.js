@@ -64,7 +64,7 @@ export async function GET(request) {
 
     const now = new Date();
 
-    // Check for unlimited scratches (quarterly allowance)
+    // Check for unlimited scratches (yearly allowance)
     if (
       subscription.unlimitedScratches?.isActive &&
       subscription.unlimitedScratches?.validUntil &&

@@ -35,22 +35,28 @@ export default async function Layout({ children }) {
   const role = user?.role || 'Merchant';
   const merchantHasStore = cookieStore.get('merchantHasStore')?.value;
 
-  // Verify store ownership via API whenever cookie isn't definitively '1'
-  // (handles stuck '0' cookies after store creation, and missing cookies from OAuth)
-  let hasStore = merchantHasStore === '1';
-  if (!hasStore) {
-    try {
-      const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
-      const res = await fetch(`${base}/api/stores`, {
-        headers: { cookie: cookieHeader },
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        hasStore = Array.isArray(data.stores) ? data.stores.length > 0 : false;
+  // Store-ownership onboarding gate only applies to Merchant accounts — every
+  // other role (Super_Admin, Distributor, Manager, etc.) naturally has zero
+  // stores of their own and must never be stripped of the sidebar/header for it.
+  let hasStore = true;
+  if (role === 'Merchant') {
+    // Verify store ownership via API whenever cookie isn't definitively '1'
+    // (handles stuck '0' cookies after store creation, and missing cookies from OAuth)
+    hasStore = merchantHasStore === '1';
+    if (!hasStore) {
+      try {
+        const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+        const res = await fetch(`${base}/api/stores`, {
+          headers: { cookie: cookieHeader },
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          hasStore = Array.isArray(data.stores) ? data.stores.length > 0 : false;
+        }
+      } catch {
+        hasStore = false;
       }
-    } catch {
-      hasStore = false;
     }
   }
 

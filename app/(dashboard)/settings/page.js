@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { LogOut } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
-import { criticalFetchService } from "@/lib/criticalFetchService";
+import { useMerchantAccountQuery } from "@/hooks/queries/useMerchantAccountQuery";
 import SettingsProfileCard from "@/components/settings/SettingsProfileCard";
 import SettingsAccountCard from "@/components/settings/SettingsAccountCard";
 import SettingsSubscriptionCard from "@/components/settings/SettingsSubscriptionCard";
@@ -16,53 +16,8 @@ import styles from "./settings.module.css";
 
 export default function SettingsPage() {
   const { account, logout } = useAuthContext();
-  const [merchant, setMerchant] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchMerchantData = async () => {
-      if (!account?.id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const result = await criticalFetchService.fetchCriticalFirst(
-          'settings-merchant',
-          [
-            {
-              key: 'merchant',
-              url: '/api/merchant',
-              options: {
-                headers: {
-                  'x-user-id': account.id,
-                  'x-user-role': account.role || 'merchant',
-                },
-              },
-            },
-          ],
-          []
-        );
-
-        const data = result.critical?.merchant;
-        if (data) {
-          console.log("Fetched merchant data:", data);
-          setMerchant(data.account || account);
-        } else {
-          setMerchant(account);
-        }
-      } catch (err) {
-        console.error("Error fetching merchant data:", err);
-        setMerchant(account);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMerchantData();
-  }, [account?.id]);
+  const { data, isPending: loading } = useMerchantAccountQuery(account?.id, account?.role);
+  const merchant = data?.account || account;
 
   if (loading) {
     return (

@@ -13,13 +13,19 @@
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 24px;
   margin-bottom: 32px;
 }
 
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .headerContent h1 {
-  margin: 0 0 8px 0;
+  margin: 0;
   font-size: 32px;
   font-weight: 700;
   color: #010f44;
@@ -35,13 +41,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 16px;
+  padding: 4px 10px;
   background: #ef4444;
   color: white;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 /* Filter Section */
@@ -133,8 +140,8 @@
   background: #3b82f6;
 }
 
-/* Notification Type Styles */
-.type-user_login {
+/* Notification Type Styles (must match the `type` enum in models/notificationModel.js) */
+.type-system_alert {
   background: #0d21a1;
 }
 
@@ -142,28 +149,25 @@
   background: linear-gradient(135deg, #0d21a1 0%, #ff9907 100%);
 }
 
-.type-campaign_updated {
-  background: #3b82f6;
-}
-
-.type-campaign_deleted {
-  background: #ef4444;
-}
-
-.type-store_created {
-  background: linear-gradient(135deg, #0d21a1 0%, #ff9907 100%);
-}
-
-.type-store_updated {
-  background: #f59e0b;
-}
-
-.type-coupon_created {
+.type-campaign_activated {
   background: #10b981;
 }
 
-.type-participation_created {
+.type-plan_purchased,
+.type-scratch_pack_purchased {
   background: #8b5cf6;
+}
+
+.type-scratch_expiry_warning {
+  background: #f59e0b;
+}
+
+.type-scratch_expired {
+  background: #ef4444;
+}
+
+.type-other {
+  background: #3b82f6;
 }
 
 .content {
@@ -321,12 +325,8 @@
     padding: 20px 16px;
   }
 
-  .header {
-    flex-direction: column;
-  }
-
-  .unreadBadge {
-    align-self: flex-start;
+  .headerContent h1 {
+    font-size: 24px;
   }
 
   .notificationItem {

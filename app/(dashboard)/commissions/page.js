@@ -1,103 +1,48 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import {
   TrendingUp,
-  Filter,
   Search,
   Download,
   AlertCircle,
-  Calendar,
   BarChart3,
   CheckCircle,
-  Clock,
   DollarSign,
 } from 'lucide-react';
+import { useDistributorCommissionsQuery } from '@/hooks/queries/useDistributorCommissionsQuery';
 import styles from './commissions.module.css';
 
 export default function CommissionsPage() {
-  const [commissions, setCommissions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [summary, setSummary] = useState({
+  const [activeTab, setActiveTab] = useState('list');
+
+  const { data, isPending: loading, error: queryError, refetch } = useDistributorCommissionsQuery({
+    page,
+    limit,
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    search: searchTerm,
+  });
+
+  const commissions = data?.commissions || [];
+  const summary = data?.summary || {
     totalEarned: 0,
     totalApproved: 0,
     totalPaid: 0,
     pendingCount: 0,
     approvedCount: 0,
     paidCount: 0,
-  });
-  const [activeTab, setActiveTab] = useState('list');
-
-  useEffect(() => {
-    fetchCommissions();
-    fetchSummary();
-  }, [page, statusFilter, searchTerm]);
-
-  // Auto-refetch commissions when page becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        console.log("[Commissions] Page visible - refetching");
-        setPage(1);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, []);
-
-  const fetchCommissions = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        page,
-        limit,
-        ...(statusFilter !== 'all' && { status: statusFilter }),
-        ...(searchTerm && { search: searchTerm }),
-      });
-
-      const res = await fetch(`/api/distributor/commissions?${params}`, {
-        credentials: 'include',
-      });
-      const json = await res.json();
-
-      if (!json.success) throw new Error(json.error);
-
-      setCommissions(json.data.commissions || []);
-      setError(null);
-    } catch (err) {
-      console.error('[Commissions] Error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
   };
-
-  const fetchSummary = async () => {
-    try {
-      const res = await fetch('/api/distributor/commissions?endpoint=summary', {
-        credentials: 'include',
-      });
-      const json = await res.json();
-
-      if (json.success) {
-        setSummary(json.data);
-      }
-    } catch (err) {
-      console.error('[Summary] Error:', err);
-    }
-  };
+  const error = queryError ? queryError.message : null;
 
   const handleExport = () => {
     alert('Commission export would generate CSV file');
   };
 
-  if (loading && commissions.length === 0) {
+  if (loading) {
     return (
       <div className={styles.page}>
         <div className={styles.loadingState}>
@@ -118,7 +63,7 @@ export default function CommissionsPage() {
           <div className={styles.errorState}>
             <AlertCircle size={48} />
             <p>{error}</p>
-            <button onClick={fetchCommissions} className={styles.retryButton}>
+            <button onClick={() => refetch()} className={styles.retryButton}>
               Try Again
             </button>
           </div>
@@ -150,7 +95,7 @@ export default function CommissionsPage() {
             </div>
             <div className={styles.cardContent}>
               <p className={styles.cardLabel}>Total Earned</p>
-              <p className={styles.cardValue}>₹{(summary.totalEarned || 0).toLocaleString()}</p>
+              <p className={styles.cardValue}>₹{(summary.totalEarned || 0).toLocaleString('en-IN')}</p>
               <p className={styles.cardSubtext}>{summary.pendingCount} pending</p>
             </div>
           </div>
@@ -161,7 +106,7 @@ export default function CommissionsPage() {
             </div>
             <div className={styles.cardContent}>
               <p className={styles.cardLabel}>Total Approved</p>
-              <p className={styles.cardValue}>₹{(summary.totalApproved || 0).toLocaleString()}</p>
+              <p className={styles.cardValue}>₹{(summary.totalApproved || 0).toLocaleString('en-IN')}</p>
               <p className={styles.cardSubtext}>{summary.approvedCount} approved</p>
             </div>
           </div>
@@ -172,7 +117,7 @@ export default function CommissionsPage() {
             </div>
             <div className={styles.cardContent}>
               <p className={styles.cardLabel}>Total Paid</p>
-              <p className={styles.cardValue}>₹{(summary.totalPaid || 0).toLocaleString()}</p>
+              <p className={styles.cardValue}>₹{(summary.totalPaid || 0).toLocaleString('en-IN')}</p>
               <p className={styles.cardSubtext}>{summary.paidCount} paid</p>
             </div>
           </div>
@@ -184,7 +129,7 @@ export default function CommissionsPage() {
             <div className={styles.cardContent}>
               <p className={styles.cardLabel}>Pending Payout</p>
               <p className={styles.cardValue}>
-                ₹{(summary.totalEarned - summary.totalPaid || 0).toLocaleString()}
+                ₹{Math.max(0, (summary.totalEarned || 0) - (summary.totalPaid || 0)).toLocaleString('en-IN')}
               </p>
               <p className={styles.cardSubtext}>Ready to payout</p>
             </div>
@@ -224,7 +169,7 @@ export default function CommissionsPage() {
                 <Search size={20} />
                 <input
                   type="text"
-                  placeholder="Search by retailer name..."
+                  placeholder="Search by merchant name..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -243,7 +188,7 @@ export default function CommissionsPage() {
                 className={styles.filterSelect}
               >
                 <option value="all">All Status</option>
-                <option value="earned">Earned</option>
+                <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
                 <option value="paid">Paid</option>
               </select>
@@ -254,9 +199,9 @@ export default function CommissionsPage() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Retailer</th>
+                    <th>Merchant</th>
                     <th>Amount</th>
-                    <th>Percentage</th>
+                    <th>Rate</th>
                     <th>Earned Date</th>
                     <th>Status</th>
                     <th>Payout Date</th>
@@ -272,22 +217,27 @@ export default function CommissionsPage() {
                     </tr>
                   ) : (
                     commissions.map((comm) => (
-                      <tr key={comm._id}>
+                      <tr key={comm.id}>
                         <td>
-                          <div className={styles.retailerInfo}>
-                            <span className={styles.retailerName}>{comm.retailerName || 'N/A'}</span>
+                          <div className={styles.merchantInfo}>
+                            <span className={styles.merchantName}>{comm.merchantName}</span>
+                            {comm.merchantEmail && (
+                              <span className={styles.merchantEmail}>{comm.merchantEmail}</span>
+                            )}
                           </div>
                         </td>
                         <td className={styles.amount}>
-                          ₹{(comm.commissionAmount || 0).toLocaleString()}
+                          ₹{(comm.amount || 0).toLocaleString('en-IN')}
                         </td>
-                        <td>{comm.commissionPercentage}%</td>
+                        <td>{comm.percentage != null ? `${comm.percentage}%` : '—'}</td>
                         <td>
-                          {new Date(comm.earnedAt).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
+                          {comm.earnedAt
+                            ? new Date(comm.earnedAt).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })
+                            : '—'}
                         </td>
                         <td>
                           <span className={`${styles.badge} ${styles[`badge-${comm.status}`]}`}>
@@ -301,7 +251,7 @@ export default function CommissionsPage() {
                                 month: 'short',
                                 year: 'numeric',
                               })
-                            : '-'}
+                            : '—'}
                         </td>
                       </tr>
                     ))
@@ -340,15 +290,15 @@ export default function CommissionsPage() {
               <div className={styles.breakdown}>
                 <div className={styles.breakdownItem}>
                   <span>Earned</span>
-                  <strong className={styles.earned}>₹{(summary.totalEarned || 0).toLocaleString()}</strong>
+                  <strong className={styles.earned}>₹{(summary.totalEarned || 0).toLocaleString('en-IN')}</strong>
                 </div>
                 <div className={styles.breakdownItem}>
                   <span>Approved</span>
-                  <strong className={styles.approved}>₹{(summary.totalApproved || 0).toLocaleString()}</strong>
+                  <strong className={styles.approved}>₹{(summary.totalApproved || 0).toLocaleString('en-IN')}</strong>
                 </div>
                 <div className={styles.breakdownItem}>
                   <span>Paid</span>
-                  <strong className={styles.paid}>₹{(summary.totalPaid || 0).toLocaleString()}</strong>
+                  <strong className={styles.paid}>₹{(summary.totalPaid || 0).toLocaleString('en-IN')}</strong>
                 </div>
               </div>
             </div>
@@ -364,7 +314,14 @@ export default function CommissionsPage() {
           <div className={styles.payoutsSection}>
             <div className={styles.payoutCard}>
               <h3>Recent Payouts</h3>
-              <p className={styles.placeholderText}>No payout history available</p>
+              {summary.paidCount > 0 ? (
+                <p className={styles.placeholderText}>
+                  {summary.paidCount} payout{summary.paidCount === 1 ? '' : 's'} totaling ₹
+                  {(summary.totalPaid || 0).toLocaleString('en-IN')}. Detailed payout history coming soon.
+                </p>
+              ) : (
+                <p className={styles.placeholderText}>No payout history available</p>
+              )}
             </div>
           </div>
         )}

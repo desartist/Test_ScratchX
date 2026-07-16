@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
+import Notification from "@/models/notificationModel";
 import notificationService from "@/lib/services/notificationService";
 
 export async function GET(request) {
@@ -22,11 +23,19 @@ export async function GET(request) {
       ownerType,
       limit
     );
+    const unread = await Notification.countDocuments({
+      ownerId: account._id,
+      ownerType,
+      read: false,
+    });
 
     return NextResponse.json(
       {
         success: true,
-        data: notifications,
+        data: {
+          notifications,
+          unread,
+        },
         count: notifications.length,
       },
       { status: 200 }

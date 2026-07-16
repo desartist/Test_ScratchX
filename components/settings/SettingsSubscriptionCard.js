@@ -86,7 +86,7 @@ export default function SettingsSubscriptionCard() {
           ✓ {formatLimit(limits?.maxStores)} Stores
         </div>
         <div className={styles.feature}>
-          ✓ Unlimited scratch cards / month
+          ✓ Unlimited scratch cards / year
         </div>
       </div>
       {!isTopTier && (

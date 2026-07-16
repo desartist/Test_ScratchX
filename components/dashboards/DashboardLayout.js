@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { useNotificationsQuery } from "@/hooks/queries/useNotificationsQuery";
 import {
   getAccountDisplayName,
   getAccountInitials,
@@ -60,6 +61,8 @@ export default function DashboardLayout({ children, role }) {
   );
   const pathname = usePathname();
   const { account, logout } = useAuthContext();
+  const { data: notificationsData } = useNotificationsQuery();
+  const unreadNotifications = notificationsData?.unread || 0;
 
   // Only needed for old sessions where the cookie was never written (rare).
   useEffect(() => {
@@ -434,6 +437,11 @@ export default function DashboardLayout({ children, role }) {
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                 </svg>
+                {unreadNotifications > 0 && (
+                  <span className={styles.notificationBadge}>
+                    {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                  </span>
+                )}
               </Link>
               {/* <div className={styles.userMeta}>
                 <span className={styles.userName}>

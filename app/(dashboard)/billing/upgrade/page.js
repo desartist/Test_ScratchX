@@ -20,7 +20,7 @@ const HARDCODED_PLANS = [
     type: "one-time",
     features: [
       "Unlimited campaigns",
-      "Unlimited scratch cards / month",
+      "Unlimited scratch cards / year",
       "Customer database",
       "3 team members",
       "Basic analytics & insights",

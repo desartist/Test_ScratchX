@@ -12,46 +12,20 @@ export async function PUT(request) {
 
     const now = new Date();
 
-    // Find all active campaigns that have passed their end date
-    const endedCampaigns = await Campaign.find({
-      status: { $ne: 'ended' }, // Not already ended
-      endDate: { $lt: now } // End date is in the past
-    });
-
-    if (endedCampaigns.length === 0) {
-      return Response.json(
-        {
-          success: true,
-          message: 'No campaigns to update',
-          updated: 0,
-          campaigns: []
-        },
-        { status: 200 }
-      );
-    }
-
-    // Update all ended campaigns
-    const updatedCampaigns = [];
-    for (const campaign of endedCampaigns) {
-      campaign.status = 'ended';
-      await campaign.save();
-      updatedCampaigns.push({
-        _id: campaign._id,
-        campaignName: campaign.campaignName,
-        endDate: campaign.endDate,
-        previousStatus: campaign.status,
-        newStatus: 'ended'
-      });
-    }
-
-    console.log(`✅ Updated ${updatedCampaigns.length} campaign(s) to ended status`);
+    // Single bulk update instead of a find-then-save-per-doc loop.
+    const result = await Campaign.updateMany(
+      {
+        status: { $ne: 'ended' }, // Not already ended
+        endDate: { $lt: now } // End date is in the past
+      },
+      { status: 'ended' }
+    );
 
     return Response.json(
       {
         success: true,
-        message: `Updated ${updatedCampaigns.length} campaign(s) to ended status`,
-        updated: updatedCampaigns.length,
-        campaigns: updatedCampaigns
+        message: `Updated ${result.modifiedCount} campaign(s) to ended status`,
+        updated: result.modifiedCount,
       },
       { status: 200 }
     );
