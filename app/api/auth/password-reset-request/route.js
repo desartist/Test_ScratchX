@@ -95,11 +95,11 @@ export async function POST(request) {
     <!-- Body -->
     <div style="padding: 20px 49px;">
 
-        <h1 style="margin:0 0 35px;font-size:34px;font-weight:700;color:#111827;text-align:center;">
+        <h1 style="margin:0 0 35px;font-size:34px;font-weight:700;color:#111827;text-align: left;">
             Reset your password
         </h1>
 
-        <p style="margin:0 0 25px;font-size:16px;color:#374151;line-height:28px;">
+        <p style="margin:0 0 10px;font-size:16px;color:#374151;line-height:28px;">
             Hi <strong>${account.name || 'there'}</strong>,
         </p>
 
@@ -108,7 +108,7 @@ export async function POST(request) {
         </p>
 
         <!-- Button -->
-        <div style="text-align:center;margin:35px 0;">
+        <div style="text-align:left;margin:28px 0;">
 
             <a
                 href="${resetUrl}"
@@ -119,10 +119,10 @@ export async function POST(request) {
         </div>
 
         <!-- Info Box -->
-        <div style="background:#eff6ff;border-left:4px solid #ef9e1b;padding:18px 20px;border-radius:8px;margin-bottom:35px;">
+        <div style="margin-bottom:18px;">
 
-            <span style="font-size:15px;color:#1e40af;font-weight:600;">
-                ⏰ This password reset link will expire in 10 minutes.
+            <span style="font-size:15px;color:#000;font-weight:600;">
+              This password reset link will expire in 10 minutes.
             </span>
 
         </div>
@@ -134,7 +134,7 @@ export async function POST(request) {
         </p>
 
         <!-- Backup Link -->
-        <div style="padding:20px;background:#f9fafb;border-radius:10px;margin-bottom:35px;">
+        <div style="margin-bottom:35px;">
 
             <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:10px;">
                 Having trouble with the button?
