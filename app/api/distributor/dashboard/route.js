@@ -5,15 +5,10 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/connectDB';
 import { requireAuth } from '@/lib/auth';
-import {
-  commissionService,
-  inventoryService,
-  purchaseService,
-  assignmentService,
-  transactionService,
-} from '@/lib/services/distributor';
+import Account from '@/models/accountModel';
+import Commission from '@/models/commissionModel';
 
-export async function GET(request) {
+export async function GET() {
   try {
     await connectDB();
     const { account, error: authError } = await requireAuth();
@@ -26,90 +21,56 @@ export async function GET(request) {
       );
     }
 
-    // Fetch all metrics in parallel
-    const [inventory, balance, orderStats, assignmentStats, commissionSummary] =
-      await Promise.all([
-        inventoryService.getDistributorInventory(account._id),
-        transactionService.getCurrentBalance(account._id),
-        purchaseService.getOrderStats(account._id,
-          new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          new Date()
-        ),
-        assignmentService.getAssignmentStats(account._id),
-        commissionService.getCommissionSummary(account._id,
-          new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          new Date()
-        ),
-      ]);
+    const [totalRetailers, activeRetailers, commissionAgg] = await Promise.all([
+      Account.countDocuments({ role: 'Merchant', parentId: account._id }),
+      Account.countDocuments({ role: 'Merchant', parentId: account._id, status: 'active' }),
+      Commission.aggregate([
+        { $match: { distributorId: account._id } },
+        { $group: { _id: '$status', total: { $sum: '$totalEarning' }, count: { $sum: 1 } } },
+      ]),
+    ]);
 
-    // Get low inventory alerts
-    const alerts = await inventoryService.getLowInventoryAlerts(account._id);
+    const commission = { earned: 0, approved: 0, paid: 0, pending: 0 };
+    for (const row of commissionAgg) {
+      commission.earned += row.total;
+      if (row._id === 'approved') commission.approved = row.total;
+      if (row._id === 'paid') commission.paid = row.total;
+      if (row._id === 'pending') commission.pending = row.count;
+    }
 
+    // Plan purchasing/inventory and order history for distributors isn't
+    // backed by a real system yet (no working purchase/inventory pipeline
+    // exists) — reporting honest zeros here rather than fabricating numbers.
     const dashboard = {
-      // Metrics cards
       metrics: {
-        currentBalance: balance.balance,
-        totalPlansInventory:
-          inventory.totalPurchased,
-        assignedPlans:
-          inventory.totalAssigned,
-        remainingPlans:
-          inventory.totalRemaining,
-        activePlans: assignmentStats.activeAssignments,
-        monthlyRevenue: orderStats.totalSpent,
-        monthlyProfit: commissionSummary.totalEarned,
-        totalRetailers: assignmentStats.totalAssignments,
+        currentBalance: 0,
+        totalPlansInventory: 0,
+        assignedPlans: 0,
+        remainingPlans: 0,
+        activePlans: activeRetailers,
+        monthlyRevenue: 0,
+        monthlyProfit: commission.earned,
+        totalRetailers,
       },
-
-      // Plan inventory breakdown
       inventory: {
-        core: inventory.plans.CORE || {
-          totalPurchased: 0,
-          totalAssigned: 0,
-          totalRemaining: 0,
-          percentageUtilized: 0,
-        },
-        smart: inventory.plans.SMART || {
-          totalPurchased: 0,
-          totalAssigned: 0,
-          totalRemaining: 0,
-          percentageUtilized: 0,
-        },
+        core: { totalPurchased: 0, totalAssigned: 0, totalRemaining: 0, percentageUtilized: 0 },
+        smart: { totalPurchased: 0, totalAssigned: 0, totalRemaining: 0, percentageUtilized: 0 },
       },
-
-      // Commission breakdown
-      commission: {
-        earned: commissionSummary.totalEarned,
-        approved: commissionSummary.totalApproved,
-        paid: commissionSummary.totalPaid,
-        pending: commissionSummary.pending,
-      },
-
-      // Orders this month
+      commission,
       orders: {
-        total: orderStats.totalOrders,
-        completed: orderStats.completedOrders,
-        pending: orderStats.pendingOrders,
-        failed: orderStats.failedOrders,
-        totalSpent: orderStats.totalSpent,
-        totalPlansOrdered: orderStats.totalPlans,
+        total: 0,
+        completed: 0,
+        pending: 0,
+        failed: 0,
+        totalSpent: 0,
+        totalPlansOrdered: 0,
       },
-
-      // Alerts
-      alerts: alerts.map((a) => ({
-        type: 'low_inventory',
-        planType: a.planType,
-        remaining: a.totalRemaining,
-        utilization: a.percentageUtilized,
-        message: `${a.planType} plan inventory is ${a.percentageUtilized}% utilized`,
-      })),
-
-      // Summary stats
+      alerts: [],
       stats: {
-        activeRetailers: assignmentStats.activeAssignments,
-        totalRetailersEver: assignmentStats.totalAssignments,
-        revokedPlans: assignmentStats.revokedAssignments,
-        totalProfitEarned: assignmentStats.totalProfit,
+        activeRetailers,
+        totalRetailersEver: totalRetailers,
+        revokedPlans: 0,
+        totalProfitEarned: commission.earned,
       },
     };
 

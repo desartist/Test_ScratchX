@@ -10,7 +10,7 @@ import mockPaymentService from "@/lib/mockPaymentService";
 import { createHmac } from "crypto";
 import { cookies } from "next/headers";
 
-const DEFAULT_COMMISSION_RATE = parseFloat(process.env.DISTRIBUTOR_COMMISSION_RATE ?? "20");
+const DEFAULT_COMMISSION_RATE = parseFloat(process.env.DISTRIBUTOR_COMMISSION_RATE ?? "0");
 
 /**
  * POST /api/payment/verify
@@ -124,7 +124,7 @@ export async function POST(request) {
     // Link subscription to payment
     await Payment.findByIdAndUpdate(payment._id, { subscriptionId: subscription._id });
 
-    // Activate unlimited scratches for 90 days (quarterly)
+    // Activate unlimited scratches for 365 days (yearly)
     await scratchEntitlementService.activateUnlimitedScratches(subscription._id);
 
     // Update account with subscription info

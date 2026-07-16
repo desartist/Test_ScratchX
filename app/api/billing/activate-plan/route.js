@@ -3,14 +3,16 @@ import { connectDB } from "@/lib/connectDB";
 import Subscription from "@/models/subscriptionModel";
 import SubscriptionPlan from "@/models/subscriptionPlanModel";
 import Notification from "@/models/notificationModel";
-import scratchEntitlementService from "@/lib/scratchEntitlementService";
+import scratchEntitlementService, {
+  UNLIMITED_SCRATCHES_DURATION_DAYS,
+} from "@/lib/scratchEntitlementService";
 import { sendPlanPurchaseEmail } from "@/lib/emailService";
 
 /**
  * POST /api/billing/activate-plan
  *
  * Activate a subscription plan for a merchant/distributor.
- * On first purchase, automatically grant unlimited scratches for 90 days.
+ * On first purchase, automatically grant unlimited scratches for 365 days.
  *
  * Request body:
  * {
@@ -149,7 +151,7 @@ export async function POST(request) {
           ownerId: account._id,
           type: "plan_purchased",
           title: "Plan Activated",
-          message: `${plan.displayName} activated successfully. Unlimited scratches active for 90 days.`,
+          message: `${plan.displayName} activated successfully. Unlimited scratches active for ${UNLIMITED_SCRATCHES_DURATION_DAYS} days.`,
           severity: "info",
           actionUrl: "/dashboard",
           actionText: "Go to Dashboard",
@@ -165,7 +167,7 @@ export async function POST(request) {
           account.email,
           account.name,
           plan.displayName,
-          90
+          UNLIMITED_SCRATCHES_DURATION_DAYS
         );
       } catch (emailError) {
         console.error("Error sending plan purchase email:", emailError);
@@ -192,7 +194,7 @@ export async function POST(request) {
             }
           : null,
         message: isFirstPurchase
-          ? `${plan.displayName} activated successfully. Unlimited scratches active for 90 days.`
+          ? `${plan.displayName} activated successfully. Unlimited scratches active for ${UNLIMITED_SCRATCHES_DURATION_DAYS} days.`
           : `Plan updated to ${plan.displayName}`,
       },
       { status: 201 }

@@ -7,7 +7,11 @@ import CampaignCard from "@/components/dashboard/CampaignCard";
 import FilterTabs from "@/components/dashboard/FilterTabs";
 import SearchBar from "@/components/dashboard/SearchBar";
 import CampaignEmptyState from "@/components/campaign/CampaignEmptyState";
-import { smartCacheService } from "@/lib/smartCacheService";
+import {
+  useCampaignsListQuery,
+  useUpdateCampaignStatusMutation,
+  useDeleteCampaignMutation,
+} from "@/hooks/queries/useCampaignsListQuery";
 import styles from "./campaign.module.css";
 
 // Low-scratch threshold: allocated > 0 AND remaining/allocated <= 10%.
@@ -57,116 +61,57 @@ export default function CampaignPage() {
   const router = useRouter();
   const { account, loading: authLoading } = useAuthContext();
 
-  const [campaigns, setCampaigns] = useState([]);
-  const [filteredCampaigns, setFilteredCampaigns] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  const fetchCampaigns = useCallback(async () => {
-    try {
-      setLoading(true);
+  const {
+    data: campaignsJson,
+    isPending: loading,
+    error: queryError,
+    refetch,
+  } = useCampaignsListQuery();
+  const campaigns = useMemo(() => campaignsJson?.data || [], [campaignsJson]);
+  const error = queryError ? queryError.message : null;
 
-      // Update campaign statuses first (checks if any campaigns have ended)
-      try {
-        await fetch('/api/campaigns/update-status', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-      } catch (err) {
-        console.warn('Failed to update campaign statuses:', err);
-      }
-
-      // Use smartCacheService for instant load + background refresh
-      const campaignsData = await smartCacheService.fetchWithCache(
-        'campaigns-list',
-        '/api/campaigns',
-        account.id,
-        account.role || 'Merchant'
-      );
-
-      setCampaigns(Array.isArray(campaignsData) ? campaignsData : []);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-      console.error("Error fetching campaigns:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [account]);
-
-  // Fetch campaigns
-  useEffect(() => {
-    if (!authLoading && account?.id) {
-      fetchCampaigns();
-    }
-  }, [authLoading, account?.id, fetchCampaigns]);
+  const updateStatusMutation = useUpdateCampaignStatusMutation();
+  const deleteMutation = useDeleteCampaignMutation();
 
   // Auto-refetch campaigns when page becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible" && account?.id) {
         console.log("[Campaigns] Page visible - refetching campaigns");
-        fetchCampaigns();
+        refetch();
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [account?.id, fetchCampaigns]);
+  }, [account?.id, refetch]);
 
   // Pause / resume via existing PUT endpoint.
   const togglePause = useCallback(
     async (campaignId, nextStatus) => {
       try {
-        // Use smartCacheService for optimistic update
-        const result = await smartCacheService.updateWithCache(
-          'campaigns-list',
-          campaignId,
-          `/api/campaigns/${campaignId}`,
-          { status: nextStatus },
-          account?.id,
-          account?.role || "Merchant"
-        );
-
-        if (!result.success) {
-          router.push(`/campaign/${campaignId}`);
-          return;
-        }
-        // Campaign status updated instantly in list
+        await updateStatusMutation.mutateAsync({ campaignId, status: nextStatus });
+        // Campaign status updated instantly in list via query invalidation
       } catch (err) {
         console.error("Error updating campaign status:", err);
         router.push(`/campaign/${campaignId}`);
       }
     },
-    [account],
+    [updateStatusMutation, router],
   );
 
   const deleteCampaign = useCallback(
     async (campaignId) => {
-      // Use smartCacheService for optimistic delete
-      const result = await smartCacheService.deleteWithCache(
-        'campaigns-list',
-        campaignId,
-        `/api/campaigns/${campaignId}`,
-        account?.id,
-        account?.role || "Merchant"
-      );
-
-      if (!result.success) {
-        return { error: result.error || "Failed to delete campaign." };
+      try {
+        await deleteMutation.mutateAsync(campaignId);
+        return { success: true };
+      } catch (err) {
+        return { error: err.message || "Failed to delete campaign." };
       }
-
-      // Update React state immediately (optimistic update)
-      setCampaigns((prevCampaigns) =>
-        prevCampaigns.filter((c) => c._id !== campaignId)
-      );
-
-      return { success: true };
     },
-    [account],
+    [deleteMutation],
   );
 
   // Central action handler for card menu + inline buttons.
@@ -208,7 +153,7 @@ export default function CampaignPage() {
   );
 
   // Filter campaigns based on search and tab
-  useEffect(() => {
+  const filteredCampaigns = useMemo(() => {
     let filtered = campaigns;
 
     // Apply search filter
@@ -247,7 +192,7 @@ export default function CampaignPage() {
       });
     }
 
-    setFilteredCampaigns(filtered);
+    return filtered;
   }, [campaigns, searchQuery, activeTab]);
 
   if (authLoading) {

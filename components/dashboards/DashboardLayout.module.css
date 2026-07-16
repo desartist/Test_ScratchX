@@ -355,6 +355,7 @@
 }
 
 .notificationBtn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -371,6 +372,25 @@
 .notificationBtn:hover {
   background: #d0d4ff;
   transform: scale(1.08);
+}
+
+.notificationBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 999px;
+  border: 2px solid white;
 }
 
 .userMeta {

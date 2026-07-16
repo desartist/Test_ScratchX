@@ -23,19 +23,38 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
   const limit = Math.min(100, parseInt(searchParams.get("limit") ?? "20"));
+  const search = searchParams.get("search") || "";
+  const status = searchParams.get("status");
   const skip = (page - 1) * limit;
 
   const query = { role: "Merchant" };
   // Distributor only sees their own merchants; Super_Admin can see all
   if (account.role === "Distributor") query.parentId = account._id;
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { "profile.storeName": { $regex: search, $options: "i" } },
+      { "profile.storeLocation": { $regex: search, $options: "i" } },
+    ];
+  }
+  if (status) {
+    query.status = status;
+  }
 
-  const [merchants, total] = await Promise.all([
+  const baseScope = { role: "Merchant" };
+  if (account.role === "Distributor") baseScope.parentId = account._id;
+
+  const [merchants, total, activeCount, pendingCount, totalCount] = await Promise.all([
     Account.find(query)
       .select("-password -__v")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
     Account.countDocuments(query),
+    Account.countDocuments({ ...baseScope, status: "active" }),
+    Account.countDocuments({ ...baseScope, status: "pending" }),
+    Account.countDocuments(baseScope),
   ]);
 
   // Attach subscription info
@@ -52,7 +71,51 @@ export async function GET(request) {
     subscription: subMap[m._id.toString()] ?? null,
   }));
 
-  return Response.json({ success: true, merchants: enriched, total, page, limit }, { status: 200 });
+  return Response.json(
+    {
+      success: true,
+      merchants: enriched,
+      total,
+      page,
+      limit,
+      metrics: { total: totalCount, active: activeCount, pending: pendingCount },
+    },
+    { status: 200 },
+  );
+}
+
+// PATCH /api/distributor/merchants — update a merchant's status (suspend/activate)
+export async function PATCH(request) {
+  await connectDB();
+  const { account, error } = await requireAuth();
+  if (error) return error;
+  const denied = distributorOrAdmin(account);
+  if (denied) return denied;
+
+  const { id, status } = await request.json();
+
+  if (!id || !["active", "inactive", "suspended"].includes(status)) {
+    return Response.json(
+      { success: false, error: "id and valid status are required" },
+      { status: 400 },
+    );
+  }
+
+  const query = { _id: id, role: "Merchant" };
+  // Distributor may only update their own merchants; Super_Admin may update any
+  if (account.role === "Distributor") query.parentId = account._id;
+
+  const merchant = await Account.findOneAndUpdate(
+    query,
+    { status },
+    { new: true, select: "-password -__v" },
+  );
+
+  if (!merchant) {
+    return Response.json({ success: false, error: "Merchant not found" }, { status: 404 });
+  }
+
+  return Response.json({ success: true, merchant }, { status: 200 });
 }
 
 // POST /api/distributor/merchants — create a merchant and optionally assign a plan

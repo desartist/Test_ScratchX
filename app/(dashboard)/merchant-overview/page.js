@@ -32,8 +32,10 @@ export default function MerchantOverviewPage() {
 
   // Redirect merchants with zero stores into onboarding, same as the old
   // fetch-effect used to — now reacting to the shared query result instead.
+  // Scoped to Merchant only: Super_Admin/Distributor accounts naturally have
+  // zero stores of their own and should never be pushed into store setup.
   useEffect(() => {
-    if (mounted && dashboardJson && totalStores === 0) {
+    if (mounted && dashboardJson && dashboardJson.role === "Merchant" && totalStores === 0) {
       router.push("/stores/create");
     }
   }, [mounted, dashboardJson, totalStores, router]);
@@ -98,7 +100,7 @@ export default function MerchantOverviewPage() {
           {userRole === "Distributor" && (
             <DistributorDashboard data={dashboardData} />
           )}
-          {userRole === "SuperAdmin" && <AdminDashboard data={dashboardData} />}
+          {userRole === "Super_Admin" && <AdminDashboard data={dashboardData} />}
         </>
       )}
     </div>

@@ -34,6 +34,7 @@ export async function GET(request) {
       severity: n.severity,
       createdAt: n.createdAt,
       actionUrl: n.actionUrl || null,
+      isRead: n.read,
     }));
     return NextResponse.json({ success: true, data });
   } catch (e) {

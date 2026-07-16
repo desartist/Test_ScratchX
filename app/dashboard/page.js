@@ -40,7 +40,7 @@ export default function DashboardPage() {
       } else if (roleNormalized === "merchant") {
         console.log("[Dashboard Router] Redirecting to /merchant-overview");
         router.push("/merchant-overview");
-      } else if (roleNormalized === "super admin" || roleNormalized === "admin" || roleNormalized === "superadmin") {
+      } else if (roleNormalized === "super_admin" || roleNormalized === "super admin" || roleNormalized === "admin" || roleNormalized === "superadmin") {
         console.log("[Dashboard Router] Redirecting to /admin-overview");
         router.push("/admin-overview");
       } else {

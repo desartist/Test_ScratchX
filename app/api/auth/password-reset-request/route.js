@@ -5,19 +5,21 @@ import PasswordResetToken from '@/models/passwordResetTokenModel';
 import jwtService from '@/lib/jwtService';
 import nodemailer from 'nodemailer';
 
-// Initialize email transporter (configure with your email service)
+// Initialize email transporter (real SMTP — see SMTP_* vars in .env.local)
 let transporter = null;
 
 function initializeTransporter() {
   if (transporter) return transporter;
 
-  // Only initialize if email credentials are provided
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+  // Only initialize if SMTP credentials are provided
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     transporter = nodemailer.createTransport({
-      service: process.env.EMAIL_SERVICE || 'gmail',
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: process.env.SMTP_PORT === '465', // 465 = implicit TLS, 587 = STARTTLS
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
   }
@@ -66,24 +68,184 @@ export async function POST(request) {
     });
 
     // Send reset email
-    const resetUrl = `${process.env.APP_URL || 'http://localhost:3000'}/auth/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.APP_URL || 'http://localhost:3000'}/auth/reset-password/confirm?token=${resetToken}`;
 
+    let emailSent = false;
     const transporter = initializeTransporter();
     if (transporter) {
       try {
+        const fromAddress = process.env.MAIL_FROM
+          ? `${process.env.MAIL_FROM_NAME || 'ScratchX'} <${process.env.MAIL_FROM}>`
+          : process.env.SMTP_USER;
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: fromAddress,
           to: account.email,
-          subject: 'Password Reset Request - ScratchX',
+          subject: 'Reset your ScratchX password',
           html: `
-            <h2>Password Reset Request</h2>
-            <p>You requested a password reset for your ScratchX account.</p>
-            <p><a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
-            <p>Or copy this link: ${resetUrl}</p>
-            <p><strong>This link expires in 10 minutes.</strong></p>
-            <p>If you didn't request this, please ignore this email.</p>
+           <body style="margin: 0; padding: 35px 0px; background: #f9fafb">
+    <div
+      style="
+        max-width: 640px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 16px;
+        overflow: hidden;
+        font-family: Arial, Helvetica, sans-serif;
+      "
+    >
+      <!-- Header -->
+      <div style="padding: 14px 50px; text-align: center">
+        <img
+          src="https://test.thescratchx.com/ScratchXlogo.png"
+          alt="ScratchX"
+          style="width: 190px; height: auto; display: block"
+        />
+      </div>
+
+      <!-- Body -->
+      <div style="padding: 20px 49px">
+        <h1
+          style="
+            margin: 0 0 35px;
+            font-size: 34px;
+            font-weight: 700;
+            color: #111827;
+            text-align: left;
+          "
+        >
+          Reset your password
+        </h1>
+
+        <p
+          style="
+            margin: 0 0 10px;
+            font-size: 16px;
+            color: #374151;
+            line-height: 28px;
+          "
+        >
+          Hi <strong>${account.name || 'there'}</strong>,
+        </p>
+
+        <p
+          style="
+            margin: 0 0 25px;
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 30px;
+          "
+        >
+          Let’s reset your password so you can get back to growing your business with ScratchX.
+        </p>
+
+        <!-- Button -->
+        <div style="text-align: left; margin: 28px 0">
+          <a
+            href="${resetUrl}"
+            style="
+              display: inline-block;
+              background: #ef9e1b;
+              color: #ffffff;
+              text-decoration: none;
+              padding: 16px 60px;
+              border-radius: 8px;
+              font-size: 16px;
+              font-weight: 600;
+            "
+          >
+            Reset Password
+          </a>
+          <p  style="
+            margin: 0 0 25px;
+            font-size: 10px;
+            color: #4b5563;
+            line-height: 30px;
+            font-style: italic;
+          ">This password reset request will expire in <b>10 minutes.</b></p>
+        </div>
+
+        <p
+          style="
+            margin: 0 0 30px;
+            font-size: 15px;
+            color: #6b7280;
+            line-height: 22px;
+          "
+        >
+         If you didn’t request a password reset, you can safely ignore this email. Your account will remain secure unless this link is used.
+        </p>
+
+        <!-- Backup Link -->
+        <div style="margin-bottom: 35px">
+          <div
+            style="
+              font-size: 14px;
+              color: #111827;
+              margin-bottom: 10px;
+              font-weight: 500;
+            "
+          >
+            Need another way to reset your password??
+          </div>
+
+          <div style="font-size: 14px; color: #6b7280; margin-bottom: 10px">
+            Use the secure password reset link below to continue.
+          </div>
+
+          <a
+            href="${resetUrl}"
+            style="
+              font-size: 14px;
+              color: #6b7280;
+              text-decoration: none;
+              word-break: break-word;
+              font-style: italic;
+            "
+          >
+            ${resetUrl}
+          </a>
+        </div>
+
+        <!-- Support -->
+        <div style="padding-top: 4px">
+          <div style="font-size: 15px; color: #6b7280; line-height: 26px">
+            We're here to assist if you need it. 
+          </div>
+
+          <a
+            href="mailto:support.scratchx@thedesartist.com"
+            style="
+              display: inline-block;
+              margin-top: 0px;
+              color: #6c7280;
+              font-size: 15px;
+              text-decoration: none;
+            "
+          >
+            support.scratchx@thedesartist.com
+          </a>
+        </div>
+         <p
+          style="
+            margin: 30px 0 30px;
+            font-size: 15px;
+            color: #000000;
+            line-height: 22px;
+            font-weight: 600;
+          "
+        >
+          The ScratchX Team
+        </p>
+      </div>
+     
+
+
+   
+    </div>
+  </body>
           `,
         });
+        emailSent = true;
       } catch (emailError) {
         console.error('Email send error:', emailError);
         // Log but don't fail - token is still stored for manual access
@@ -92,9 +254,13 @@ export async function POST(request) {
       console.warn('Email transporter not configured. Reset token stored but email not sent.');
     }
 
-    // Always return same message for security
     return NextResponse.json(
-      { message: 'If email exists, reset link will be sent shortly' },
+      {
+        message: emailSent
+          ? 'If email exists, reset link will be sent shortly'
+          : 'Reset link generated (email delivery not configured)',
+        emailSent,
+      },
       { status: 200 }
     );
   } catch (error) {

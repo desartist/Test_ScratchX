@@ -355,8 +355,8 @@ export default function SmartDashboard() {
     ? subStatus.scratchConsumed
     : dashboard?.scratch?.distributed;
 
-  // Day counter: "Day X of 30"
-  const PLAN_TOTAL_DAYS = 30;
+  // Day counter: "Day X of 365"
+  const PLAN_TOTAL_DAYS = 365;
   const heroDayOf = Number.isFinite(heroDaysRemaining)
     ? Math.max(1, PLAN_TOTAL_DAYS - heroDaysRemaining)
     : null;

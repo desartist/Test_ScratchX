@@ -1,13 +1,12 @@
 /**
- * GET /api/distributor/commissions - Get commission history
- * GET /api/distributor/commissions/summary - Get commission summary
+ * GET /api/distributor/commissions - list commission records + summary totals
+ * for the logged-in distributor.
  */
 
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/connectDB';
 import { requireAuth } from '@/lib/auth';
-import { commissionService } from '@/lib/services/distributor';
-import DistributorCommission from '@/models/distributorCommissionModel';
+import Commission from '@/models/commissionModel';
 
 export async function GET(request) {
   try {
@@ -22,72 +21,74 @@ export async function GET(request) {
       );
     }
 
-    const url = new URL(request.url);
-    const endpoint = url.pathname.split('/').pop();
-    const status = url.searchParams.get('status');
-    const startDate = url.searchParams.get('startDate');
-    const endDate = url.searchParams.get('endDate');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '50');
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const search = searchParams.get('search') || '';
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(100, parseInt(searchParams.get('limit') || '20'));
 
-    // Handle summary endpoint
-    if (endpoint === 'summary') {
-      const summary = await commissionService.getCommissionSummary(
-        account._id,
-        startDate || undefined,
-        endDate || undefined
-      );
+    const baseQuery = { distributorId: account._id };
+    const query = { ...baseQuery };
+    if (status && status !== 'all') query.status = status;
 
-      return NextResponse.json(
+    const [commissions, total, summaryAgg] = await Promise.all([
+      Commission.find(query)
+        .populate('merchantId', 'email name profile')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      Commission.countDocuments(query),
+      Commission.aggregate([
+        { $match: baseQuery },
         {
-          success: true,
-          data: {
-            totalEarned: summary.totalEarned,
-            totalApproved: summary.totalApproved,
-            totalPaid: summary.totalPaid,
-            pendingCount: summary.pending,
-            approvedCount: summary.approved,
-            paidCount: summary.paid,
-            commissionCount: summary.commissions.length,
+          $group: {
+            _id: '$status',
+            total: { $sum: '$totalEarning' },
+            count: { $sum: 1 },
           },
         },
-        { status: 200 }
-      );
+      ]),
+    ]);
+
+    const summary = { totalEarned: 0, totalApproved: 0, totalPaid: 0, pendingCount: 0, approvedCount: 0, paidCount: 0 };
+    for (const row of summaryAgg) {
+      summary.totalEarned += row.total;
+      if (row._id === 'approved') {
+        summary.totalApproved = row.total;
+        summary.approvedCount = row.count;
+      } else if (row._id === 'paid') {
+        summary.totalPaid = row.total;
+        summary.paidCount = row.count;
+      } else if (row._id === 'pending') {
+        summary.pendingCount = row.count;
+      }
     }
 
-    // Handle history endpoint (default)
-    const query = { distributorId: account._id };
-
-    if (status) query.status = status;
-
-    if (startDate || endDate) {
-      query.earnedAt = {};
-      if (startDate) query.earnedAt.$gte = new Date(startDate);
-      if (endDate) query.earnedAt.$lte = new Date(endDate);
+    // Server-side search on merchant name/email (post-populate, in-memory —
+    // commission volume per distributor is small enough that this is fine).
+    let filtered = commissions;
+    if (search) {
+      const term = search.toLowerCase();
+      filtered = commissions.filter((c) => {
+        const name = c.merchantId?.profile?.storeName || c.merchantId?.name || '';
+        const email = c.merchantId?.email || '';
+        return name.toLowerCase().includes(term) || email.toLowerCase().includes(term);
+      });
     }
-
-    const commissions = await DistributorCommission.find(query)
-      .populate('retailerId', 'email name profile')
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip((page - 1) * limit);
-
-    const total = await DistributorCommission.countDocuments(query);
 
     return NextResponse.json(
       {
         success: true,
         data: {
-          commissions: commissions.map((c) => ({
+          commissions: filtered.map((c) => ({
             id: c._id,
-            commissionId: c.commissionId,
-            retailerId: c.retailerId?._id,
-            retailerName: c.retailerId?.profile?.companyName || c.retailerId?.name,
-            planType: c.planType,
-            amount: c.commissionAmount,
-            percentage: c.commissionPercentage,
+            merchantId: c.merchantId?._id,
+            merchantName: c.merchantId?.profile?.storeName || c.merchantId?.name || 'Unknown',
+            merchantEmail: c.merchantId?.email,
+            amount: c.totalEarning,
+            percentage: c.commissionRate,
             status: c.status,
-            earnedAt: c.earnedAt,
+            earnedAt: c.createdAt,
             approvedAt: c.approvedAt,
             paidAt: c.paidAt,
           })),
@@ -97,6 +98,7 @@ export async function GET(request) {
             total,
             pages: Math.ceil(total / limit),
           },
+          summary,
         },
       },
       { status: 200 }

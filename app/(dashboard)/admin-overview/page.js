@@ -1,117 +1,90 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   Users,
-  TrendingUp,
-  DollarSign,
   AlertCircle,
-  Settings,
+  Plus,
   BarChart3,
   Shield,
-  Database,
   ArrowRight,
   Activity,
   UserCheck,
   Zap,
+  X,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
+import { useSuperAdminDashboardQuery } from '@/hooks/queries/useSuperAdminDashboardQuery';
+import { useCreateDistributorMutation } from '@/hooks/queries/useAdminDistributorsQuery';
 import styles from './admin.module.css';
 
+const EMPTY_FORM = {
+  name: '',
+  email: '',
+  phone: '',
+  password: '',
+  companyName: '',
+  territory: '',
+  region: '',
+  commissionRate: '',
+};
+
 export default function AdminOverviewPage() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [metrics, setMetrics] = useState({
-    totalDistributors: 0,
-    activeDistributors: 0,
-    totalMerchants: 0,
-    activeMerchants: 0,
-    totalRevenue: 0,
-    totalCommission: 0,
-    totalPlansDistributed: 0,
-    totalStores: 0,
-  });
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [systemHealth, setSystemHealth] = useState({
-    databaseStatus: 'healthy',
-    apiStatus: 'operational',
-    cacheStatus: 'operational',
-  });
+  const { data, isPending: loading, error: queryError, refetch } = useSuperAdminDashboardQuery();
+  const error = queryError ? queryError.message || 'Failed to load admin dashboard' : null;
 
-  useEffect(() => {
-    fetchAdminData();
-  }, []);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [formError, setFormError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const createMutation = useCreateDistributorMutation();
 
-  const fetchAdminData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const metrics = {
+    totalDistributors: data?.roleCounts?.distributors || 0,
+    totalMerchants: data?.roleCounts?.merchants || 0,
+  };
+  const recentUsers = data?.recentUsers || [];
 
-      // Fetch admin dashboard data
-      const res = await fetch('/api/dashboard/admin', {
-        credentials: 'include',
-      });
-
-      const json = await res.json();
-
-      if (json.success && json.data) {
-        setMetrics(json.data.metrics || {});
-        setRecentActivities(json.data.recentActivities || []);
-        setSystemHealth(json.data.systemHealth || {});
-      }
-    } catch (err) {
-      console.error('[AdminDashboard] Error:', err);
-      // Use mock data instead of failing
-      setMockData();
-    } finally {
-      setLoading(false);
-    }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const setMockData = () => {
-    setMetrics({
-      totalDistributors: 45,
-      activeDistributors: 38,
-      totalMerchants: 128,
-      activeMerchants: 105,
-      totalRevenue: 2450000,
-      totalCommission: 680000,
-      totalPlansDistributed: 3840,
-      totalStores: 312,
-    });
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setFormData(EMPTY_FORM);
+    setFormError(null);
+    setShowPassword(false);
+  };
 
-    setRecentActivities([
-      {
-        id: 1,
-        type: 'distributor_signup',
-        description: 'New distributor registered: Tech Retail Co',
-        timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-      },
-      {
-        id: 2,
-        type: 'merchant_signup',
-        description: 'New merchant registered: Premium Stores Inc',
-        timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-      },
-      {
-        id: 3,
-        type: 'payment_processed',
-        description: 'Commission payout processed: ₹125,000',
-        timestamp: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-      },
-      {
-        id: 4,
-        type: 'plan_purchase',
-        description: '250 SMART plans distributed',
-        timestamp: new Date(Date.now() - 1000 * 60 * 150).toISOString(),
-      },
-    ]);
+  const handleCreateDistributor = async (e) => {
+    e.preventDefault();
+    setFormError(null);
 
-    setSystemHealth({
-      databaseStatus: 'healthy',
-      apiStatus: 'operational',
-      cacheStatus: 'operational',
-    });
+    if (!formData.name || !formData.email || !formData.password) {
+      setFormError('Name, email and password are required');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setFormError('Password must be at least 6 characters');
+      return;
+    }
+    if (formData.commissionRate !== '') {
+      const rate = Number(formData.commissionRate);
+      if (Number.isNaN(rate) || rate < 0 || rate > 100) {
+        setFormError('Commission rate must be a number between 0 and 100');
+        return;
+      }
+    }
+
+    try {
+      await createMutation.mutateAsync(formData);
+      handleCloseModal();
+    } catch (err) {
+      setFormError(err.message);
+    }
   };
 
   if (loading) {
@@ -120,6 +93,22 @@ export default function AdminOverviewPage() {
         <div className={styles.loadingState}>
           <div className={styles.spinner} />
           <p>Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <div className={styles.errorState}>
+            <AlertCircle size={48} />
+            <p>{error}</p>
+            <button onClick={() => refetch()} className={styles.retryButton}>
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -134,125 +123,33 @@ export default function AdminOverviewPage() {
             <h1>Admin Dashboard</h1>
             <p>System overview and management</p>
           </div>
-          <Link href="/dashboard/settings" className={styles.primaryButton}>
-            <Settings size={16} />
-            System Settings
-          </Link>
-        </div>
-
-        {/* System Health */}
-        <div className={styles.healthSection}>
-          <h2 className={styles.sectionTitle}>System Health</h2>
-          <div className={styles.healthGrid}>
-            <div className={styles.healthCard}>
-              <Database size={20} />
-              <div>
-                <p className={styles.healthLabel}>Database</p>
-                <p className={`${styles.healthStatus} ${styles.healthy}`}>
-                  {systemHealth.databaseStatus}
-                </p>
-              </div>
-            </div>
-            <div className={styles.healthCard}>
-              <Zap size={20} />
-              <div>
-                <p className={styles.healthLabel}>API Services</p>
-                <p className={`${styles.healthStatus} ${styles.operational}`}>
-                  {systemHealth.apiStatus}
-                </p>
-              </div>
-            </div>
-            <div className={styles.healthCard}>
-              <Activity size={20} />
-              <div>
-                <p className={styles.healthLabel}>Cache System</p>
-                <p className={`${styles.healthStatus} ${styles.operational}`}>
-                  {systemHealth.cacheStatus}
-                </p>
-              </div>
-            </div>
-          </div>
+          <button className={styles.primaryButton} onClick={() => setShowModal(true)}>
+            <Plus size={16} />
+            Add Distributor
+          </button>
         </div>
 
         {/* Metrics Grid */}
         <div className={styles.metricsGrid}>
           {/* Total Distributors */}
-          <div className={`${styles.metricCard} ${styles['metric-blue']}`}>
+          <div className={`${styles.metricCard} ${styles['metric-green']}`}>
             <div className={styles.metricIcon}>
               <UserCheck size={24} />
             </div>
             <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Total Distributors</p>
+              <p className={styles.metricLabel}>Distributors</p>
               <p className={styles.metricValue}>{metrics.totalDistributors}</p>
-              <p className={styles.metricSubtext}>
-                {metrics.activeDistributors} active
-              </p>
             </div>
           </div>
 
           {/* Total Merchants */}
-          <div className={`${styles.metricCard} ${styles['metric-green']}`}>
-            <div className={styles.metricIcon}>
-              <Users size={24} />
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Total Merchants</p>
-              <p className={styles.metricValue}>{metrics.totalMerchants}</p>
-              <p className={styles.metricSubtext}>
-                {metrics.activeMerchants} active
-              </p>
-            </div>
-          </div>
-
-          {/* Total Stores */}
           <div className={`${styles.metricCard} ${styles['metric-purple']}`}>
             <div className={styles.metricIcon}>
-              🏪
+              <Activity size={24} />
             </div>
             <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Total Stores</p>
-              <p className={styles.metricValue}>{metrics.totalStores}</p>
-              <p className={styles.metricSubtext}>Across all merchants</p>
-            </div>
-          </div>
-
-          {/* Total Revenue */}
-          <div className={`${styles.metricCard} ${styles['metric-orange']}`}>
-            <div className={styles.metricIcon}>
-              <DollarSign size={24} />
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Total Revenue</p>
-              <p className={styles.metricValue}>
-                ₹{metrics.totalRevenue.toLocaleString()}
-              </p>
-              <p className={styles.metricSubtext}>All-time</p>
-            </div>
-          </div>
-
-          {/* Total Commission */}
-          <div className={`${styles.metricCard} ${styles['metric-red']}`}>
-            <div className={styles.metricIcon}>
-              💰
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Total Commission</p>
-              <p className={styles.metricValue}>
-                ₹{metrics.totalCommission.toLocaleString()}
-              </p>
-              <p className={styles.metricSubtext}>Distributed</p>
-            </div>
-          </div>
-
-          {/* Plans Distributed */}
-          <div className={`${styles.metricCard} ${styles['metric-indigo']}`}>
-            <div className={styles.metricIcon}>
-              📦
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Plans Distributed</p>
-              <p className={styles.metricValue}>{metrics.totalPlansDistributed}</p>
-              <p className={styles.metricSubtext}>Total active</p>
+              <p className={styles.metricLabel}>Merchants</p>
+              <p className={styles.metricValue}>{metrics.totalMerchants}</p>
             </div>
           </div>
         </div>
@@ -261,70 +158,46 @@ export default function AdminOverviewPage() {
         <div className={styles.actionsSection}>
           <h2 className={styles.sectionTitle}>Admin Actions</h2>
           <div className={styles.actionsGrid}>
-            <Link href="/dashboard/distributors" className={styles.actionCard}>
+            <Link href="/distributors" className={styles.actionCard}>
               <div className={styles.actionIcon}>👥</div>
               <h3>Manage Distributors</h3>
               <p>View and manage distributor accounts</p>
               <ArrowRight size={16} />
             </Link>
-            <Link href="/dashboard/merchants" className={styles.actionCard}>
+            <Link href="/retailers" className={styles.actionCard}>
               <div className={styles.actionIcon}>🏢</div>
               <h3>Manage Merchants</h3>
               <p>View and manage merchant accounts</p>
               <ArrowRight size={16} />
             </Link>
-            <Link href="/dashboard/analytics" className={styles.actionCard}>
-              <div className={styles.actionIcon}>📊</div>
-              <h3>System Analytics</h3>
-              <p>View detailed analytics and reports</p>
-              <ArrowRight size={16} />
-            </Link>
-            <Link href="/dashboard/settings" className={styles.actionCard}>
-              <div className={styles.actionIcon}>⚙️</div>
-              <h3>System Settings</h3>
-              <p>Configure system parameters</p>
-              <ArrowRight size={16} />
-            </Link>
           </div>
         </div>
 
-        {/* Recent Activities */}
-        {recentActivities.length > 0 && (
+        {/* Recent Signups */}
+        {recentUsers.length > 0 && (
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Recent Activities</h2>
-              <Link href="/dashboard/audit-logs" className={styles.viewAllLink}>
-                View All
-                <ArrowRight size={14} />
-              </Link>
+              <h2 className={styles.sectionTitle}>Recent Merchant Signups</h2>
             </div>
 
             <div className={styles.activitiesList}>
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className={styles.activityItem}>
+              {recentUsers.map((user) => (
+                <div key={user._id} className={styles.activityItem}>
                   <div className={styles.activityIcon}>
-                    {activity.type === 'distributor_signup' ? (
-                      <UserCheck size={18} />
-                    ) : activity.type === 'merchant_signup' ? (
-                      <Users size={18} />
-                    ) : activity.type === 'payment_processed' ? (
-                      <DollarSign size={18} />
-                    ) : (
-                      <TrendingUp size={18} />
-                    )}
+                    <Users size={18} />
                   </div>
 
                   <div className={styles.activityContent}>
                     <p className={styles.activityDescription}>
-                      {activity.description}
+                      {`${user.firstName} ${user.lastName}`.trim() || user.email}
                     </p>
                     <p className={styles.activityTime}>
-                      {new Date(activity.timestamp).toLocaleTimeString('en-IN', {
+                      {new Date(user.createdAt).toLocaleTimeString('en-IN', {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
                       {' • '}
-                      {new Date(activity.timestamp).toLocaleDateString('en-IN', {
+                      {new Date(user.createdAt).toLocaleDateString('en-IN', {
                         month: 'short',
                         day: 'numeric',
                       })}
@@ -355,6 +228,184 @@ export default function AdminOverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Distributor Modal */}
+      {showModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Add Distributor</h2>
+              <button className={styles.modalClose} onClick={handleCloseModal}>
+                <X size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDistributor} className={styles.modalForm}>
+              {formError && (
+                <div className={styles.formError}>
+                  <AlertCircle size={16} />
+                  {formError}
+                </div>
+              )}
+
+              <div className={styles.formGroup}>
+                <label htmlFor="name" className={styles.formLabel}>
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter full name"
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="email" className={styles.formLabel}>
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter email address"
+                    className={styles.formInput}
+                    required
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="phone" className={styles.formLabel}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="Enter phone number"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="password" className={styles.formLabel}>
+                  Password *
+                </label>
+                <div className={styles.passwordInputWrapper}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Enter password (min 6 characters)"
+                    className={styles.formInput}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className={styles.passwordToggle}
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="companyName" className={styles.formLabel}>
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleInputChange}
+                    placeholder="Enter company name"
+                    className={styles.formInput}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="territory" className={styles.formLabel}>
+                    Territory
+                  </label>
+                  <input
+                    type="text"
+                    id="territory"
+                    name="territory"
+                    value={formData.territory}
+                    onChange={handleInputChange}
+                    placeholder="e.g. North India"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="region" className={styles.formLabel}>
+                    Region
+                  </label>
+                  <input
+                    type="text"
+                    id="region"
+                    name="region"
+                    value={formData.region}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Delhi NCR"
+                    className={styles.formInput}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="commissionRate" className={styles.formLabel}>
+                    Commission Rate (%)
+                  </label>
+                  <input
+                    type="number"
+                    id="commissionRate"
+                    name="commissionRate"
+                    value={formData.commissionRate}
+                    onChange={handleInputChange}
+                    placeholder="Default: 0%"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button type="button" className={styles.cancelButton} onClick={handleCloseModal}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={styles.submitButton}
+                  disabled={createMutation.isPending}
+                >
+                  {createMutation.isPending ? 'Creating...' : 'Create Distributor'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

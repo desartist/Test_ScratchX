@@ -8,7 +8,7 @@ export function notificationsQueryKey(accountId) {
 }
 
 export async function fetchNotifications() {
-  const res = await fetch(`/api/distributor/notifications?limit=100`, {
+  const res = await fetch(`/api/notifications?limit=100`, {
     credentials: "include",
   });
   const json = await res.json();
@@ -34,7 +34,7 @@ export function useMarkNotificationReadMutation() {
 
   return useMutation({
     mutationFn: async (notificationId) => {
-      const res = await fetch(`/api/distributor/notifications/${notificationId}/read`, {
+      const res = await fetch(`/api/notifications/${notificationId}/read`, {
         method: "POST",
         credentials: "include",
       });
@@ -63,7 +63,7 @@ export function useDeleteNotificationMutation() {
 
   return useMutation({
     mutationFn: async (notificationId) => {
-      const res = await fetch(`/api/distributor/notifications/${notificationId}`, {
+      const res = await fetch(`/api/notifications/${notificationId}`, {
         method: "DELETE",
         credentials: "include",
       });

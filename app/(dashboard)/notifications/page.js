@@ -6,16 +6,12 @@ import {
   Trash2,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
   Info,
   Search,
   Filter,
-  LogIn,
   Plus,
-  Edit2,
-  Trash,
-  MapPin,
   Gift,
-  Users,
 } from 'lucide-react';
 import {
   useNotificationsQuery,
@@ -47,27 +43,20 @@ export default function NotificationsPage() {
 
   const getNotificationIcon = (type) => {
     switch (type) {
-      case 'user_login':
-        return <LogIn size={20} />;
       case 'campaign_created':
         return <Plus size={20} />;
-      case 'campaign_updated':
-        return <Edit2 size={20} />;
-      case 'campaign_deleted':
-        return <Trash size={20} />;
-      case 'store_created':
-        return <Plus size={20} />;
-      case 'store_updated':
-        return <MapPin size={20} />;
-      case 'coupon_created':
-        return <Gift size={20} />;
-      case 'participation_created':
-        return <Users size={20} />;
-      case 'success':
+      case 'campaign_activated':
         return <CheckCircle size={20} />;
-      case 'warning':
+      case 'plan_purchased':
+      case 'scratch_pack_purchased':
+        return <Gift size={20} />;
+      case 'scratch_expiry_warning':
+        return <AlertTriangle size={20} />;
+      case 'scratch_expired':
         return <AlertCircle size={20} />;
-      case 'info':
+      case 'system_alert':
+        return <Bell size={20} />;
+      case 'other':
         return <Info size={20} />;
       default:
         return <Bell size={20} />;
@@ -111,12 +100,12 @@ export default function NotificationsPage() {
         <div className={styles.header}>
           <div className={styles.headerContent}>
             <h1>Notifications</h1>
+            {unreadCount > 0 && (
+              <span className={styles.unreadBadge}>
+                {unreadCount} unread
+              </span>
+            )}
           </div>
-          {unreadCount > 0 && (
-            <div className={styles.unreadBadge}>
-              {unreadCount} unread
-            </div>
-          )}
         </div>
 
         {/* Notifications List */}

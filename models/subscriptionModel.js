@@ -55,16 +55,16 @@ const subscriptionSchema = new mongoose.Schema(
     purchaseDate: { type: Date, default: Date.now },
     cancelledAt: { type: Date, default: null },
 
-    // ========== UNLIMITED SCRATCHES (QUARTERLY - 90 DAYS) ==========
-    // When plan is purchased, merchant receives unlimited scratches for 90 days
+    // ========== UNLIMITED SCRATCHES (YEARLY - 365 DAYS) ==========
+    // When plan is purchased, merchant receives unlimited scratches for 365 days
     unlimitedScratches: {
       isActive: { type: Boolean, default: false },
       grantedAt: { type: Date, default: null },      // When scratches were granted (plan purchase date)
-      validUntil: { type: Date, default: null },    // 90 days from grant date
+      validUntil: { type: Date, default: null },    // 365 days from grant date
       scratchValidityType: {
         type: String,
-        enum: ['quarterly'],
-        default: 'quarterly'
+        enum: ['quarterly', 'yearly'],
+        default: 'yearly'
       },
       daysRemaining: { type: Number, default: 0 },  // Calculated field: Math.ceil((validUntil - now) / (1000*60*60*24))
       lastWarningAt: { type: Date, default: null },  // Track last warning sent (prevent spam)

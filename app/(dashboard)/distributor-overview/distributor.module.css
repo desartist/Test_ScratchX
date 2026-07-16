@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background:linear-gradient(135deg, #fff 0%, #ededed 100%);
   padding: 32px 24px;
 }
 
@@ -56,24 +56,24 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 15px rgba(239, 158, 27, 0.3);
 }
 
 .primaryButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.4);
 }
 
 .secondaryButton {
   background: white;
-  color: #3b82f6;
-  border: 2px solid #3b82f6;
+  color: #ef9e1b;
+  border: 2px solid #ef9e1b;
 }
 
 .secondaryButton:hover {
-  background: #f0f4ff;
+  background: #fff8eb;
 }
 
 /* Alerts */
@@ -161,7 +161,7 @@
 }
 
 .metric-blue {
-  border-left-color: #3b82f6;
+  border-left-color: #ef9e1b;
 }
 
 .metric-green {
@@ -184,8 +184,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: rgba(239, 158, 27, 0.1);
+  color: #ef9e1b;
 }
 
 .metric-green .metricIcon {
@@ -266,7 +266,7 @@
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #3b82f6;
+  color: #ef9e1b;
   text-decoration: none;
   transition: all 0.3s ease;
 }
@@ -455,7 +455,7 @@
 
 .actionItem:hover {
   background: #f3f4f6;
-  border-color: #3b82f6;
+  border-color: #ef9e1b;
   transform: translateX(4px);
 }
 
@@ -463,8 +463,8 @@
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: rgba(239, 158, 27, 0.1);
+  color: #ef9e1b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -502,7 +502,7 @@
   width: 48px;
   height: 48px;
   border: 4px solid #e5e7eb;
-  border-top-color: #3b82f6;
+  border-top-color: #ef9e1b;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 16px;
@@ -526,7 +526,7 @@
 
 .retryButton {
   padding: 10px 20px;
-  background: #3b82f6;
+  background: #ef9e1b;
   color: white;
   border: none;
   border-radius: 6px;
@@ -537,7 +537,7 @@
 }
 
 .retryButton:hover {
-  background: #2563eb;
+  background: #d98e14;
 }
 
 /* Responsive */
@@ -560,7 +560,37 @@
   }
 
   .metricsGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .metricCard {
+    padding: 12px;
+    gap: 8px;
+    border-left-width: 3px;
+  }
+
+  .metricIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  .metricIcon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .metricLabel {
+    font-size: 11px;
+  }
+
+  .metricValue {
+    font-size: 18px;
+  }
+
+  .metricSubtext {
+    font-size: 10px;
   }
 
   .contentGrid {

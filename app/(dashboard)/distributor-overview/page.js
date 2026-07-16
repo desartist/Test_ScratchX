@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import {
   TrendingUp,
@@ -8,54 +8,15 @@ import {
   Users,
   DollarSign,
   AlertCircle,
-  Zap,
   Package,
   ArrowRight,
-  Eye,
-  Download,
 } from 'lucide-react';
+import { useDistributorDashboardQuery } from '@/hooks/queries/useDistributorDashboardQuery';
 import styles from './distributor.module.css';
 
 export default function DistributorDashboard() {
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
-
-  const fetchDashboard = async () => {
-    try {
-      setLoading(true);
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-      const res = await fetch('/api/distributor/dashboard', {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (!res.ok) {
-        throw new Error(`API Error: ${res.status}`);
-      }
-
-      const data = await res.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to load dashboard');
-      }
-
-      setDashboard(data.data);
-      setError(null);
-    } catch (err) {
-      console.error('[Dashboard] Error:', err);
-      setError(err.name === 'AbortError' ? 'Request timeout - please try again' : err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: dashboard, isPending: loading, error: queryError, refetch } = useDistributorDashboardQuery();
+  const error = queryError ? queryError.message : null;
 
   if (loading) {
     return (
@@ -74,7 +35,7 @@ export default function DistributorDashboard() {
         <div className={styles.errorState}>
           <AlertCircle size={48} />
           <p>{error}</p>
-          <button onClick={fetchDashboard} className={styles.retryButton}>
+          <button onClick={() => refetch()} className={styles.retryButton}>
             Try Again
           </button>
         </div>
@@ -86,7 +47,7 @@ export default function DistributorDashboard() {
     return null;
   }
 
-  const { metrics, inventory, commission, orders, alerts, stats } = dashboard;
+  const { metrics, inventory, commission, orders, alerts } = dashboard;
 
   return (
     <div className={styles.page}>
@@ -102,7 +63,7 @@ export default function DistributorDashboard() {
               <ShoppingCart size={20} />
               Buy Plans
             </Link>
-            <Link href="/dashboard/retailers/create" className={styles.secondaryButton}>
+            <Link href="/retailers" className={styles.secondaryButton}>
               <Users size={20} />
               Add Retailer
             </Link>
@@ -189,7 +150,7 @@ export default function DistributorDashboard() {
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <h2 className={styles.cardTitle}>Plan Inventory</h2>
-              <Link href="/distributor/inventory" className={styles.viewLink}>
+              <Link href="/scratch-allocation" className={styles.viewLink}>
                 View All
                 <ArrowRight size={16} />
               </Link>
@@ -220,7 +181,7 @@ export default function DistributorDashboard() {
                     style={{
                       width: `${inventory.core.percentageUtilized}%`,
                       backgroundColor:
-                        inventory.core.percentageUtilized > 80 ? '#ef4444' : '#3b82f6',
+                        inventory.core.percentageUtilized > 80 ? '#ef4444' : '#ef9e1b',
                     }}
                   />
                 </div>

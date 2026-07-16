@@ -82,7 +82,7 @@ export async function POST(request, { params }) {
     }
 
     // Gate allocation on the subscription scratch entitlement.
-    // Business rule: during the 90-day unlimited grant, allocation is unlimited.
+    // Business rule: during the 365-day unlimited grant, allocation is unlimited.
     // After it expires, the merchant must have purchased scratch packs; otherwise
     // they are prompted to buy more.
     const entitlement = await scratchEntitlementService.checkEntitlement(
@@ -119,7 +119,7 @@ export async function POST(request, { params }) {
         );
       }
     }
-    // entitlement.type === 'unlimited' → no balance cap during the 90-day grant.
+    // entitlement.type === 'unlimited' → no balance cap during the 365-day grant.
 
     // Update campaign allocation
     campaign.allocated_scratch_cards = allocationAmount;

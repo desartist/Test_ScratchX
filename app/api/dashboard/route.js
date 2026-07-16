@@ -26,7 +26,7 @@ export async function GET(request) {
     let data;
 
     switch (account.role) {
-      case "SuperAdmin":
+      case "Super_Admin":
         data = await dashboardService.getSuperAdminDashboard();
         break;
 
