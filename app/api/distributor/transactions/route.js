@@ -23,7 +23,9 @@ export async function GET(request) {
     }
 
     const url = new URL(request.url);
-    const endpoint = url.pathname.split('/').pop();
+    // No nested route files exist for /balance or /summary — both are reached
+    // via this same flat route with an `?endpoint=` query param instead.
+    const endpoint = url.searchParams.get('endpoint');
     const type = url.searchParams.get('type');
     const direction = url.searchParams.get('direction');
     const startDate = url.searchParams.get('startDate');

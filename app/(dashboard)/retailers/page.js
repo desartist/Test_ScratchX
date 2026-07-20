@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   UserCheck,
@@ -10,6 +10,8 @@ import {
   X,
   AlertCircle,
   ShieldAlert,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import {
   useDistributorMerchantsQuery,
@@ -19,14 +21,13 @@ import {
 import styles from './retailers.module.css';
 
 const EMPTY_FORM = {
-  name: '',
-  email: '',
-  phoneNumber: '',
-  password: '',
   storeName: '',
-  storeAddress: '',
-  businessType: '',
-  storeLocation: '',
+  name: '',
+  countryCode: '+91',
+  phoneNumber: '',
+  email: '',
+  planType: '',
+  password: '',
 };
 
 function getInitials(name) {
@@ -46,6 +47,8 @@ export default function RetailersPage() {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState(null);
   const [statusTarget, setStatusTarget] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [inventory, setInventory] = useState(null);
 
   const { data, isPending: loading, error: queryError, refetch } = useDistributorMerchantsQuery({
     search: searchQuery,
@@ -58,6 +61,16 @@ export default function RetailersPage() {
   const createMutation = useCreateMerchantMutation();
   const statusMutation = useUpdateMerchantStatusMutation();
 
+  useEffect(() => {
+    if (!showModal) return;
+    fetch('/api/distributor/inventory', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success) setInventory(json.data);
+      })
+      .catch(() => {});
+  }, [showModal]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -67,6 +80,7 @@ export default function RetailersPage() {
     setShowModal(false);
     setFormData(EMPTY_FORM);
     setFormError(null);
+    setShowPassword(false);
   };
 
   const handleCreateMerchant = async (e) => {
@@ -239,8 +253,8 @@ export default function RetailersPage() {
                       <td>{merchant.profile?.phoneNumber || merchant.phone || '—'}</td>
                       <td>{merchant.profile?.storeLocation || merchant.profile?.storeAddress || '—'}</td>
                       <td>
-                        {merchant.subscription?.planId?.name
-                          ? `${merchant.subscription.planId.name} (${merchant.subscription.status})`
+                        {merchant.subscription?.planType
+                          ? `${merchant.subscription.planType === 'SMART' ? 'Smart' : 'Core'} (${merchant.subscription.status})`
                           : 'No plan'}
                       </td>
                       <td>
@@ -281,10 +295,13 @@ export default function RetailersPage() {
 
       {/* Add Retailer Modal */}
       {showModal && (
-        <div className={styles.modalOverlay} onClick={handleCloseModal}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Add Retailer</h2>
+              <div>
+                <h2 className={styles.modalTitle}>Add Retailer</h2>
+                <p className={styles.modalSubtitle}>Onboard a new retailer to your territory</p>
+              </div>
               <button className={styles.modalClose} onClick={handleCloseModal}>
                 <X size={24} />
               </button>
@@ -299,8 +316,24 @@ export default function RetailersPage() {
               )}
 
               <div className={styles.formGroup}>
+                <label htmlFor="storeName" className={styles.formLabel}>
+                  Business Name *
+                </label>
+                <input
+                  type="text"
+                  id="storeName"
+                  name="storeName"
+                  value={formData.storeName}
+                  onChange={handleInputChange}
+                  placeholder="Enter business name"
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
                 <label htmlFor="name" className={styles.formLabel}>
-                  Owner Full Name *
+                  Owner Name *
                 </label>
                 <input
                   type="text"
@@ -314,27 +347,22 @@ export default function RetailersPage() {
                 />
               </div>
 
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label htmlFor="email" className={styles.formLabel}>
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
+              <div className={styles.formGroup}>
+                <label htmlFor="phoneNumber" className={styles.formLabel}>
+                  Contact Number *
+                </label>
+                <div className={styles.phoneInputWrapper}>
+                  <select
+                    name="countryCode"
+                    value={formData.countryCode}
                     onChange={handleInputChange}
-                    placeholder="Enter email address"
-                    className={styles.formInput}
-                    required
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="phoneNumber" className={styles.formLabel}>
-                    Phone Number
-                  </label>
+                    className={styles.countryCodeSelect}
+                  >
+                    <option value="+91">+91</option>
+                    <option value="+1">+1</option>
+                    <option value="+44">+44</option>
+                    <option value="+971">+971</option>
+                  </select>
                   <input
                     type="tel"
                     id="phoneNumber"
@@ -343,86 +371,78 @@ export default function RetailersPage() {
                     onChange={handleInputChange}
                     placeholder="Enter phone number"
                     className={styles.formInput}
+                    required
                   />
                 </div>
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="password" className={styles.formLabel}>
-                  Password *
+                <label htmlFor="email" className={styles.formLabel}>
+                  Email ID *
                 </label>
                 <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="Enter password (min 6 characters)"
+                  placeholder="your@email.com"
                   className={styles.formInput}
                   required
                 />
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="storeName" className={styles.formLabel}>
-                  Store Name
+                <label htmlFor="planType" className={styles.formLabel}>
+                  Choose Subscription
                 </label>
-                <input
-                  type="text"
-                  id="storeName"
-                  name="storeName"
-                  value={formData.storeName}
+                <select
+                  id="planType"
+                  name="planType"
+                  value={formData.planType}
                   onChange={handleInputChange}
-                  placeholder="Enter store name"
                   className={styles.formInput}
-                />
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label htmlFor="businessType" className={styles.formLabel}>
-                    Business Type
-                  </label>
-                  <input
-                    type="text"
-                    id="businessType"
-                    name="businessType"
-                    value={formData.businessType}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Retail, Grocery"
-                    className={styles.formInput}
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="storeLocation" className={styles.formLabel}>
-                    Store Location
-                  </label>
-                  <input
-                    type="text"
-                    id="storeLocation"
-                    name="storeLocation"
-                    value={formData.storeLocation}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Mumbai"
-                    className={styles.formInput}
-                  />
-                </div>
+                >
+                  <option value="">Select licence (optional)</option>
+                  <option value="SMART" disabled={!inventory?.plans?.SMART?.totalRemaining}>
+                    Smart Licence
+                    {inventory ? ` (${inventory.plans?.SMART?.totalRemaining || 0} left)` : ''}
+                  </option>
+                  <option value="CORE" disabled={!inventory?.plans?.CORE?.totalRemaining}>
+                    Core Licence
+                    {inventory ? ` (${inventory.plans?.CORE?.totalRemaining || 0} left)` : ''}
+                  </option>
+                </select>
+                <p className={styles.formHint}>
+                  Assigns a license from your purchased inventory and activates it immediately.
+                  Leave blank to add the retailer without a plan.
+                </p>
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="storeAddress" className={styles.formLabel}>
-                  Store Address
+                <label htmlFor="password" className={styles.formLabel}>
+                  Password *
                 </label>
-                <input
-                  type="text"
-                  id="storeAddress"
-                  name="storeAddress"
-                  value={formData.storeAddress}
-                  onChange={handleInputChange}
-                  placeholder="Enter full store address"
-                  className={styles.formInput}
-                />
+                <div className={styles.passwordInputWrapper}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Enter password (min 6 characters)"
+                    className={styles.formInput}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className={styles.passwordToggle}
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <div className={styles.modalFooter}>
@@ -434,7 +454,7 @@ export default function RetailersPage() {
                   className={styles.submitButton}
                   disabled={createMutation.isPending}
                 >
-                  {createMutation.isPending ? 'Creating...' : 'Create Retailer'}
+                  {createMutation.isPending ? 'Activating...' : 'Activate Retailer'}
                 </button>
               </div>
             </form>

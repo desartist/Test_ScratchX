@@ -17,10 +17,10 @@ const distributorTransactionSchema = new mongoose.Schema(
       index: true,
     },
 
-    // Distributor involved
+    // Distributor involved (real accounts live on the Account model)
     distributorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Distributor',
+      ref: 'Account',
       required: true,
       index: true,
     },
@@ -132,5 +132,10 @@ const distributorTransactionSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.DistributorTransaction ||
-  mongoose.model('DistributorTransaction', distributorTransactionSchema);
+// Delete cached model to ensure schema changes are fresh (avoids stale
+// schema surviving a Next.js dev hot-reload)
+if (mongoose.models.DistributorTransaction) {
+  delete mongoose.models.DistributorTransaction;
+}
+
+export default mongoose.model('DistributorTransaction', distributorTransactionSchema);

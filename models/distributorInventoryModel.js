@@ -10,10 +10,10 @@ import mongoose from 'mongoose';
 
 const distributorInventorySchema = new mongoose.Schema(
   {
-    // Distributor owning this inventory
+    // Distributor owning this inventory (real accounts live on the Account model)
     distributorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Distributor',
+      ref: 'Account',
       required: true,
       index: true,
     },
@@ -57,19 +57,11 @@ const distributorInventorySchema = new mongoose.Schema(
     lastPurchasedAt: Date,
     lastAssignedAt: Date,
 
-    // Purchase order references
+    // Distributor purchase orders that contributed to this inventory
     purchaseOrders: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'DistributorOrder',
-      },
-    ],
-
-    // Plan assignments from this inventory
-    planAssignments: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'PlanAssignment',
       },
     ],
   },
@@ -83,10 +75,15 @@ const distributorInventorySchema = new mongoose.Schema(
 );
 
 // Middleware to ensure totalRemaining = totalPurchased - totalAssigned
-distributorInventorySchema.pre('save', function (next) {
+// (Mongoose 9 dropped the legacy callback-style `next` — hooks are sync/async functions now.)
+distributorInventorySchema.pre('save', function () {
   this.totalRemaining = this.totalPurchased - this.totalAssigned;
-  next();
 });
 
-export default mongoose.models.DistributorInventory ||
-  mongoose.model('DistributorInventory', distributorInventorySchema);
+// Delete cached model to ensure hooks are fresh (avoids stale schema/hooks
+// surviving a Next.js dev hot-reload — see subscriptionModel.js for the same pattern)
+if (mongoose.models.DistributorInventory) {
+  delete mongoose.models.DistributorInventory;
+}
+
+export default mongoose.model('DistributorInventory', distributorInventorySchema);

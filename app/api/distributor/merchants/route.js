@@ -2,8 +2,9 @@ import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
 import Account from "@/models/accountModel";
 import Subscription from "@/models/subscriptionModel";
-import SubscriptionPlan from "@/models/subscriptionPlanModel";
 import bcrypt from "bcrypt";
+import { inventoryService } from "@/lib/services/distributor";
+import scratchEntitlementService from "@/lib/scratchEntitlementService";
 
 function distributorOrAdmin(account) {
   if (!["Super_Admin", "Distributor"].includes(account.role)) {
@@ -60,8 +61,7 @@ export async function GET(request) {
   // Attach subscription info
   const ids = merchants.map((m) => m._id);
   const subs = await Subscription.find({ merchantId: { $in: ids } })
-    .populate("planId", "name price")
-    .select("merchantId status currentPeriodEnd planId billingCycle");
+    .select("merchantId status currentPeriodEnd planType billingCycle unlimitedScratches.validUntil");
 
   const subMap = {};
   for (const s of subs) subMap[s.merchantId.toString()] = s;
@@ -129,7 +129,7 @@ export async function POST(request) {
   const {
     name, email, password,
     storeName, storeAddress, businessType, countryCode, phoneNumber, storeLocation,
-    planId, billingCycle = "monthly",
+    planType,
   } = await request.json();
 
   if (!name || !email || !password) {
@@ -137,6 +137,29 @@ export async function POST(request) {
       { success: false, error: "name, email and password are required" },
       { status: 400 },
     );
+  }
+
+  if (planType && !["CORE", "SMART"].includes(planType)) {
+    return Response.json(
+      { success: false, error: "Invalid planType" },
+      { status: 400 },
+    );
+  }
+
+  // A distributor granting a plan on creation must have inventory for it —
+  // check before creating the account so we don't leave an orphaned merchant
+  // behind if the assignment fails.
+  if (planType && account.role === "Distributor") {
+    const available = await inventoryService.hasAvailableInventory(account._id, planType, 1);
+    if (!available) {
+      return Response.json(
+        {
+          success: false,
+          error: `You don't have any ${planType === "SMART" ? "Smart" : "Core"} licenses left. Buy more from the marketplace first.`,
+        },
+        { status: 400 },
+      );
+    }
   }
 
   try {
@@ -152,26 +175,38 @@ export async function POST(request) {
       profile: { storeName, storeAddress, businessType, countryCode, phoneNumber, storeLocation },
     });
 
-    // Optionally assign subscription plan immediately
+    // Optionally activate a real subscription immediately (deducting from the
+    // distributor's purchased inventory, same 365-day grant as a self-service purchase)
     let subscription = null;
-    if (planId) {
-      const plan = await SubscriptionPlan.findById(planId);
-      if (plan) {
-        const now = new Date();
-        const periodEnd = new Date(now);
-        periodEnd.setMonth(periodEnd.getMonth() + (billingCycle === "annual" ? 12 : 1));
+    if (planType) {
+      const now = new Date();
 
-        subscription = await Subscription.create({
-          merchantId: merchant._id,
-          planId: plan._id,
-          distributorId: account.role === "Distributor" ? account._id : null,
-          status: "active",
-          billingCycle,
-          currentPeriodStart: now,
-          currentPeriodEnd: periodEnd,
-          usage: { lastResetAt: now },
-        });
+      subscription = await Subscription.create({
+        ownerId: merchant._id,
+        ownerType: "merchant",
+        merchantId: merchant._id,
+        planType,
+        distributorId: account.role === "Distributor" ? account._id : null,
+        status: "active",
+        billingCycle: "one-time",
+        purchaseDate: now,
+      });
+
+      await scratchEntitlementService.activateUnlimitedScratches(subscription._id);
+
+      if (account.role === "Distributor") {
+        await inventoryService.assignFromInventory(account._id, planType, merchant._id);
       }
+
+      await Account.findByIdAndUpdate(merchant._id, {
+        activePlan: planType,
+        subscriptionId: subscription._id,
+        planPurchaseDate: now,
+      });
+
+      // Re-fetch so the response reflects the post-activation state
+      // (activateUnlimitedScratches updates the DB directly, not this in-memory doc)
+      subscription = await Subscription.findById(subscription._id);
     }
 
     return Response.json(

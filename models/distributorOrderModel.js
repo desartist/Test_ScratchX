@@ -22,10 +22,10 @@ const distributorOrderSchema = new mongoose.Schema(
       sparse: true,
     },
 
-    // Distributor placing the order
+    // Distributor placing the order (real accounts live on the Account model)
     distributorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Distributor',
+      ref: 'Account',
       required: true,
       index: true,
     },
@@ -157,5 +157,10 @@ const distributorOrderSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.DistributorOrder ||
-  mongoose.model('DistributorOrder', distributorOrderSchema);
+// Delete cached model to ensure schema changes are fresh (avoids stale
+// schema surviving a Next.js dev hot-reload)
+if (mongoose.models.DistributorOrder) {
+  delete mongoose.models.DistributorOrder;
+}
+
+export default mongoose.model('DistributorOrder', distributorOrderSchema);

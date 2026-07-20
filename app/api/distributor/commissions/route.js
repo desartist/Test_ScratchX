@@ -50,7 +50,15 @@ export async function GET(request) {
       ]),
     ]);
 
-    const summary = { totalEarned: 0, totalApproved: 0, totalPaid: 0, pendingCount: 0, approvedCount: 0, paidCount: 0 };
+    const summary = {
+      totalEarned: 0,
+      totalApproved: 0,
+      totalPaid: 0,
+      pendingCount: 0,
+      approvedCount: 0,
+      paidCount: 0,
+      commissionRate: account.profile?.commissionRate ?? 0,
+    };
     for (const row of summaryAgg) {
       summary.totalEarned += row.total;
       if (row._id === 'approved') {

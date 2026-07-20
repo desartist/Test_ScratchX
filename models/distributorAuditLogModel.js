@@ -178,14 +178,18 @@ const distributorAuditLogSchema = new mongoose.Schema(
 );
 
 // Auto-set expiresAt based on retentionDays
-distributorAuditLogSchema.pre('save', function (next) {
+distributorAuditLogSchema.pre('save', function () {
   if (!this.expiresAt && this.retentionDays) {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + this.retentionDays);
     this.expiresAt = expiryDate;
   }
-  next();
 });
 
-export default mongoose.models.DistributorAuditLog ||
-  mongoose.model('DistributorAuditLog', distributorAuditLogSchema);
+// Delete cached model to ensure hooks are fresh (avoids stale schema/hooks
+// surviving a Next.js dev hot-reload)
+if (mongoose.models.DistributorAuditLog) {
+  delete mongoose.models.DistributorAuditLog;
+}
+
+export default mongoose.model('DistributorAuditLog', distributorAuditLogSchema);
