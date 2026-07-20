@@ -53,6 +53,76 @@
   box-shadow: 0 6px 20px rgba(239, 158, 27, 0.4);
 }
 
+/* Commission Rate banner */
+.rateBanner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #010f44 0%, #1a2c6b 100%);
+  border-radius: 16px;
+  padding: 22px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 20px rgba(1, 15, 68, 0.25);
+  flex-wrap: wrap;
+}
+
+.rateBannerIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(239, 158, 27, 0.18);
+  color: #ef9e1b;
+}
+
+.rateBannerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rateBannerLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.rateBannerValue {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  color: #ef9e1b;
+  line-height: 1.2;
+}
+
+.rateBannerNote {
+  margin: 0 0 0 auto;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 320px;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .rateBanner {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .rateBannerNote {
+    margin: 0;
+    text-align: left;
+    max-width: none;
+  }
+}
+
 /* Summary cards */
 .summaryGrid {
   display: grid;

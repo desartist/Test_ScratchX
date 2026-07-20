@@ -9,6 +9,7 @@ import {
   BarChart3,
   CheckCircle,
   DollarSign,
+  Percent,
 } from 'lucide-react';
 import { useDistributorCommissionsQuery } from '@/hooks/queries/useDistributorCommissionsQuery';
 import styles from './commissions.module.css';
@@ -35,6 +36,7 @@ export default function CommissionsPage() {
     pendingCount: 0,
     approvedCount: 0,
     paidCount: 0,
+    commissionRate: 0,
   };
   const error = queryError ? queryError.message : null;
 
@@ -85,6 +87,20 @@ export default function CommissionsPage() {
             <Download size={20} />
             Export
           </button>
+        </div>
+
+        {/* Commission Rate */}
+        <div className={styles.rateBanner}>
+          <div className={styles.rateBannerIcon}>
+            <Percent size={26} />
+          </div>
+          <div className={styles.rateBannerContent}>
+            <p className={styles.rateBannerLabel}>Your Commission Rate</p>
+            <p className={styles.rateBannerValue}>{summary.commissionRate}%</p>
+          </div>
+          <p className={styles.rateBannerNote}>
+            Set by ScratchX — applied to every merchant payment processed under your account
+          </p>
         </div>
 
         {/* Summary Cards */}

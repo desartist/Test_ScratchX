@@ -11,6 +11,7 @@ import {
 import PlanStatusCard from "@/components/sidebar/PlanStatusCard";
 import PlatformNoticeModal from "@/components/policy/PlatformNoticeModal";
 import {
+  IconCart,
   IconChart,
   IconDashboard,
   IconLogout,
@@ -40,6 +41,7 @@ const NAV_ICONS = {
   studio: IconDashboard,
   support: IconUsers,
   notice: IconShield,
+  marketplace: IconCart,
 };
 
 function isNavItemActive(pathname, href) {
@@ -146,18 +148,19 @@ export default function DashboardLayout({ children, role }) {
         return {
           primary: [
             ...baseItems,
+            { label: "Buy Plans", href: "/marketplace", iconKey: "marketplace" },
             { label: "Retailers", href: "/retailers", iconKey: "merchants" },
-            {
-              label: "Scratch Allocation",
-              href: "/scratch-allocation",
-              iconKey: "commission",
-            },
-            {
-              label: "Campaign Activity",
-              href: "/campaigns",
-              iconKey: "campaigns",
-            },
-            { label: "Analytics", href: "/analytics", iconKey: "analytics" },
+            // {
+            //   label: "Scratch Allocation",
+            //   href: "/scratch-allocation",
+            //   iconKey: "commission",
+            // },
+            // {
+            //   label: "Campaign Activity",
+            //   href: "/campaigns",
+            //   iconKey: "campaigns",
+            // },
+            // { label: "Analytics", href: "/analytics", iconKey: "analytics" },
             { label: "Support Center", href: "/support", iconKey: "support" },
           ],
           secondary: [
@@ -166,11 +169,11 @@ export default function DashboardLayout({ children, role }) {
               href: "/notifications",
               iconKey: "operations",
             },
-            {
-              label: "Territory Reports",
-              href: "/reports",
-              iconKey: "analytics",
-            },
+            // {
+            //   label: "Territory Reports",
+            //   href: "/reports",
+            //   iconKey: "analytics",
+            // },
             {
               label: "Commission Summary",
               href: "/commissions",

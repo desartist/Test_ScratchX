@@ -952,7 +952,7 @@
 .modalHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 24px;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -962,6 +962,12 @@
   font-size: 20px;
   font-weight: 700;
   color: #010f44;
+}
+
+.modalSubtitle {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #6b7280;
 }
 
 .modalClose {
@@ -998,6 +1004,64 @@
   color: #c0392b;
   margin-bottom: 20px;
   font-size: 14px;
+}
+
+.formHint {
+  margin: 6px 0 0 0;
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+.phoneInputWrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.countryCodeSelect {
+  width: 80px;
+  flex-shrink: 0;
+  padding: 12px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #010f44;
+  background: white;
+}
+
+.countryCodeSelect:focus {
+  outline: none;
+  border-color: #ef9e1b;
+  box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.1);
+}
+
+.passwordInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInputWrapper .formInput {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.passwordToggle:hover {
+  color: #ef9e1b;
 }
 
 .modalFooter {

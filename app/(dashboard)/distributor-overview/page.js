@@ -3,16 +3,31 @@
 import React from 'react';
 import Link from 'next/link';
 import {
+  Plus,
   TrendingUp,
-  ShoppingCart,
+  TrendingDown,
+  ArrowRight,
   Users,
-  DollarSign,
+  CreditCard,
+  Wallet,
+  Clock,
   AlertCircle,
   Package,
-  ArrowRight,
+  Zap,
+  ShoppingCart,
+  MapPin,
 } from 'lucide-react';
 import { useDistributorDashboardQuery } from '@/hooks/queries/useDistributorDashboardQuery';
+import { getAccountInitials } from '@/lib/accountDisplay';
 import styles from './distributor.module.css';
+
+function formatDaysLeft(daysLeft) {
+  if (daysLeft <= 0) {
+    const daysAgo = Math.abs(daysLeft);
+    return daysAgo === 0 ? 'Plan lapsed today' : `Plan lapsed ${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
+  }
+  return `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`;
+}
 
 export default function DistributorDashboard() {
   const { data: dashboard, isPending: loading, error: queryError, refetch } = useDistributorDashboardQuery();
@@ -47,321 +62,202 @@ export default function DistributorDashboard() {
     return null;
   }
 
-  const { metrics, inventory, commission, orders, alerts } = dashboard;
+  const { distributor, metrics, inventory, rechargeQueue } = dashboard;
+  const totalRemaining = inventory.core.totalRemaining + inventory.smart.totalRemaining;
+  const location = [distributor.territory, distributor.region].filter(Boolean).join(', ');
 
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <h1 className={styles.title}>Distributor Dashboard</h1>
-            <p className={styles.subtitle}>Manage plans, retailers & commissions</p>
-          </div>
-          <div className={styles.headerActions}>
-            <Link href="/marketplace" className={styles.primaryButton}>
-              <ShoppingCart size={20} />
-              Buy Plans
-            </Link>
-            <Link href="/retailers" className={styles.secondaryButton}>
-              <Users size={20} />
-              Add Retailer
-            </Link>
+        {/* Profile header */}
+        <div className={styles.profileHeader}>
+          <div className={styles.avatar}>{getAccountInitials({ name: distributor.name })}</div>
+          <div>
+            <h1 className={styles.profileName}>{distributor.name}</h1>
+            {location && (
+              <p className={styles.profileLocation}>
+                <MapPin size={14} />
+                {location}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Alerts */}
-        {alerts.length > 0 && (
-          <div className={styles.alertsSection}>
-            {alerts.map((alert, idx) => (
-              <div key={idx} className={styles.alertBox}>
-                <AlertCircle size={20} />
-                <div className={styles.alertContent}>
-                  <p className={styles.alertTitle}>{alert.message}</p>
-                  <p className={styles.alertDetail}>
-                    {alert.remaining} remaining ({alert.utilization}% utilized)
-                  </p>
-                </div>
-                <Link href="/marketplace" className={styles.alertAction}>
-                  Buy More
-                  <ArrowRight size={16} />
-                </Link>
+        {/* Hero: Add Retailer */}
+        <div className={styles.heroCard}>
+          <div className={styles.heroTop}>
+            <div className={styles.heroIcon}>
+              <Plus size={20} />
+            </div>
+            {metrics.retailerGrowthPercent !== null && metrics.retailerGrowthPercent !== 0 && (
+              <span className={styles.heroTrend}>
+                {metrics.retailerGrowthPercent > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                {metrics.retailerGrowthPercent > 0 ? '+' : ''}
+                {metrics.retailerGrowthPercent}% this week
+              </span>
+            )}
+          </div>
+          <h2 className={styles.heroTitle}>Add Retailer</h2>
+          <p className={styles.heroSubtitle}>
+            Onboard a new store with 365 days of unlimited access.
+          </p>
+
+          <div className={styles.heroStats}>
+            <div className={styles.heroStatMain}>
+              <span className={styles.heroStatValue}>{totalRemaining}</span>
+              <span className={styles.heroStatLabel}>Plan licenses remaining</span>
+            </div>
+            <div className={styles.heroStatDivider} />
+            <div className={styles.heroStatSub}>
+              <span className={styles.heroStatSubValue}>{inventory.smart.totalRemaining}</span>
+              <span className={styles.heroStatSubLabel}>Smart</span>
+            </div>
+            <div className={styles.heroStatSub}>
+              <span className={styles.heroStatSubValue}>{inventory.core.totalRemaining}</span>
+              <span className={styles.heroStatSubLabel}>Core</span>
+            </div>
+          </div>
+
+          <Link href="/retailers" className={styles.heroButton}>
+            Start Onboarding
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+
+        {/* Territory Overview */}
+        <div className={styles.sectionHeading}>
+          <h2>Territory Overview</h2>
+        </div>
+
+        <div className={styles.statGrid}>
+          <div className={styles.statCard}>
+            <div className={styles.statTop}>
+              <div className={`${styles.statIcon} ${styles['icon-purple']}`}>
+                <Users size={19} />
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Main Metrics */}
-        <div className={styles.metricsGrid}>
-          <div className={`${styles.metricCard} ${styles['metric-blue']}`}>
-            <div className={styles.metricIcon}>
-              <DollarSign size={24} />
+              <span className={styles.statValue}>{metrics.retailersThisWeek}</span>
             </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Current Balance</p>
-              <p className={styles.metricValue}>
-                ₹{(metrics.currentBalance || 0).toLocaleString()}
-              </p>
-              <p className={styles.metricSubtext}>Available credit</p>
-            </div>
+            <p className={styles.statLabel}>New Retailers This Week</p>
           </div>
 
-          <div className={`${styles.metricCard} ${styles['metric-green']}`}>
-            <div className={styles.metricIcon}>
-              <Package size={24} />
+          <div className={styles.statCard}>
+            <div className={styles.statTop}>
+              <div className={`${styles.statIcon} ${styles['icon-blue']}`}>
+                <CreditCard size={19} />
+              </div>
+              <span className={styles.statValue}>{metrics.licensesPurchased}</span>
             </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Remaining Plans</p>
-              <p className={styles.metricValue}>{metrics.remainingPlans}</p>
-              <p className={styles.metricSubtext}>
-                {((metrics.remainingPlans / metrics.totalPlansInventory) * 100 || 0).toFixed(0)}% of inventory
-              </p>
-            </div>
+            <p className={styles.statLabel}>Core + Smart Licenses Purchased</p>
           </div>
 
-          <div className={`${styles.metricCard} ${styles['metric-purple']}`}>
-            <div className={styles.metricIcon}>
-              <Users size={24} />
+          <div className={styles.statCard}>
+            <div className={styles.statTop}>
+              <div className={`${styles.statIcon} ${styles['icon-green']}`}>
+                <Wallet size={19} />
+              </div>
+              <span className={styles.statValue}>₹{metrics.monthlyMargin.toLocaleString('en-IN')}</span>
             </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Active Retailers</p>
-              <p className={styles.metricValue}>{metrics.totalRetailers}</p>
-              <p className={styles.metricSubtext}>Using your plans</p>
-            </div>
+            <p className={styles.statLabel}>Estimated Margin This Month</p>
           </div>
 
-          <div className={`${styles.metricCard} ${styles['metric-orange']}`}>
-            <div className={styles.metricIcon}>
-              <TrendingUp size={24} />
+          <div className={styles.statCard}>
+            <div className={styles.statTop}>
+              <div className={`${styles.statIcon} ${styles['icon-orange']}`}>
+                <Clock size={19} />
+              </div>
+              <span className={styles.statValue}>₹{metrics.pendingPayoutAmount.toLocaleString('en-IN')}</span>
             </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Monthly Profit</p>
-              <p className={styles.metricValue}>
-                ₹{(metrics.monthlyProfit || 0).toLocaleString()}
-              </p>
-              <p className={styles.metricSubtext}>Commissions earned</p>
-            </div>
+            <p className={styles.statLabel}>
+              Pending Payments
+              {metrics.pendingRetailerCount > 0 &&
+                ` from ${metrics.pendingRetailerCount} retailer${metrics.pendingRetailerCount === 1 ? '' : 's'}`}
+            </p>
           </div>
         </div>
 
-        {/* Content Grid */}
-        <div className={styles.contentGrid}>
-          {/* Inventory Status */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>Plan Inventory</h2>
-              <Link href="/scratch-allocation" className={styles.viewLink}>
-                View All
-                <ArrowRight size={16} />
-              </Link>
-            </div>
-
-            <div className={styles.inventoryGrid}>
-              <div className={styles.inventoryItem}>
-                <span className={styles.planName}>Core Plans</span>
-                <div className={styles.inventoryStats}>
-                  <div className={styles.statRow}>
-                    <span>Purchased:</span>
-                    <strong>{inventory.core.totalPurchased}</strong>
-                  </div>
-                  <div className={styles.statRow}>
-                    <span>Assigned:</span>
-                    <strong>{inventory.core.totalAssigned}</strong>
-                  </div>
-                  <div className={styles.statRow}>
-                    <span>Remaining:</span>
-                    <strong className={styles.remaining}>
-                      {inventory.core.totalRemaining}
-                    </strong>
-                  </div>
-                </div>
-                <div className={styles.progressBar}>
-                  <div
-                    className={styles.progressFill}
-                    style={{
-                      width: `${inventory.core.percentageUtilized}%`,
-                      backgroundColor:
-                        inventory.core.percentageUtilized > 80 ? '#ef4444' : '#ef9e1b',
-                    }}
-                  />
-                </div>
-                <p className={styles.utilization}>
-                  {inventory.core.percentageUtilized}% utilized
-                </p>
-              </div>
-
-              <div className={styles.inventoryItem}>
-                <span className={styles.planName}>Smart Plans</span>
-                <div className={styles.inventoryStats}>
-                  <div className={styles.statRow}>
-                    <span>Purchased:</span>
-                    <strong>{inventory.smart.totalPurchased}</strong>
-                  </div>
-                  <div className={styles.statRow}>
-                    <span>Assigned:</span>
-                    <strong>{inventory.smart.totalAssigned}</strong>
-                  </div>
-                  <div className={styles.statRow}>
-                    <span>Remaining:</span>
-                    <strong className={styles.remaining}>
-                      {inventory.smart.totalRemaining}
-                    </strong>
-                  </div>
-                </div>
-                <div className={styles.progressBar}>
-                  <div
-                    className={styles.progressFill}
-                    style={{
-                      width: `${inventory.smart.percentageUtilized}%`,
-                      backgroundColor:
-                        inventory.smart.percentageUtilized > 80 ? '#ef4444' : '#8b5cf6',
-                    }}
-                  />
-                </div>
-                <p className={styles.utilization}>
-                  {inventory.smart.percentageUtilized}% utilized
-                </p>
-              </div>
-            </div>
+        {/* Recharge Queue */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>Recharge Queue</h2>
+            <Link href="/retailers" className={styles.viewLink}>
+              View All
+              <ArrowRight size={16} />
+            </Link>
           </div>
 
-          {/* Commission Status */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>Commission Status</h2>
-              <Link href="/commissions" className={styles.viewLink}>
-                View All
-                <ArrowRight size={16} />
-              </Link>
+          {rechargeQueue.length === 0 ? (
+            <p className={styles.emptyText}>No retailers need a recharge right now.</p>
+          ) : (
+            <div className={styles.queueList}>
+              {rechargeQueue.map((item) => (
+                <div key={item.retailerId} className={styles.queueItem}>
+                  <div className={styles.queueAvatar}>{getAccountInitials({ name: item.storeName })}</div>
+                  <div className={styles.queueInfo}>
+                    <p className={styles.queueName}>{item.storeName}</p>
+                    <p className={styles.queueMeta}>
+                      {item.location ? `${item.location} · ` : ''}
+                      {item.planType === 'CORE' ? 'Core Plan' : 'Smart Plan'}
+                    </p>
+                    <p className={item.daysLeft <= 0 ? styles.queueLapsed : styles.queueDaysLeft}>
+                      {formatDaysLeft(item.daysLeft)}
+                    </p>
+                  </div>
+                  <Link href="/retailers" className={styles.rechargeBtn}>
+                    Recharge
+                  </Link>
+                </div>
+              ))}
             </div>
+          )}
+        </div>
 
-            <div className={styles.commissionBreakdown}>
-              <div className={styles.commissionItem}>
-                <div className={styles.commissionLabel}>
-                  <span>Earned</span>
-                  <span className={styles.commissionCount}>
-                    ({commission.pending})
-                  </span>
-                </div>
-                <p className={styles.commissionAmount}>
-                  ₹{(commission.earned || 0).toLocaleString()}
-                </p>
-              </div>
-
-              <div className={styles.commissionItem}>
-                <div className={styles.commissionLabel}>
-                  <span>Approved</span>
-                  <span className={styles.commissionCount}>
-                    ({commission.approved})
-                  </span>
-                </div>
-                <p className={styles.commissionAmount}>
-                  ₹{(commission.approved || 0).toLocaleString()}
-                </p>
-              </div>
-
-              <div className={styles.commissionItem}>
-                <div className={styles.commissionLabel}>
-                  <span>Paid</span>
-                  <span className={styles.commissionCount}>
-                    ({commission.paid})
-                  </span>
-                </div>
-                <p className={styles.commissionAmount}>
-                  ₹{(commission.paid || 0).toLocaleString()}
-                </p>
-              </div>
-            </div>
+        {/* Restock Inventory */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>Restock Inventory</h2>
           </div>
 
-          {/* Orders Summary */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>Orders This Month</h2>
-              <Link href="/orders" className={styles.viewLink}>
-                View All
-                <ArrowRight size={16} />
+          <div className={styles.restockList}>
+            <div className={styles.restockItem}>
+              <div className={`${styles.restockIcon} ${styles['icon-purple']}`}>
+                <Zap size={18} />
+              </div>
+              <div className={styles.restockInfo}>
+                <p className={styles.restockName}>Smart License</p>
+                <p className={styles.restockMeta}>
+                  ₹{inventory.smart.unitMRP.toLocaleString('en-IN')}/license · {inventory.smart.totalRemaining} left
+                </p>
+              </div>
+              <Link href="/marketplace" className={styles.buyBtnPrimary}>
+                Buy Smart
               </Link>
             </div>
 
-            <div className={styles.ordersSummary}>
-              <div className={styles.orderStat}>
-                <span className={styles.statLabel}>Total Orders</span>
-                <span className={styles.statValue}>{orders.total}</span>
+            <div className={styles.restockItem}>
+              <div className={`${styles.restockIcon} ${styles['icon-blue']}`}>
+                <Package size={18} />
               </div>
-              <div className={styles.orderStat}>
-                <span className={styles.statLabel}>Completed</span>
-                <span className={`${styles.statValue} ${styles.success}`}>
-                  {orders.completed}
-                </span>
+              <div className={styles.restockInfo}>
+                <p className={styles.restockName}>Core License</p>
+                <p className={styles.restockMeta}>
+                  ₹{inventory.core.unitMRP.toLocaleString('en-IN')}/license · {inventory.core.totalRemaining} left
+                </p>
               </div>
-              <div className={styles.orderStat}>
-                <span className={styles.statLabel}>Pending</span>
-                <span className={`${styles.statValue} ${styles.warning}`}>
-                  {orders.pending}
-                </span>
-              </div>
-              <div className={styles.orderStat}>
-                <span className={styles.statLabel}>Failed</span>
-                <span className={`${styles.statValue} ${styles.danger}`}>
-                  {orders.failed}
-                </span>
-              </div>
+              <Link href="/marketplace" className={styles.buyBtnSecondary}>
+                Buy Core
+              </Link>
             </div>
 
-            <div className={styles.orderTotal}>
-              <span>Total Spent:</span>
-              <strong>₹{(orders.totalSpent || 0).toLocaleString()}</strong>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Quick Actions</h2>
-
-            <div className={styles.actionsList}>
-              <Link href="/marketplace" className={styles.actionItem}>
-                <div className={styles.actionIcon}>
-                  <ShoppingCart size={20} />
-                </div>
-                <div className={styles.actionContent}>
-                  <p className={styles.actionTitle}>Buy Plans</p>
-                  <p className={styles.actionDesc}>Purchase more plans</p>
-                </div>
-                <ArrowRight size={16} />
-              </Link>
-
-              <Link href="/retailers" className={styles.actionItem}>
-                <div className={styles.actionIcon}>
-                  <Users size={20} />
-                </div>
-                <div className={styles.actionContent}>
-                  <p className={styles.actionTitle}>Manage Retailers</p>
-                  <p className={styles.actionDesc}>View & assign plans</p>
-                </div>
-                <ArrowRight size={16} />
-              </Link>
-
-              <Link href="/commissions" className={styles.actionItem}>
-                <div className={styles.actionIcon}>
-                  <DollarSign size={20} />
-                </div>
-                <div className={styles.actionContent}>
-                  <p className={styles.actionTitle}>View Commissions</p>
-                  <p className={styles.actionDesc}>Track earnings & payouts</p>
-                </div>
-                <ArrowRight size={16} />
-              </Link>
-
-              <Link href="/transactions" className={styles.actionItem}>
-                <div className={styles.actionIcon}>
-                  <TrendingUp size={20} />
-                </div>
-                <div className={styles.actionContent}>
-                  <p className={styles.actionTitle}>Transactions</p>
-                  <p className={styles.actionDesc}>View financial ledger</p>
-                </div>
-                <ArrowRight size={16} />
+            <div className={styles.restockItem}>
+              <div className={`${styles.restockIcon} ${styles['icon-orange']}`}>
+                <ShoppingCart size={18} />
+              </div>
+              <div className={styles.restockInfo}>
+                <p className={styles.restockName}>Recharge Plans</p>
+                <p className={styles.restockMeta}>Available · {totalRemaining} total</p>
+              </div>
+              <Link href="/marketplace" className={styles.buyBtnSecondary}>
+                Buy Plans
               </Link>
             </div>
           </div>

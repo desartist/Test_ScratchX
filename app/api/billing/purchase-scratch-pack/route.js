@@ -4,7 +4,8 @@ import Subscription from "@/models/subscriptionModel";
 import ScratchPack from "@/models/scratchPackModel";
 import ScratchPackOrder from "@/models/scratchPackOrderModel";
 import scratchEntitlementService from "@/lib/scratchEntitlementService";
-import { sendScratchPackPurchaseEmail } from "@/lib/emailService";
+import { sendScratchPackPurchaseEmail, sendAdminPurchaseAlertEmail } from "@/lib/emailService";
+import Account from "@/models/accountModel";
 
 /**
  * POST /api/billing/purchase-scratch-pack
@@ -182,6 +183,24 @@ export async function POST(request) {
       );
     } catch (emailError) {
       console.error("Error sending purchase confirmation email:", emailError);
+      // Don't fail the purchase if email fails
+    }
+
+    // ========== NOTIFY ADMINS ==========
+    try {
+      const admins = await Account.find({ role: "Super_Admin", status: "active" }).select("email");
+      await sendAdminPurchaseAlertEmail(
+        admins.map((admin) => admin.email),
+        { name: account.name, email: account.email, phone: account.phone, role: account.role },
+        {
+          orderNumber: order._id.toString(),
+          purchaseType: "Scratch Pack Recharge",
+          itemsSummary: `${quantity.toLocaleString()} scratches`,
+          amount: finalAmount / 100,
+        }
+      );
+    } catch (emailError) {
+      console.error("Error sending admin purchase alert email:", emailError);
       // Don't fail the purchase if email fails
     }
 

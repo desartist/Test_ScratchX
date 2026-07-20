@@ -142,12 +142,16 @@ const distributorCommissionSchema = new mongoose.Schema(
 );
 
 // Calculate netCommission if not set
-distributorCommissionSchema.pre('save', function (next) {
+distributorCommissionSchema.pre('save', function () {
   if (!this.netCommission) {
     this.netCommission = this.commissionAmount - (this.taxAmount || 0);
   }
-  next();
 });
 
-export default mongoose.models.DistributorCommission ||
-  mongoose.model('DistributorCommission', distributorCommissionSchema);
+// Delete cached model to ensure hooks are fresh (avoids stale schema/hooks
+// surviving a Next.js dev hot-reload)
+if (mongoose.models.DistributorCommission) {
+  delete mongoose.models.DistributorCommission;
+}
+
+export default mongoose.model('DistributorCommission', distributorCommissionSchema);

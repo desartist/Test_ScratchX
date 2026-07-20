@@ -4,7 +4,7 @@ const commissionSchema = new mongoose.Schema(
   {
     distributorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Distributor',
+      ref: 'Account',
       required: true,
       index: true,
     },
@@ -54,5 +54,10 @@ const commissionSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.Commission ||
-  mongoose.model('Commission', commissionSchema);
+// Delete cached model to ensure schema changes are fresh (avoids stale
+// schema surviving a Next.js dev hot-reload)
+if (mongoose.models.Commission) {
+  delete mongoose.models.Commission;
+}
+
+export default mongoose.model('Commission', commissionSchema);
