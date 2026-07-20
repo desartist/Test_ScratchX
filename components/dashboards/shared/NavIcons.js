@@ -82,6 +82,16 @@ export function IconShield() {
   );
 }
 
+export function IconCart() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 8H6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="9.5" cy="21" r="1.4" fill="currentColor" />
+      <circle cx="17.5" cy="21" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function IconLogout() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
