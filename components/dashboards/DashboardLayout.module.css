@@ -266,6 +266,20 @@
   margin-top: 6px;
 }
 
+.privacyPolicyLink {
+  font-size: 10px;
+  color: var(--color-muted, #637080);
+  text-decoration: none;
+  opacity: 0.75;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.privacyPolicyLink:hover {
+  color: var(--color-primary, #ef9e1b);
+  opacity: 1;
+  text-decoration: underline;
+}
+
 /* ── Main area ── */
 .main {
   flex: 1;

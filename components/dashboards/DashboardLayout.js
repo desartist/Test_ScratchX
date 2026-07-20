@@ -180,11 +180,6 @@ export default function DashboardLayout({ children, role }) {
               iconKey: "commission",
             },
             { label: "Settings", href: "/settings", iconKey: "settings" },
-            {
-              label: "Privacy Policy",
-              href: "/privacy-policy",
-              iconKey: "notice",
-            },
           ],
         };
       case "Merchant":
@@ -212,11 +207,6 @@ export default function DashboardLayout({ children, role }) {
             { label: "Team Access", href: "/team", iconKey: "users" },
             { label: "Help & Support", href: "/support", iconKey: "support" },
             { label: "Settings", href: "/settings", iconKey: "settings" },
-            {
-              label: "Privacy Policy",
-              href: "/privacy-policy",
-              iconKey: "notice",
-            },
           ],
         };
       case "Manager":
@@ -394,6 +384,13 @@ export default function DashboardLayout({ children, role }) {
               <div className={styles.copyright}>
                 © Copyright 2026 | Powered by Desartist
               </div>
+              <Link
+                href="/privacy-policy"
+                className={styles.privacyPolicyLink}
+                onClick={() => setSidebarOpen(false)}
+              >
+                Privacy Policy
+              </Link>
             </div>
           </div>
         </div>
