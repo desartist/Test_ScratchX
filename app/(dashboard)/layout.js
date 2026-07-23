@@ -2,34 +2,24 @@ import React from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboards/DashboardLayout';
+import { connectDB } from '@/lib/connectDB';
+import { getLoginToken } from '@/lib/auth';
+import Store from '@/models/storeModel';
 
 export const dynamic = 'force-dynamic';
 
-async function getUser(cookieHeader) {
-  try {
-    const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
-    const res = await fetch(`${base}/api/auth/me`, {
-      headers: { cookie: cookieHeader },
-      credentials: 'include',
-    });
-    if (res.status === 401) return { unauthorized: true };
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.account || null;
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    return null;
-  }
-}
-
 export default async function Layout({ children }) {
+  await connectDB();
+
   const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
+  const user = await getLoginToken();
 
-  const user = await getUser(cookieHeader);
-
-  if (!user || user.unauthorized) {
-    redirect('/auth/login');
+  if (!user) {
+    // Route through the logout endpoint (not straight to /auth/login) so the
+    // stale authToken/sessionId cookies actually get cleared. Otherwise
+    // middleware still sees a present authToken on /auth/login and bounces
+    // the browser right back to /merchant-overview — an infinite loop.
+    redirect('/api/auth/logout');
   }
 
   const role = user?.role || 'Merchant';
@@ -40,20 +30,18 @@ export default async function Layout({ children }) {
   // stores of their own and must never be stripped of the sidebar/header for it.
   let hasStore = true;
   if (role === 'Merchant') {
-    // Verify store ownership via API whenever cookie isn't definitively '1'
-    // (handles stuck '0' cookies after store creation, and missing cookies from OAuth)
+    // Verify store ownership directly against the DB whenever cookie isn't
+    // definitively '1' (handles stuck '0' cookies after store creation, and
+    // missing cookies from OAuth).
     hasStore = merchantHasStore === '1';
     if (!hasStore) {
       try {
-        const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
-        const res = await fetch(`${base}/api/stores`, {
-          headers: { cookie: cookieHeader },
-          credentials: 'include',
+        const count = await Store.countDocuments({
+          merchant_id: user._id,
+          isDeleted: { $ne: true },
+          status: { $ne: 'deleted' },
         });
-        if (res.ok) {
-          const data = await res.json();
-          hasStore = Array.isArray(data.stores) ? data.stores.length > 0 : false;
-        }
+        hasStore = count > 0;
       } catch {
         hasStore = false;
       }

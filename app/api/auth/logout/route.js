@@ -17,9 +17,13 @@ const COOKIE_NAMES = [
 
 // GET /api/auth/logout — clear all auth cookies and redirect to login.
 // Used by the server layout when a session is invalid (user not in DB).
-export async function GET() {
+export async function GET(request) {
+  // Build the redirect from the incoming request's own origin — not
+  // NEXT_PUBLIC_API_URL, which may point at a different deployed environment
+  // (e.g. a local dev server configured against a remote API URL) and would
+  // otherwise bounce the browser to the wrong host entirely.
   const response = NextResponse.redirect(
-    new URL('/auth/login', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'),
+    new URL('/auth/login', request.url),
     { status: 302 }
   );
   for (const name of COOKIE_NAMES) {

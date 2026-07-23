@@ -24,10 +24,10 @@ export default function LoginPage() {
         <LoginForm />
 
         {/* Footer */}
-        {/* <p className={styles.signupLine}>
+        <p className={styles.signupLine}>
           Don&apos;t have an account?{' '}
           <Link href="/auth/register">Sign up</Link>
-        </p> */}
+        </p>
       </div>
     </div>
   );
