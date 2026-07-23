@@ -9,6 +9,7 @@ import {
   FileWarning,
 } from 'lucide-react';
 import { useAdminAnalyticsQuery } from '@/hooks/queries/useAdminAnalyticsQuery';
+import LoadingState from '@/components/common/LoadingState';
 import styles from './revenue.module.css';
 
 const RANGE_OPTIONS = [
@@ -24,10 +25,7 @@ export default function RevenueAnalyticsPage() {
   if (isPending) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading revenue analytics...</p>
-        </div>
+        <LoadingState message="Loading revenue analytics..." />
       </div>
     );
   }

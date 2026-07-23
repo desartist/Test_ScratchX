@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useSuperAdminDashboardQuery } from '@/hooks/queries/useSuperAdminDashboardQuery';
 import { useCreateDistributorMutation } from '@/hooks/queries/useAdminDistributorsQuery';
+import LoadingState from '@/components/common/LoadingState';
 import styles from './admin.module.css';
 
 const EMPTY_FORM = {
@@ -90,10 +91,7 @@ export default function AdminOverviewPage() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading admin dashboard...</p>
-        </div>
+        <LoadingState message="Loading admin dashboard..." />
       </div>
     );
   }

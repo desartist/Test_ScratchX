@@ -12,6 +12,7 @@ import {
   Percent,
 } from 'lucide-react';
 import { useDistributorCommissionsQuery } from '@/hooks/queries/useDistributorCommissionsQuery';
+import LoadingState from '@/components/common/LoadingState';
 import styles from './commissions.module.css';
 
 export default function CommissionsPage() {
@@ -47,10 +48,7 @@ export default function CommissionsPage() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading commissions...</p>
-        </div>
+        <LoadingState message="Loading commissions..." />
       </div>
     );
   }

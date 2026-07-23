@@ -374,7 +374,7 @@ export default function CampaignQrStudio({
     const qrBox = QR_SIZE;
     const outW = qrBox + padding * 2;
     const outH = qrBox + LOGO_HEADER_H + STORE_NAME_H + DETAILS_SECTION_H + padding * 3;
-    const qrY = padding + LOGO_HEADER_H;
+    const qrY = padding + LOGO_HEADER_H + STORE_NAME_H;
 
     // Re-scale the inner QR svg to QR_SIZE via a nested viewport.
     const inner = qrSvg

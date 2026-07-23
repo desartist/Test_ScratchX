@@ -13,6 +13,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import styles from './retailers.module.css';
+import LoadingState from '@/components/common/LoadingState';
 
 export default function RetailersPage() {
   const [retailers, setRetailers] = useState([]);
@@ -88,10 +89,7 @@ export default function RetailersPage() {
   if (loading && retailers.length === 0) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading retailers...</p>
-        </div>
+        <LoadingState message="Loading retailers..." />
       </div>
     );
   }

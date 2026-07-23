@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import {
   Users,
   UserCheck,
@@ -12,12 +13,14 @@ import {
   ShieldAlert,
   Eye,
   EyeOff,
+  ChevronDown,
 } from 'lucide-react';
 import {
   useDistributorMerchantsQuery,
   useCreateMerchantMutation,
   useUpdateMerchantStatusMutation,
 } from '@/hooks/queries/useDistributorMerchantsQuery';
+import LoadingState from '@/components/common/LoadingState';
 import styles from './retailers.module.css';
 
 const EMPTY_FORM = {
@@ -37,6 +40,68 @@ function getInitials(name) {
       .map((n) => n[0])
       .join('')
       .toUpperCase() || '?'
+  );
+}
+
+function CustomSelect({ id, options, value, onChange, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  const selected = options.find((o) => o.value === value);
+
+  return (
+    <div className={styles.customSelect} ref={ref}>
+      <button
+        type="button"
+        id={id}
+        className={`${styles.customSelectTrigger} ${open ? styles.customSelectTriggerOpen : ''}`}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className={selected?.value ? styles.customSelectValue : styles.customSelectPlaceholder}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <ChevronDown
+          size={18}
+          className={open ? styles.customSelectChevronOpen : styles.customSelectChevron}
+        />
+      </button>
+      {open && (
+        <ul className={styles.customSelectList} role="listbox">
+          {options.map((opt) => (
+            <li
+              key={opt.value}
+              role="option"
+              aria-selected={opt.value === value}
+              className={[
+                styles.customSelectOption,
+                opt.disabled ? styles.customSelectOptionDisabled : '',
+                opt.value === value ? styles.customSelectOptionSelected : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              onClick={() => {
+                if (opt.disabled) return;
+                onChange(opt.value);
+                setOpen(false);
+              }}
+            >
+              {opt.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -197,10 +262,7 @@ export default function RetailersPage() {
 
         {/* Table */}
         {loading ? (
-          <div className={styles.loadingState}>
-            <div className={styles.spinner} />
-            <p>Loading retailers...</p>
-          </div>
+          <LoadingState message="Loading retailers..." />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />
@@ -274,15 +336,24 @@ export default function RetailersPage() {
                           : '—'}
                       </td>
                       <td>
-                        <button
-                          className={`${styles.statusToggleBtn} ${
-                            merchant.status === 'suspended' ? styles.activate : styles.suspend
-                          }`}
-                          onClick={() => handleToggleStatus(merchant)}
-                          disabled={statusMutation.isPending}
-                        >
-                          {merchant.status === 'suspended' ? 'Activate' : 'Suspend'}
-                        </button>
+                        <div className={styles.actions}>
+                          <Link
+                            href={`/retailers/${merchant._id}`}
+                            className={styles.actionBtn}
+                            title="View details"
+                          >
+                            <Eye size={16} />
+                          </Link>
+                          <button
+                            className={`${styles.statusToggleBtn} ${
+                              merchant.status === 'suspended' ? styles.activate : styles.suspend
+                            }`}
+                            onClick={() => handleToggleStatus(merchant)}
+                            disabled={statusMutation.isPending}
+                          >
+                            {merchant.status === 'suspended' ? 'Activate' : 'Suspend'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -371,6 +442,8 @@ export default function RetailersPage() {
                     onChange={handleInputChange}
                     placeholder="Enter phone number"
                     className={styles.formInput}
+                    inputMode="numeric"
+                    maxLength={10}
                     required
                   />
                 </div>
@@ -396,23 +469,24 @@ export default function RetailersPage() {
                 <label htmlFor="planType" className={styles.formLabel}>
                   Choose Subscription
                 </label>
-                <select
+                <CustomSelect
                   id="planType"
-                  name="planType"
                   value={formData.planType}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                >
-                  <option value="">Select licence (optional)</option>
-                  <option value="SMART" disabled={!inventory?.plans?.SMART?.totalRemaining}>
-                    Smart Licence
-                    {inventory ? ` (${inventory.plans?.SMART?.totalRemaining || 0} left)` : ''}
-                  </option>
-                  <option value="CORE" disabled={!inventory?.plans?.CORE?.totalRemaining}>
-                    Core Licence
-                    {inventory ? ` (${inventory.plans?.CORE?.totalRemaining || 0} left)` : ''}
-                  </option>
-                </select>
+                  onChange={(val) => setFormData((prev) => ({ ...prev, planType: val }))}
+                  placeholder="Select licence (optional)"
+                  options={[
+                    {
+                      value: 'SMART',
+                      label: `Smart Licence${inventory ? ` (${inventory.plans?.SMART?.totalRemaining || 0} left)` : ''}`,
+                      disabled: !inventory?.plans?.SMART?.totalRemaining,
+                    },
+                    {
+                      value: 'CORE',
+                      label: `Core Licence${inventory ? ` (${inventory.plans?.CORE?.totalRemaining || 0} left)` : ''}`,
+                      disabled: !inventory?.plans?.CORE?.totalRemaining,
+                    },
+                  ]}
+                />
                 <p className={styles.formHint}>
                   Assigns a license from your purchased inventory and activates it immediately.
                   Leave blank to add the retailer without a plan.

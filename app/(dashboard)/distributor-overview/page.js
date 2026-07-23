@@ -9,8 +9,6 @@ import {
   ArrowRight,
   Users,
   CreditCard,
-  Wallet,
-  Clock,
   AlertCircle,
   Package,
   Zap,
@@ -19,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useDistributorDashboardQuery } from '@/hooks/queries/useDistributorDashboardQuery';
 import { getAccountInitials } from '@/lib/accountDisplay';
+import LoadingState from '@/components/common/LoadingState';
 import styles from './distributor.module.css';
 
 function formatDaysLeft(daysLeft) {
@@ -36,10 +35,7 @@ export default function DistributorDashboard() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading dashboard...</p>
-        </div>
+        <LoadingState message="Loading dashboard..." />
       </div>
     );
   }
@@ -86,9 +82,9 @@ export default function DistributorDashboard() {
         {/* Hero: Add Retailer */}
         <div className={styles.heroCard}>
           <div className={styles.heroTop}>
-            <div className={styles.heroIcon}>
+            {/* <div className={styles.heroIcon}>
               <Plus size={20} />
-            </div>
+            </div> */}
             {metrics.retailerGrowthPercent !== null && metrics.retailerGrowthPercent !== 0 && (
               <span className={styles.heroTrend}>
                 {metrics.retailerGrowthPercent > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
@@ -112,6 +108,7 @@ export default function DistributorDashboard() {
               <span className={styles.heroStatSubValue}>{inventory.smart.totalRemaining}</span>
               <span className={styles.heroStatSubLabel}>Smart</span>
             </div>
+            <div className={styles.heroStatDivider} />
             <div className={styles.heroStatSub}>
               <span className={styles.heroStatSubValue}>{inventory.core.totalRemaining}</span>
               <span className={styles.heroStatSubLabel}>Core</span>
@@ -124,57 +121,61 @@ export default function DistributorDashboard() {
           </Link>
         </div>
 
-        {/* Territory Overview */}
+  {/* Territory Overview */}
         <div className={styles.sectionHeading}>
           <h2>Territory Overview</h2>
         </div>
 
         <div className={styles.statGrid}>
           <div className={styles.statCard}>
-            <div className={styles.statTop}>
+            <div className={styles.statTopRow}>
               <div className={`${styles.statIcon} ${styles['icon-purple']}`}>
                 <Users size={19} />
               </div>
-              <span className={styles.statValue}>{metrics.retailersThisWeek}</span>
+              <div className={styles.statNumberCol}>
+                <span className={styles.statValue}>{metrics.retailersThisWeek}</span>
+                {metrics.retailerGrowthPercent !== null && metrics.retailerGrowthPercent !== 0 && (
+                  <span className={styles.statTrend}>
+                    {metrics.retailerGrowthPercent > 0 ? '+' : ''}
+                    {metrics.retailerGrowthPercent}% this week
+                  </span>
+                )}
+              </div>
             </div>
             <p className={styles.statLabel}>New Retailers This Week</p>
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statTop}>
+            <div className={styles.statTopRow}>
               <div className={`${styles.statIcon} ${styles['icon-blue']}`}>
                 <CreditCard size={19} />
               </div>
-              <span className={styles.statValue}>{metrics.licensesPurchased}</span>
+              <div className={styles.statNumberCol}>
+                <span className={styles.statValue}>{metrics.licensesPurchased}</span>
+                <span className={styles.statTrend}>
+                  {inventory.core.totalPurchased} Core + {inventory.smart.totalPurchased} Smart
+                </span>
+              </div>
             </div>
             <p className={styles.statLabel}>Core + Smart Licenses Purchased</p>
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statTop}>
-              <div className={`${styles.statIcon} ${styles['icon-green']}`}>
-                <Wallet size={19} />
-              </div>
-              <span className={styles.statValue}>₹{metrics.monthlyMargin.toLocaleString('en-IN')}</span>
-            </div>
-            <p className={styles.statLabel}>Estimated Margin This Month</p>
+            <span className={styles.statValueSolo}>₹{metrics.monthlyMargin.toLocaleString('en-IN')}</span>
+            <p className={styles.statLabelBold}>Estimated Margin</p>
+            <p className={styles.statCaption}>This month</p>
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statTop}>
-              <div className={`${styles.statIcon} ${styles['icon-orange']}`}>
-                <Clock size={19} />
-              </div>
-              <span className={styles.statValue}>₹{metrics.pendingPayoutAmount.toLocaleString('en-IN')}</span>
-            </div>
-            <p className={styles.statLabel}>
-              Pending Payments
-              {metrics.pendingRetailerCount > 0 &&
-                ` from ${metrics.pendingRetailerCount} retailer${metrics.pendingRetailerCount === 1 ? '' : 's'}`}
+            <span className={styles.statValueSolo}>₹{metrics.pendingPayoutAmount.toLocaleString('en-IN')}</span>
+            <p className={styles.statLabelBold}>Pending Payments</p>
+            <p className={styles.statCaption}>
+              {metrics.pendingRetailerCount > 0
+                ? `From ${metrics.pendingRetailerCount} retailer${metrics.pendingRetailerCount === 1 ? '' : 's'}`
+                : 'No pending payments'}
             </p>
           </div>
         </div>
-
         {/* Recharge Queue */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
@@ -262,6 +263,8 @@ export default function DistributorDashboard() {
             </div>
           </div>
         </div>
+
+      
       </div>
     </div>
   );

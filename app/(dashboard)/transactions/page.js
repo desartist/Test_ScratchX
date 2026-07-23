@@ -10,6 +10,7 @@ import {
   Calendar,
   Download,
 } from 'lucide-react';
+import LoadingState from '@/components/common/LoadingState';
 import styles from './transactions.module.css';
 
 export default function TransactionsPage() {
@@ -127,10 +128,7 @@ export default function TransactionsPage() {
   if (loading && transactions.length === 0) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading transactions...</p>
-        </div>
+        <LoadingState message="Loading transactions..." />
       </div>
     );
   }

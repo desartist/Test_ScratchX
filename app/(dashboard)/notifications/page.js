@@ -18,6 +18,7 @@ import {
   useMarkNotificationReadMutation,
   useDeleteNotificationMutation,
 } from '@/hooks/queries/useNotificationsQuery';
+import LoadingState from '@/components/common/LoadingState';
 import styles from './notifications.module.css';
 
 export default function NotificationsPage() {
@@ -66,10 +67,7 @@ export default function NotificationsPage() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading notifications...</p>
-        </div>
+        <LoadingState message="Loading notifications..." />
       </div>
     );
   }

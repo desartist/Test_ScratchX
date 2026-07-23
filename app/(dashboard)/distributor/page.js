@@ -15,6 +15,7 @@ import {
   Download,
 } from 'lucide-react';
 import styles from './distributor.module.css';
+import LoadingState from '@/components/common/LoadingState';
 
 export default function DistributorDashboard() {
   const [dashboard, setDashboard] = useState(null);
@@ -50,10 +51,7 @@ export default function DistributorDashboard() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading dashboard...</p>
-        </div>
+        <LoadingState message="Loading dashboard..." />
       </div>
     );
   }

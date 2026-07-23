@@ -462,35 +462,6 @@
   font-weight: 600;
 }
 
-/* Loading State */
-.loadingState {
-  background: white;
-  border-radius: 16px;
-  padding: 60px 24px;
-  text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #ef9e1b;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loadingState p {
-  color: #6b7280;
-}
-
 /* Error State */
 .errorState {
   background: white;
@@ -822,6 +793,8 @@
 }
 
 .cancelButton {
+  flex: 0 0 auto;
+  padding: 12px 20px;
   background: #f3f4f6;
   color: #010f44;
   border: 1px solid #e5e7eb;
@@ -833,6 +806,7 @@
 }
 
 .submitButton {
+  flex: 1;
   background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
   color: white;
   box-shadow: 0 4px 15px rgba(239, 158, 27, 0.3);
@@ -909,6 +883,11 @@
   .cancelButton,
   .submitButton {
     width: 100%;
+  }
+
+  .modalFooter .cancelButton,
+  .modalFooter .submitButton {
+    width: auto;
   }
 }
 
@@ -1015,15 +994,25 @@
 
 .phoneInputWrapper {
   display: flex;
-  gap: 8px;
+  align-items: stretch;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.phoneInputWrapper:focus-within {
+  border-color: #ef9e1b;
+  box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.1);
 }
 
 .countryCodeSelect {
-  width: 80px;
+  width: auto;
   flex-shrink: 0;
-  padding: 12px 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  padding: 12px 8px 12px 14px;
+  border: none;
+  border-right: 1px solid #e5e7eb;
+  border-radius: 8px 0 0 8px;
   font-size: 14px;
   color: #010f44;
   background: white;
@@ -1031,8 +1020,116 @@
 
 .countryCodeSelect:focus {
   outline: none;
+}
+
+.phoneInputWrapper .formInput {
+  border: none;
+  border-radius: 0 8px 8px 0;
+}
+
+.phoneInputWrapper .formInput:focus {
+  box-shadow: none;
+}
+
+/* Custom dropdown (replaces native <select> for consistent styling) */
+.customSelect {
+  position: relative;
+  width: 100%;
+}
+
+.customSelectTrigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  color: #010f44;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.customSelectTrigger:hover {
+  border-color: #d1d5db;
+}
+
+.customSelectTriggerOpen {
   border-color: #ef9e1b;
   box-shadow: 0 0 0 3px rgba(239, 158, 27, 0.1);
+}
+
+.customSelectValue {
+  color: #010f44;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customSelectPlaceholder {
+  color: #9ca3af;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customSelectChevron,
+.customSelectChevronOpen {
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.customSelectChevronOpen {
+  color: #ef9e1b;
+  transform: rotate(180deg);
+}
+
+.customSelectList {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(16, 24, 64, 0.12);
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.customSelectOption {
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #010f44;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.customSelectOption:hover {
+  background: #fff8eb;
+}
+
+.customSelectOptionSelected {
+  background: #fef3e2;
+  font-weight: 600;
+  color: #ef9e1b;
+}
+
+.customSelectOptionDisabled {
+  color: #d1d5db;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .passwordInputWrapper {
@@ -1067,8 +1164,6 @@
 .modalFooter {
   display: flex;
   gap: 12px;
-  padding: 24px;
-  border-top: 1px solid #e5e7eb;
   background: #f9fafb;
   border-radius: 0 0 16px 16px;
 }

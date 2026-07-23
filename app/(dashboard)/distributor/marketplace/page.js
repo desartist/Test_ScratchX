@@ -13,6 +13,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import styles from './marketplace.module.css';
+import LoadingState from '@/components/common/LoadingState';
 
 export default function MarketplacePage() {
   const [plans, setPlans] = useState([]);
@@ -242,10 +243,7 @@ export default function MarketplacePage() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading marketplace...</p>
-        </div>
+        <LoadingState message="Loading marketplace..." />
       </div>
     );
   }

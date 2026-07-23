@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Loader } from "lucide-react";
-import styles from "./page.module.css";
+import { AlertCircle } from "lucide-react";
+import LoadingState from "@/components/common/LoadingState";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -55,14 +55,7 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return (
-      <div style={loadingStyles.container}>
-        <div style={loadingStyles.loadingBox}>
-          <Loader size={48} style={loadingStyles.spinner} />
-          <p>Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading dashboard..." fullScreen />;
   }
 
   if (error) {
@@ -89,18 +82,6 @@ const loadingStyles = {
     alignItems: "center",
     justifyContent: "center",
     background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-  },
-  loadingBox: {
-    background: "white",
-    borderRadius: "16px",
-    padding: "60px 24px",
-    textAlign: "center",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.07)",
-  },
-  spinner: {
-    color: "#3b82f6",
-    animation: "spin 1s linear infinite",
-    marginBottom: "16px",
   },
   errorBox: {
     background: "white",

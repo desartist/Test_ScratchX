@@ -1,0 +1,511 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ffffff 0%, #ededed 100%);
+  padding: 32px 24px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header */
+.header {
+  margin-bottom: 18px;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px 10px 16px;
+  border-radius: 999px;
+  background: #eef0ff;
+  border: none;
+  color: #010f44;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.backButton:hover {
+  background: #dfe3ff;
+  transform: translateX(-2px);
+}
+
+/* Hero card */
+.heroCard {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  background: white;
+  border-radius: 22px;
+  padding: 28px 28px;
+  box-shadow: 0 4px 14px rgba(16, 24, 64, 0.06);
+  margin-bottom: 28px;
+}
+
+.heroDots {
+  position: absolute;
+  top: 22px;
+  right: 48px;
+  width: 130px;
+  height: 90px;
+  background-image: radial-gradient(#d8dce6 1.5px, transparent 1.5px);
+  background-size: 14px 14px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.heroBlob {
+  position: absolute;
+  right: -60px;
+  bottom: -80px;
+  width: 340px;
+  height: 240px;
+  background: radial-gradient(ellipse at bottom right, rgba(239, 158, 27, 0.16), rgba(255, 149, 0, 0.05) 55%, transparent 75%);
+  pointer-events: none;
+}
+
+.heroDotSm1, .heroDotSm2, .heroDotSm3 {
+  position: absolute;
+  border-radius: 50%;
+  background: #ef9e1b;
+  pointer-events: none;
+}
+
+.heroDotSm1 { width: 8px; height: 8px; right: 64px; bottom: 50px; opacity: 0.8; }
+.heroDotSm2 { width: 5px; height: 5px; right: 46px; bottom: 32px; opacity: 0.55; }
+.heroDotSm3 { width: 5px; height: 5px; right: 82px; bottom: 28px; opacity: 0.35; }
+
+.avatarWrap {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.avatarGlow {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 149, 0, 0.35), transparent 70%);
+  filter: blur(6px);
+  z-index: 0;
+}
+
+.avatar {
+  position: relative;
+  z-index: 1;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 22px;
+  flex-shrink: 0;
+  border: 3px solid #fff3e0;
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.3);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.storeName {
+  margin: 0;
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: #010f44;
+  letter-spacing: -0.3px;
+}
+
+.ownerName {
+  margin: 3px 0 0 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.headerBadges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+  letter-spacing: 0.2px;
+}
+
+.badge-active { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.25); }
+.badge-pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.25); }
+.badge-inactive { background: rgba(107, 114, 128, 0.1); color: #6b7280; border-color: rgba(107, 114, 128, 0.25); }
+.badge-suspended { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.25); }
+.planBadge { background: rgba(1, 15, 68, 0.05); color: #010f44; border-color: rgba(1, 15, 68, 0.12); }
+
+/* Info tiles — same card language as the Territory Overview stat cards
+   (icon-in-colored-square, label, value) so unused grid cells just show
+   page background instead of empty space inside one big shared card. */
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.infoItem {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(16, 24, 64, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.infoItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 24, 64, 0.1);
+}
+
+.infoIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.icon-purple { background: #ede9fe; color: #7c3aed; }
+.icon-blue { background: #dbeafe; color: #3b82f6; }
+.icon-green { background: #d1fae5; color: #10b981; }
+.icon-orange { background: #fdecd1; color: #ef9e1b; }
+.icon-pink { background: #fce7f3; color: #db2777; }
+
+.infoLabel {
+  margin: 0 0 3px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.infoValue {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #010f44;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.infoValueEmpty {
+  color: #cbd0d8;
+  font-weight: 600;
+}
+
+/* Wide "Joined" tile — spans the full row, icon+text laid out inline,
+   with a large faint watermark icon like the other decorated cards. */
+.infoItemWide {
+  grid-column: 1 / -1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.infoItemWide .infoIcon {
+  margin-bottom: 0;
+}
+
+.infoWatermark {
+  position: absolute;
+  right: 14px;
+  bottom: -14px;
+  color: #fce7f3;
+  opacity: 0.9;
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+/* Section heading */
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 4px 0 16px 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #010f44;
+}
+
+.sectionHeading::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #ef9e1b 0%, #ff9500 100%);
+}
+
+/* Stats */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Filters */
+.filtersSection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.searchBox {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(16, 24, 64, 0.04);
+  transition: border-color 0.15s ease;
+}
+
+.searchBox:focus-within {
+  border-color: #ef9e1b;
+}
+
+.searchBox svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #010f44;
+  background: transparent;
+}
+
+.select {
+  padding: 11px 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(16, 24, 64, 0.04);
+  font-size: 13px;
+  font-weight: 600;
+  color: #010f44;
+  cursor: pointer;
+}
+
+/* Table */
+.tableWrap {
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(16, 24, 64, 0.06);
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #010f44;
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #f0f1f3;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.customerName {
+  font-weight: 600;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1.5px solid;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.pageButton {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #010f44;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageLabel {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.emptyText {
+  margin: 0;
+  padding: 48px 0;
+  text-align: center;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.errorState {
+  background: white;
+  border-radius: 16px;
+  padding: 60px 24px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.errorState svg {
+  color: #ef4444;
+  margin-bottom: 16px;
+}
+
+.errorState p {
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.retryButton {
+  padding: 10px 20px;
+  background: #ef9e1b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 20px 16px;
+  }
+
+  .heroCard {
+    padding: 20px 18px;
+    gap: 14px;
+  }
+
+  .heroDots {
+    width: 90px;
+    height: 60px;
+    right: 24px;
+  }
+
+  .avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 18px;
+  }
+
+  .storeName {
+    font-size: 1.3rem;
+  }
+
+  .infoWatermark {
+    right: 6px;
+  }
+
+  .infoGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

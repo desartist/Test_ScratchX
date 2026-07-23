@@ -18,6 +18,7 @@ import {
   useCreateDistributorMutation,
   useUpdateDistributorStatusMutation,
 } from '@/hooks/queries/useAdminDistributorsQuery';
+import LoadingState from '@/components/common/LoadingState';
 import styles from './distributors.module.css';
 
 const EMPTY_FORM = {
@@ -194,10 +195,7 @@ export default function DistributorsPage() {
 
         {/* Table */}
         {loading ? (
-          <div className={styles.loadingState}>
-            <div className={styles.spinner} />
-            <p>Loading distributors...</p>
-          </div>
+          <LoadingState message="Loading distributors..." />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />

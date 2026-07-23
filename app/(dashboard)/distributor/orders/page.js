@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import styles from './orders.module.css';
+import LoadingState from '@/components/common/LoadingState';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -95,10 +96,7 @@ export default function OrdersPage() {
   if (loading && orders.length === 0) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading orders...</p>
-        </div>
+        <LoadingState message="Loading orders..." />
       </div>
     );
   }

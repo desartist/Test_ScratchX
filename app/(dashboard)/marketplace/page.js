@@ -13,6 +13,7 @@ import {
   Store,
 } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthContext';
+import LoadingState from '@/components/common/LoadingState';
 import styles from './marketplace.module.css';
 
 const MIN_QUANTITY = 5;
@@ -352,10 +353,7 @@ export default function MarketplacePage() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading marketplace...</p>
-        </div>
+        <LoadingState message="Loading marketplace..." />
       </div>
     );
   }
