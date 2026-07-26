@@ -35,11 +35,16 @@ export async function GET() {
     startOfPrevWeek.setDate(now.getDate() - 14);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
+    // Accounts created before businessModel existed have no value set —
+    // treat those as Retail (the pre-existing, default kind of merchant).
+    const WHOLESALE_MATCH = { 'profile.businessModel': 'Wholesale' };
+
     const [
       totalRetailers,
       activeRetailers,
       retailersThisWeek,
       retailersPrevWeek,
+      wholesaleBusinesses,
       commissionAgg,
       commissionThisMonthAgg,
       pendingCommissionMerchants,
@@ -54,6 +59,7 @@ export async function GET() {
         parentId: account._id,
         createdAt: { $gte: startOfPrevWeek, $lt: startOfWeek },
       }),
+      Account.countDocuments({ role: 'Merchant', parentId: account._id, ...WHOLESALE_MATCH }),
       Commission.aggregate([
         { $match: { distributorId: account._id } },
         { $group: { _id: '$status', total: { $sum: '$totalEarning' }, count: { $sum: 1 } } },
@@ -79,6 +85,7 @@ export async function GET() {
     }
     const monthlyMargin = commissionThisMonthAgg[0]?.total || 0;
     const pendingRetailerCount = pendingCommissionMerchants.length;
+    const retailBusinesses = totalRetailers - wholesaleBusinesses;
 
     // Retailer growth trend (week-over-week) — only shown when there's a real
     // prior-week baseline to compare against.
@@ -137,6 +144,9 @@ export async function GET() {
         activeRetailers,
         retailersThisWeek,
         retailerGrowthPercent,
+        totalBusinesses: totalRetailers,
+        retailBusinesses,
+        wholesaleBusinesses,
         monthlyMargin,
         licensesPurchased: core.totalPurchased + smart.totalPurchased,
         pendingPayoutAmount: commission.pendingAmount,

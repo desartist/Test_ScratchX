@@ -26,27 +26,56 @@ export async function GET(request) {
   const limit = Math.min(100, parseInt(searchParams.get("limit") ?? "20"));
   const search = searchParams.get("search") || "";
   const status = searchParams.get("status");
+  const businessModel = searchParams.get("businessModel");
   const skip = (page - 1) * limit;
+
+  // Accounts created before businessModel existed have no value set —
+  // treat those as Retail (the pre-existing, default kind of merchant)
+  // rather than excluding them from the Retailers count/filter.
+  const RETAIL_MATCH = {
+    $or: [
+      { "profile.businessModel": "Retail" },
+      { "profile.businessModel": null },
+      { "profile.businessModel": { $exists: false } },
+    ],
+  };
+  const WHOLESALE_MATCH = { "profile.businessModel": "Wholesale" };
 
   const query = { role: "Merchant" };
   // Distributor only sees their own merchants; Super_Admin can see all
   if (account.role === "Distributor") query.parentId = account._id;
-  if (search) {
-    query.$or = [
-      { name: { $regex: search, $options: "i" } },
-      { email: { $regex: search, $options: "i" } },
-      { "profile.storeName": { $regex: search, $options: "i" } },
-      { "profile.storeLocation": { $regex: search, $options: "i" } },
-    ];
-  }
   if (status) {
     query.status = status;
+  }
+
+  // search and businessModel each need their own $or — combine them under
+  // $and instead of assigning both to query.$or, which would silently drop one.
+  const andClauses = [];
+  if (search) {
+    andClauses.push({
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { status: { $regex: search, $options: "i" } },
+        { "profile.storeName": { $regex: search, $options: "i" } },
+        { "profile.storeLocation": { $regex: search, $options: "i" } },
+        { "profile.businessModel": { $regex: search, $options: "i" } },
+      ],
+    });
+  }
+  if (businessModel === "Retail") {
+    andClauses.push(RETAIL_MATCH);
+  } else if (businessModel === "Wholesale") {
+    andClauses.push(WHOLESALE_MATCH);
+  }
+  if (andClauses.length) {
+    query.$and = andClauses;
   }
 
   const baseScope = { role: "Merchant" };
   if (account.role === "Distributor") baseScope.parentId = account._id;
 
-  const [merchants, total, activeCount, pendingCount, totalCount] = await Promise.all([
+  const [merchants, total, activeCount, pendingCount, totalCount, wholesaleCount] = await Promise.all([
     Account.find(query)
       .select("-password -__v")
       .sort({ createdAt: -1 })
@@ -56,7 +85,9 @@ export async function GET(request) {
     Account.countDocuments({ ...baseScope, status: "active" }),
     Account.countDocuments({ ...baseScope, status: "pending" }),
     Account.countDocuments(baseScope),
+    Account.countDocuments({ ...baseScope, ...WHOLESALE_MATCH }),
   ]);
+  const retailCount = totalCount - wholesaleCount;
 
   // Attach subscription info
   const ids = merchants.map((m) => m._id);
@@ -78,7 +109,13 @@ export async function GET(request) {
       total,
       page,
       limit,
-      metrics: { total: totalCount, active: activeCount, pending: pendingCount },
+      metrics: {
+        total: totalCount,
+        active: activeCount,
+        pending: pendingCount,
+        retail: retailCount,
+        wholesale: wholesaleCount,
+      },
     },
     { status: 200 },
   );
@@ -128,7 +165,7 @@ export async function POST(request) {
 
   const {
     name, email, password,
-    storeName, storeAddress, businessType, countryCode, phoneNumber, storeLocation,
+    storeName, storeAddress, businessType, businessModel, countryCode, phoneNumber, storeLocation,
     planType,
   } = await request.json();
 
@@ -172,7 +209,7 @@ export async function POST(request) {
       role: "Merchant",
       createdBy: account._id,
       parentId: account.role === "Distributor" ? account._id : null,
-      profile: { storeName, storeAddress, businessType, countryCode, phoneNumber, storeLocation },
+      profile: { storeName, storeAddress, businessType, businessModel, countryCode, phoneNumber, storeLocation },
     });
 
     // Optionally activate a real subscription immediately (deducting from the

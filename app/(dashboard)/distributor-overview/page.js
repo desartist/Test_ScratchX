@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   Plus,
@@ -18,6 +18,7 @@ import {
 import { useDistributorDashboardQuery } from '@/hooks/queries/useDistributorDashboardQuery';
 import { getAccountInitials } from '@/lib/accountDisplay';
 import LoadingState from '@/components/common/LoadingState';
+import AddBusinessModal from '@/components/distributor/AddBusinessModal';
 import styles from './distributor.module.css';
 
 function formatDaysLeft(daysLeft) {
@@ -31,6 +32,7 @@ function formatDaysLeft(daysLeft) {
 export default function DistributorDashboard() {
   const { data: dashboard, isPending: loading, error: queryError, refetch } = useDistributorDashboardQuery();
   const error = queryError ? queryError.message : null;
+  const [showAddBusinessModal, setShowAddBusinessModal] = useState(false);
 
   if (loading) {
     return (
@@ -93,32 +95,38 @@ export default function DistributorDashboard() {
               </span>
             )}
           </div>
-          <h2 className={styles.heroTitle}>Add Retailer</h2>
+          <h2 className={styles.heroTitle}>Add New Business</h2>
           <p className={styles.heroSubtitle}>
-            Onboard a new store with 365 days of unlimited access.
+            Onboard a new retailer or wholesaler with 365 days of unlimited access.
           </p>
 
           <div className={styles.heroStats}>
             <div className={styles.heroStatMain}>
-              <span className={styles.heroStatValue}>{totalRemaining}</span>
-              <span className={styles.heroStatLabel}>Plan licenses remaining</span>
+              <span className={styles.heroStatValue}>{metrics.retailBusinesses + metrics.wholesaleBusinesses}</span>
+              <span className={styles.heroStatLabel}>Total Businesses</span>
             </div>
-            <div className={styles.heroStatDivider} />
-            <div className={styles.heroStatSub}>
-              <span className={styles.heroStatSubValue}>{inventory.smart.totalRemaining}</span>
-              <span className={styles.heroStatSubLabel}>Smart</span>
-            </div>
-            <div className={styles.heroStatDivider} />
-            <div className={styles.heroStatSub}>
-              <span className={styles.heroStatSubValue}>{inventory.core.totalRemaining}</span>
-              <span className={styles.heroStatSubLabel}>Core</span>
+
+            <div className={styles.heroSubstats}>
+              <div className={styles.heroStatSub}>
+                <span className={styles.heroStatSubValue}>{metrics.retailBusinesses}</span>
+                <span className={styles.heroStatSubLabel}>Retailers</span>
+              </div>
+              <div className={styles.heroStatDivider} />
+              <div className={styles.heroStatSub}>
+                <span className={styles.heroStatSubValue}>{metrics.wholesaleBusinesses}</span>
+                <span className={styles.heroStatSubLabel}>Wholesalers</span>
+              </div>
             </div>
           </div>
 
-          <Link href="/retailers" className={styles.heroButton}>
+          <button
+            type="button"
+            className={styles.heroButton}
+            onClick={() => setShowAddBusinessModal(true)}
+          >
             Start Onboarding
             <ArrowRight size={16} />
-          </Link>
+          </button>
         </div>
 
   {/* Territory Overview */}
@@ -133,16 +141,11 @@ export default function DistributorDashboard() {
                 <Users size={19} />
               </div>
               <div className={styles.statNumberCol}>
-                <span className={styles.statValue}>{metrics.retailersThisWeek}</span>
-                {metrics.retailerGrowthPercent !== null && metrics.retailerGrowthPercent !== 0 && (
-                  <span className={styles.statTrend}>
-                    {metrics.retailerGrowthPercent > 0 ? '+' : ''}
-                    {metrics.retailerGrowthPercent}% this week
-                  </span>
-                )}
+                <span className={styles.statValue}> {totalRemaining} </span>
+                
               </div>
             </div>
-            <p className={styles.statLabel}>New Retailers This Week</p>
+            <p className={styles.statLabel}>licenses remaining</p>
           </div>
 
           <div className={styles.statCard}>
@@ -263,9 +266,12 @@ export default function DistributorDashboard() {
             </div>
           </div>
         </div>
-
-      
       </div>
+
+      <AddBusinessModal
+        isOpen={showAddBusinessModal}
+        onClose={() => setShowAddBusinessModal(false)}
+      />
     </div>
   );
 }

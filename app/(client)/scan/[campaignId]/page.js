@@ -195,6 +195,41 @@ export default function ScanClientPage() {
 
     if (!validateForm()) return;
 
+    // Wholesale merchants sell in bulk to other businesses rather than
+    // walk-in customers, so there's no "is the customer at the store"
+    // requirement. We still capture GPS the same as any other campaign
+    // (for the same record-keeping every participation gets) — we just
+    // never call location-verify or block progress on the result.
+    if (campaign?.isWholesale) {
+      const storesList = campaign?.assignedStores;
+      if (!storesList?.length) {
+        setLocationError({ title: "Store not found", body: "No stores are assigned to this campaign. Contact the merchant." });
+        return;
+      }
+      const verifiedStoreData = storesList[0];
+      setMatchedStore(verifiedStoreData);
+      setLocationVerified(true);
+
+      setLocationVerifying(true);
+      let lat = customerLocation.latitude;
+      let lng = customerLocation.longitude;
+      let acc = customerLocation.accuracy;
+      if (!lat || !lng) {
+        const loc = await getCustomerLocation();
+        if (loc.success) {
+          lat = loc.latitude;
+          lng = loc.longitude;
+          acc = loc.accuracy;
+        }
+        // GPS denied/unavailable is fine here — wholesale never gates on
+        // location, so we proceed either way with whatever we captured.
+      }
+      setLocationVerifying(false);
+
+      submitParticipation(verifiedStoreData, lat, lng, acc);
+      return;
+    }
+
     setLocationVerifying(true);
 
     // Step 1: get GPS (use cached if available)

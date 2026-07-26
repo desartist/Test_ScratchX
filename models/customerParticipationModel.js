@@ -88,16 +88,17 @@ const customerParticipationSchema = new mongoose.Schema(
       min: [0, 'Bill amount cannot be negative']
     },
 
-    // Location Data
+    // Location Data — optional because wholesale-business campaigns bypass
+    // location validation entirely (no GPS is captured from the customer).
     customer_latitude: {
       type: Number,
-      required: [true, 'Customer latitude is required'],
+      default: null,
       min: [-90, 'Latitude must be between -90 and 90'],
       max: [90, 'Latitude must be between -90 and 90']
     },
     customer_longitude: {
       type: Number,
-      required: [true, 'Customer longitude is required'],
+      default: null,
       min: [-180, 'Longitude must be between -180 and 180'],
       max: [180, 'Longitude must be between -180 and 180']
     },

@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/connectDB";
 import Campaign from "@/models/campaignModel";
 import Range from "@/models/rangeModel";
 import Store from "@/models/storeModel";
+import Account from "@/models/accountModel";
 import CustomerParticipation from "@/models/customerParticipationModel";
 import ScratchCardRecord from "@/models/scratchCardRecordModel";
 import { consumeInventory } from "@/lib/services/inventoryManagementService";
@@ -110,46 +111,68 @@ export async function POST(request) {
       );
     }
 
-    if (
-      customerLatitude === undefined ||
-      customerLatitude === null ||
-      typeof customerLatitude !== "number"
-    ) {
+    // ===== FETCH CAMPAIGN & MERCHANT BUSINESS TYPE (early) =====
+    // Needed before the location checks below: wholesale merchants sell in
+    // bulk to other businesses rather than walk-in customers, so the
+    // "customer is physically at the store" GPS requirement doesn't apply
+    // to their campaigns.
+    const campaignForLocationCheck = await Campaign.findById(campaignId);
+    if (!campaignForLocationCheck) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "customerLatitude is required and must be a number",
-          data: null,
-        },
-        { status: 400 },
+        { success: false, error: "Campaign not found", data: null },
+        { status: 404 },
       );
     }
+    const merchantForLocationCheck = await Account.findById(
+      campaignForLocationCheck.merchantId,
+    )
+      .select("profile.businessModel")
+      .lean();
+    const isWholesale =
+      merchantForLocationCheck?.profile?.businessModel === "Wholesale";
 
-    if (
-      customerLongitude === undefined ||
-      customerLongitude === null ||
-      typeof customerLongitude !== "number"
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "customerLongitude is required and must be a number",
-          data: null,
-        },
-        { status: 400 },
-      );
-    }
+    if (!isWholesale) {
+      if (
+        customerLatitude === undefined ||
+        customerLatitude === null ||
+        typeof customerLatitude !== "number"
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "customerLatitude is required and must be a number",
+            data: null,
+          },
+          { status: 400 },
+        );
+      }
 
-    if (!validateCoordinates(customerLatitude, customerLongitude)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Invalid coordinate ranges. Latitude: -90 to 90, Longitude: -180 to 180",
-          data: null,
-        },
-        { status: 400 },
-      );
+      if (
+        customerLongitude === undefined ||
+        customerLongitude === null ||
+        typeof customerLongitude !== "number"
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "customerLongitude is required and must be a number",
+            data: null,
+          },
+          { status: 400 },
+        );
+      }
+
+      if (!validateCoordinates(customerLatitude, customerLongitude)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Invalid coordinate ranges. Latitude: -90 to 90, Longitude: -180 to 180",
+            data: null,
+          },
+          { status: 400 },
+        );
+      }
     }
 
     if (typeof customerConsent !== "boolean") {
@@ -163,12 +186,14 @@ export async function POST(request) {
       );
     }
 
-    // Validate verified store
+    // Validate verified store — wholesale campaigns only need a store
+    // identified, not GPS-matched, since there's no proximity requirement.
     if (
       !verifiedStore ||
       !verifiedStore.storeId ||
-      verifiedStore.latitude === undefined ||
-      verifiedStore.longitude === undefined
+      (!isWholesale &&
+        (verifiedStore.latitude === undefined ||
+          verifiedStore.longitude === undefined))
     ) {
       return NextResponse.json(
         {
@@ -233,14 +258,8 @@ export async function POST(request) {
       }
     }
 
-    // ===== FETCH & VALIDATE CAMPAIGN =====
-    const campaign = await Campaign.findById(campaignId);
-    if (!campaign) {
-      return NextResponse.json(
-        { success: false, error: "Campaign not found", data: null },
-        { status: 404 },
-      );
-    }
+    // ===== VALIDATE CAMPAIGN (already fetched above for the wholesale check) =====
+    const campaign = campaignForLocationCheck;
 
     if (campaign.status !== "active") {
       return NextResponse.json(
@@ -267,87 +286,93 @@ export async function POST(request) {
       );
     }
 
-    // ===== RE-VALIDATE LOCATION =====
-    const ALLOWED_RADIUS_METERS = 250;
-    // Same accuracy-aware widening as /api/customer/location-verify — a
-    // customer's own GPS uncertainty is added to the base radius (capped),
-    // so a genuinely imprecise-but-honest fix isn't rejected here.
-    const MAX_ACCURACY_BONUS_METERS = 200;
-    const accuracyBonus =
-      typeof customerAccuracy === "number" && customerAccuracy > 0
-        ? Math.min(customerAccuracy, MAX_ACCURACY_BONUS_METERS)
-        : 0;
-    const effectiveRadiusMeters = ALLOWED_RADIUS_METERS + accuracyBonus;
+    // ===== RE-VALIDATE LOCATION (skipped entirely for wholesale merchants) =====
+    let distanceFromStore = null;
 
-    const { calculateDistance } = require("@/lib/utils/distanceCalculator");
+    if (!isWholesale) {
+      const ALLOWED_RADIUS_METERS = 250;
+      // Same accuracy-aware widening as /api/customer/location-verify — a
+      // customer's own GPS uncertainty is added to the base radius (capped),
+      // so a genuinely imprecise-but-honest fix isn't rejected here.
+      const MAX_ACCURACY_BONUS_METERS = 200;
+      const accuracyBonus =
+        typeof customerAccuracy === "number" && customerAccuracy > 0
+          ? Math.min(customerAccuracy, MAX_ACCURACY_BONUS_METERS)
+          : 0;
+      const effectiveRadiusMeters = ALLOWED_RADIUS_METERS + accuracyBonus;
 
-    // Re-fetch the store's live coordinates from the DB rather than trusting
-    // whatever the client submitted in verifiedStore — otherwise a merchant
-    // editing the store's location between the location-verify call and this
-    // submission could let this check disagree with that one.
-    const liveStore = await Store.findById(verifiedStore.storeId).lean();
-    const storeLat = liveStore?.latitude ?? verifiedStore.latitude;
-    const storeLon = liveStore?.longitude ?? verifiedStore.longitude;
+      const { calculateDistance } = require("@/lib/utils/distanceCalculator");
 
-    console.log("🔍 Re-validating location with verified store:", {
-      customerLat: customerLatitude,
-      customerLon: customerLongitude,
-      storeLat,
-      storeLon,
-    });
+      // Re-fetch the store's live coordinates from the DB rather than trusting
+      // whatever the client submitted in verifiedStore — otherwise a merchant
+      // editing the store's location between the location-verify call and this
+      // submission could let this check disagree with that one.
+      const liveStore = await Store.findById(verifiedStore.storeId).lean();
+      const storeLat = liveStore?.latitude ?? verifiedStore.latitude;
+      const storeLon = liveStore?.longitude ?? verifiedStore.longitude;
 
-    let distanceFromStore;
-    try {
-      if (typeof storeLat !== "number" || typeof storeLon !== "number") {
-        throw new Error(
-          `Invalid store coordinates: lat=${storeLat}, lon=${storeLon}`,
+      console.log("🔍 Re-validating location with verified store:", {
+        customerLat: customerLatitude,
+        customerLon: customerLongitude,
+        storeLat,
+        storeLon,
+      });
+
+      try {
+        if (typeof storeLat !== "number" || typeof storeLon !== "number") {
+          throw new Error(
+            `Invalid store coordinates: lat=${storeLat}, lon=${storeLon}`,
+          );
+        }
+
+        distanceFromStore = Math.round(
+          calculateDistance(
+            customerLatitude,
+            customerLongitude,
+            storeLat,
+            storeLon,
+          ),
+        );
+      } catch (err) {
+        console.error("❌ Distance calculation error:", err.message);
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Location validation failed: " + err.message,
+            data: null,
+          },
+          { status: 400 },
         );
       }
 
-      distanceFromStore = Math.round(
-        calculateDistance(
-          customerLatitude,
-          customerLongitude,
-          storeLat,
-          storeLon,
-        ),
-      );
-    } catch (err) {
-      console.error("❌ Distance calculation error:", err.message);
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Location validation failed: " + err.message,
-          data: null,
-        },
-        { status: 400 },
-      );
-    }
+      console.log("📏 Distance calculated:", {
+        distance: distanceFromStore,
+        allowedRadius: effectiveRadiusMeters,
+        isValid: distanceFromStore <= effectiveRadiusMeters,
+      });
 
-    console.log("📏 Distance calculated:", {
-      distance: distanceFromStore,
-      allowedRadius: effectiveRadiusMeters,
-      isValid: distanceFromStore <= effectiveRadiusMeters,
-    });
-
-    if (distanceFromStore > effectiveRadiusMeters) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `You must be within ${effectiveRadiusMeters}m of the store. You are ${distanceFromStore}m away.`,
-          data: null,
-        },
-        { status: 400 },
-      );
+      if (distanceFromStore > effectiveRadiusMeters) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `You must be within ${effectiveRadiusMeters}m of the store. You are ${distanceFromStore}m away.`,
+            data: null,
+          },
+          { status: 400 },
+        );
+      }
+    } else {
+      console.log("🏬 Wholesale merchant — skipping customer location validation entirely");
     }
 
     const matchedStoreId = verifiedStore.storeId;
     const matchedStoreName = verifiedStore.storeName;
 
-    console.log("✅ Location re-validated. Matched store:", {
+    console.log("✅ Store matched:", {
       storeId: matchedStoreId,
       storeName: matchedStoreName,
       distance: distanceFromStore,
+      isWholesale,
     });
 
     // ===== FETCH & VALIDATE RANGE =====

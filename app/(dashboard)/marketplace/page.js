@@ -110,7 +110,7 @@ export default function MarketplacePage() {
       for (const plan of plansJson.data) {
         byType[plan.planType] = {
           planType: plan.planType,
-          retailValue: plan.price.withGST,
+          retailValue: plan.price.base,
           description: plan.description,
           recommended: plan.recommended,
           features: plan.features,
@@ -583,16 +583,16 @@ export default function MarketplacePage() {
                       <div>
                         <div className={styles.planDetailTitleRow}>
                           <span className={styles.planDetailTitle}>{PLAN_DISPLAY_NAME[planType]}</span>
-                          {plan.recommended && (
+                          {/* {plan.recommended && (
                             <span className={styles.planDetailBadge}>Most popular</span>
-                          )}
+                          )} */}
                         </div>
                         {plan.description && (
                           <p className={styles.planDetailDescription}>{plan.description}</p>
                         )}
                       </div>
                       <span className={styles.planDetailPrice}>
-                        ₹{getYourPrice(plan.retailValue).toLocaleString()}
+                        ₹{plan.retailValue.toLocaleString()}
                         <small>/license</small>
                       </span>
                     </div>

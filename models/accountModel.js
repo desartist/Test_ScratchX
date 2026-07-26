@@ -105,7 +105,8 @@ const accountSchema = new mongoose.Schema(
       // Merchant & Manager fields
       storeName: { type: String, default: null },
       storeAddress: { type: String, default: null },
-      businessType: { type: String, default: null },
+      businessType: { type: String, default: null }, // free-text industry category, e.g. "Electronics & Gadgets"
+      businessModel: { type: String, enum: ['Retail', 'Wholesale', null], default: null }, // how the business sells: direct-to-consumer vs bulk-to-trade
       phoneNumber: { type: String, default: null },
       countryCode: { type: String, default: null },
       storeLocation: { type: String, default: null },

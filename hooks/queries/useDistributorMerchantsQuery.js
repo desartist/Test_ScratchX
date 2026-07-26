@@ -50,6 +50,7 @@ export function useCreateMerchantMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["distributor-merchants"] });
+      queryClient.invalidateQueries({ queryKey: ["distributor-dashboard"] });
     },
   });
 }

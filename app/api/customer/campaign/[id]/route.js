@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 import Campaign from "@/models/campaignModel";
 import Range from "@/models/rangeModel";
+import Account from "@/models/accountModel";
 
 /**
  * GET /api/customer/campaign/:id
@@ -78,12 +79,21 @@ export async function GET(request, { params }) {
       .lean();
     console.log(ranges, "ranges");
 
+    // Wholesale merchants sell in bulk to other businesses rather than
+    // walk-in customers, so the "is the customer physically at the store"
+    // GPS check doesn't apply to their campaigns — flag it here so the
+    // customer-facing scan page can skip location capture entirely.
+    const merchant = await Account.findById(campaign.merchantId)
+      .select("profile.businessModel")
+      .lean();
+    const isWholesale = merchant?.profile?.businessModel === "Wholesale";
+
     // Format and return success response
     return NextResponse.json(
       {
         success: true,
         data: {
-          campaign: campaign,
+          campaign: { ...campaign, isWholesale },
           // campaign: {
           //   _id: campaign._id,
           //   campaignName: campaign.campaignName,

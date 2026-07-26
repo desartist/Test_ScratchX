@@ -3,47 +3,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
-  Users,
-  UserCheck,
-  Clock,
   Plus,
   Search,
-  X,
   AlertCircle,
-  ShieldAlert,
   Eye,
-  EyeOff,
-  ChevronDown,
+  Phone,
+  Check,
+  Filter,
 } from 'lucide-react';
-import {
-  useDistributorMerchantsQuery,
-  useCreateMerchantMutation,
-  useUpdateMerchantStatusMutation,
-} from '@/hooks/queries/useDistributorMerchantsQuery';
+import { useDistributorMerchantsQuery } from '@/hooks/queries/useDistributorMerchantsQuery';
 import LoadingState from '@/components/common/LoadingState';
+import AddBusinessModal from '@/components/distributor/AddBusinessModal';
 import styles from './retailers.module.css';
 
-const EMPTY_FORM = {
-  storeName: '',
-  name: '',
-  countryCode: '+91',
-  phoneNumber: '',
-  email: '',
-  planType: '',
-  password: '',
-};
+const STATUS_OPTIONS = ['all', 'active', 'pending', 'suspended'];
 
-function getInitials(name) {
-  return (
-    name
-      ?.split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase() || '?'
-  );
-}
-
-function CustomSelect({ id, options, value, onChange, placeholder }) {
+function StatusFilterDropdown({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -56,135 +31,74 @@ function CustomSelect({ id, options, value, onChange, placeholder }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
-  const selected = options.find((o) => o.value === value);
-
   return (
-    <div className={styles.customSelect} ref={ref}>
+    <span className={styles.statusFilterWrap} ref={ref}>
+      Status
       <button
         type="button"
-        id={id}
-        className={`${styles.customSelectTrigger} ${open ? styles.customSelectTriggerOpen : ''}`}
+        className={`${styles.statusFilterBtn} ${value !== 'all' ? styles.statusFilterBtnActive : ''}`}
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-label="Filter by status"
       >
-        <span className={selected?.value ? styles.customSelectValue : styles.customSelectPlaceholder}>
-          {selected ? selected.label : placeholder}
-        </span>
-        <ChevronDown
-          size={18}
-          className={open ? styles.customSelectChevronOpen : styles.customSelectChevron}
-        />
+        <Filter size={13} />
       </button>
       {open && (
-        <ul className={styles.customSelectList} role="listbox">
-          {options.map((opt) => (
+        <ul className={styles.statusFilterMenu} role="listbox">
+          {STATUS_OPTIONS.map((opt) => (
             <li
-              key={opt.value}
+              key={opt}
               role="option"
-              aria-selected={opt.value === value}
-              className={[
-                styles.customSelectOption,
-                opt.disabled ? styles.customSelectOptionDisabled : '',
-                opt.value === value ? styles.customSelectOptionSelected : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
+              aria-selected={value === opt}
+              className={`${styles.statusFilterOption} ${value === opt ? styles.statusFilterOptionActive : ''}`}
               onClick={() => {
-                if (opt.disabled) return;
-                onChange(opt.value);
+                onChange(opt);
                 setOpen(false);
               }}
             >
-              {opt.label}
+              {opt.charAt(0).toUpperCase() + opt.slice(1)}
+              {value === opt && <Check size={13} />}
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </span>
   );
+}
+
+function getInitials(name) {
+  return (
+    name
+      ?.split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase() || '?'
+  );
+}
+
+function getDaysLeftDisplay(merchant) {
+  const validUntil = merchant.subscription?.unlimitedScratches?.validUntil;
+  if (!validUntil) return '—';
+  const daysLeft = Math.ceil((new Date(validUntil) - new Date()) / (1000 * 60 * 60 * 24));
+  if (daysLeft <= 0) return 'Lapsed';
+  return `${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
 }
 
 export default function RetailersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [businessModelFilter, setBusinessModelFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState(EMPTY_FORM);
-  const [formError, setFormError] = useState(null);
-  const [statusTarget, setStatusTarget] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [inventory, setInventory] = useState(null);
 
   const { data, isPending: loading, error: queryError, refetch } = useDistributorMerchantsQuery({
     search: searchQuery,
     status: statusFilter !== 'all' ? statusFilter : undefined,
+    businessModel: businessModelFilter !== 'all' ? businessModelFilter : undefined,
   });
   const merchants = data?.merchants || [];
-  const metrics = data?.metrics || { total: 0, active: 0, pending: 0 };
+  const metrics = data?.metrics || { total: 0, active: 0, pending: 0, retail: 0, wholesale: 0 };
   const error = queryError ? queryError.message : null;
-
-  const createMutation = useCreateMerchantMutation();
-  const statusMutation = useUpdateMerchantStatusMutation();
-
-  useEffect(() => {
-    if (!showModal) return;
-    fetch('/api/distributor/inventory', { credentials: 'include' })
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success) setInventory(json.data);
-      })
-      .catch(() => {});
-  }, [showModal]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setFormData(EMPTY_FORM);
-    setFormError(null);
-    setShowPassword(false);
-  };
-
-  const handleCreateMerchant = async (e) => {
-    e.preventDefault();
-    setFormError(null);
-
-    if (!formData.name || !formData.email || !formData.password) {
-      setFormError('Name, email and password are required');
-      return;
-    }
-    if (formData.password.length < 6) {
-      setFormError('Password must be at least 6 characters');
-      return;
-    }
-
-    try {
-      await createMutation.mutateAsync(formData);
-      handleCloseModal();
-    } catch (err) {
-      setFormError(err.message);
-    }
-  };
-
-  const handleToggleStatus = (merchant) => {
-    setStatusTarget(merchant);
-  };
-
-  const handleCancelStatusChange = () => {
-    setStatusTarget(null);
-  };
-
-  const handleConfirmStatusChange = () => {
-    if (!statusTarget) return;
-    const nextStatus = statusTarget.status === 'suspended' ? 'active' : 'suspended';
-    statusMutation.mutate(
-      { id: statusTarget._id, status: nextStatus },
-      { onSettled: () => setStatusTarget(null) },
-    );
-  };
 
   return (
     <div className={styles.page}>
@@ -192,50 +106,35 @@ export default function RetailersPage() {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerContent}>
-            <h1>Retailers Management</h1>
-            <p>Manage and monitor the retail merchants on your network</p>
-          </div>
-          <button className={styles.primaryButton} onClick={() => setShowModal(true)}>
-            <Plus size={20} />
-            Add Retailer
-          </button>
-        </div>
-
-        {/* Metrics */}
-        <div className={styles.metricsGrid}>
-          <div className={`${styles.metricCard} ${styles['metric-blue']}`}>
-            <div className={styles.metricIcon}>
-              <Users size={24} />
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Total Retailers</p>
-              <p className={styles.metricValue}>{metrics.total}</p>
-            </div>
-          </div>
-
-          <div className={`${styles.metricCard} ${styles['metric-green']}`}>
-            <div className={styles.metricIcon}>
-              <UserCheck size={24} />
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Active</p>
-              <p className={styles.metricValue}>{metrics.active}</p>
-            </div>
-          </div>
-
-          <div className={`${styles.metricCard} ${styles['metric-orange']}`}>
-            <div className={styles.metricIcon}>
-              <Clock size={24} />
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Pending</p>
-              <p className={styles.metricValue}>{metrics.pending}</p>
-            </div>
+            <h1>Businesses </h1>
           </div>
         </div>
 
+        {/* Business Model Tabs */}
+        <div className={styles.businessModelTabsRow}>
+          <div className={styles.filterTabs}>
+            {[
+              { value: 'all', label: 'All', count: metrics.total },
+              { value: 'Retail', label: 'Retailers', count: metrics.retail },
+              { value: 'Wholesale', label: 'Wholesalers', count: metrics.wholesale },
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                className={`${styles.filterTab} ${businessModelFilter === tab.value ? styles.active : ''}`}
+                onClick={() => setBusinessModelFilter(tab.value)}
+              >
+                {tab.label} · {tab.count}
+              </button>
+            ))}
+          </div>
+        </div>
+             
         {/* Search & Filters */}
         <div className={styles.filterSection}>
+          <button className={styles.primaryButton} onClick={() => setShowModal(true)}>
+            <Plus size={20} />
+            Add New Business
+          </button>
           <div className={styles.searchBox}>
             <Search size={20} />
             <input
@@ -245,18 +144,6 @@ export default function RetailersPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className={styles.searchInput}
             />
-          </div>
-
-          <div className={styles.filterTabs}>
-            {['all', 'active', 'pending', 'suspended'].map((tab) => (
-              <button
-                key={tab}
-                className={`${styles.filterTab} ${statusFilter === tab ? styles.active : ''}`}
-                onClick={() => setStatusFilter(tab)}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
           </div>
         </div>
 
@@ -276,28 +163,34 @@ export default function RetailersPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Retailer</th>
-                  <th>Contact</th>
-                  <th>Store</th>
+                  <th>Business Name</th>
+                  <th>B. Model</th>
+                  <th>Owner</th>
+                  <th>City</th>
                   <th>Plan</th>
-                  <th>Status</th>
-                  <th>Joined</th>
-                  <th>Actions</th>
+                  <th>
+                    <StatusFilterDropdown value={statusFilter} onChange={setStatusFilter} />
+                  </th>
+                  <th>Days Left</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {merchants.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className={styles.emptyState}>
+                    <td colSpan="8" className={styles.emptyState}>
                       <AlertCircle size={32} />
-                      <p>No retailers found</p>
+                      <p>No businesses found</p>
                       <button className={styles.createLink} onClick={() => setShowModal(true)}>
-                        Add your first retailer
+                        Add your first business
                       </button>
                     </td>
                   </tr>
                 ) : (
-                  merchants.map((merchant) => (
+                  merchants.map((merchant) => {
+                    const isWholesale = merchant.profile?.businessModel === 'Wholesale';
+                    const phone = merchant.profile?.phoneNumber || merchant.phone;
+                    return (
                     <tr key={merchant._id}>
                       <td>
                         <div className={styles.retailerInfo}>
@@ -306,17 +199,24 @@ export default function RetailersPage() {
                           </div>
                           <div>
                             <p className={styles.name}>
-                              {merchant.profile?.storeName || merchant.name}
+                              {merchant.profile?.storeName || '—'}
                             </p>
                             <p className={styles.email}>{merchant.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td>{merchant.profile?.phoneNumber || merchant.phone || '—'}</td>
+                      <td>
+                        <span
+                          className={`${styles.typeBadge} ${isWholesale ? styles.typeBadgeWholesale : styles.typeBadgeRetail}`}
+                        >
+                          {isWholesale ? 'Wholesaler' : 'Retailer'}
+                        </span>
+                      </td>
+                      <td>{merchant.name || '—'}</td>
                       <td>{merchant.profile?.storeLocation || merchant.profile?.storeAddress || '—'}</td>
                       <td>
                         {merchant.subscription?.planType
-                          ? `${merchant.subscription.planType === 'SMART' ? 'Smart' : 'Core'} (${merchant.subscription.status})`
+                          ? `${merchant.subscription.planType === 'SMART' ? 'Smart' : 'Core'}`
                           : 'No plan'}
                       </td>
                       <td>
@@ -326,15 +226,7 @@ export default function RetailersPage() {
                           {merchant.status === 'active' ? '✓' : '●'} {merchant.status || 'pending'}
                         </span>
                       </td>
-                      <td>
-                        {merchant.createdAt
-                          ? new Date(merchant.createdAt).toLocaleDateString('en-IN', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric',
-                            })
-                          : '—'}
-                      </td>
+                      <td>{getDaysLeftDisplay(merchant)}</td>
                       <td>
                         <div className={styles.actions}>
                           <Link
@@ -344,19 +236,27 @@ export default function RetailersPage() {
                           >
                             <Eye size={16} />
                           </Link>
-                          <button
-                            className={`${styles.statusToggleBtn} ${
-                              merchant.status === 'suspended' ? styles.activate : styles.suspend
-                            }`}
-                            onClick={() => handleToggleStatus(merchant)}
-                            disabled={statusMutation.isPending}
-                          >
-                            {merchant.status === 'suspended' ? 'Activate' : 'Suspend'}
-                          </button>
+                          {phone ? (
+                            <a
+                              href={`tel:${merchant.profile?.countryCode || ''}${phone}`}
+                              className={styles.actionBtn}
+                              title="Call"
+                            >
+                              <Phone size={16} />
+                            </a>
+                          ) : (
+                            <span
+                              className={`${styles.actionBtn} ${styles.actionBtnDisabled}`}
+                              title="No phone number"
+                            >
+                              <Phone size={16} />
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -364,224 +264,7 @@ export default function RetailersPage() {
         )}
       </div>
 
-      {/* Add Retailer Modal */}
-      {showModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <div>
-                <h2 className={styles.modalTitle}>Add Retailer</h2>
-                <p className={styles.modalSubtitle}>Onboard a new retailer to your territory</p>
-              </div>
-              <button className={styles.modalClose} onClick={handleCloseModal}>
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateMerchant} className={styles.modalForm}>
-              {formError && (
-                <div className={styles.formError}>
-                  <AlertCircle size={16} />
-                  {formError}
-                </div>
-              )}
-
-              <div className={styles.formGroup}>
-                <label htmlFor="storeName" className={styles.formLabel}>
-                  Business Name *
-                </label>
-                <input
-                  type="text"
-                  id="storeName"
-                  name="storeName"
-                  value={formData.storeName}
-                  onChange={handleInputChange}
-                  placeholder="Enter business name"
-                  className={styles.formInput}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="name" className={styles.formLabel}>
-                  Owner Name *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter owner's full name"
-                  className={styles.formInput}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="phoneNumber" className={styles.formLabel}>
-                  Contact Number *
-                </label>
-                <div className={styles.phoneInputWrapper}>
-                  <select
-                    name="countryCode"
-                    value={formData.countryCode}
-                    onChange={handleInputChange}
-                    className={styles.countryCodeSelect}
-                  >
-                    <option value="+91">+91</option>
-                    <option value="+1">+1</option>
-                    <option value="+44">+44</option>
-                    <option value="+971">+971</option>
-                  </select>
-                  <input
-                    type="tel"
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
-                    onChange={handleInputChange}
-                    placeholder="Enter phone number"
-                    className={styles.formInput}
-                    inputMode="numeric"
-                    maxLength={10}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="email" className={styles.formLabel}>
-                  Email ID *
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="your@email.com"
-                  className={styles.formInput}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="planType" className={styles.formLabel}>
-                  Choose Subscription
-                </label>
-                <CustomSelect
-                  id="planType"
-                  value={formData.planType}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, planType: val }))}
-                  placeholder="Select licence (optional)"
-                  options={[
-                    {
-                      value: 'SMART',
-                      label: `Smart Licence${inventory ? ` (${inventory.plans?.SMART?.totalRemaining || 0} left)` : ''}`,
-                      disabled: !inventory?.plans?.SMART?.totalRemaining,
-                    },
-                    {
-                      value: 'CORE',
-                      label: `Core Licence${inventory ? ` (${inventory.plans?.CORE?.totalRemaining || 0} left)` : ''}`,
-                      disabled: !inventory?.plans?.CORE?.totalRemaining,
-                    },
-                  ]}
-                />
-                <p className={styles.formHint}>
-                  Assigns a license from your purchased inventory and activates it immediately.
-                  Leave blank to add the retailer without a plan.
-                </p>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="password" className={styles.formLabel}>
-                  Password *
-                </label>
-                <div className={styles.passwordInputWrapper}>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Enter password (min 6 characters)"
-                    className={styles.formInput}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className={styles.passwordToggle}
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className={styles.modalFooter}>
-                <button type="button" className={styles.cancelButton} onClick={handleCloseModal}>
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={styles.submitButton}
-                  disabled={createMutation.isPending}
-                >
-                  {createMutation.isPending ? 'Activating...' : 'Activate Retailer'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Suspend/Activate Confirmation Modal */}
-      {statusTarget && (
-        <div className={styles.modalOverlay} onClick={handleCancelStatusChange}>
-          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
-            <div
-              className={`${styles.confirmIcon} ${
-                statusTarget.status === 'suspended' ? styles.confirmIconGreen : ''
-              }`}
-            >
-              <ShieldAlert size={32} />
-            </div>
-            <h2 className={styles.confirmTitle}>
-              {statusTarget.status === 'suspended' ? 'Activate Retailer?' : 'Suspend Retailer?'}
-            </h2>
-            <p className={styles.confirmMessage}>
-              {statusTarget.status === 'suspended' ? (
-                <>
-                  <strong>{statusTarget.profile?.storeName || statusTarget.name}</strong> will regain access and be able to log in again.
-                </>
-              ) : (
-                <>
-                  <strong>{statusTarget.profile?.storeName || statusTarget.name}</strong> will lose access immediately and won&apos;t be able to log in until reactivated.
-                </>
-              )}
-            </p>
-            <div className={styles.confirmFooter}>
-              <button className={styles.confirmCancelBtn} onClick={handleCancelStatusChange}>
-                Cancel
-              </button>
-              <button
-                className={`${styles.confirmActionBtn} ${
-                  statusTarget.status === 'suspended' ? styles.confirmActivateBtn : styles.confirmSuspendBtn
-                }`}
-                onClick={handleConfirmStatusChange}
-                disabled={statusMutation.isPending}
-              >
-                {statusMutation.isPending
-                  ? 'Please wait...'
-                  : statusTarget.status === 'suspended'
-                    ? 'Activate'
-                    : 'Suspend'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AddBusinessModal isOpen={showModal} onClose={() => setShowModal(false)} />
     </div>
   );
 }

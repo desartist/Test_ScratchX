@@ -60,7 +60,7 @@ export default function MarketplacePage() {
           'Basic analytics',
           'Email support',
         ],
-        unitMRP: 2477,
+        unitMRP: 2099,
         icon: 'Package',
       };
 
@@ -76,7 +76,7 @@ export default function MarketplacePage() {
           'Priority support',
           'Custom branding',
         ],
-        unitMRP: 3539,
+        unitMRP: 2999,
         icon: 'Zap',
       };
 
