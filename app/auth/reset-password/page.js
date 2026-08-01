@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthContext } from '../../../components/auth/AuthContext';
 import styles from './page.module.css';
@@ -10,6 +10,13 @@ export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
   const [validationError, setValidationError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // The auth error state is shared across the whole auth flow — clear any
+  // stale error left over from another page (e.g. login) on mount.
+  useEffect(() => {
+    clearError();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

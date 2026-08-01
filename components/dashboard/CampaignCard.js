@@ -32,6 +32,8 @@ function getStatusBadge(status) {
       return { label: "Paused", variant: "warning" };
     case "ended":
       return { label: "Ended", variant: "default" };
+    case "scheduled":
+      return { label: "Scheduled", variant: "info" };
     case "draft":
       return { label: "Draft", variant: "default" };
     default:

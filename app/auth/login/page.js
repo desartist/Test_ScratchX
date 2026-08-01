@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import LoginForm from '../../../components/auth/LoginForm';
 import styles from './page.module.css';
 
@@ -22,12 +21,6 @@ export default function LoginPage() {
 
         {/* Form */}
         <LoginForm />
-
-        {/* Footer */}
-        <p className={styles.signupLine}>
-          Don&apos;t have an account?{' '}
-          <Link href="/auth/register">Sign up</Link>
-        </p>
       </div>
     </div>
   );

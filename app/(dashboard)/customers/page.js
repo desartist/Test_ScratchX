@@ -5,7 +5,12 @@ import { Search, Filter, ChevronDown } from 'lucide-react';
 import { useCustomersQuery } from '@/hooks/queries/useCustomersQuery';
 import CustomerStatsCard from '@/components/customers/CustomerStatsCard';
 import CustomerDetailDrawer from '@/components/customers/CustomerDetailDrawer';
+import WhatsAppButton from '@/components/whatsapp/WhatsAppButton';
+import { useSubscription } from '@/components/subscription/SubscriptionContext';
 import styles from './customers.module.css';
+
+// Matches the seed data's canUseWhatsAppIntegration flag (Smart-only feature)
+const WHATSAPP_ENABLED_PLAN_TYPES = ['SMART'];
 
 const DEFAULT_STATS = {
   totalCustomers: 0,
@@ -54,6 +59,9 @@ export default function CustomersPage() {
   const campaigns = data?.filters?.campaigns || [];
   const stores = data?.filters?.stores || [];
   const error = queryError ? queryError.message : null;
+
+  const { planData } = useSubscription();
+  const whatsappEnabled = WHATSAPP_ENABLED_PLAN_TYPES.includes(planData?.planType);
 
   const handleCustomerClick = (customer) => {
     setSelectedCustomer(customer);
@@ -310,6 +318,30 @@ export default function CustomersPage() {
                       month: 'short',
                       year: '2-digit'
                     })}
+                  </div>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <WhatsAppButton
+                      phoneNumber={customer.customer_mobile}
+                      countryCode="+91"
+                      defaultMessage={`Hi ${customer.customer_name}, thank you for visiting ScratchX. ${
+                        formatWonReward(customer.scratch_card_id)
+                          ? `You've won ${formatWonReward(customer.scratch_card_id)}!`
+                          : ''
+                      }`}
+                      recipientType="customer"
+                      customerId={customer._id}
+                      campaignId={customer.campaign_id?._id}
+                      placeholderValues={{
+                        customerName: customer.customer_name,
+                        reward: formatWonReward(customer.scratch_card_id) || '',
+                      }}
+                      disabled={!whatsappEnabled}
+                      disabledReason={
+                        !whatsappEnabled
+                          ? 'Upgrade to the Smart plan to unlock WhatsApp sharing'
+                          : 'No phone number on file'
+                      }
+                    />
                   </div>
                   <div className={styles.participationIcon}>👤</div>
                 </div>

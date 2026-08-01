@@ -53,26 +53,6 @@ min-height: 100vh;
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
-/* ── Signup Line ───────────────────────────────────────────── */
-.signupLine {
-  text-align: center;
-  margin-top: 24px;
-  font-size: 0.9rem;
-  color: #637080;
-  font-family: var(--font-afacad-flux), system-ui, sans-serif;
-}
-
-.signupLine a {
-  color: #010f44;
-  font-weight: 700;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.signupLine a:hover {
-  color: #ef9e1b;
-}
-
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 520px) {
   .card {

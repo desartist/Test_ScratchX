@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthContext } from '../../../../components/auth/AuthContext';
@@ -32,6 +32,13 @@ function ConfirmResetContent() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [success, setSuccess] = useState(false);
+
+  // The auth error state is shared across the whole auth flow — clear any
+  // stale error left over from another page (e.g. login) on mount.
+  useEffect(() => {
+    clearError();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const validate = () => {
     const errors = {};

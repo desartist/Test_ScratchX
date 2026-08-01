@@ -40,16 +40,37 @@ export async function POST(request) {
       );
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json(
+        { error: 'Please enter a valid email address.' },
+        { status: 400 }
+      );
+    }
+
     // Normalize email
     const normalizedEmail = email.toLowerCase().trim();
 
     // Find account
     const account = await Account.findOne({ email: normalizedEmail });
     if (!account) {
-      // Don't reveal if email exists - security best practice
       return NextResponse.json(
-        { message: 'If email exists, reset link will be sent shortly' },
-        { status: 200 }
+        { error: 'No account found with this email address.' },
+        { status: 404 }
+      );
+    }
+
+    // Resend cooldown — stop the same account from spamming itself (or being
+    // used to spam a real inbox) with repeated reset emails.
+    const RESEND_COOLDOWN_MS = 60 * 1000;
+    const recentToken = await PasswordResetToken.findOne({ accountId: account._id })
+      .sort({ createdAt: -1 });
+    if (recentToken && Date.now() - recentToken.createdAt.getTime() < RESEND_COOLDOWN_MS) {
+      const secondsLeft = Math.ceil(
+        (RESEND_COOLDOWN_MS - (Date.now() - recentToken.createdAt.getTime())) / 1000
+      );
+      return NextResponse.json(
+        { error: `Please wait ${secondsLeft}s before requesting another reset email.` },
+        { status: 429 }
       );
     }
 

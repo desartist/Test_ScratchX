@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import { useNotificationsQuery } from "@/hooks/queries/useNotificationsQuery";
 import {
@@ -48,6 +49,13 @@ function isNavItemActive(pathname, href) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function isNavGroupDefaultExpanded(pathname, item) {
+  return (
+    isNavItemActive(pathname, item.href) ||
+    (item.children || []).some((child) => isNavItemActive(pathname, child.href))
+  );
+}
+
 function readMerchantHasStoreCookie() {
   if (typeof document === "undefined") return null; // SSR — unknown
   const match = document.cookie.match(/(?:^|;\s*)merchantHasStore=([^;]*)/);
@@ -65,6 +73,10 @@ export default function DashboardLayout({ children, role }) {
   const { account, logout } = useAuthContext();
   const { data: notificationsData } = useNotificationsQuery();
   const unreadNotifications = notificationsData?.unread || 0;
+  // Explicit expand/collapse overrides for nav items with sub-items — when a
+  // href isn't in here, expansion falls back to whether the user is
+  // currently on that item or one of its children (see isNavGroupExpanded).
+  const [expandedNavGroups, setExpandedNavGroups] = useState({});
 
   // Only needed for old sessions where the cookie was never written (rare).
   useEffect(() => {
@@ -190,7 +202,14 @@ export default function DashboardLayout({ children, role }) {
             { label: "Customers", href: "/customers", iconKey: "customers" },
             { label: "Analytics", href: "/analytics", iconKey: "analytics" },
             { label: "Stores", href: "/stores", iconKey: "stores" },
-            { label: "ScratchX Studio", href: "/studio", iconKey: "studio" },
+            {
+              label: "ScratchX Studio",
+              href: "/studio",
+              iconKey: "studio",
+              children: [
+                { label: "WhatsApp Templates", href: "/studio/whatsapp-templates" },
+              ],
+            },
           ],
           secondary: [
             {
@@ -220,7 +239,14 @@ export default function DashboardLayout({ children, role }) {
               href: "/store-analytics",
               iconKey: "analytics",
             },
-            { label: "ScratchX Studio", href: "/studio", iconKey: "studio" },
+            {
+              label: "ScratchX Studio",
+              href: "/studio",
+              iconKey: "studio",
+              children: [
+                { label: "WhatsApp Templates", href: "/studio/whatsapp-templates" },
+              ],
+            },
             {
               label: "QR & Promotions",
               href: "/qr-promotions",
@@ -334,17 +360,63 @@ export default function DashboardLayout({ children, role }) {
             {navItems.primary.map((item) => {
               const isActive = isNavItemActive(pathname, item.href);
               const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+              const hasChildren = item.children && item.children.length > 0;
+              const isExpanded = hasChildren
+                ? expandedNavGroups[item.href] ?? isNavGroupDefaultExpanded(pathname, item)
+                : false;
+
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-                  aria-current={isActive ? "page" : undefined}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <span className={styles.navIcon}><Icon /></span>
-                  {item.label}
-                </Link>
+                <div key={item.href} className={styles.navGroup}>
+                  <div className={styles.navItemRow}>
+                    <Link
+                      href={item.href}
+                      className={`${styles.navItem} ${isActive ? styles.navItemActive : ""} ${hasChildren ? styles.navItemWithChildren : ""}`}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <span className={styles.navIcon}><Icon /></span>
+                      {item.label}
+                    </Link>
+                    {hasChildren && (
+                      <button
+                        type="button"
+                        className={styles.navExpandBtn}
+                        onClick={() =>
+                          setExpandedNavGroups((prev) => ({ ...prev, [item.href]: !isExpanded }))
+                        }
+                        aria-label={isExpanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
+                        aria-expanded={isExpanded}
+                      >
+                        <ChevronDown
+                          size={16}
+                          style={{
+                            transform: isExpanded ? "rotate(180deg)" : "none",
+                            transition: "transform 0.2s ease",
+                          }}
+                        />
+                      </button>
+                    )}
+                  </div>
+
+                  {hasChildren && isExpanded && (
+                    <div className={styles.navSubItems}>
+                      {item.children.map((child) => {
+                        const childActive = isNavItemActive(pathname, child.href);
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={`${styles.navSubItem} ${childActive ? styles.navSubItemActive : ""}`}
+                            aria-current={childActive ? "page" : undefined}
+                            onClick={() => setSidebarOpen(false)}
+                          >
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
 

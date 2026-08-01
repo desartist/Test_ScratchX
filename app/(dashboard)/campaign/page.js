@@ -29,14 +29,21 @@ function getCalculatedStatus(campaign) {
   const startDate = new Date(campaign.startDate);
   const endDate = new Date(campaign.endDate);
 
+  // A real draft (never activated by the merchant) stays a draft regardless
+  // of its dates — this must be checked before the date-based overrides below.
+  if (campaign.status === "draft") {
+    return "draft";
+  }
+
   // If end date has passed, campaign is ended
   if (endDate < now) {
     return "ended";
   }
 
-  // If start date hasn't arrived yet, campaign is draft
+  // Already activated but its start date hasn't arrived yet — scheduled,
+  // not draft (the merchant already published it; it just hasn't gone live).
   if (startDate > now) {
-    return "draft";
+    return "scheduled";
   }
 
   // Otherwise use the stored status (active, paused, etc.)

@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import { MessageCircle, ArrowRight } from 'lucide-react';
 import StudioHero from '@/components/studio/StudioHero';
 import StudioFeatureCard from '@/components/studio/StudioFeatureCard';
 import StudioRoadmap from '@/components/studio/StudioRoadmap';
@@ -43,6 +45,31 @@ export default function StudioPage() {
 
       {/* Hero Section */}
       <StudioHero />
+
+      {/* Available Now Section */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>Available Now</h2>
+        <p className={styles.sectionSubtitle}>
+          Ready-to-use tools you can start using today
+        </p>
+        <div className={styles.featuresGrid}>
+          <Link href="/studio/whatsapp-templates" className={styles.availableCard}>
+            <div className={styles.availableCardTop}>
+              <div className={styles.availableIcon}>
+                <MessageCircle size={22} />
+              </div>
+              <span className={styles.availableBadge}>Available</span>
+            </div>
+            <h3 className={styles.availableTitle}>WhatsApp Templates</h3>
+            <p className={styles.availableDescription}>
+              Create reusable message templates — like offers and thank-you notes — to send customers over WhatsApp in one click.
+            </p>
+            <span className={styles.availableLink}>
+              Manage templates <ArrowRight size={14} />
+            </span>
+          </Link>
+        </div>
+      </div>
 
       {/* Features Section */}
       <div className={styles.section}>

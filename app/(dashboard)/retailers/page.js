@@ -14,6 +14,7 @@ import {
 import { useDistributorMerchantsQuery } from '@/hooks/queries/useDistributorMerchantsQuery';
 import LoadingState from '@/components/common/LoadingState';
 import AddBusinessModal from '@/components/distributor/AddBusinessModal';
+import WhatsAppButton from '@/components/whatsapp/WhatsAppButton';
 import styles from './retailers.module.css';
 
 const STATUS_OPTIONS = ['all', 'active', 'pending', 'suspended'];
@@ -252,6 +253,17 @@ export default function RetailersPage() {
                               <Phone size={16} />
                             </span>
                           )}
+                          <WhatsAppButton
+                            phoneNumber={phone}
+                            countryCode={merchant.profile?.countryCode || '+91'}
+                            defaultMessage={`Hi ${merchant.name || 'there'}, this is your ScratchX distributor reaching out regarding ${merchant.profile?.storeName || 'your business'}.`}
+                            recipientType="business"
+                            businessId={merchant._id}
+                            placeholderValues={{
+                              customerName: merchant.name || '',
+                              businessName: merchant.profile?.storeName || '',
+                            }}
+                          />
                         </div>
                       </td>
                     </tr>

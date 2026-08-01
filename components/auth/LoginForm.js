@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthContext } from './AuthContext';
 import styles from './LoginForm.module.css';
@@ -41,6 +41,15 @@ export default function LoginForm() {
   const [otpError, setOtpError] = useState('');
 
   const isDeactivated = error?.includes('deactivated');
+
+  // The auth error state is shared across the whole auth flow (login, reset
+  // password, etc). Clear it on mount so an error from a previous page
+  // (e.g. "No account found" from Reset Password) doesn't bleed through
+  // when the user navigates back here.
+  useEffect(() => {
+    clearError();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatPhoneNumber = (phoneInput) => {
     const cleaned = phoneInput.replace(/\D/g, '');
