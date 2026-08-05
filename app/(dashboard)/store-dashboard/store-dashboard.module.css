@@ -1,0 +1,170 @@
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.pageTitle {
+  font-size: 32px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0 0 8px 0;
+  font-family: var(--font-afacad);
+}
+
+.pageSubtitle {
+  font-size: 15px;
+  color: #637080;
+  margin: 0;
+}
+
+.pageSubtitle strong {
+  color: #ef9e1b;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e8eaff;
+  box-shadow: 0 2px 8px rgba(1, 15, 68, 0.04);
+}
+
+.cardWide {
+  grid-column: 1 / -1;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: #ef9e1b;
+}
+
+.cardHeader h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #010f44;
+  font-family: var(--font-afacad);
+}
+
+.infoRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+.infoRow svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #9ca3af;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: #eef2ff;
+  color: #4f46e5;
+  margin-top: 8px;
+}
+
+.statusBadge.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.permissionList {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.8;
+}
+
+.emptyText {
+  font-size: 14px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.teammateList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.teammateRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.teammateRow:last-child {
+  border-bottom: none;
+}
+
+.teammateName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #010f44;
+}
+
+.teammateEmail {
+  font-size: 12px;
+  color: #637080;
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #eef2ff;
+  color: #4f46e5;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 16px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pageTitle {
+    font-size: 24px;
+  }
+}

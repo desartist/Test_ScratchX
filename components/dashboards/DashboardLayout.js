@@ -106,6 +106,9 @@ export default function DashboardLayout({ children, role }) {
         return "/distributor-overview";
       case "Super_Admin":
         return "/admin-overview";
+      case "Store_Manager":
+      case "Store_Staff":
+        return "/store-dashboard";
       default:
         return "/dashboard";
     }
@@ -162,6 +165,7 @@ export default function DashboardLayout({ children, role }) {
             ...baseItems,
             { label: "Buy Plans", href: "/marketplace", iconKey: "marketplace" },
             { label: "Retailers", href: "/retailers", iconKey: "merchants" },
+            { label: "Seat Requests", href: "/seat-requests", iconKey: "commission" },
             // {
             //   label: "Scratch Allocation",
             //   href: "/scratch-allocation",
@@ -273,6 +277,25 @@ export default function DashboardLayout({ children, role }) {
             },
           ],
         };
+      case "Store_Manager":
+      case "Store_Staff":
+        return {
+          primary: [
+            ...baseItems,
+            { label: "Campaigns", href: "/store-campaigns", iconKey: "campaigns" },
+            { label: "Redemptions", href: "/redemptions", iconKey: "operations" },
+            { label: "Inventory", href: "/store-inventory", iconKey: "commission" },
+            { label: "Analytics", href: "/store-analytics", iconKey: "analytics" },
+          ],
+          secondary: [
+            {
+              label: "Notifications",
+              href: "/notifications",
+              iconKey: "operations",
+            },
+            { label: "Settings", href: "/settings", iconKey: "settings" },
+          ],
+        };
       default:
         return { primary: baseItems, secondary: [] };
     }
@@ -284,6 +307,8 @@ export default function DashboardLayout({ children, role }) {
       Distributor: "Admin",
       Merchant: "Merchant",
       Manager: "Manager",
+      Store_Manager: "Store Manager",
+      Store_Staff: "Store Staff",
     };
     return roleMap[role] || role;
   };

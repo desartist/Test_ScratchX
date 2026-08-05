@@ -14,10 +14,15 @@ import DangerZoneCard from "@/components/settings/DangerZoneCard";
 import ActiveSessionsCard from "@/components/settings/ActiveSessionsCard";
 import styles from "./settings.module.css";
 
+// Business Info and Subscription are Merchant concepts (profile.businessModel,
+// businessInfo.*, plan billing) — meaningless for a store-scoped account.
+const STORE_ROLES = ["Store_Manager", "Store_Staff"];
+
 export default function SettingsPage() {
   const { account, logout } = useAuthContext();
   const { data, isPending: loading } = useMerchantAccountQuery(account?.id, account?.role);
   const merchant = data?.account || account;
+  const isStoreRole = STORE_ROLES.includes(merchant?.role);
 
   if (loading) {
     return (
@@ -65,8 +70,8 @@ export default function SettingsPage() {
           {/* Profile Card */}
           <SettingsProfileCard merchant={merchant} />
 
-          {/* Business Information Card */}
-          <SettingsBusinessCard merchant={merchant} />
+          {/* Business Information Card - not applicable to store accounts */}
+          {!isStoreRole && <SettingsBusinessCard merchant={merchant} />}
         </div>
 
         {/* Right Column */}
@@ -74,8 +79,8 @@ export default function SettingsPage() {
           {/* Account Information Card */}
           <SettingsAccountCard merchant={merchant} />
 
-          {/* Subscription Card - not applicable to distributor accounts */}
-          {merchant?.role !== "Distributor" && (
+          {/* Subscription Card - not applicable to distributor or store accounts */}
+          {merchant?.role !== "Distributor" && !isStoreRole && (
             <SettingsSubscriptionCard merchant={merchant} />
           )}
 

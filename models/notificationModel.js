@@ -44,6 +44,8 @@ const notificationSchema = new mongoose.Schema(
         "commission_earned",
         "payout_processed",
         "retailer_activated",
+        "team_seat_requested",
+        "team_seat_resolved",
         "other",
       ],
       required: true,

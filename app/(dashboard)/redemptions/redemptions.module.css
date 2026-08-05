@@ -1,0 +1,187 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.pageTitle {
+  font-size: 32px;
+  font-weight: 800;
+  color: #010f44;
+  margin: 0 0 8px 0;
+  font-family: var(--font-afacad);
+}
+
+.pageSubtitle {
+  font-size: 15px;
+  color: #637080;
+  margin: 0;
+}
+
+.searchRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 13px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #010f44;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #ef9e1b;
+}
+
+.searchButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  background: #0523a7;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.searchButton:hover {
+  transform: translateY(-1px);
+}
+
+.formError {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.loadingWrap {
+  padding: 20px 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  border: 1px solid #e8eaff;
+  box-shadow: 0 2px 8px rgba(1, 15, 68, 0.04);
+}
+
+.cardInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.customerName {
+  font-size: 15px;
+  font-weight: 700;
+  color: #010f44;
+}
+
+.campaignName {
+  font-size: 13px;
+  color: #637080;
+}
+
+.statusBadge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.statusBadge.pending {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.statusBadge.ready {
+  background: #fff7ea;
+  color: #b45309;
+}
+
+.statusBadge.done {
+  background: #d4edda;
+  color: #155724;
+}
+
+.statusBadge.expired {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.redeemButton {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  background: #ef9e1b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.redeemButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.redeemButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emptyState,
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 24px 16px;
+  }
+
+  .card {
+    flex-wrap: wrap;
+  }
+
+  .pageTitle {
+    font-size: 24px;
+  }
+}

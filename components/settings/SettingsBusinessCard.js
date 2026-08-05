@@ -2,12 +2,21 @@
 import React, { useState, useEffect } from "react";
 import styles from "./SettingsBusinessCard.module.css";
 
+const BUSINESS_MODEL_LABELS = {
+  Retail: "Retailer",
+  Wholesale: "Wholesaler",
+};
+
 export default function SettingsBusinessCard({ merchant }) {
-  console.log("Merchant data in Business Card:", merchant);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+
+  // Business type (Retail/Wholesale) is set only by the distributor when
+  // creating the business (AddBusinessModal) — read-only here, never
+  // editable by the merchant themselves.
+  const businessModelLabel = BUSINESS_MODEL_LABELS[merchant?.profile?.businessModel] || "Not set";
 
   // Initialize state with merchant data if available
   const getInitialBusiness = () => {
@@ -144,6 +153,12 @@ export default function SettingsBusinessCard({ merchant }) {
   return (
     <div className={styles.card}>
       <h3>Business Information</h3>
+
+      {/* Business Type — read-only; set only by the distributor at creation time */}
+      <div className={styles.infoItem} style={{ marginBottom: 16 }}>
+        <span className={styles.label}>Business Type</span>
+        <span className={styles.value}>{businessModelLabel}</span>
+      </div>
 
       {success && (
         <div className={styles.successMessage}>✓ Business details updated</div>

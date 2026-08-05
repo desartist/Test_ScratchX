@@ -138,7 +138,7 @@ export default function WhatsAppModal({
                 value={selectedTemplateId}
                 onChange={(e) => handleTemplateSelect(e.target.value)}
               >
-                <option value="">Write your own message</option>
+                <option value="">Select Template</option>
                 {templates.map((template) => (
                   <option key={template._id} value={template._id}>
                     {template.name}
@@ -150,10 +150,10 @@ export default function WhatsAppModal({
 
           <MessageEditor value={message} onChange={setMessage} />
 
-          <div className={styles.formGroup}>
+         {image&& <div className={styles.formGroup}>
             <label className={styles.label}>Image</label>
             <ImageUploader value={image} onChange={setImage} onError={setError} />
-          </div>
+          </div>}
         </div>
 
         <div className={styles.modalFooter}>
@@ -166,7 +166,7 @@ export default function WhatsAppModal({
             onClick={handleSend}
             disabled={sending || !phoneNumber}
           >
-            Send to WhatsApp
+            Send 
           </button>
         </div>
       </div>

@@ -24,6 +24,9 @@ export async function GET(req) {
       state: null,
       pincode: null,
     },
+    // Read-only here — businessModel (Retail/Wholesale) is set only by the
+    // distributor at creation time (AddBusinessModal), never by the merchant.
+    businessModel: account.profile?.businessModel || null,
   });
 }
 

@@ -198,6 +198,23 @@ const storeSchema = new mongoose.Schema(
       default: 'BRANCH',
       index: true,
     },
+
+    // Extra Store_Manager/Store_Staff seats purchased on top of the plan's
+    // free per-store limit (see lib/config/teamLimits.js). Permanent —
+    // matches the one-time-lifetime pricing model used elsewhere (e.g.
+    // isExtraStore/extraStoreFee above), not a recurring add-on.
+    teamSeatAddons: {
+      extraManagerSeats: {
+        type: Number,
+        default: 0,
+        min: [0, 'Extra manager seats cannot be negative'],
+      },
+      extraStaffSeats: {
+        type: Number,
+        default: 0,
+        min: [0, 'Extra staff seats cannot be negative'],
+      },
+    },
   },
   {
     timestamps: true

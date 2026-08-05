@@ -43,6 +43,9 @@ export default function DashboardPage() {
       } else if (roleNormalized === "super_admin" || roleNormalized === "super admin" || roleNormalized === "admin" || roleNormalized === "superadmin") {
         console.log("[Dashboard Router] Redirecting to /admin-overview");
         router.push("/admin-overview");
+      } else if (roleNormalized === "store_manager" || roleNormalized === "store_staff") {
+        console.log("[Dashboard Router] Redirecting to /store-dashboard");
+        router.push("/store-dashboard");
       } else {
         console.log("[Dashboard Router] Unknown role, defaulting to /merchant-overview");
         router.push("/merchant-overview");

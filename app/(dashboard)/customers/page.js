@@ -323,7 +323,7 @@ export default function CustomersPage() {
                     <WhatsAppButton
                       phoneNumber={customer.customer_mobile}
                       countryCode="+91"
-                      defaultMessage={`Hi ${customer.customer_name}, thank you for visiting ScratchX. ${
+                      defaultMessage={`Hi ${customer.customer_name}, thank you for visiting ${customer.matched_store_name}. ${
                         formatWonReward(customer.scratch_card_id)
                           ? `You've won ${formatWonReward(customer.scratch_card_id)}!`
                           : ''
