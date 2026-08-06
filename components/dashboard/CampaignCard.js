@@ -55,6 +55,7 @@ export default function CampaignCard({
   scratchesClaimed = 0,
   priceRange = null,
   hasRanges = false,
+  readOnly = false,
   onView = () => {},
   onEdit = () => {},
   onClone = () => {},
@@ -134,13 +135,15 @@ export default function CampaignCard({
           </div>
           {dateRange && <p className={styles.dateRange}>{dateRange}</p>}
         </div>
-        <div
-          className={styles.menuWrap}
-          onClick={(e) => e.stopPropagation()}
-          role="presentation"
-        >
-          <CampaignCardMenu onAction={handleMenuAction} isPaused={isPaused} />
-        </div>
+        {!readOnly && (
+          <div
+            className={styles.menuWrap}
+            onClick={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <CampaignCardMenu onAction={handleMenuAction} isPaused={isPaused} />
+          </div>
+        )}
       </div>
 
       {/* Meta row */}
@@ -197,14 +200,16 @@ export default function CampaignCard({
             <AlertTriangle size={15} className={styles.lowWarningIcon} />
             Only {remaining.toLocaleString()} scratches left
           </span>
-          <button
-            type="button"
-            className={styles.addBtn}
-            onClick={handleAddScratches}
-          >
-            <Plus size={14} />
-            Add
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              className={styles.addBtn}
+              onClick={handleAddScratches}
+            >
+              <Plus size={14} />
+              Add
+            </button>
+          )}
         </div>
       )}
     </div>

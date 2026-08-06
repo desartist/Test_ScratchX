@@ -283,8 +283,8 @@ export default function DashboardLayout({ children, role }) {
           primary: [
             ...baseItems,
             { label: "Campaigns", href: "/store-campaigns", iconKey: "campaigns" },
-            { label: "Redemptions", href: "/redemptions", iconKey: "operations" },
-            { label: "Inventory", href: "/store-inventory", iconKey: "commission" },
+            // { label: "Redemptions", href: "/redemptions", iconKey: "operations" },
+            // { label: "Inventory", href: "/store-inventory", iconKey: "commission" },
             { label: "Analytics", href: "/store-analytics", iconKey: "analytics" },
           ],
           secondary: [

@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Store as StoreIcon, Users, ShieldCheck, AlertCircle, Phone, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Store as StoreIcon, Users, ShieldCheck, AlertCircle, Phone, MapPin, ArrowRight } from "lucide-react";
 import { useStoreDashboardQuery } from "@/hooks/queries/useStoreDashboardQuery";
 import LoadingState from "@/components/common/LoadingState";
 import styles from "./store-dashboard.module.css";
@@ -23,6 +24,7 @@ const PERMISSION_LABELS = {
 };
 
 export default function StoreDashboardPage() {
+  const router = useRouter();
   const { data, isPending: loading, error: queryError } = useStoreDashboardQuery();
   const error = queryError ? queryError.message : null;
 
@@ -76,6 +78,10 @@ export default function StoreDashboardPage() {
             </span>
           </div>
           <span className={`${styles.statusBadge} ${styles[store.status] || ""}`}>{store.status}</span>
+          <button type="button" className={styles.viewDetailsBtn} onClick={() => router.push("/store-details")}>
+            View Full Store Details
+            <ArrowRight size={14} />
+          </button>
         </div>
 
         {/* Your access */}

@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
-import CampaignStoreMapping from "@/models/campaignStoreMappingModel";
+import Campaign from "@/models/campaignModel";
+import Range from "@/models/rangeModel";
 
 const STORE_TEAM_ROLES = ["Store_Manager", "Store_Staff"];
 
@@ -8,6 +9,12 @@ const STORE_TEAM_ROLES = ["Store_Manager", "Store_Staff"];
  * GET /api/store-campaigns
  * Campaigns allocated to the authenticated Store_Manager/Store_Staff's store,
  * with this store's own allocation numbers. Read-only.
+ *
+ * Reads Campaign.assignedStores[] directly — the real "Create Campaign" wizard
+ * (app/(dashboard)/campaign/new) writes store allocations there, not to the
+ * separate CampaignStoreMapping collection (that collection is only written
+ * by the older manual /api/inventory/allocate reallocation path, which the
+ * standard campaign-launch flow never calls).
  */
 export async function GET() {
   try {
@@ -29,24 +36,43 @@ export async function GET() {
       );
     }
 
-    const mappings = await CampaignStoreMapping.find({ store_id: account.storeId })
-      .populate("campaign_id", "campaignName startDate endDate status")
-      .sort({ createdAt: -1 });
+    const campaignDocs = await Campaign.find({
+      "assignedStores.storeId": account.storeId,
+      "assignedStores.status": "active",
+    })
+      .select("campaignName description startDate endDate status assignedStores")
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const campaigns = mappings
-      .filter((m) => m.campaign_id)
-      .map((m) => ({
-        _id: m.campaign_id._id,
-        name: m.campaign_id.campaignName,
-        status: m.campaign_id.status,
-        startDate: m.campaign_id.startDate,
-        endDate: m.campaign_id.endDate,
-        allocationStatus: m.status,
-        allocatedScratchCards: m.allocated_scratch_cards,
-        usedScratchCards: m.used_scratch_cards,
-        redeemedScratchCards: m.redeemed_scratch_cards,
-        remainingScratchCards: m.remaining_scratch_cards,
-      }));
+    const campaignIds = campaignDocs.map((c) => c._id);
+    const ranges = await Range.find({ campaignId: { $in: campaignIds } }).lean();
+    const lastRangeByCampaign = {};
+    for (const r of ranges) {
+      lastRangeByCampaign[String(r.campaignId)] = r; // last write wins, matches merchant page's "last added range"
+    }
+
+    const campaigns = campaignDocs.map((c) => {
+      const activeStores = (c.assignedStores || []).filter((s) => s.status === "active");
+      const myAssignment = activeStores.find((s) => String(s.storeId) === String(account.storeId));
+      const range = lastRangeByCampaign[String(c._id)];
+
+      return {
+        _id: c._id,
+        name: c.campaignName,
+        description: c.description,
+        status: c.status,
+        startDate: c.startDate,
+        endDate: c.endDate,
+        storeCount: activeStores.length,
+        priceRange: range ? range.label || `₹${range.minAmount}-₹${range.maxAmount}` : null,
+        hasRanges: Boolean(range),
+        allocationStatus: myAssignment?.status,
+        allocatedScratchCards: myAssignment?.allocated_scratch_cards ?? 0,
+        usedScratchCards: myAssignment?.used_scratch_cards ?? 0,
+        redeemedScratchCards: myAssignment?.redeemed_scratch_cards ?? 0,
+        remainingScratchCards: myAssignment?.remaining_scratch_cards ?? 0,
+      };
+    });
 
     return Response.json({ success: true, campaigns }, { status: 200 });
   } catch (err) {

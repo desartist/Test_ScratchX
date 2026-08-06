@@ -1,141 +1,92 @@
+/* Mirrors app/(dashboard)/campaign/campaign.module.css so the team-member
+   Campaigns page looks identical to the merchant's own. */
+
 .container {
-  max-width: 1000px;
   margin: 0 auto;
-  padding: 40px 24px;
-}
-
-.header {
-  margin-bottom: 32px;
-}
-
-.pageTitle {
-  font-size: 32px;
-  font-weight: 800;
-  color: #010f44;
-  margin: 0 0 8px 0;
-  font-family: var(--font-afacad);
-}
-
-.pageSubtitle {
-  font-size: 15px;
-  color: #637080;
-  margin: 0;
-}
-
-.list {
+  padding: 32px 32px 64px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px 24px;
-  border: 1px solid #e8eaff;
-  box-shadow: 0 2px 8px rgba(1, 15, 68, 0.04);
-}
-
-.cardTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.campaignName {
-  margin: 0 0 4px 0;
-  font-size: 17px;
-  font-weight: 800;
-  color: #010f44;
-  font-family: var(--font-afacad);
-}
-
-.dateRange {
-  margin: 0;
-  font-size: 13px;
-  color: #637080;
-}
-
-.statusBadge {
-  flex-shrink: 0;
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: capitalize;
-  background: #eef2ff;
-  color: #4f46e5;
-}
-
-.statusBadge.active {
-  background: #d4edda;
-  color: #155724;
-}
-
-.statusBadge.completed,
-.statusBadge.ended {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.statsRow {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  border-top: 1px solid #f0f1f3;
-  padding-top: 16px;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.statValue {
-  font-size: 20px;
-  font-weight: 800;
-  color: #010f44;
-}
-
-.statLabel {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.emptyState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 60px 20px;
-  color: #9ca3af;
-  text-align: center;
-}
-
-.errorState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 60px 20px;
-  color: #9ca3af;
-  text-align: center;
+  font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 24px 16px;
-  }
+  .container { padding: 24px 18px 48px; gap: 14px; }
+}
 
-  .statsRow {
-    grid-template-columns: repeat(2, 1fr);
-  }
+@media (max-width: 480px) {
+  .container { padding: 16px 14px 48px; gap: 12px; }
+  .title { font-size: 1.3rem; }
+}
 
-  .pageTitle {
-    font-size: 24px;
-  }
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .header { flex-direction: column; align-items: stretch; }
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #010f44;
+  letter-spacing: -0.3px;
+  line-height: 1.15;
+}
+
+@media (max-width: 768px) {
+  .title { font-size: 1.45rem; }
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #637080;
+  line-height: 1.5;
+}
+
+.campaignsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .campaignsGrid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .campaignsGrid { grid-template-columns: 1fr; gap: 14px; }
+}
+
+.loading {
+  padding: 60px 24px;
+  text-align: center;
+  color: #637080;
+  font-size: 0.95rem;
+}
+
+.error {
+  padding: 16px 20px;
+  background: #fff0f0;
+  border: 1px solid #ffc5c5;
+  border-radius: 12px;
+  color: #c0392b;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.empty {
+  padding: 60px 24px;
+  text-align: center;
+  color: #637080;
+  font-size: 0.95rem;
+  background: #fff;
+  border-radius: 20px;
+  border: 1.5px dashed #e0e4ff;
 }

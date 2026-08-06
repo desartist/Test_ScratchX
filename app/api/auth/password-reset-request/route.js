@@ -59,6 +59,21 @@ export async function POST(request) {
       );
     }
 
+    // Store team accounts (Store_Manager/Store_Staff) don't have self-service
+    // password reset — their password is set directly by the business owner
+    // when the account is created, and Settings hides the change-password
+    // form for these roles too. Block the reset email here so a team member
+    // can't route around that via forgot-password.
+    if (["Store_Manager", "Store_Staff"].includes(account.role)) {
+      return NextResponse.json(
+        {
+          error:
+            'Team member accounts can\'t reset their own password. Contact your business owner to have it reset for you.',
+        },
+        { status: 403 }
+      );
+    }
+
     // Resend cooldown — stop the same account from spamming itself (or being
     // used to spam a real inbox) with repeated reset emails.
     const RESEND_COOLDOWN_MS = 60 * 1000;

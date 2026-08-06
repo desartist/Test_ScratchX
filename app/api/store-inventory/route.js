@@ -1,7 +1,7 @@
 import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
-import InventoryService from "@/lib/inventoryService";
-import { NotFoundError } from "@/lib/errors";
+import Store from "@/models/storeModel";
+import Campaign from "@/models/campaignModel";
 
 const STORE_TEAM_ROLES = ["Store_Manager", "Store_Staff"];
 
@@ -11,6 +11,10 @@ const STORE_TEAM_ROLES = ["Store_Manager", "Store_Staff"];
  * Store_Manager/Store_Staff's own store (allocated/used/redeemed/remaining,
  * per campaign). Both roles see the same data — inventory:allocate has no
  * store-level write semantics yet.
+ *
+ * Reads Campaign.assignedStores[] directly (see app/api/store-campaigns/route.js
+ * for why — the real campaign wizard never populates CampaignStoreMapping,
+ * which is what InventoryService.getStoreInventoryStatus reads).
  */
 export async function GET() {
   try {
@@ -32,14 +36,54 @@ export async function GET() {
       );
     }
 
-    const status = await InventoryService.getStoreInventoryStatus(account.storeId);
+    const store = await Store.findById(account.storeId).lean();
+    if (!store) {
+      return Response.json({ success: false, error: "Store not found" }, { status: 404 });
+    }
 
-    return Response.json({ success: true, ...status }, { status: 200 });
+    const campaignDocs = await Campaign.find({
+      "assignedStores.storeId": account.storeId,
+      "assignedStores.status": "active",
+    })
+      .select("campaignName status assignedStores.$")
+      .lean();
+
+    const campaignAllocations = campaignDocs.map((c) => {
+      const assignment = c.assignedStores[0];
+      return {
+        campaignId: c._id,
+        campaignName: c.campaignName,
+        allocated: assignment?.allocated_scratch_cards ?? 0,
+        used: assignment?.used_scratch_cards ?? 0,
+        redeemed: assignment?.redeemed_scratch_cards ?? 0,
+        remaining: assignment?.remaining_scratch_cards ?? 0,
+        status: c.status,
+      };
+    });
+
+    const totalAllocated = campaignAllocations.reduce((sum, c) => sum + c.allocated, 0);
+    const totalUsed = campaignAllocations.reduce((sum, c) => sum + c.used, 0);
+    const totalRedeemed = campaignAllocations.reduce((sum, c) => sum + c.redeemed, 0);
+    const storeTotal = store.total_scratch_cards || 0;
+
+    return Response.json(
+      {
+        success: true,
+        inventory: {
+          total: storeTotal,
+          allocated: totalAllocated,
+          used: totalUsed,
+          redeemed: totalRedeemed,
+          unallocated: Math.max(0, storeTotal - totalAllocated),
+          utilizationPercentage:
+            storeTotal > 0 ? Math.round(((totalUsed + totalRedeemed) / storeTotal) * 100) : 0,
+        },
+        campaignAllocations,
+      },
+      { status: 200 }
+    );
   } catch (err) {
     console.error("Error fetching store inventory:", err);
-    if (err instanceof NotFoundError) {
-      return Response.json({ success: false, error: err.message }, { status: 404 });
-    }
     return Response.json(
       { success: false, error: "Failed to fetch inventory" },
       { status: 500 }

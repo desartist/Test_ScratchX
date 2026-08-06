@@ -84,8 +84,9 @@ export default function SettingsPage() {
             <SettingsSubscriptionCard merchant={merchant} />
           )}
 
-          {/* Security Card */}
-          <SettingsSecurityCard />
+          {/* Security Card — password is set by the business owner for store
+              accounts, not self-serviceable, so hide it for Store_Manager/Staff */}
+          {!isStoreRole && <SettingsSecurityCard />}
 
           {/* Notification Preferences Card */}
           <SettingsNotificationCard />

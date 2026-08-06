@@ -92,6 +92,31 @@
   color: #155724;
 }
 
+.viewDetailsBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1.5px solid #e0e4ff;
+  border-radius: 10px;
+  color: #010f44;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-afacad);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.viewDetailsBtn:hover {
+  background: #f0f2ff;
+  border-color: #ef9e1b;
+  color: #ef9e1b;
+}
+
 .permissionList {
   margin: 0;
   padding-left: 18px;

@@ -1,82 +1,124 @@
 "use client";
 
-import React from "react";
-import { AlertCircle, Megaphone } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import CampaignCard from "@/components/dashboard/CampaignCard";
+import FilterTabs from "@/components/dashboard/FilterTabs";
+import SearchBar from "@/components/dashboard/SearchBar";
 import { useStoreCampaignsQuery } from "@/hooks/queries/useStoreCampaignsQuery";
-import LoadingState from "@/components/common/LoadingState";
 import styles from "./store-campaigns.module.css";
 
-const formatDate = (date) =>
-  date ? new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+// Same low-scratch threshold and status-calculation logic as the merchant's
+// own Campaigns page (app/(dashboard)/campaign/page.js), kept in sync so a
+// campaign shows the same status/badge everywhere.
+const LOW_SCRATCH_RATIO = 0.1;
+
+function getCalculatedStatus(campaign) {
+  const now = new Date();
+  const startDate = new Date(campaign.startDate);
+  const endDate = new Date(campaign.endDate);
+  if (campaign.status === "draft") return "draft";
+  if (endDate < now) return "ended";
+  if (startDate > now) return "scheduled";
+  return campaign.status || "active";
+}
+
+function isLowScratch(campaign) {
+  const allocated = Number(campaign.allocatedScratchCards || 0);
+  if (allocated <= 0) return false;
+  return Number(campaign.remainingScratchCards || 0) / allocated <= LOW_SCRATCH_RATIO;
+}
 
 export default function StoreCampaignsPage() {
-  const { data: campaigns, isPending: loading, error: queryError } = useStoreCampaignsQuery();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+
+  const { data: campaignsJson, isPending: loading, error: queryError } = useStoreCampaignsQuery();
+  const campaigns = useMemo(() => campaignsJson || [], [campaignsJson]);
   const error = queryError ? queryError.message : null;
 
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <LoadingState message="Loading campaigns..." />
-      </div>
-    );
-  }
+  const lowScratchCount = useMemo(() => campaigns.filter(isLowScratch).length, [campaigns]);
 
-  if (error) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.errorState}>
-          <AlertCircle size={40} />
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
+  const filteredCampaigns = useMemo(() => {
+    let filtered = campaigns;
+
+    if (searchQuery.trim()) {
+      filtered = filtered.filter((c) => (c.name || "").toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+
+    if (activeTab !== "all") {
+      filtered = filtered.filter((c) => {
+        const now = new Date();
+        const startDate = new Date(c.startDate);
+        const endDate = new Date(c.endDate);
+        switch (activeTab) {
+          case "active":
+            return now >= startDate && now <= endDate;
+          case "ending-soon": {
+            const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+            return daysLeft > 0 && daysLeft <= 30;
+          }
+          case "ended":
+            return now > endDate;
+          case "draft":
+            return c.status === "draft";
+          case "low-scratches":
+            return isLowScratch(c);
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  }, [campaigns, searchQuery, activeTab]);
+
+  const handleView = (campaignId) => {
+    router.push(`/store-campaigns/${campaignId}`);
+  };
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.pageTitle}>Campaigns</h1>
-        <p className={styles.pageSubtitle}>Campaigns currently allocated to your store</p>
+        <div>
+          <h1 className={styles.title}>Campaigns</h1>
+          <p className={styles.subtitle}>Campaigns currently allocated to your store</p>
+        </div>
       </div>
 
-      {campaigns.length === 0 ? (
-        <div className={styles.emptyState}>
-          <Megaphone size={40} />
-          <p>No campaigns are allocated to your store yet.</p>
+      <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search campaigns..." />
+
+      <FilterTabs activeTab={activeTab} onTabChange={setActiveTab} lowScratchCount={lowScratchCount} />
+
+      {loading ? (
+        <div className={styles.loading}>Loading campaigns...</div>
+      ) : error ? (
+        <div className={styles.error}>{error}</div>
+      ) : filteredCampaigns.length === 0 ? (
+        <div className={styles.empty}>
+          <p>No campaigns found</p>
         </div>
       ) : (
-        <div className={styles.list}>
-          {campaigns.map((c) => (
-            <div key={c._id} className={styles.card}>
-              <div className={styles.cardTop}>
-                <div>
-                  <h2 className={styles.campaignName}>{c.name}</h2>
-                  <p className={styles.dateRange}>
-                    {formatDate(c.startDate)} – {formatDate(c.endDate)}
-                  </p>
-                </div>
-                <span className={`${styles.statusBadge} ${styles[c.status] || ""}`}>{c.status}</span>
-              </div>
-
-              <div className={styles.statsRow}>
-                <div className={styles.stat}>
-                  <span className={styles.statValue}>{c.allocatedScratchCards}</span>
-                  <span className={styles.statLabel}>Allocated</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statValue}>{c.usedScratchCards}</span>
-                  <span className={styles.statLabel}>Used</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statValue}>{c.redeemedScratchCards}</span>
-                  <span className={styles.statLabel}>Redeemed</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statValue}>{c.remainingScratchCards}</span>
-                  <span className={styles.statLabel}>Remaining</span>
-                </div>
-              </div>
-            </div>
+        <div className={styles.campaignsGrid}>
+          {filteredCampaigns.map((c) => (
+            <CampaignCard
+              key={c._id}
+              id={c._id}
+              name={c.name}
+              startDate={c.startDate}
+              endDate={c.endDate}
+              status={getCalculatedStatus(c)}
+              storesCount={c.storeCount}
+              scratchesLeft={c.remainingScratchCards}
+              scratchesAllocated={c.allocatedScratchCards}
+              scratchesTotal={c.allocatedScratchCards}
+              scratchesClaimed={c.redeemedScratchCards}
+              priceRange={c.priceRange}
+              hasRanges={c.hasRanges}
+              readOnly
+              onView={handleView}
+            />
           ))}
         </div>
       )}
