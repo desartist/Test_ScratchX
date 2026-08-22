@@ -1,0 +1,316 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ffffff 0%, #ededed 100%);
+  padding: 32px 24px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header */
+.header {
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px 10px 16px;
+  border-radius: 999px;
+  background: #eef0ff;
+  border: none;
+  color: #010f44;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.backButton:hover { background: #dfe3ff; transform: translateX(-2px); }
+
+.statusActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.statusActionBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.suspendBtn { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.suspendBtn:hover:not(:disabled) { background: rgba(239, 68, 68, 0.18); }
+.activateBtn { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.activateBtn:hover:not(:disabled) { background: rgba(16, 185, 129, 0.18); }
+
+/* State screens */
+.loadingContainer, .errorState {
+  padding: 80px 24px;
+  text-align: center;
+  color: #6b7280;
+}
+.errorState svg { color: #ef4444; margin-bottom: 16px; }
+.retryButton {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: #ef9e1b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Hero card */
+.heroCard {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  background: white;
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: 0 4px 14px rgba(16, 24, 64, 0.06);
+  margin-bottom: 28px;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 22px;
+  flex-shrink: 0;
+  border: 3px solid #fff3e0;
+  box-shadow: 0 4px 12px rgba(239, 158, 27, 0.3);
+}
+
+.heroContent { min-width: 0; flex: 1; }
+
+.distributorName {
+  margin: 0;
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: #010f44;
+  letter-spacing: -0.3px;
+}
+
+.companyName { margin: 3px 0 0 0; font-size: 14px; color: #6b7280; }
+
+.headerBadges { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.badge-active { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.25); }
+.badge-pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.25); }
+.badge-inactive { background: rgba(107, 114, 128, 0.1); color: #6b7280; border-color: rgba(107, 114, 128, 0.25); }
+.badge-suspended { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.25); }
+.infoBadge { background: rgba(1, 15, 68, 0.05); color: #010f44; border-color: rgba(1, 15, 68, 0.12); }
+
+/* Section heading */
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 4px 0 16px 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #010f44;
+}
+.sectionHeading::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #ef9e1b 0%, #ff9500 100%);
+}
+
+/* Stat tiles */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 480px) {
+  .statsGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
+/* Inventory + Commission tiles */
+.twoColGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 900px) {
+  .twoColGrid { grid-template-columns: 1fr; }
+}
+
+.panelCard {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 4px 14px rgba(16, 24, 64, 0.06);
+}
+
+.panelTitle {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #010f44;
+}
+
+.planRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f1f3;
+}
+.planRow:last-child { border-bottom: none; }
+
+.planLabel { font-size: 13px; font-weight: 700; color: #010f44; }
+.planSub { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+.planValue { font-size: 16px; font-weight: 800; color: #010f44; }
+
+.commissionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f1f3;
+  font-size: 13px;
+}
+.commissionRow:last-child { border-bottom: none; }
+.commissionLabel { color: #6b7280; font-weight: 600; }
+.commissionValue { color: #010f44; font-weight: 800; }
+
+/* Retailers table */
+.tableSection {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+}
+.table { width: 100%; border-collapse: collapse; }
+.table thead { background: #f9fafb; border-bottom: 2px solid #e5e7eb; }
+.table th {
+  padding: 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.table tbody tr { border-bottom: 1px solid #e5e7eb; transition: background 0.2s ease; }
+.table tbody tr:hover { background: #f9fafb; }
+.table td { padding: 16px; font-size: 14px; color: #010f44; }
+
+.retailerName { margin: 0; font-size: 14px; font-weight: 600; color: #010f44; }
+.retailerEmail { margin: 4px 0 0 0; font-size: 12px; color: #9ca3af; }
+
+.viewLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #eef0ff;
+  color: #010f44;
+  transition: all 0.15s ease;
+}
+.viewLink:hover { background: #dfe3ff; }
+
+.emptyState {
+  padding: 60px 24px !important;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* Suspend/Activate confirmation modal */
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.confirmModal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+.confirmIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 24px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #dc2626;
+}
+.confirmIconGreen { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.confirmTitle { margin: 0 0 12px 0; font-size: 20px; font-weight: 700; color: #010f44; }
+.confirmMessage { margin: 0 0 32px 0; font-size: 14px; color: #6b7280; line-height: 1.6; }
+.confirmMessage strong { color: #010f44; font-weight: 700; }
+.confirmFooter { display: flex; gap: 12px; }
+.confirmCancelBtn {
+  flex: 1; padding: 12px 24px; background: white; border: 1px solid #e5e7eb;
+  border-radius: 8px; font-size: 14px; font-weight: 600; color: #010f44; cursor: pointer;
+}
+.confirmCancelBtn:hover { background: #f9fafb; border-color: #d1d5db; }
+.confirmActionBtn {
+  flex: 1; padding: 12px 24px; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 600; color: white; cursor: pointer;
+}
+.confirmActionBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+.confirmSuspendBtn { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.confirmActivateBtn { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .heroCard { flex-direction: column; align-items: flex-start; text-align: left; }
+  .tableSection { overflow-x: auto; }
+  .table { min-width: 640px; }
+}

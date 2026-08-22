@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Zap,
 } from "lucide-react";
+import { usePlatformSettingsQuery } from "@/hooks/queries/usePlatformSettingsQuery";
 import styles from "./support.module.css";
 
 const CONTACT_CARDS = [
@@ -62,6 +63,15 @@ const FAQS = [
 
 export default function SupportPage() {
   const [openFaq, setOpenFaq] = useState(null);
+  const { data: settingsData } = usePlatformSettingsQuery();
+  const contacts = settingsData?.supportContacts;
+  const contactCards = CONTACT_CARDS.map((card) => ({
+    ...card,
+    email:
+      card.title === "Sales & Demo"
+        ? contacts?.salesEmail || card.email
+        : contacts?.supportEmail || card.email,
+  }));
 
   return (
     <div className={styles.page}>
@@ -80,7 +90,7 @@ export default function SupportPage() {
 
       {/* ── Contact Cards ────────────────────────────────── */}
       <section className={styles.cardsGrid}>
-        {CONTACT_CARDS.map((card) => (
+        {contactCards.map((card) => (
           <div key={card.email} className={styles.contactCard}>
             <div
               className={styles.contactIcon}

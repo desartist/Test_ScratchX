@@ -1,0 +1,107 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fff 0%, #ededed 100%);
+  padding: 32px 24px;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header { margin-bottom: 24px; }
+.header h1 { margin: 0 0 8px 0; font-size: 32px; font-weight: 700; color: #010f44; }
+.header p { margin: 0; font-size: 16px; color: #6b7280; }
+
+.scopeNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #4338ca;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+.scopeNote svg { flex-shrink: 0; margin-top: 1px; }
+
+.section {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.sectionHeader { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.sectionHeader svg { color: #ef9e1b; }
+.sectionHeader h3 { margin: 0; font-size: 16px; font-weight: 700; color: #010f44; }
+.sectionDesc { margin: 0 0 20px 0; font-size: 13px; color: #9ca3af; }
+
+.formGroup { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.formGroup:last-child { margin-bottom: 0; }
+.formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.formLabel { font-size: 13px; font-weight: 600; color: #010f44; }
+.formInput {
+  padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 8px;
+  font-size: 14px; font-family: inherit;
+}
+.formInput:focus { outline: none; border-color: #ef9e1b; }
+.formHint { font-size: 12px; color: #9ca3af; }
+
+.toggleRow {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 4px 0;
+}
+.toggleLabel { font-size: 14px; font-weight: 600; color: #010f44; }
+.toggleDesc { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background-color: #e5e7eb; border-radius: 999px; transition: 0.2s;
+}
+.slider:before {
+  position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+  background-color: white; border-radius: 50%; transition: 0.2s;
+}
+.switch input:checked + .slider { background-color: #ef9e1b; }
+.switch input:checked + .slider:before { transform: translateX(20px); }
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #fee2e2;
+  color: #c0392b;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.logoutButton:hover { background: #fecaca; }
+.logoutButton:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.footer {
+  display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;
+}
+.saveButton {
+  padding: 12px 28px; background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white; border: none; border-radius: 10px; font-size: 14px;
+  font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 158, 27, 0.3);
+}
+.saveButton:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.savedNote { font-size: 13px; color: #10b981; font-weight: 600; align-self: center; }
+
+@media (max-width: 640px) {
+  .page { padding: 20px 16px; }
+  .header h1 { font-size: 24px; }
+  .formRow { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,70 @@
+.wrap {
+  width: 100%;
+}
+
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-12, 12px);
+  margin: 0 0 12px 0;
+  padding: 0;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm, 13px);
+  font-weight: 600;
+  color: var(--color-muted, #637080);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.svg {
+  width: 100%;
+  display: block;
+}
+
+.tickLabel {
+  font-family: var(--font-afacad, inherit);
+  font-size: 10px;
+  fill: var(--color-muted, #637080);
+  font-weight: 600;
+}
+
+.hoverLine {
+  stroke: rgba(1, 15, 68, 0.15);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.tipTitle {
+  font-family: var(--font-afacad, inherit);
+  font-size: 9px;
+  fill: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+}
+
+.tipText {
+  font-family: var(--font-afacad, inherit);
+  font-size: 10px;
+  fill: #ffffff;
+  font-weight: 700;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  font-size: var(--font-size-sm, 13px);
+  color: var(--color-muted, #637080);
+  font-weight: 600;
+}

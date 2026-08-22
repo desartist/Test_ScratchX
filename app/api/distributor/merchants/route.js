@@ -2,6 +2,9 @@ import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
 import Account from "@/models/accountModel";
 import Subscription from "@/models/subscriptionModel";
+import Store from "@/models/storeModel";
+import Campaign from "@/models/campaignModel";
+import CustomerParticipation from "@/models/customerParticipationModel";
 import bcrypt from "bcrypt";
 import { inventoryService } from "@/lib/services/distributor";
 import scratchEntitlementService from "@/lib/scratchEntitlementService";
@@ -97,10 +100,59 @@ export async function GET(request) {
   const subMap = {};
   for (const s of subs) subMap[s.merchantId.toString()] = s;
 
-  const enriched = merchants.map((m) => ({
-    ...m.toObject(),
-    subscription: subMap[m._id.toString()] ?? null,
-  }));
+  // Platform-wide extras (distributor name, store/campaign/customer counts) —
+  // only computed for Super_Admin's view, since Distributor's own "my
+  // retailers" page never needed and never showed these before.
+  let distributorNameMap = {};
+  let storeCountMap = {};
+  let campaignCountMap = {};
+  let customerCountMap = {};
+  if (account.role === "Super_Admin" && ids.length > 0) {
+    const distributorIds = [
+      ...new Set(merchants.map((m) => m.parentId).filter(Boolean).map(String)),
+    ];
+    const [distributors, storeCounts, campaignCounts, customerCounts] = await Promise.all([
+      distributorIds.length
+        ? Account.find({ _id: { $in: distributorIds } }).select("name profile.companyName")
+        : [],
+      Store.aggregate([
+        { $match: { merchant_id: { $in: ids }, isDeleted: { $ne: true } } },
+        { $group: { _id: "$merchant_id", count: { $sum: 1 } } },
+      ]),
+      Campaign.aggregate([
+        { $match: { merchantId: { $in: ids } } },
+        { $group: { _id: "$merchantId", count: { $sum: 1 } } },
+      ]),
+      CustomerParticipation.aggregate([
+        { $match: { merchant_id: { $in: ids } } },
+        { $group: { _id: "$merchant_id", mobiles: { $addToSet: "$customer_mobile" } } },
+      ]),
+    ]);
+    distributorNameMap = Object.fromEntries(
+      distributors.map((d) => [String(d._id), d.profile?.companyName || d.name]),
+    );
+    storeCountMap = Object.fromEntries(storeCounts.map((s) => [String(s._id), s.count]));
+    campaignCountMap = Object.fromEntries(campaignCounts.map((c) => [String(c._id), c.count]));
+    customerCountMap = Object.fromEntries(
+      customerCounts.map((c) => [String(c._id), c.mobiles.length]),
+    );
+  }
+
+  const enriched = merchants.map((m) => {
+    const base = {
+      ...m.toObject(),
+      subscription: subMap[m._id.toString()] ?? null,
+    };
+    if (account.role !== "Super_Admin") return base;
+    const idStr = String(m._id);
+    return {
+      ...base,
+      distributorName: m.parentId ? distributorNameMap[String(m.parentId)] || null : null,
+      storeCount: storeCountMap[idStr] || 0,
+      campaignCount: campaignCountMap[idStr] || 0,
+      customerCount: customerCountMap[idStr] || 0,
+    };
+  });
 
   return Response.json(
     {

@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, #fff 0%, #ededed 100%);
   padding: 32px 24px;
 }
 
@@ -55,11 +55,11 @@
 }
 
 .filterTab:hover {
-  color: #3b82f6;
+  color: #ef9e1b;
 }
 
 .filterTab.active {
-  background: #3b82f6;
+  background: #ef9e1b;
   color: white;
 }
 
@@ -69,6 +69,17 @@
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
   margin-bottom: 32px;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 480px) {
+  .statGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 }
 
 .metricCard {
@@ -89,7 +100,7 @@
 }
 
 .metric-blue {
-  border-left-color: #3b82f6;
+  border-left-color: #ef9e1b;
 }
 
 .metric-green {
@@ -97,11 +108,11 @@
 }
 
 .metric-purple {
-  border-left-color: #8b5cf6;
+  border-left-color: #010f44;
 }
 
 .metric-orange {
-  border-left-color: #f59e0b;
+  border-left-color: #ef9e1b;
 }
 
 .metricIcon {
@@ -112,8 +123,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: rgba(239, 158, 27, 0.1);
+  color: #ef9e1b;
 }
 
 .metric-green .metricIcon {
@@ -122,17 +133,18 @@
 }
 
 .metric-purple .metricIcon {
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
+  background: rgba(1, 15, 68, 0.08);
+  color: #010f44;
 }
 
 .metric-orange .metricIcon {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  background: rgba(239, 158, 27, 0.1);
+  color: #ef9e1b;
 }
 
 .metricContent {
   flex: 1;
+  min-width: 0;
 }
 
 .metricLabel {
@@ -149,6 +161,7 @@
   font-size: 28px;
   font-weight: 700;
   color: #010f44;
+  overflow-wrap: break-word;
 }
 
 /* Panels */
@@ -196,7 +209,7 @@
 .trendBar {
   width: 100%;
   max-width: 28px;
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(180deg, #ef9e1b 0%, #ff9500 100%);
   border-radius: 4px 4px 0 0;
   transition: height 0.3s ease;
 }
@@ -284,7 +297,7 @@
 
 .retryButton {
   padding: 10px 20px;
-  background: #3b82f6;
+  background: #ef9e1b;
   color: white;
   border: none;
   border-radius: 6px;
@@ -295,8 +308,112 @@
 }
 
 .retryButton:hover {
-  background: #2563eb;
+  background: #d98e14;
 }
+
+/* Payments table */
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.panelHeader .panelTitle { margin: 0; }
+
+.addPaymentBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.addPaymentBtn:hover { filter: brightness(1.05); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
+}
+.badge-success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.badge-pending, .badge-created { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.badge-failed { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.badge-refunded { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+
+.rowActions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.actionBtn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #010f44;
+}
+.actionBtn:hover { background: #f9fafb; }
+.actionBtnDanger { color: #ef4444; border-color: rgba(239, 68, 68, 0.25); }
+.actionBtnDanger:hover { background: rgba(239, 68, 68, 0.06); }
+
+.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px 0 0; }
+.pageButton {
+  padding: 8px 16px; border: 1px solid #e5e7eb; background: white;
+  border-radius: 8px; font-size: 13px; font-weight: 600; color: #010f44; cursor: pointer;
+}
+.pageButton:disabled { opacity: 0.5; cursor: not-allowed; }
+.pageLabel { font-size: 13px; color: #6b7280; }
+
+/* Manual payment modal */
+.modalOverlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
+}
+.modal {
+  background: white; border-radius: 16px; width: 100%; max-width: 460px;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+.modalHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px; border-bottom: 1px solid #e5e7eb;
+}
+.modalTitle { margin: 0; font-size: 18px; font-weight: 700; color: #010f44; }
+.modalClose {
+  background: none; border: none; cursor: pointer; color: #6b7280;
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 6px;
+}
+.modalClose:hover { background: #f9fafb; }
+.modalBody { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.formGroup { display: flex; flex-direction: column; gap: 6px; }
+.formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.formLabel { font-size: 13px; font-weight: 600; color: #010f44; }
+.formInput {
+  padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 8px;
+  font-size: 14px; font-family: inherit;
+}
+.formInput:focus { outline: none; border-color: #ef9e1b; }
+.formError {
+  padding: 10px 14px; background: #fee2e2; border: 1px solid #fca5a5;
+  border-radius: 8px; color: #c0392b; font-size: 13px;
+}
+.modalFooter {
+  display: flex; gap: 12px; padding: 20px 24px; border-top: 1px solid #e5e7eb;
+}
+.cancelButton {
+  flex: 1; padding: 12px 24px; background: white; border: 1px solid #e5e7eb;
+  border-radius: 8px; font-size: 14px; font-weight: 600; color: #010f44; cursor: pointer;
+}
+.submitButton {
+  flex: 1; padding: 12px 24px; background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  border: none; border-radius: 8px; font-size: 14px; font-weight: 600; color: white; cursor: pointer;
+}
+.submitButton:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Responsive */
 @media (max-width: 1024px) {
@@ -316,6 +433,22 @@
 
   .metricsGrid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .metricCard {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .metricIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .metricValue {
+    font-size: 22px;
   }
 
   .invoiceSummary {
@@ -326,5 +459,9 @@
   .table td {
     padding: 10px 8px;
     font-size: 13px;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
   }
 }

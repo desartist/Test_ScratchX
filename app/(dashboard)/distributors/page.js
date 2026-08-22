@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   Users,
   UserCheck,
@@ -18,6 +19,7 @@ import {
   useCreateDistributorMutation,
   useUpdateDistributorStatusMutation,
 } from '@/hooks/queries/useAdminDistributorsQuery';
+import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './distributors.module.css';
 
@@ -135,36 +137,10 @@ export default function DistributorsPage() {
         </div>
 
         {/* Metrics */}
-        <div className={styles.metricsGrid}>
-          <div className={`${styles.metricCard} ${styles['metric-blue']}`}>
-            <div className={styles.metricIcon}>
-              <Users size={24} />
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Total Distributors</p>
-              <p className={styles.metricValue}>{metrics.total}</p>
-            </div>
-          </div>
-
-          <div className={`${styles.metricCard} ${styles['metric-green']}`}>
-            <div className={styles.metricIcon}>
-              <UserCheck size={24} />
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Active</p>
-              <p className={styles.metricValue}>{metrics.active}</p>
-            </div>
-          </div>
-
-          <div className={`${styles.metricCard} ${styles['metric-red']}`}>
-            <div className={styles.metricIcon}>
-              <Ban size={24} />
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Suspended</p>
-              <p className={styles.metricValue}>{metrics.suspended}</p>
-            </div>
-          </div>
+        <div className={styles.statGrid}>
+          <StatCard icon={<Users />} value={metrics.total} label="Total Distributors" />
+          <StatCard icon={<UserCheck />} value={metrics.active} label="Active" tone="green" />
+          <StatCard icon={<Ban />} value={metrics.suspended} label="Suspended" tone="red" />
         </div>
 
         {/* Search & Filters */}
@@ -213,7 +189,8 @@ export default function DistributorsPage() {
                   <th>Contact</th>
                   <th>Company</th>
                   <th>Territory</th>
-                  <th>Commission</th>
+                  <th>Rate</th>
+                  <th>Total Earned</th>
                   <th>Status</th>
                   <th>Joined</th>
                   <th>Actions</th>
@@ -222,7 +199,7 @@ export default function DistributorsPage() {
               <tbody>
                 {distributors.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className={styles.emptyState}>
+                    <td colSpan="9" className={styles.emptyState}>
                       <Users size={32} />
                       <p>No distributors found</p>
                       <button className={styles.createLink} onClick={() => setShowModal(true)}>
@@ -250,6 +227,7 @@ export default function DistributorsPage() {
                           ? `${distributor.profile.commissionRate}%`
                           : 'Default (0%)'}
                       </td>
+                      <td>₹{Number(distributor.totalCommissionEarned || 0).toLocaleString('en-IN')}</td>
                       <td>
                         <span
                           className={`${styles.badge} ${styles[`badge-${distributor.status || 'pending'}`]}`}
@@ -268,15 +246,24 @@ export default function DistributorsPage() {
                           : '—'}
                       </td>
                       <td>
-                        <button
-                          className={`${styles.statusToggleBtn} ${
-                            distributor.status === 'suspended' ? styles.activate : styles.suspend
-                          }`}
-                          onClick={() => handleToggleStatus(distributor)}
-                          disabled={statusMutation.isPending}
-                        >
-                          {distributor.status === 'suspended' ? 'Activate' : 'Suspend'}
-                        </button>
+                        <div className={styles.rowActions}>
+                          <Link
+                            href={`/distributors/${distributor._id}`}
+                            className={styles.viewIconBtn}
+                            title="View details"
+                          >
+                            <Eye size={16} />
+                          </Link>
+                          <button
+                            className={`${styles.statusToggleBtn} ${
+                              distributor.status === 'suspended' ? styles.activate : styles.suspend
+                            }`}
+                            onClick={() => handleToggleStatus(distributor)}
+                            disabled={statusMutation.isPending}
+                          >
+                            {distributor.status === 'suspended' ? 'Activate' : 'Suspend'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

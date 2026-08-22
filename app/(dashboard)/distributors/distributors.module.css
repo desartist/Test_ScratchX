@@ -61,6 +61,17 @@
   margin-bottom: 32px;
 }
 
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 480px) {
+  .statGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
 .metricCard {
   background: white;
   border-radius: 16px;
@@ -114,6 +125,7 @@
 
 .metricContent {
   flex: 1;
+  min-width: 0;
 }
 
 .metricLabel {
@@ -130,6 +142,7 @@
   font-size: 28px;
   font-weight: 700;
   color: #010f44;
+  overflow-wrap: break-word;
 }
 
 /* Filter Section */
@@ -309,6 +322,27 @@
   background: rgba(107, 114, 128, 0.1);
   color: #6b7280;
 }
+
+/* Row actions */
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.viewIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #eef0ff;
+  color: #010f44;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.viewIconBtn:hover { background: #dfe3ff; }
 
 /* Status toggle */
 .statusToggleBtn {

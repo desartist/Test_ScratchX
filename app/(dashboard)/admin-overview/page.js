@@ -6,20 +6,50 @@ import {
   Users,
   AlertCircle,
   Plus,
-  BarChart3,
   Shield,
-  ArrowRight,
-  Activity,
-  UserCheck,
+  BarChart3,
   Zap,
   X,
   Eye,
   EyeOff,
+  Store as StoreIcon,
+  Megaphone,
+  Wallet,
+  Ticket,
+  Gift,
+  AlertTriangle,
+  Clock,
+  FileText,
+  UsersRound,
+  ClipboardList,
+  Building2,
+  Repeat,
 } from 'lucide-react';
 import { useSuperAdminDashboardQuery } from '@/hooks/queries/useSuperAdminDashboardQuery';
 import { useCreateDistributorMutation } from '@/hooks/queries/useAdminDistributorsQuery';
+import { useAdminAnalyticsQuery } from '@/hooks/queries/useAdminAnalyticsQuery';
+import { useAdminCampaignsQuery } from '@/hooks/queries/useAdminCampaignsQuery';
+import { useAdminActivityTrendQuery } from '@/hooks/queries/useAdminActivityTrendQuery';
+import { useAdminDashboardChartsQuery } from '@/hooks/queries/useAdminDashboardChartsQuery';
+import { useAdminCustomersQuery } from '@/hooks/queries/useAdminCustomersQuery';
+import { useDistributorMerchantsQuery } from '@/hooks/queries/useDistributorMerchantsQuery';
+import { MultiLineChart, DonutChart, HBarList } from '@/components/dashboard/smart/charts';
+import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './admin.module.css';
+
+const CAMPAIGN_CONSUMPTION_COLORS = ['#6d5df6', '#ef9e1b', '#00b0b1', '#4c6ef5', '#b9b0f7'];
+
+function formatCurrency(amount) {
+  return `₹${Number(amount || 0).toLocaleString('en-IN')}`;
+}
+
+function formatDate(date) {
+  if (!date) return '—';
+  return new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+const CAMPAIGN_STATUS_LABEL = { draft: 'Draft', active: 'Active', paused: 'Paused', ended: 'Ended' };
 
 const EMPTY_FORM = {
   name: '',
@@ -35,6 +65,12 @@ const EMPTY_FORM = {
 export default function AdminOverviewPage() {
   const { data, isPending: loading, error: queryError, refetch } = useSuperAdminDashboardQuery();
   const error = queryError ? queryError.message || 'Failed to load admin dashboard' : null;
+  const { data: analytics } = useAdminAnalyticsQuery(30);
+  const { data: topCampaignsData } = useAdminCampaignsQuery({ limit: 3, status: 'active' });
+  const { data: activityData } = useAdminActivityTrendQuery(30);
+  const { data: chartsData } = useAdminDashboardChartsQuery(30);
+  const { data: customersMeta } = useAdminCustomersQuery({ limit: 1 });
+  const { data: merchantsMeta } = useDistributorMerchantsQuery({ limit: 1 });
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -46,7 +82,46 @@ export default function AdminOverviewPage() {
     totalDistributors: data?.roleCounts?.distributors || 0,
     totalMerchants: data?.roleCounts?.merchants || 0,
   };
+  const platform = data?.platform || {
+    totalStores: 0,
+    activeStores: 0,
+    totalCampaigns: 0,
+    activeCampaigns: 0,
+    totalCustomers: 0,
+    totalRedemptions: 0,
+    scratchAllocated: 0,
+    scratchUsed: 0,
+    scratchRemaining: 0,
+  };
+  const health = data?.health || { expiringSubscriptions30d: 0 };
+  const revenue30d = analytics?.revenue?.total || 0;
+  const pendingInvoices = analytics?.invoices?.outstanding || 0;
   const recentUsers = data?.recentUsers || [];
+
+  const topCampaigns = topCampaignsData?.campaigns || [];
+  const trend = activityData?.trend || [];
+  const campaignStatus = activityData?.campaignStatus || { draft: 0, active: 0, paused: 0, ended: 0 };
+  const totalCampaignsForStatus = Object.values(campaignStatus).reduce((sum, v) => sum + v, 0);
+
+  const scratchUsage = (chartsData?.scratchUsage || []).map((d) => ({
+    label: d.date ? new Date(d.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : '',
+    value: d.used,
+  }));
+  const campaignConsumption = (chartsData?.campaignConsumption || []).map((c, i) => ({
+    label: c.name,
+    value: c.used,
+    color: CAMPAIGN_CONSUMPTION_COLORS[i % CAMPAIGN_CONSUMPTION_COLORS.length],
+  }));
+  const consumptionTotal = campaignConsumption.reduce((sum, c) => sum + c.value, 0);
+  const storeWiseItems = (chartsData?.storeWise || []).map((s) => ({ label: s.name, value: s.used }));
+  const storeWiseTotal = storeWiseItems.reduce((sum, s) => sum + s.value, 0);
+
+  const wholesalerCount = merchantsMeta?.metrics?.wholesale || 0;
+  const totalCustomersForRetention = customersMeta?.metrics?.totalCustomers || 0;
+  const returningCustomers = customersMeta?.metrics?.returningCustomers || 0;
+  const retentionRate = totalCustomersForRetention > 0
+    ? Math.round((returningCustomers / totalCustomersForRetention) * 100)
+    : 0;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -127,48 +202,267 @@ export default function AdminOverviewPage() {
           </button>
         </div>
 
-        {/* Metrics Grid */}
-        <div className={styles.metricsGrid}>
-          {/* Total Distributors */}
-          <div className={`${styles.metricCard} ${styles['metric-green']}`}>
-            <div className={styles.metricIcon}>
-              <UserCheck size={24} />
-            </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Distributors</p>
-              <p className={styles.metricValue}>{metrics.totalDistributors}</p>
-            </div>
+        {/* Section 1: Platform Overview */}
+        <h2 className={styles.sectionTitle}>Platform Overview</h2>
+        <div className={styles.statGrid}>
+          <StatCard
+            href="/retailers"
+            icon={<UsersRound />}
+            value={metrics.totalMerchants}
+            label="Retailers"
+          />
+          <StatCard
+            href="/distributors"
+            icon={<Users />}
+            value={metrics.totalDistributors}
+            label="Distributors"
+          />
+          <StatCard
+            href="/campaign-intelligence"
+            icon={<Megaphone />}
+            value={`${platform.activeCampaigns} / ${platform.totalCampaigns}`}
+            label="Live Campaigns"
+          />
+          <StatCard
+            href="/revenue"
+            icon={<Wallet />}
+            value={formatCurrency(revenue30d)}
+            label="Revenue (30d)"
+          />
+        </div>
+
+        {/* Section 2: Engagement */}
+        <h2 className={styles.subsectionTitle}>Engagement</h2>
+        <div className={styles.statGrid}>
+          <StatCard
+            href="/admin-customers"
+            icon={<Users />}
+            value={platform.totalCustomers.toLocaleString('en-IN')}
+            label="Customers"
+          />
+          <StatCard
+            href="/scratch-economy"
+            icon={<Ticket />}
+            value={`${platform.scratchUsed.toLocaleString('en-IN')} / ${platform.scratchAllocated.toLocaleString('en-IN')}`}
+            label="Scratches Used"
+          />
+          <StatCard
+            href="/admin-redemptions"
+            icon={<Gift />}
+            value={platform.totalRedemptions.toLocaleString('en-IN')}
+            label="Redemptions"
+          />
+          <StatCard
+            href="/admin-stores"
+            icon={<StoreIcon />}
+            value={`${platform.activeStores} / ${platform.totalStores}`}
+            label="Active Stores"
+          />
+          <StatCard
+            href="/retailers"
+            icon={<Building2 />}
+            value={wholesalerCount}
+            label="Wholesalers"
+          />
+          <StatCard
+            href="/admin-customers"
+            icon={<Repeat />}
+            value={`${retentionRate}%`}
+            label="Customer Retention"
+            subtitle={`${returningCustomers.toLocaleString('en-IN')} of ${totalCustomersForRetention.toLocaleString('en-IN')} return`}
+          />
+        </div>
+
+        {/* Section 3: Platform Health */}
+        <h2 className={styles.subsectionTitle}>Platform Health</h2>
+        <div className={styles.statGrid}>
+          <StatCard
+            href="/subscriptions"
+            tone="red"
+            icon={<Clock />}
+            value={health.expiringSubscriptions30d}
+            label="Expiring Subscriptions (30d)"
+          />
+          <StatCard
+            href="/scratch-economy"
+            tone="red"
+            icon={<AlertTriangle />}
+            value="View report"
+            label="Low Scratch Balances"
+          />
+          <StatCard
+            href="/revenue"
+            tone="red"
+            icon={<FileText />}
+            value={pendingInvoices}
+            label="Outstanding Invoices"
+          />
+        </div>
+
+        {/* Quick Actions */}
+        <h2 className={styles.subsectionTitle}>Quick Actions</h2>
+        <div className={styles.statGrid}>
+          <StatCard
+            href="/admin-stores"
+            icon={<StoreIcon />}
+            value={String(platform.activeStores).padStart(2, '0')}
+            label="Stores"
+            subtitle={`${platform.activeStores} active out of ${platform.totalStores}`}
+          />
+          <StatCard
+            href="/campaign-intelligence"
+            icon={<Megaphone />}
+            value={String(platform.totalCampaigns).padStart(2, '0')}
+            label="Campaigns"
+            subtitle={`${platform.activeCampaigns} campaign${platform.activeCampaigns === 1 ? '' : 's'} live now`}
+          />
+          <StatCard
+            href="/admin-support"
+            icon={<ClipboardList />}
+            value=""
+            label="Support Tickets"
+            subtitle="Review open support & escalations"
+          />
+          <StatCard
+            href="/admin-team"
+            icon={<Users />}
+            value=""
+            label="Team & Roles"
+            subtitle="Manage internal admin staff access"
+          />
+        </div>
+
+        {/* Top Campaigns */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Top Campaigns</h2>
+            <Link href="/campaign-intelligence" className={styles.viewAllLink}>View all</Link>
           </div>
 
-          {/* Total Merchants */}
-          <div className={`${styles.metricCard} ${styles['metric-purple']}`}>
-            <div className={styles.metricIcon}>
-              <Activity size={24} />
+          {topCampaigns.length === 0 ? (
+            <p className={styles.emptyNote}>No active campaigns right now.</p>
+          ) : (
+            <div className={styles.topCampaignsList}>
+              {topCampaigns.map((c) => {
+                const allocationPct = c.allocated > 0 ? Math.min(100, Math.round((c.used / c.allocated) * 100)) : 0;
+                const remaining = Math.max(0, c.allocated - c.used);
+                return (
+                  <div key={c._id} className={styles.topCampaignCard}>
+                    <div className={styles.topCampaignHeader}>
+                      <div>
+                        <h3 className={styles.topCampaignName}>{c.name}</h3>
+                        <p className={styles.topCampaignMeta}>{c.merchantName} &middot; {formatDate(c.startDate)} - {formatDate(c.endDate)}</p>
+                      </div>
+                      <span className={`${styles.statusBadge} ${styles[`status-${c.status}`]}`}>{CAMPAIGN_STATUS_LABEL[c.status] || c.status}</span>
+                    </div>
+
+                    <div className={styles.topCampaignStats}>
+                      <span><StoreIcon size={14} /> {c.storeCount} Store{c.storeCount === 1 ? '' : 's'}</span>
+                      <span><Gift size={14} /> {c.redemptionCount} Redemptions</span>
+                    </div>
+
+                    <div className={styles.allocationBlock}>
+                      <div className={styles.allocationLabelRow}>
+                        <span>Scratch Allocation</span>
+                        <span>{c.used.toLocaleString('en-IN')} / {c.allocated.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className={styles.progressTrack}>
+                        <div className={styles.progressFill} style={{ width: `${allocationPct}%` }} />
+                      </div>
+                      <span className={styles.allocationRemaining}>{remaining.toLocaleString('en-IN')} left</span>
+                    </div>
+
+                    <Link href="/campaign-intelligence" className={styles.topCampaignViewBtn}>View</Link>
+                  </div>
+                );
+              })}
             </div>
-            <div className={styles.metricContent}>
-              <p className={styles.metricLabel}>Merchants</p>
-              <p className={styles.metricValue}>{metrics.totalMerchants}</p>
+          )}
+        </div>
+
+        {/* Charts: Activity Overview + Campaign Status */}
+        <div className={styles.chartsGrid}>
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>Activity Overview</h2>
+              <span className={styles.chartRangeNote}>Last 30 Days</span>
             </div>
+            <MultiLineChart
+              labels={trend.map((t) => t.label)}
+              series={[
+                { name: 'Scans', color: '#ef9e1b', data: trend.map((t) => t.scans) },
+                { name: 'Participations', color: '#010f44', data: trend.map((t) => t.participations) },
+                { name: 'Redemptions', color: '#00b0b1', data: trend.map((t) => t.redemptions) },
+              ]}
+              ariaLabel="Platform activity over the last 30 days"
+            />
+          </div>
+
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>Campaign Status</h2>
+            <DonutChart
+              segments={[
+                { label: 'Active', value: campaignStatus.active, color: '#ef9e1b' },
+                { label: 'Draft', value: campaignStatus.draft, color: '#010f44' },
+                { label: 'Paused', value: campaignStatus.paused, color: '#00b0b1' },
+                { label: 'Ended', value: campaignStatus.ended, color: '#9ca3af' },
+              ]}
+              centerLabel={totalCampaignsForStatus}
+              centerSubLabel="Total"
+              ariaLabel="Campaign status breakdown"
+            />
           </div>
         </div>
 
-        {/* Admin Actions */}
-        <div className={styles.actionsSection}>
-          <h2 className={styles.sectionTitle}>Admin Actions</h2>
-          <div className={styles.actionsGrid}>
-            <Link href="/distributors" className={styles.actionCard}>
-              <div className={styles.actionIcon}>👥</div>
-              <h3>Manage Distributors</h3>
-              <p>View and manage distributor accounts</p>
-              <ArrowRight size={16} />
-            </Link>
-            <Link href="/retailers" className={styles.actionCard}>
-              <div className={styles.actionIcon}>🏢</div>
-              <h3>Manage Merchants</h3>
-              <p>View and manage merchant accounts</p>
-              <ArrowRight size={16} />
-            </Link>
+        {/* Charts: Scratch Consumption + Campaign-wise Consumption */}
+        <div className={styles.chartsGrid}>
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>Scratch Consumption</h2>
+              <span className={styles.chartRangeNote}>Last 30 Days</span>
+            </div>
+            <MultiLineChart
+              labels={scratchUsage.map((d) => d.label)}
+              series={[{ name: 'Scratches Used', color: '#6d5df6', data: scratchUsage.map((d) => d.value) }]}
+              ariaLabel="Daily scratch usage over the last 30 days"
+            />
           </div>
+
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>Campaign-wise Consumption</h2>
+            {campaignConsumption.length === 0 ? (
+              <p className={styles.emptyNote}>No scratch usage recorded yet.</p>
+            ) : (
+              <DonutChart
+                segments={campaignConsumption}
+                centerLabel={consumptionTotal.toLocaleString('en-IN')}
+                centerSubLabel="Used"
+                ariaLabel="Top campaigns by scratch consumption"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Store-wise Performance */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>Store-wise Performance</h2>
+          {storeWiseItems.length === 0 ? (
+            <p className={styles.emptyNote}>No store-level scratch usage recorded yet.</p>
+          ) : (
+            <>
+              <div className={styles.statRow}>
+                <div className={styles.statRowItem}>
+                  <span className={styles.statRowValue}>{storeWiseTotal.toLocaleString('en-IN')}</span>
+                  <span className={styles.statRowLabel}>Total Scratches Used</span>
+                </div>
+                <div className={styles.statRowItem}>
+                  <span className={styles.statRowValue}>{storeWiseItems.length}</span>
+                  <span className={styles.statRowLabel}>Top Stores Shown</span>
+                </div>
+              </div>
+              <HBarList items={storeWiseItems} ariaLabel="Top stores by scratch usage" />
+            </>
+          )}
         </div>
 
         {/* Recent Signups */}
@@ -187,7 +481,7 @@ export default function AdminOverviewPage() {
 
                   <div className={styles.activityContent}>
                     <p className={styles.activityDescription}>
-                      {`${user.firstName} ${user.lastName}`.trim() || user.email}
+                      {user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
                     </p>
                     <p className={styles.activityTime}>
                       {new Date(user.createdAt).toLocaleTimeString('en-IN', {

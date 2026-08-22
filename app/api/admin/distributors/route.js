@@ -1,7 +1,9 @@
 import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
 import Account from "@/models/accountModel";
+import Commission from "@/models/commissionModel";
 import bcrypt from "bcrypt";
+import { logAdminAction } from "@/lib/services/platformAuditService";
 
 function superAdminOnly(account) {
   if (account.role !== "Super_Admin") {
@@ -49,10 +51,26 @@ export async function GET(request) {
     Account.countDocuments({ role: "Distributor" }),
   ]);
 
+  // Commission earned per distributor on this page (Total Earned column).
+  const distributorIds = distributors.map((d) => d._id);
+  const commissionAgg = distributorIds.length
+    ? await Commission.aggregate([
+        { $match: { distributorId: { $in: distributorIds } } },
+        { $group: { _id: "$distributorId", totalEarning: { $sum: "$totalEarning" } } },
+      ])
+    : [];
+  const commissionMap = Object.fromEntries(
+    commissionAgg.map((c) => [String(c._id), c.totalEarning]),
+  );
+  const enriched = distributors.map((d) => ({
+    ...d.toObject(),
+    totalCommissionEarned: commissionMap[String(d._id)] || 0,
+  }));
+
   return Response.json(
     {
       success: true,
-      distributors,
+      distributors: enriched,
       total,
       page,
       limit,
@@ -153,15 +171,28 @@ export async function PATCH(request) {
     );
   }
 
+  const previous = await Account.findOne({ _id: id, role: "Distributor" }).select("status name profile.companyName");
+  if (!previous) {
+    return Response.json({ success: false, error: "Distributor not found" }, { status: 404 });
+  }
+
   const distributor = await Account.findOneAndUpdate(
     { _id: id, role: "Distributor" },
     { status },
     { new: true, select: "-password -__v" },
   );
 
-  if (!distributor) {
-    return Response.json({ success: false, error: "Distributor not found" }, { status: 404 });
-  }
+  await logAdminAction({
+    account,
+    module: "Distributors",
+    action: `Changed distributor status: ${previous.status} → ${status}`,
+    request,
+    targetType: "Account",
+    targetId: distributor._id,
+    targetLabel: distributor.profile?.companyName || distributor.name,
+    before: { status: previous.status },
+    after: { status },
+  });
 
   return Response.json({ success: true, distributor }, { status: 200 });
 }

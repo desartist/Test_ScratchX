@@ -129,6 +129,7 @@
 
 .metricContent {
   flex: 1;
+  min-width: 0;
 }
 
 .metricLabel {
@@ -145,6 +146,7 @@
   font-size: 28px;
   font-weight: 700;
   color: #010f44;
+  overflow-wrap: break-word;
 }
 
 /* Filter Section */

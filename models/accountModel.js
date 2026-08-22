@@ -35,7 +35,7 @@ const accountSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["Super_Admin", "Distributor", "Merchant", "Manager", "Store_Manager", "Store_Staff"],
+      enum: ["Super_Admin", "Admin", "Distributor", "Merchant", "Manager", "Store_Manager", "Store_Staff"],
       required: true,
       index: true,
     },
@@ -118,6 +118,14 @@ const accountSchema = new mongoose.Schema(
       region: { type: String, default: null },
       // Commission % earned per merchant payment (falls back to DISTRIBUTOR_COMMISSION_RATE env)
       commissionRate: { type: Number, default: null, min: 0, max: 100 },
+
+      // Internal Admin team sub-role (role === 'Admin' only) — gates which
+      // modules/actions this staff account can use (see lib/adminPermissions.js)
+      adminRole: {
+        type: String,
+        enum: ['Finance', 'Support', 'Sales', 'Operations', 'Analyst', null],
+        default: null,
+      },
     },
 
     // Scratch Card Allocation (for Merchants)

@@ -685,3 +685,48 @@
     height: 34px;
   }
 }
+
+.maintenancePage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #010f44 0%, #0a1f5c 100%);
+  padding: 24px;
+}
+
+.maintenanceCard {
+  max-width: 480px;
+  width: 100%;
+  background: white;
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.maintenanceIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(239, 158, 27, 0.12);
+  color: #ef9e1b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.maintenanceCard h2 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #010f44;
+}
+
+.maintenanceCard p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+}

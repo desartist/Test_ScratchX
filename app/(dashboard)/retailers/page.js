@@ -12,6 +12,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { useDistributorMerchantsQuery } from '@/hooks/queries/useDistributorMerchantsQuery';
+import { useAuthContext } from '@/components/auth/AuthContext';
 import LoadingState from '@/components/common/LoadingState';
 import AddBusinessModal from '@/components/distributor/AddBusinessModal';
 import WhatsAppButton from '@/components/whatsapp/WhatsAppButton';
@@ -87,6 +88,9 @@ function getDaysLeftDisplay(merchant) {
 }
 
 export default function RetailersPage() {
+  const { account } = useAuthContext();
+  const isSuperAdmin = account?.role === 'Super_Admin';
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [businessModelFilter, setBusinessModelFilter] = useState('all');
@@ -168,18 +172,22 @@ export default function RetailersPage() {
                   <th>B. Model</th>
                   <th>Owner</th>
                   <th>City</th>
+                  {isSuperAdmin && <th>Distributor</th>}
                   <th>Plan</th>
                   <th>
                     <StatusFilterDropdown value={statusFilter} onChange={setStatusFilter} />
                   </th>
                   <th>Days Left</th>
+                  {isSuperAdmin && <th>Stores</th>}
+                  {isSuperAdmin && <th>Campaigns</th>}
+                  {isSuperAdmin && <th>Customers</th>}
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {merchants.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className={styles.emptyState}>
+                    <td colSpan={isSuperAdmin ? 12 : 8} className={styles.emptyState}>
                       <AlertCircle size={32} />
                       <p>No businesses found</p>
                       <button className={styles.createLink} onClick={() => setShowModal(true)}>
@@ -215,6 +223,7 @@ export default function RetailersPage() {
                       </td>
                       <td>{merchant.name || '—'}</td>
                       <td>{merchant.profile?.storeLocation || merchant.profile?.storeAddress || '—'}</td>
+                      {isSuperAdmin && <td>{merchant.distributorName || '—'}</td>}
                       <td>
                         {merchant.subscription?.planType
                           ? `${merchant.subscription.planType === 'SMART' ? 'Smart' : 'Core'}`
@@ -228,6 +237,9 @@ export default function RetailersPage() {
                         </span>
                       </td>
                       <td>{getDaysLeftDisplay(merchant)}</td>
+                      {isSuperAdmin && <td>{merchant.storeCount ?? 0}</td>}
+                      {isSuperAdmin && <td>{merchant.campaignCount ?? 0}</td>}
+                      {isSuperAdmin && <td>{merchant.customerCount ?? 0}</td>}
                       <td>
                         <div className={styles.actions}>
                           <Link

@@ -2,9 +2,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Wrench } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import { useNotificationsQuery } from "@/hooks/queries/useNotificationsQuery";
+import { usePlatformSettingsQuery } from "@/hooks/queries/usePlatformSettingsQuery";
 import {
   getAccountDisplayName,
   getAccountInitials,
@@ -73,6 +74,13 @@ export default function DashboardLayout({ children, role }) {
   const { account, logout } = useAuthContext();
   const { data: notificationsData } = useNotificationsQuery();
   const unreadNotifications = notificationsData?.unread || 0;
+  const { data: platformSettingsData } = usePlatformSettingsQuery();
+  const maintenanceMode = platformSettingsData?.maintenanceMode;
+  // Gate only applies post-hydration — the server render never has this
+  // query's data, so gating on it during the initial client render (which
+  // must match the server) would throw a hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   // Explicit expand/collapse overrides for nav items with sub-items — when a
   // href isn't in here, expansion falls back to whether the user is
   // currently on that item or one of its children (see isNavGroupExpanded).
@@ -92,6 +100,22 @@ export default function DashboardLayout({ children, role }) {
         setHasStore(Array.isArray(stores) && stores.length > 0);
       });
   }, [hasStore, role, account?.id]);
+
+  // Platform-wide maintenance mode (Super_Admin always bypasses so they can
+  // manage the platform while it's shown to everyone else).
+  if (mounted && maintenanceMode?.enabled && role !== "Super_Admin") {
+    return (
+      <div className={styles.maintenancePage}>
+        <div className={styles.maintenanceCard}>
+          <div className={styles.maintenanceIcon}>
+            <Wrench size={26} />
+          </div>
+          <h2>ScratchX is under maintenance</h2>
+          <p>{maintenanceMode.message || "We're making some improvements. Please check back shortly."}</p>
+        </div>
+      </div>
+    );
+  }
 
   // Cookie says no store OR API confirmed no store → bare page, no chrome.
   if (hasStore === false) return <><PlatformNoticeModal />{children}</>;
@@ -126,34 +150,61 @@ export default function DashboardLayout({ children, role }) {
             ...baseItems,
             { label: "Distributors", href: "/distributors", iconKey: "users" },
             { label: "Retailers", href: "/retailers", iconKey: "merchants" },
+            { label: "Stores", href: "/admin-stores", iconKey: "stores" },
             {
-              label: "Scratch Economy",
-              href: "/scratch-economy",
-              iconKey: "commission",
-            },
-            {
-              label: "Revenue Analytics",
-              href: "/revenue",
-              iconKey: "analytics",
-            },
-            {
-              label: "Campaign Intelligence",
+              label: "Campaigns",
               href: "/campaign-intelligence",
               iconKey: "campaigns",
             },
             {
-              label: "Creative Studio Governance",
-              href: "/studio-governance",
-              iconKey: "studio",
+              label: "Scratch Inventory",
+              href: "/scratch-economy",
+              iconKey: "commission",
+            },
+            {
+              label: "Subscriptions",
+              href: "/subscriptions",
+              iconKey: "transactions",
+            },
+            {
+              label: "Payments & Revenue",
+              href: "/revenue",
+              iconKey: "analytics",
+            },
+            { label: "Customers", href: "/admin-customers", iconKey: "customers" },
+            {
+              label: "QR & Redemptions",
+              href: "/admin-redemptions",
+              iconKey: "sales",
             },
             {
               label: "Support & Operations",
-              href: "/support",
+              href: "/admin-support",
               iconKey: "operations",
             },
             {
-              label: "Settings & Permissions",
-              href: "/settings",
+              label: "Notifications",
+              href: "/admin-notifications",
+              iconKey: "notice",
+            },
+            {
+              label: "Reports & Exports",
+              href: "/admin-reports",
+              iconKey: "studio",
+            },
+            {
+              label: "Team & Roles",
+              href: "/admin-team",
+              iconKey: "staff",
+            },
+            {
+              label: "Audit Logs",
+              href: "/admin-audit-logs",
+              iconKey: "notice",
+            },
+            {
+              label: "Platform Settings",
+              href: "/admin-settings",
               iconKey: "settings",
             },
           ],

@@ -17,14 +17,19 @@ import {
   MinusCircle,
   ShieldCheck,
   ClipboardList,
+  Megaphone,
+  Users,
+  Ticket,
 } from 'lucide-react';
 import {
   useDistributorMerchantDetailQuery,
   useDistributorMerchantCustomersQuery,
+  useUpdateMerchantStatusMutation,
 } from '@/hooks/queries/useDistributorMerchantDetailQuery';
+import { useAuthContext } from '@/components/auth/AuthContext';
 import { getAccountInitials } from '@/lib/accountDisplay';
 import LoadingState from '@/components/common/LoadingState';
-import CustomerStatsCard from '@/components/customers/CustomerStatsCard';
+import StatCard from '@/components/dashboard/shared/StatCard';
 import CustomerDetailDrawer from '@/components/customers/CustomerDetailDrawer';
 import styles from './retailerDetail.module.css';
 
@@ -69,6 +74,11 @@ export default function RetailerDetailPage() {
   const params = useParams();
   const retailerId = params.id;
 
+  const { account } = useAuthContext();
+  const isSuperAdmin = account?.role === 'Super_Admin';
+  const statusMutation = useUpdateMerchantStatusMutation();
+  const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [dateRange, setDateRange] = useState('all');
@@ -102,7 +112,17 @@ export default function RetailerDetailPage() {
   } = useDistributorMerchantCustomersQuery(retailerId, customerParams);
 
   const merchant = merchantData?.merchant;
+  const summary = merchantData?.summary;
   const merchantError = merchantQueryError ? merchantQueryError.message : null;
+
+  const handleConfirmStatusChange = () => {
+    if (!merchant) return;
+    const nextStatus = merchant.status === 'suspended' ? 'active' : 'suspended';
+    statusMutation.mutate(
+      { id: merchant._id, status: nextStatus },
+      { onSettled: () => setStatusConfirmOpen(false) },
+    );
+  };
 
   const customers = customersData?.data || [];
   const stats = customersData?.stats || {};
@@ -157,6 +177,16 @@ export default function RetailerDetailPage() {
             <ArrowLeft size={18} />
             Back
           </button>
+          {isSuperAdmin && (
+            <button
+              className={`${styles.statusActionBtn} ${merchant.status === 'suspended' ? styles.activateBtn : styles.suspendBtn}`}
+              onClick={() => setStatusConfirmOpen(true)}
+              disabled={statusMutation.isPending}
+            >
+              {merchant.status === 'suspended' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+              {merchant.status === 'suspended' ? 'Activate Retailer' : 'Suspend Retailer'}
+            </button>
+          )}
         </div>
 
         {/* Hero card */}
@@ -252,6 +282,31 @@ export default function RetailerDetailPage() {
             <ClipboardList size={84} className={styles.infoWatermark} />
           </div>
         </div>
+
+        {/* Business Summary (Super_Admin only — platform-wide view of this retailer) */}
+        {isSuperAdmin && summary && (
+          <>
+            <h2 className={styles.sectionHeading}>Business Summary</h2>
+            <div className={styles.statsGrid}>
+              <StatCard icon={<Store />} label="Stores" value={summary.storeCount} />
+              <StatCard icon={<Megaphone />} label="Campaigns" value={summary.campaignCount} />
+              <StatCard icon={<Users />} label="Customers" value={summary.customerCount} />
+              <StatCard
+                icon={<Ticket />}
+                label="Scratches Remaining"
+                value={
+                  (summary.scratchBalance?.total_scratch_cards || 0) -
+                  (summary.scratchBalance?.used_scratch_cards || 0)
+                }
+              />
+            </div>
+            {summary.distributorName && (
+              <p className={styles.distributorNote}>
+                Onboarded via distributor: <strong>{summary.distributorName}</strong>
+              </p>
+            )}
+          </>
+        )}
 
         {/* Customers */}
         {/* <h2 className={styles.sectionHeading}>Customers</h2> */}
@@ -399,6 +454,49 @@ export default function RetailerDetailPage() {
           customer={selectedCustomer}
         /> */}
       </div>
+
+      {/* Suspend/Activate confirmation (Super_Admin only) */}
+      {statusConfirmOpen && (
+        <div className={styles.modalOverlay} onClick={() => setStatusConfirmOpen(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div
+              className={`${styles.confirmIcon} ${merchant.status === 'suspended' ? styles.confirmIconGreen : ''}`}
+            >
+              {merchant.status === 'suspended' ? <CheckCircle2 size={32} /> : <XCircle size={32} />}
+            </div>
+            <h2 className={styles.confirmTitle}>
+              {merchant.status === 'suspended' ? 'Activate Retailer?' : 'Suspend Retailer?'}
+            </h2>
+            <p className={styles.confirmMessage}>
+              {merchant.status === 'suspended' ? (
+                <>
+                  <strong>{storeName}</strong> will regain access and be able to log in again.
+                </>
+              ) : (
+                <>
+                  <strong>{storeName}</strong> will lose access immediately and won&apos;t be able to log in until reactivated.
+                </>
+              )}
+            </p>
+            <div className={styles.confirmFooter}>
+              <button className={styles.confirmCancelBtn} onClick={() => setStatusConfirmOpen(false)}>
+                Cancel
+              </button>
+              <button
+                className={`${styles.confirmActionBtn} ${merchant.status === 'suspended' ? styles.confirmActivateBtn : styles.confirmSuspendBtn}`}
+                onClick={handleConfirmStatusChange}
+                disabled={statusMutation.isPending}
+              >
+                {statusMutation.isPending
+                  ? 'Please wait...'
+                  : merchant.status === 'suspended'
+                    ? 'Activate'
+                    : 'Suspend'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

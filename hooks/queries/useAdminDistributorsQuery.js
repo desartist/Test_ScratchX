@@ -54,6 +54,27 @@ export function useCreateDistributorMutation() {
   });
 }
 
+export function adminDistributorDetailQueryKey(id) {
+  return ["admin-distributor", id];
+}
+
+export async function fetchAdminDistributorDetail(id) {
+  const res = await fetch(`/api/admin/distributors/${id}`, { credentials: "include" });
+  const json = await res.json();
+  if (!json.success) {
+    throw new Error(json.error || "Failed to load distributor");
+  }
+  return json; // { success, distributor, metrics, inventory, commission, retailers }
+}
+
+export function useAdminDistributorDetailQuery(id) {
+  return useQuery({
+    queryKey: adminDistributorDetailQueryKey(id),
+    queryFn: () => fetchAdminDistributorDetail(id),
+    enabled: !!id,
+  });
+}
+
 export function useUpdateDistributorStatusMutation() {
   const queryClient = useQueryClient();
 
@@ -71,8 +92,9 @@ export function useUpdateDistributorStatusMutation() {
       }
       return json;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-distributors"] });
+      queryClient.invalidateQueries({ queryKey: adminDistributorDetailQueryKey(variables.id) });
     },
   });
 }

@@ -7,10 +7,9 @@ import Commission from "@/models/commissionModel";
 import scratchEntitlementService from "@/lib/scratchEntitlementService";
 import notificationService from "@/lib/services/notificationService";
 import mockPaymentService from "@/lib/mockPaymentService";
+import { getEffectiveDefaultCommissionRate } from "@/lib/services/platformSettingsService";
 import { createHmac } from "crypto";
 import { cookies } from "next/headers";
-
-const DEFAULT_COMMISSION_RATE = parseFloat(process.env.DISTRIBUTOR_COMMISSION_RATE ?? "0");
 
 /**
  * POST /api/payment/verify
@@ -143,7 +142,7 @@ export async function POST(request) {
       const distributor = await Account.findById(payment.distributorId).select(
         "profile.commissionRate",
       );
-      const rate = distributor?.profile?.commissionRate ?? DEFAULT_COMMISSION_RATE;
+      const rate = distributor?.profile?.commissionRate ?? (await getEffectiveDefaultCommissionRate());
       const commissionAmount = Math.round((payment.totalAmount * rate) / 100);
 
       await Commission.create({

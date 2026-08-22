@@ -629,7 +629,7 @@ export default function ScanClientPage() {
                 <input
                   type="text"
                   className={`${styles.input} ${validationErrors.customerName ? styles.inputError : ""}`}
-                  placeholder="Nimit"
+                  placeholder="Full Name"
                   value={formData.customerName}
                   onChange={(e) => {
                     setFormData({ ...formData, customerName: e.target.value });
@@ -644,14 +644,14 @@ export default function ScanClientPage() {
 
               {/* Contact Number Field */}
               <div className={styles.inputGroup}>
-                <label className={styles.label}>Contact Number</label>
+                <label className={styles.label}>WhatsApp Number</label>
                 <div className={`${styles.mobileInputWrapper} ${validationErrors.customerMobile ? styles.inputError : ""}`}>
                   <span className={styles.phonePrefix}>+91</span>
                   <div className={styles.prefixDivider} />
                   <input
                     type="tel"
                     className={styles.mobileInput}
-                    placeholder="9099321133"
+                    placeholder="Enter your phone number"
                     maxLength="10"
                     value={formData.customerMobile}
                     onChange={(e) => {
