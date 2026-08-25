@@ -13,6 +13,7 @@ import {
   useRequestTeamSeatMutation,
 } from "@/hooks/queries/useTeamMembersQuery";
 import TeamEmptyState from "@/components/team/TeamEmptyState";
+import { sanitizeNameInput } from "@/lib/nameInput";
 import styles from "./team.module.css";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,7 +65,7 @@ export default function TeamPage() {
     confirmPassword: "",
     role: "Store_Staff",
   });
-  const [editFormData, setEditFormData] = useState({ name: "", email: "", phone: "" });
+  const [editFormData, setEditFormData] = useState({ name: "", email: "", phone: "", storeId: "" });
   const [formError, setFormError] = useState(null);
   const [editFormError, setEditFormError] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -178,7 +179,7 @@ export default function TeamPage() {
   const handleEditClick = (member) => {
     setOpenMenuId(null);
     setEditingMember(member);
-    setEditFormData({ name: member.name, email: member.email, phone: member.phone });
+    setEditFormData({ name: member.name, email: member.email, phone: member.phone, storeId: member.storeId || selectedStoreId || "" });
     setShowEditModal(true);
   };
 
@@ -192,7 +193,7 @@ export default function TeamPage() {
     e.preventDefault();
     setEditFormError(null);
 
-    if (!editFormData.name || !editFormData.email || !editFormData.phone) {
+    if (!editFormData.name || !editFormData.email || !editFormData.phone || !editFormData.storeId) {
       setEditFormError("All fields are required");
       return;
     }
@@ -381,6 +382,11 @@ export default function TeamPage() {
                     {member.status === "active" ? "✓" : ""}
                     {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                   </span> */}
+                  {typeof member.scanCount === "number" && (
+                    <span className={styles.memberScanCount} title="Customer scans attributed to this team member's own QR code">
+                      {member.scanCount} scan{member.scanCount === 1 ? "" : "s"}
+                    </span>
+                  )}
                   <span className={styles.memberLastLogin}>Last login: {formatDate(member.lastLoginAt)}</span>
                 </div>
 
@@ -454,7 +460,7 @@ export default function TeamPage() {
                 <div className={styles.formGroup}>
                   <div className={styles.para}><p>Team Member Details</p></div>
                   <label htmlFor="name" className={styles.formLabel}>Full Name</label>
-                  <input type="text" id="name" name="name" value={formData.name} onChange={handleInputChange}
+                  <input type="text" id="name" name="name" value={formData.name} onChange={(e) => handleInputChange({ target: { name: 'name', value: sanitizeNameInput(e.target.value) } })}
                     placeholder="Enter full name" className={styles.formInput} required />
                 </div>
 
@@ -603,7 +609,7 @@ export default function TeamPage() {
 
               <div className={styles.formGroup}>
                 <label htmlFor="edit-name" className={styles.formLabel}>Full Name</label>
-                <input type="text" id="edit-name" name="name" value={editFormData.name} onChange={handleEditInputChange}
+                <input type="text" id="edit-name" name="name" value={editFormData.name} onChange={(e) => handleEditInputChange({ target: { name: 'name', value: sanitizeNameInput(e.target.value) } })}
                   placeholder="Enter full name" className={styles.formInput} required />
               </div>
 
@@ -618,6 +624,24 @@ export default function TeamPage() {
                 <input type="tel" id="edit-phone" name="phone" value={editFormData.phone} onChange={handleEditInputChange}
                   placeholder="Enter 10-digit phone number" className={styles.formInput}
                   inputMode="numeric" maxLength={10} required />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="edit-store" className={styles.formLabel}>Store</label>
+                <select
+                  id="edit-store"
+                  name="storeId"
+                  className={styles.formInput}
+                  value={editFormData.storeId}
+                  onChange={handleEditInputChange}
+                  required
+                >
+                  {stores.map((s) => (
+                    <option key={s._id} value={s._id}>
+                      {s.store_name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className={styles.modalFooter}>

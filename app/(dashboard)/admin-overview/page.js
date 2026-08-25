@@ -33,6 +33,7 @@ import { useAdminActivityTrendQuery } from '@/hooks/queries/useAdminActivityTren
 import { useAdminDashboardChartsQuery } from '@/hooks/queries/useAdminDashboardChartsQuery';
 import { useAdminCustomersQuery } from '@/hooks/queries/useAdminCustomersQuery';
 import { useDistributorMerchantsQuery } from '@/hooks/queries/useDistributorMerchantsQuery';
+import { sanitizeNameInput } from '@/lib/nameInput';
 import { MultiLineChart, DonutChart, HBarList } from '@/components/dashboard/smart/charts';
 import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
@@ -549,7 +550,7 @@ export default function AdminOverviewPage() {
                   id="name"
                   name="name"
                   value={formData.name}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange({ target: { name: 'name', value: sanitizeNameInput(e.target.value) } })}
                   placeholder="Enter full name"
                   className={styles.formInput}
                   required

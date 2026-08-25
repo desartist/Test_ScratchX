@@ -12,6 +12,7 @@ import {
   Percent,
 } from 'lucide-react';
 import { useDistributorCommissionsQuery } from '@/hooks/queries/useDistributorCommissionsQuery';
+import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './commissions.module.css';
 
@@ -102,52 +103,33 @@ export default function CommissionsPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className={styles.summaryGrid}>
-          <div className={`${styles.summaryCard} ${styles['card-blue']}`}>
-            <div className={styles.cardIcon}>
-              <TrendingUp size={24} />
-            </div>
-            <div className={styles.cardContent}>
-              <p className={styles.cardLabel}>Total Earned</p>
-              <p className={styles.cardValue}>₹{(summary.totalEarned || 0).toLocaleString('en-IN')}</p>
-              <p className={styles.cardSubtext}>{summary.pendingCount} pending</p>
-            </div>
-          </div>
-
-          <div className={`${styles.summaryCard} ${styles['card-green']}`}>
-            <div className={styles.cardIcon}>
-              <CheckCircle size={24} />
-            </div>
-            <div className={styles.cardContent}>
-              <p className={styles.cardLabel}>Total Approved</p>
-              <p className={styles.cardValue}>₹{(summary.totalApproved || 0).toLocaleString('en-IN')}</p>
-              <p className={styles.cardSubtext}>{summary.approvedCount} approved</p>
-            </div>
-          </div>
-
-          <div className={`${styles.summaryCard} ${styles['card-purple']}`}>
-            <div className={styles.cardIcon}>
-              <DollarSign size={24} />
-            </div>
-            <div className={styles.cardContent}>
-              <p className={styles.cardLabel}>Total Paid</p>
-              <p className={styles.cardValue}>₹{(summary.totalPaid || 0).toLocaleString('en-IN')}</p>
-              <p className={styles.cardSubtext}>{summary.paidCount} paid</p>
-            </div>
-          </div>
-
-          <div className={`${styles.summaryCard} ${styles['card-orange']}`}>
-            <div className={styles.cardIcon}>
-              <BarChart3 size={24} />
-            </div>
-            <div className={styles.cardContent}>
-              <p className={styles.cardLabel}>Pending Payout</p>
-              <p className={styles.cardValue}>
-                ₹{Math.max(0, (summary.totalEarned || 0) - (summary.totalPaid || 0)).toLocaleString('en-IN')}
-              </p>
-              <p className={styles.cardSubtext}>Ready to payout</p>
-            </div>
-          </div>
+        <div className={styles.statGrid}>
+          <StatCard
+            icon={<TrendingUp />}
+            value={`₹${(summary.totalEarned || 0).toLocaleString('en-IN')}`}
+            label="Total Earned"
+            subtitle={`${summary.pendingCount} pending`}
+          />
+          <StatCard
+            icon={<CheckCircle />}
+            value={`₹${(summary.totalApproved || 0).toLocaleString('en-IN')}`}
+            label="Total Approved"
+            tone="green"
+            subtitle={`${summary.approvedCount} approved`}
+          />
+          <StatCard
+            icon={<DollarSign />}
+            value={`₹${(summary.totalPaid || 0).toLocaleString('en-IN')}`}
+            label="Total Paid"
+            subtitle={`${summary.paidCount} paid`}
+          />
+          <StatCard
+            icon={<BarChart3 />}
+            value={`₹${Math.max(0, (summary.totalEarned || 0) - (summary.totalPaid || 0)).toLocaleString('en-IN')}`}
+            label="Pending Payout"
+            tone="red"
+            subtitle="Ready to payout"
+          />
         </div>
 
         {/* Tabs */}

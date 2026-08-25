@@ -241,8 +241,8 @@ color: #fff;
 }
 
 .icon-blue {
-  background: #dbeafe;
-  color: #3b82f6;
+  background: rgba(1, 15, 68, 0.08);
+  color: #010f44;
 }
 
 .icon-green {
@@ -333,6 +333,30 @@ color: #fff;
 
 .viewLink:hover {
   background: #e5e7eb;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+  align-items: stretch;
+}
+
+.chartsGrid .card {
+  margin-bottom: 0;
+}
+
+.chartRangeNote {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+@media (max-width: 1024px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .emptyText {

@@ -11,11 +11,47 @@ import {
   MapPin,
   Gift,
   QrCode,
+  Users,
 } from "lucide-react";
-import { useStoreCampaignDetailQuery } from "@/hooks/queries/useStoreCampaignsQuery";
+import { useStoreCampaignDetailQuery, useMyQrCustomersQuery } from "@/hooks/queries/useStoreCampaignsQuery";
+import { useAuthContext } from "@/components/auth/AuthContext";
 import Badge from "@/components/dashboard/Badge";
 import CampaignQrStudio from "@/components/campaign/CampaignQrStudio";
 import styles from "./campaign-detail.module.css";
+
+const STATUS_COLORS = {
+  initiated: "#6b7280",
+  verified: "#3b82f6",
+  scratched: "#f59e0b",
+  revealed: "#f59e0b",
+  redeemed: "#10b981",
+  expired: "#ef4444",
+  failed: "#ef4444",
+};
+
+const STATUS_LABELS = {
+  initiated: "Initiated",
+  verified: "Verified",
+  scratched: "Scratched",
+  revealed: "Revealed",
+  redeemed: "Claimed",
+  expired: "Expired",
+  failed: "Failed",
+};
+
+function formatWonReward(reward) {
+  if (!reward) return null;
+  const { type, value, description } = reward;
+  if (type === "discount" || type === "voucher") return `₹${value} OFF`;
+  if (type === "cashback") return `${value}% OFF`;
+  if (type === "freeItem") return description || "Free Gift";
+  return value ? `₹${value} OFF` : null;
+}
+
+function formatDateTime(value) {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
 
 function statusToVariant(status) {
   switch ((status || "").toLowerCase()) {
@@ -63,8 +99,11 @@ function getCalculatedStatus(campaign) {
 export default function StoreCampaignDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { account } = useAuthContext();
   const { data, isPending: loading, error: queryError } = useStoreCampaignDetailQuery(id);
   const error = queryError ? queryError.message : null;
+  const { data: myCustomersData, isPending: customersLoading } = useMyQrCustomersQuery(id);
+  const myCustomers = myCustomersData?.customers || [];
 
   if (loading) {
     return (
@@ -223,6 +262,57 @@ export default function StoreCampaignDetailPage() {
               </div>
             )}
           </section>
+
+          {/* Customers who scanned my personalized QR code */}
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <Users size={20} />
+              <h2 className={styles.sectionTitle}>Customers from My QR Code</h2>
+            </div>
+            {customersLoading ? (
+              <p className={styles.stateMsg}>Loading customers...</p>
+            ) : myCustomers.length === 0 ? (
+              <p className={styles.stateMsg}>
+                No customers have scanned your QR code for this campaign yet.
+              </p>
+            ) : (
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th>Mobile</th>
+                      <th>Reward</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myCustomers.map((customer) => (
+                      <tr key={customer._id}>
+                        <td className={styles.customerName}>{customer.name || "-"}</td>
+                        <td>{customer.mobile || "-"}</td>
+                        <td>{formatWonReward(customer.reward) || "-"}</td>
+                        <td>
+                          <span
+                            className={styles.statusPill}
+                            style={{ borderColor: STATUS_COLORS[customer.status] }}
+                          >
+                            <span
+                              className={styles.statusDot}
+                              style={{ backgroundColor: STATUS_COLORS[customer.status] }}
+                            />
+                            {STATUS_LABELS[customer.status] || customer.status}
+                          </span>
+                        </td>
+                        <td>{formatDateTime(customer.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
         </div>
 
         {/* ── Sidebar ── */}
@@ -239,6 +329,12 @@ export default function StoreCampaignDetailPage() {
               campaignName={campaign.name || ""}
               startDate={campaign.startDate}
               endDate={campaign.endDate}
+              // This page only ever belongs to the logged-in Store_Manager/
+              // Store_Staff themselves — always show their own personalized
+              // QR automatically, no picker needed.
+              fixedStaffId={account?.id || account?._id || null}
+              fixedStaffName={account?.name || null}
+              staffStoreId={store?._id || null}
             />
           </section>
         </div>

@@ -189,6 +189,16 @@
   white-space: nowrap;
 }
 
+.memberScanCount {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #4c4ce6;
+  background: #eef0ff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 .statusBadge {
   display: inline-flex;
   align-items: center;

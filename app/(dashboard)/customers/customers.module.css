@@ -334,7 +334,7 @@
 /* ── Campaign & Store Section ──────────────────────────────── */
 .campaignStore {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 24px;
 }
 
@@ -480,7 +480,7 @@
   }
 
   .campaignStore {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 16px;
   }
 

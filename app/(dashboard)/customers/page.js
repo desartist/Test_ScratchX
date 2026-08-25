@@ -284,6 +284,15 @@ export default function CustomersPage() {
                       <div className={styles.value}>{customer.store_id?.store_name}</div>
                       <div className={styles.city}>{customer.store_id?.city}</div>
                     </div>
+                    <div className={styles.store}>
+                      <div className={styles.label}>Staff</div>
+                      <div className={styles.value}>
+                        {customer.handled_by_staff_id?.name || "—"}
+                      </div>
+                      {!customer.handled_by_staff_id && (
+                        <div className={styles.city}>General QR</div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Right: Reward & Status */}

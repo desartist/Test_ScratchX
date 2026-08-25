@@ -3,6 +3,7 @@
 import React, { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthContext } from '../../../components/auth/AuthContext';
+import { sanitizeNameInput } from '@/lib/nameInput';
 import styles from './form.module.css';
 
 function EyeIcon({ open }) {
@@ -123,7 +124,7 @@ export default function RegisterPage() {
               className={`${styles.input} ${validationErrors.yourName ? styles.inputError : ''}`}
               placeholder="Your full name"
               value={form.yourName}
-              onChange={set('yourName')}
+              onChange={(e) => set('yourName')({ target: { value: sanitizeNameInput(e.target.value) } })}
               disabled={isLoading}
               autoComplete="name"
             />

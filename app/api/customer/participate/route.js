@@ -45,6 +45,7 @@ export async function POST(request) {
       customerAccuracy,
       customerConsent,
       verifiedStore,
+      staffId,
     } = body;
 
     // ===== VALIDATION =====
@@ -375,6 +376,29 @@ export async function POST(request) {
       isWholesale,
     });
 
+    // ===== ATTRIBUTE TO TEAM MEMBER (optional) =====
+    // staffId is only present when the customer scanned that specific team
+    // member's own personalized QR (see CampaignQrStudio). A missing or
+    // invalid staffId never blocks the scan — it just leaves the
+    // participation unattributed, exactly like every QR printed before this
+    // feature existed.
+    let handledByStaffId = null;
+    if (staffId && mongoose.Types.ObjectId.isValid(staffId)) {
+      const staffAccount = await Account.findOne({
+        _id: staffId,
+        storeId: matchedStoreId,
+        role: { $in: ["Store_Manager", "Store_Staff"] },
+        status: "active",
+      })
+        .select("_id")
+        .lean();
+      if (staffAccount) {
+        handledByStaffId = staffAccount._id;
+      } else {
+        console.log("⚠️ staffId provided but not a valid active team member for this store — ignoring", { staffId, matchedStoreId });
+      }
+    }
+
     // ===== FETCH & VALIDATE RANGE =====
     const range = await Range.findById(rangeId);
     if (!range) {
@@ -478,6 +502,7 @@ export async function POST(request) {
       customer_latitude: customerLatitude,
       customer_longitude: customerLongitude,
       is_repeat_customer: isRepeatCustomer,
+      handled_by_staff_id: handledByStaffId,
       status: "verified",
       expires_at: new Date(Date.now() + 5 * 60 * 1000),
     });

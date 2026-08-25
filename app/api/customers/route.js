@@ -97,6 +97,7 @@ export async function GET(request) {
       .populate("store_id", "store_name city state store_code")
       .populate("range_id", "minAmount maxAmount")
       .populate("scratch_card_id", "reward_type reward_value reward_description coupon_code")
+      .populate("handled_by_staff_id", "name role")
       .sort(sortObj)
       .skip(skip)
       .limit(limit)

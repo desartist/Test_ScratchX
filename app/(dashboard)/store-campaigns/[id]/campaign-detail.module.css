@@ -363,6 +363,64 @@
   font-size: 0.9375rem;
 }
 
+/* ── My QR Customers (table) ──────────────────────────────────── */
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1.5px solid #e8eaff;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 480px;
+}
+
+.table thead {
+  background: #f8f9ff;
+}
+
+.table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #9ba8b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: #010f44;
+  white-space: nowrap;
+  border-top: 1px solid #f0f2ff;
+}
+
+.customerName {
+  font-weight: 700;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1.5px solid;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
 /* ── QR Card ───────────────────────────────────────────────── */
 .qrCardHeader {
   display: flex;

@@ -1,13 +1,24 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import confetti from "canvas-confetti";
+import { sanitizeNameInput } from "@/lib/nameInput";
 import styles from "./page.module.css";
 
 export default function ScanClientPage() {
   const { campaignId } = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Present only when the customer scanned a team member's own personalized
+  // QR code (see CampaignQrStudio) rather than the store's default one.
+  const staffId = searchParams.get("staff") || null;
+  // The staff member's own store, baked into the same QR. When present, the
+  // location check below is pinned to this one store instead of picking
+  // whichever of the campaign's assigned stores is GPS-closest — otherwise a
+  // multi-store campaign could match a different (closer) store than the
+  // staff member's own, silently dropping the attribution.
+  const staffStoreId = searchParams.get("store") || null;
 
   // Campaign & Ranges State
   const [campaign, setCampaign] = useState(null);
@@ -201,7 +212,9 @@ export default function ScanClientPage() {
     // (for the same record-keeping every participation gets) — we just
     // never call location-verify or block progress on the result.
     if (campaign?.isWholesale) {
-      const storesList = campaign?.assignedStores;
+      const storesList = staffStoreId
+        ? (campaign?.assignedStores || []).filter((s) => String(s.storeId) === String(staffStoreId))
+        : campaign?.assignedStores;
       if (!storesList?.length) {
         setLocationError({ title: "Store not found", body: "No stores are assigned to this campaign. Contact the merchant." });
         return;
@@ -256,7 +269,9 @@ export default function ScanClientPage() {
     }
 
     // Step 2: verify with store
-    const storesList = campaign?.assignedStores;
+    const storesList = staffStoreId
+      ? (campaign?.assignedStores || []).filter((s) => String(s.storeId) === String(staffStoreId))
+      : campaign?.assignedStores;
     if (!storesList?.length) {
       setLocationError({ title: "Store not found", body: "No stores are assigned to this campaign. Contact the merchant." });
       setLocationVerifying(false);
@@ -301,7 +316,9 @@ export default function ScanClientPage() {
     try {
       setSubmitting(true);
       setError(null);
-      const storesList = campaign?.assignedStores;
+      const storesList = staffStoreId
+        ? (campaign?.assignedStores || []).filter((s) => String(s.storeId) === String(staffStoreId))
+        : campaign?.assignedStores;
       if (!storesList) {
         setError("Store information not found");
         return;
@@ -346,6 +363,7 @@ export default function ScanClientPage() {
           customerAccuracy: acc ?? customerLocation.accuracy,
           customerConsent: true,
           verifiedStore: verifiedStoreData,
+          staffId,
         }),
       });
 
@@ -632,7 +650,7 @@ export default function ScanClientPage() {
                   placeholder="Full Name"
                   value={formData.customerName}
                   onChange={(e) => {
-                    setFormData({ ...formData, customerName: e.target.value });
+                    setFormData({ ...formData, customerName: sanitizeNameInput(e.target.value) });
                     if (validationErrors.customerName)
                       setValidationErrors({ ...validationErrors, customerName: null });
                   }}

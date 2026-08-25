@@ -21,6 +21,7 @@ import {
 } from '@/hooks/queries/useAdminDistributorsQuery';
 import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
+import { sanitizeNameInput } from '@/lib/nameInput';
 import styles from './distributors.module.css';
 
 const EMPTY_FORM = {
@@ -302,7 +303,7 @@ export default function DistributorsPage() {
                   id="name"
                   name="name"
                   value={formData.name}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange({ target: { name: 'name', value: sanitizeNameInput(e.target.value) } })}
                   placeholder="Enter full name"
                   className={styles.formInput}
                   required

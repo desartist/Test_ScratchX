@@ -16,6 +16,7 @@ const auditLogSchema = new mongoose.Schema({
       "PASSWORD_CHANGE",
       "PROFILE_UPDATE",
       "BUSINESS_INFO_UPDATE",
+      "PAYMENT_DETAILS_UPDATE",
       "NOTIFICATION_PREFERENCES_UPDATE",
       "DEVICE_LOGOUT",
       "LOGOUT_ALL_DEVICES",

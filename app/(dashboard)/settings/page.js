@@ -10,6 +10,8 @@ import SettingsSubscriptionCard from "@/components/settings/SettingsSubscription
 import SettingsSecurityCard from "@/components/settings/SettingsSecurityCard";
 import SettingsNotificationCard from "@/components/settings/SettingsNotificationCard";
 import SettingsBusinessCard from "@/components/settings/SettingsBusinessCard";
+import SettingsPaymentDetailsCard from "@/components/settings/SettingsPaymentDetailsCard";
+import DistributorPaymentInfoCard from "@/components/settings/DistributorPaymentInfoCard";
 import DangerZoneCard from "@/components/settings/DangerZoneCard";
 import ActiveSessionsCard from "@/components/settings/ActiveSessionsCard";
 import styles from "./settings.module.css";
@@ -72,12 +74,22 @@ export default function SettingsPage() {
 
           {/* Business Information Card - not applicable to store accounts */}
           {!isStoreRole && <SettingsBusinessCard merchant={merchant} />}
+
+          {/* Payment Details Card — Distributor fills this in so the
+              retailers/wholesalers they manage can pay them directly */}
+          {merchant?.role === "Distributor" && (
+            <SettingsPaymentDetailsCard paymentDetails={merchant?.paymentDetails} />
+          )}
         </div>
 
         {/* Right Column */}
         <div className={styles.rightColumn}>
           {/* Account Information Card */}
           <SettingsAccountCard merchant={merchant} />
+
+          {/* Distributor's payment details — read-only, shown to the
+              Merchant (retailer/wholesaler) so they know how to pay them */}
+          {merchant?.role === "Merchant" && <DistributorPaymentInfoCard />}
 
           {/* Subscription Card - not applicable to distributor or store accounts */}
           {merchant?.role !== "Distributor" && !isStoreRole && (

@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import confetti from "canvas-confetti";
+import { useBackNavigationGuard } from "@/hooks/useBackNavigationGuard";
+import SessionExpiredIcon from "@/components/customer/SessionExpiredIcon";
 import styles from "./page.module.css";
 
 // ── Canvas scratch overlay ────────────────────────────────────────────────────
@@ -102,6 +104,7 @@ export default function CouponPage() {
   const params          = useParams();
   const campaignId      = params.campaignId;
   const participationId = params.participationId;
+  const backBlocked     = useBackNavigationGuard();
 
   const REVEAL_DURATION  = 300; // seconds — 5-min window to show cashier
 
@@ -271,6 +274,23 @@ export default function CouponPage() {
         <div className={styles.centeredState}>
           <div className={styles.spinner} />
           <p className={styles.stateText}>Loading your coupons…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Back button pressed — block returning to the scan/participation form ──
+  if (backBlocked) {
+    return (
+      <div className={`${styles.page} ${styles.pageDark}`}>
+        <div className={styles.centeredState}>
+          <div className={styles.expiredIcon}>
+            <SessionExpiredIcon size={64} color="#ffc107" cutout="#0d0b13" />
+          </div>
+          <h2 className={styles.expiredTitle}>Session Expired</h2>
+          <p className={styles.expiredDesc}>
+            Your session has expired. Please scan the QR code again to continue.
+          </p>
         </div>
       </div>
     );

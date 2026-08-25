@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/components/auth/AuthContext';
 import { useStoresQuery } from '@/hooks/queries/useStoresQuery';
 import Link from 'next/link';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, LocateFixed } from 'lucide-react';
 import StoreWelcomeScreen from '@/components/stores/StoreWelcomeScreen';
+import { sanitizeNameInput } from '@/lib/nameInput';
 import styles from './page.module.css';
 
 export default function CreateStorePage() {
@@ -23,16 +24,8 @@ export default function CreateStorePage() {
 
   // Geolocation state
   const [locationStatus, setLocationStatus] = useState('idle'); // idle, requesting, detected, denied
-  const [geoError, setGeoError] = useState(null);
   const [locationInfo, setLocationInfo] = useState(null); // { landmark, area, city, display }
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const [locationModalData, setLocationModalData] = useState({
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-    isGeocoding: false,
-  });
+  const [isGeocoding, setIsGeocoding] = useState(false);
 
   // Form data across all steps
   const [formData, setFormData] = useState({
@@ -95,12 +88,10 @@ export default function CreateStorePage() {
   const requestGeolocation = () => {
     if (!navigator.geolocation) {
       setLocationStatus('denied');
-      setGeoError('Geolocation is not supported by your browser');
       return;
     }
 
     setLocationStatus('requesting');
-    setGeoError(null);
     setLocationInfo(null);
 
     navigator.geolocation.getCurrentPosition(
@@ -151,24 +142,6 @@ export default function CreateStorePage() {
       (error) => {
         console.error('Geolocation error:', error);
         setLocationStatus('denied');
-
-        if (error.code === error.PERMISSION_DENIED) {
-          // Show modal for manual address entry
-          setGeoError('We couldn\'t access your location.');
-          setShowLocationModal(true);
-          setLocationModalData(prev => ({
-            ...prev,
-            city: formData.city,
-            state: formData.state,
-            pincode: formData.pincode,
-          }));
-        } else if (error.code === error.TIMEOUT) {
-          setGeoError('Location request timed out. Please try again.');
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          setGeoError('Location service is temporarily unavailable.');
-        } else {
-          setGeoError('Unable to access your location.');
-        }
       },
       // High accuracy + no cached fix: this coordinate becomes the store's
       // permanent location and every future customer is measured against it,
@@ -178,67 +151,22 @@ export default function CreateStorePage() {
     );
   };
 
-  // Forward geocode address → lat/lng when GPS is unavailable
-  // Tries progressively simpler queries to maximise chances of a hit
-  const geocodeAddress = async () => {
+  // Geocode the manually-entered address fields in the background (used when
+  // GPS is denied) — triggered automatically once the fields are filled in,
+  // no explicit "verify address" button for the user to click.
+  const handleGeocodeAddress = async () => {
     const { address, city, state, pincode } = formData;
-    if (!city && !pincode) return;
-
-    setLocationStatus('requesting');
-    setGeoError(null);
-
-    // Queries from most specific to least — first match wins
-    const queries = [
-      [address, city, state, pincode],
-      [city, state, pincode],
-      [pincode, 'India'],
-      [city, state, 'India'],
-    ].map(parts => parts.filter(Boolean).join(', ')).filter(Boolean);
-
-    const nominatim = async (q) => {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=in`,
-        { headers: { 'Accept-Language': 'en' } }
-      );
-      return res.json();
-    };
-
-    try {
-      for (const q of queries) {
-        const results = await nominatim(q);
-        if (results && results[0]) {
-          const lat = parseFloat(parseFloat(results[0].lat).toFixed(6));
-          const lng = parseFloat(parseFloat(results[0].lon).toFixed(6));
-          setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng, location_accuracy: null, _geoSource: 'address' }));
-          setLocationStatus('detected');
-          setLocationInfo({ display: results[0].display_name?.split(',').slice(0, 3).join(',') });
-          return;
-        }
-      }
-      setLocationStatus('denied');
-      setGeoError('Could not find this location. Please check your city/pincode and try again.');
-    } catch {
-      setLocationStatus('denied');
-      setGeoError('Failed to look up address. Please check your internet connection and try again.');
-    }
-  };
-
-  // Handle manual address geocoding from modal
-  const handleModalGeocodeAddress = async () => {
-    const { address, city, state, pincode } = locationModalData;
 
     if (!address.trim() || !city.trim() || !state.trim() || !pincode.trim()) {
-      setGeoError('Please fill in all address fields');
-      return;
+      return null;
     }
 
     if (!/^\d{6}$/.test(pincode.trim())) {
-      setGeoError('Pincode must be exactly 6 digits');
-      return;
+      return null;
     }
 
-    setLocationModalData(prev => ({ ...prev, isGeocoding: true }));
-    setGeoError(null);
+    setIsGeocoding(true);
+    setErrors((prev) => ({ ...prev, location: '' }));
 
     // Queries from most specific to least — first match wins
     const queries = [
@@ -263,13 +191,8 @@ export default function CreateStorePage() {
           const lat = parseFloat(parseFloat(results[0].lat).toFixed(6));
           const lng = parseFloat(parseFloat(results[0].lon).toFixed(6));
 
-          // Update form data with modal data and coordinates
           setFormData((prev) => ({
             ...prev,
-            address: locationModalData.address,
-            city: locationModalData.city,
-            state: locationModalData.state,
-            pincode: locationModalData.pincode,
             latitude: lat,
             longitude: lng,
             location_accuracy: null,
@@ -278,16 +201,16 @@ export default function CreateStorePage() {
 
           setLocationStatus('detected');
           setLocationInfo({ display: results[0].display_name?.split(',').slice(0, 3).join(',') });
-          setShowLocationModal(false);
-          setLocationModalData({ address: '', city: '', state: '', pincode: '', isGeocoding: false });
-          return;
+          return { latitude: lat, longitude: lng };
         }
       }
-      setGeoError('Could not find this location. Please check your address details and try again.');
+      setErrors((prev) => ({ ...prev, location: 'Could not find this location. Please check your address details.' }));
+      return null;
     } catch {
-      setGeoError('Failed to verify address. Please check your internet connection and try again.');
+      setErrors((prev) => ({ ...prev, location: 'Failed to verify address. Please check your internet connection.' }));
+      return null;
     } finally {
-      setLocationModalData(prev => ({ ...prev, isGeocoding: false }));
+      setIsGeocoding(false);
     }
   };
 
@@ -306,11 +229,26 @@ export default function CreateStorePage() {
     }
   };
 
+  const ADDRESS_FIELDS = ['address', 'city', 'state', 'pincode'];
+
   const handleFieldBlur = (field) => {
     setTouched((prev) => ({
       ...prev,
       [field]: true,
     }));
+
+    // Geocode the manually-entered address in the background as soon as all
+    // fields are filled in — no separate button, and independent of whether
+    // GPS has been tried, since the manual fields are always visible now.
+    if (
+      ADDRESS_FIELDS.includes(field) &&
+      !formData.latitude &&
+      !isGeocoding &&
+      formData.address.trim() && formData.city.trim() && formData.state.trim() &&
+      /^\d{6}$/.test(formData.pincode.trim())
+    ) {
+      handleGeocodeAddress();
+    }
   };
 
   // Validate step 1: Store Info
@@ -347,11 +285,16 @@ export default function CreateStorePage() {
   };
 
   // Validate step 2: Location
-  const validateStep2 = () => {
+  // `resolvedLocation` lets a caller pass coordinates just returned by a
+  // geocode call that hasn't landed in `formData` yet (React state updates
+  // don't apply synchronously, so `formData.latitude` would still read stale).
+  const validateStep2 = (resolvedLocation) => {
     const newErrors = {};
 
-    if (formData.latitude === null || formData.longitude === null) {
-      newErrors.location = 'Store location is required. Use GPS or fill in your address and click "Use Address Location".';
+    const latitude = resolvedLocation?.latitude ?? formData.latitude;
+    const longitude = resolvedLocation?.longitude ?? formData.longitude;
+    if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) {
+      newErrors.location = 'Store location is required. Allow location access or fill in your full address below.';
     }
 
     if (!formData.address.trim()) {
@@ -393,7 +336,19 @@ export default function CreateStorePage() {
       setCurrentStep(2);
     } else if (currentStep === 2) {
       setTouched(prev => ({ ...prev, address: true, city: true, state: true, pincode: true }));
-      if (!validateStep2()) return;
+
+      // Give the background geocode a chance to run if the user typed the
+      // address and hit Next without ever blurring a field (e.g. via paste).
+      let resolvedLocation = null;
+      if (
+        !formData.latitude &&
+        formData.address.trim() && formData.city.trim() && formData.state.trim() &&
+        /^\d{6}$/.test(formData.pincode.trim())
+      ) {
+        resolvedLocation = await handleGeocodeAddress();
+      }
+
+      if (!validateStep2(resolvedLocation)) return;
       setCurrentStep(3);
     }
   };
@@ -461,7 +416,7 @@ export default function CreateStorePage() {
   const steps = [
     { number: 1, name: 'Store Info' },
     { number: 2, name: 'Location' },
-    { number: 3, name: 'Review' },
+    { number: 3, name: 'Preview' },
   ];
 
   // Show loading state while checking for existing stores
@@ -551,9 +506,6 @@ export default function CreateStorePage() {
         {/* STEP 1: Store Info */}
         {currentStep === 1 && (
           <div className={styles.stepContent}>
-            <p className={styles.subtitle}>
-              Let's set up your store
-            </p>
 
             {/* Store Name */}
             <div className={styles.formGroup}>
@@ -628,7 +580,7 @@ export default function CreateStorePage() {
                 id="contact_person"
                 name="contact_person"
                 value={formData.contact_person}
-                onChange={handleChange}
+                onChange={(e) => handleChange({ target: { name: 'contact_person', value: sanitizeNameInput(e.target.value) } })}
                 onBlur={() => handleFieldBlur('contact_person')}
                 placeholder="E.g. John Smith"
                 className={styles.input}
@@ -682,26 +634,21 @@ export default function CreateStorePage() {
         )}
 
         {/* STEP 2: Location */}
+                {/* Location Detection UI */}
         {currentStep === 2 && (
           <div className={styles.stepContent}>
-            <p className={styles.subtitle}>
-              Share your store's location for accurate customer verification
-            </p>
-
-            {/* Location Detection UI */}
-            <div className={styles.locationSection}>
-              <div className={styles.locationHeader}>
-                <h3 className={styles.locationTitle}>Store Location</h3>
-              </div>
-
-              {locationStatus === 'requesting' && (
+              {!formData.latitude && (
+                <p className={styles.locationSubtitle}>
+                Your store location helps ScratchX verify customer activity at the correct store.
+                </p>
+              )}
+ {locationStatus === 'requesting' && (
                 <div className={styles.locationStatus}>
                   <div className={styles.spinner}></div>
                   <span>Detecting your location...</span>
                 </div>
               )}
-
-              {locationStatus === 'detected' && formData.latitude && formData.longitude && (
+   {locationStatus === 'detected' && formData.latitude && formData.longitude && (
                 <div className={styles.locationDetected}>
                   <div className={styles.locationCheckmark}>✓</div>
                   <div className={styles.locationDetails}>
@@ -742,226 +689,124 @@ export default function CreateStorePage() {
                 </div>
               )}
 
-              {locationStatus === 'idle' && !formData.latitude && (
-                <button
-                  type="button"
-                  className={styles.useCurrentButton}
-                  onClick={requestGeolocation}
-                  disabled={submitting || locationStatus === 'requesting'}
-                >
-                  Use Current Location
-                </button>
-              )}
-
-              {locationStatus === 'denied' && !formData.latitude && !showLocationModal && (
-                <div className={styles.locationErrorBox}>
-                  <div className={styles.errorIcon}>📍</div>
-                  <p className={styles.errorText}>
-                    We couldn't access your location, but no worries! You can enter your store address manually below.
-                  </p>
+              {locationStatus !== 'requesting' && !(locationStatus === 'detected' && formData.latitude) && (
+                <>
                   <button
                     type="button"
-                    className={styles.useCurrentButton}
-                    onClick={() => {
-                      setShowLocationModal(true);
-                      setLocationModalData(prev => ({
-                        ...prev,
-                        address: formData.address,
-                        city: formData.city,
-                        state: formData.state,
-                        pincode: formData.pincode,
-                      }));
-                    }}
+                    className={styles.useCurrentLocationBtn}
+                    onClick={requestGeolocation}
                     disabled={submitting}
                   >
-                    Enter Address Manually
+                    <LocateFixed size={16} />
+                    Use your current location
                   </button>
+                  <p className={styles.locationHint}>Automatically detect your store address.</p>
+                </>
+              )}
+
+              {!(locationStatus === 'detected' && formData.latitude) && (
+                <div className={styles.orDivider}>
+                  <span>OR</span>
                 </div>
               )}
-            </div>
 
-            {/* Location Permission Modal - Manual Address Entry */}
-            {showLocationModal && locationStatus === 'denied' && (
-              <div className={styles.modalOverlay} onClick={() => !locationModalData.isGeocoding && setShowLocationModal(false)}>
-                <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                  <div className={styles.modalHeader}>
-                    <h2 className={styles.modalTitle}>Enter Your Store Address</h2>
-                  </div>
-                  <div className={styles.modalBody}>
-                    {geoError && locationStatus === 'denied' && (
-                      <div className={styles.modalError}>
-                        <span className={styles.errorIcon}>⚠️</span>
-                        {geoError}
-                      </div>
-                    )}
+              <h4 className={styles.manualAddressTitle}>Enter Address Manually</h4>
 
-                    {/* Address field */}
-                    <div className={styles.modalFormGroup}>
-                      <label className={styles.modalLabel}>Address <span className={styles.required}>*</span></label>
-                      <input
-                        type="text"
-                        placeholder="E.g. 123 Main Street, Suite 100"
-                        value={locationModalData.address}
-                        onChange={(e) => setLocationModalData(prev => ({ ...prev, address: e.target.value }))}
-                        className={styles.modalInput}
-                        disabled={locationModalData.isGeocoding}
-                      />
-                    </div>
-
-                    {/* City and State row */}
-                    <div className={styles.modalTwoColumn}>
-                      <div className={styles.modalFormGroup}>
-                        <label className={styles.modalLabel}>City <span className={styles.required}>*</span></label>
-                        <input
-                          type="text"
-                          placeholder="E.g. New York"
-                          value={locationModalData.city}
-                          onChange={(e) => setLocationModalData(prev => ({ ...prev, city: e.target.value }))}
-                          className={styles.modalInput}
-                          disabled={locationModalData.isGeocoding}
-                        />
-                      </div>
-                      <div className={styles.modalFormGroup}>
-                        <label className={styles.modalLabel}>State <span className={styles.required}>*</span></label>
-                        <input
-                          type="text"
-                          placeholder="E.g. NY"
-                          value={locationModalData.state}
-                          onChange={(e) => setLocationModalData(prev => ({ ...prev, state: e.target.value }))}
-                          className={styles.modalInput}
-                          disabled={locationModalData.isGeocoding}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Pincode field */}
-                    <div className={styles.modalFormGroup}>
-                      <label className={styles.modalLabel}>Pincode <span className={styles.required}>*</span></label>
-                      <input
-                        type="text"
-                        placeholder="E.g. 100001"
-                        value={locationModalData.pincode}
-                        onChange={(e) => setLocationModalData(prev => ({ ...prev, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
-                        className={styles.modalInput}
-                        maxLength="6"
-                        disabled={locationModalData.isGeocoding}
-                      />
-                    </div>
-                  </div>
-                  <div className={styles.modalFooter}>
-                    <button
-                      type="button"
-                      className={styles.modalCancelButton}
-                      onClick={() => {
-                        setShowLocationModal(false);
-                        setLocationModalData({ address: '', city: '', state: '', pincode: '', isGeocoding: false });
-                      }}
-                      disabled={locationModalData.isGeocoding}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.modalButton}
-                      onClick={handleModalGeocodeAddress}
-                      disabled={locationModalData.isGeocoding}
-                    >
-                      {locationModalData.isGeocoding ? 'Verifying...' : 'OK'}
-                    </button>
-                  </div>
+                {/* Address */}
+                <div className={styles.formGroup}>
+                  <label htmlFor="address" className={styles.label}>
+                    Store Address <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    onBlur={() => handleFieldBlur('address')}
+                    placeholder="Shop / Building / Street / Area"
+                    className={styles.input}
+                    required
+                    disabled={submitting || isGeocoding}
+                  />
+                  {touched.address && errors.address && (
+                    <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.address}</span>
+                  )}
                 </div>
-              </div>
-            )}
 
-            {/* Address */}
-            <div className={styles.formGroup}>
-              <label htmlFor="address" className={styles.label}>
-                Address <span className={styles.required}>*</span>
-              </label>
-              <input
-                type="text"
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                onBlur={() => handleFieldBlur('address')}
-                placeholder="E.g. 123 Main Street, Suite 100"
-                className={styles.input}
-                required
-                disabled={submitting}
-              />
-              {touched.address && errors.address && (
-                <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.address}</span>
-              )}
-            </div>
+                {/* Pincode */}
+                <div className={styles.formGroup}>
+                  <label htmlFor="pincode" className={styles.label}>
+                    PIN Code <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="pincode"
+                    name="pincode"
+                    value={formData.pincode}
+                    onChange={handleChange}
+                    onBlur={() => handleFieldBlur('pincode')}
+                    placeholder="6-digit PIN code"
+                    className={styles.input}
+                    maxLength="6"
+                    required
+                    disabled={submitting || isGeocoding}
+                  />
+                  {touched.pincode && errors.pincode && (
+                    <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.pincode}</span>
+                  )}
+                </div>
 
-            {/* City and State Row */}
-            <div className={styles.twoColumnRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="city" className={styles.label}>
-                  City <span className={styles.required}>*</span>
-                </label>
-                <input
-                  type="text"
-                  id="city"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  onBlur={() => handleFieldBlur('city')}
-                  placeholder="E.g. New York"
-                  className={styles.input}
-                  required
-                  disabled={submitting}
-                />
-                {touched.city && errors.city && (
-                  <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.city}</span>
+                {/* City */}
+                <div className={styles.formGroup}>
+                  <label htmlFor="city" className={styles.label}>
+                    City <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    onBlur={() => handleFieldBlur('city')}
+                    placeholder="Your City"
+                    className={styles.input}
+                    required
+                    disabled={submitting || isGeocoding}
+                  />
+                  {touched.city && errors.city && (
+                    <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.city}</span>
+                  )}
+                </div>
+
+                {/* State */}
+                <div className={styles.formGroup}>
+                  <label htmlFor="state" className={styles.label}>
+                    State <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="state"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                    onBlur={() => handleFieldBlur('state')}
+                    placeholder="Your State"
+                    className={styles.input}
+                    required
+                    disabled={submitting || isGeocoding}
+                  />
+                  {touched.state && errors.state && (
+                    <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.state}</span>
+                  )}
+                </div>
+
+                {isGeocoding && (
+                  <p className={styles.locationArea}>Verifying address...</p>
                 )}
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="state" className={styles.label}>
-                  State <span className={styles.required}>*</span>
-                </label>
-                <input
-                  type="text"
-                  id="state"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  onBlur={() => handleFieldBlur('state')}
-                  placeholder="E.g. NY"
-                  className={styles.input}
-                  required
-                  disabled={submitting}
-                />
-                {touched.state && errors.state && (
-                  <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.state}</span>
+                {!isGeocoding && errors.location && (touched.address || touched.city || touched.state || touched.pincode) && (
+                  <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.location}</span>
                 )}
-              </div>
-            </div>
-
-            {/* Pincode */}
-            <div className={styles.formGroup}>
-              <label htmlFor="pincode" className={styles.label}>
-                Pincode <span className={styles.required}>*</span>
-              </label>
-              <input
-                type="text"
-                id="pincode"
-                name="pincode"
-                value={formData.pincode}
-                onChange={handleChange}
-                onBlur={() => handleFieldBlur('pincode')}
-                placeholder="E.g. 100001"
-                className={styles.input}
-                maxLength="6"
-                required
-                disabled={submitting}
-              />
-              {touched.pincode && errors.pincode && (
-                <span className={styles.errorText} data-error="true"><AlertCircle size={12} />{errors.pincode}</span>
-              )}
-            </div>
 
             {/* Step 2 Navigation */}
             <div className={styles.buttonRow}>
@@ -994,9 +839,6 @@ export default function CreateStorePage() {
         {/* STEP 3: Review */}
         {currentStep === 3 && (
           <div className={styles.stepContent}>
-            <p className={styles.subtitle}>
-              Review your store details before creating
-            </p>
 
             {/* Summary */}
             <div className={styles.summary}>

@@ -24,6 +24,7 @@ import {
   useInvalidateCampaignCluster,
 } from "@/hooks/queries/useCampaignQuery";
 import { useSubscriptionStatusQuery } from "@/hooks/queries/useSubscriptionQuery";
+import { useTeamMembersQuery } from "@/hooks/queries/useTeamMembersQuery";
 import Badge from "@/components/dashboard/Badge";
 import StoreAssignment from "@/components/campaign/StoreAssignment";
 import RewardRanges from "@/components/campaign/RewardRanges";
@@ -101,6 +102,17 @@ export default function CampaignDetailsPage({ params }) {
 
   const { data: rangesJson } = useCampaignRangesQuery(campaignId);
   const ranges = rangesJson?.ranges || [];
+
+  // For the QR studio's optional "attribute to team member" picker — same
+  // single-store assumption the studio already makes for storeName/logo.
+  const primaryStoreId = assignedStores?.[0]?.storeId;
+  const { data: teamJson } = useTeamMembersQuery(primaryStoreId);
+  // Without a storeId, the hook falls back to the legacy account-wide
+  // Manager list (a different role, no storeId of their own) — irrelevant
+  // here, so only use the result once we actually have a store to scope to.
+  const teamMembers = primaryStoreId
+    ? (teamJson?.members || []).filter((m) => m.status === "active")
+    : [];
 
   const { data: subscription } = useSubscriptionStatusQuery();
 
@@ -607,6 +619,8 @@ export default function CampaignDetailsPage({ params }) {
                 campaignName={campaign?.campaignName || ""}
                 startDate={campaign?.startDate}
                 endDate={campaign?.endDate}
+                teamMembers={teamMembers}
+                staffStoreId={primaryStoreId}
               />
             ) : (
               <>

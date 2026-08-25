@@ -3,7 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import FormInput from '@/components/common/FormInput';
 import FormButton from '@/components/common/FormButton';
+import { sanitizeNameInput } from '@/lib/nameInput';
 import styles from './StoreForm.module.css';
+
+const NAME_ONLY_FIELDS = new Set(['contact_person']);
 
 export default function StoreForm({
   storeData,
@@ -249,7 +252,10 @@ export default function StoreForm({
         label={label}
         type={type}
         value={formData[fieldName] || ''}
-        onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+        onChange={(e) => handleFieldChange(
+          fieldName,
+          NAME_ONLY_FIELDS.has(fieldName) ? sanitizeNameInput(e.target.value) : e.target.value,
+        )}
         onBlur={() => handleFieldBlur(fieldName)}
         error={touched[fieldName] ? errors[fieldName] : ''}
         placeholder={placeholder}

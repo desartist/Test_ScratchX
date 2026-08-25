@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, AlertCircle, Check } from 'lucide-react';
+import { sanitizeNameInput } from '@/lib/nameInput';
 import styles from '../retailers.module.css';
 
 export default function CreateRetailerPage() {
@@ -205,7 +206,7 @@ export default function CreateRetailerPage() {
                   id="ownerName"
                   name="ownerName"
                   value={formData.ownerName}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange({ target: { name: 'ownerName', value: sanitizeNameInput(e.target.value) } })}
                   className={`${styles.formInput} ${
                     formErrors.ownerName ? styles.inputError : ''
                   }`}
@@ -296,7 +297,7 @@ export default function CreateRetailerPage() {
                   id="contactPersonName"
                   name="contactPersonName"
                   value={formData.contactPersonName}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange({ target: { name: 'contactPersonName', value: sanitizeNameInput(e.target.value) } })}
                   className={styles.formInput}
                   placeholder="Enter contact person name"
                   disabled={loading}

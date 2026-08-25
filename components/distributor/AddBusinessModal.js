@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, AlertCircle, Eye, EyeOff, ChevronDown, Store, Warehouse, Check } from 'lucide-react';
 import { useCreateMerchantMutation } from '@/hooks/queries/useDistributorMerchantsQuery';
+import { sanitizeNameInput } from '@/lib/nameInput';
 // Reuses the Businesses page's stylesheet so the modal is pixel-identical
 // wherever it's opened from (Businesses page, distributor dashboard, etc.).
 import styles from '@/app/(dashboard)/retailers/retailers.module.css';
@@ -232,7 +233,7 @@ export default function AddBusinessModal({ isOpen, onClose, onCreated }) {
               id="name"
               name="name"
               value={formData.name}
-              onChange={handleInputChange}
+              onChange={(e) => handleInputChange({ target: { name: 'name', value: sanitizeNameInput(e.target.value) } })}
               placeholder="Enter owner's full name"
               className={styles.formInput}
               required

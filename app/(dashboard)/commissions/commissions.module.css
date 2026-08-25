@@ -131,6 +131,17 @@
   margin-bottom: 32px;
 }
 
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 480px) {
+  .statGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
 .summaryCard {
   background: white;
   border-radius: 16px;

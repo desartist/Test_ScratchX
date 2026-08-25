@@ -203,6 +203,18 @@ const accountSchema = new mongoose.Schema(
       },
     },
 
+    // Payment/Payout Details (Distributor) — how a Retailer/Wholesaler the
+    // distributor manages can pay them directly (bank transfer, UPI, or by
+    // scanning an uploaded QR code). Every field is optional; a distributor
+    // may fill in any one, a few, or all of them.
+    paymentDetails: {
+      accountHolderName: { type: String, trim: true, default: null },
+      accountNumber: { type: String, trim: true, default: null },
+      ifscCode: { type: String, trim: true, uppercase: true, default: null },
+      upiId: { type: String, trim: true, default: null },
+      qrCodeImage: { type: String, default: null },
+    },
+
     // Notification Preferences
     notificationPreferences: {
       campaigns: { type: Boolean, default: true },

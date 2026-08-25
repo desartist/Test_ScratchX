@@ -116,6 +116,18 @@ const customerParticipationSchema = new mongoose.Schema(
       index: true
     },
 
+    // Which Store_Manager/Store_Staff this scan is attributed to, when the
+    // customer scanned that team member's own personalized QR code (see
+    // CampaignQrStudio's optional "attribute to team member" picker). Null
+    // for the default, unattributed campaign QR — this field is purely
+    // additive and never required.
+    handled_by_staff_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Account',
+      default: null,
+      index: true
+    },
+
     // Status Tracking
     status: {
       type: String,

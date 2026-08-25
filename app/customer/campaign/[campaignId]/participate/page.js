@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { sanitizeNameInput } from "@/lib/nameInput";
 import styles from "./participationForm.module.css";
 
 export default function ParticipationPage() {
@@ -468,7 +469,7 @@ export default function ParticipationPage() {
                 }`}
               placeholder="Enter your full name"
               value={formData.customerName}
-              onChange={handleInputChange}
+              onChange={(e) => handleInputChange({ target: { name: "customerName", value: sanitizeNameInput(e.target.value), type: "text" } })}
             />
             {validationErrors.customerName && (
               <span className={styles.errorText}>

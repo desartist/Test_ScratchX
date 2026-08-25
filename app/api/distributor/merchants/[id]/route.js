@@ -38,14 +38,60 @@ export async function GET(request, { params }) {
   const subscription = await Subscription.findOne({ merchantId: merchant._id })
     .select("merchantId status currentPeriodEnd planType billingCycle unlimitedScratches.validUntil");
 
+  // Stores, campaigns, and team (Store_Manager/Store_Staff) this retailer has
+  // set up — shown to both the owning Distributor and Super_Admin so either
+  // can see the full picture from this one detail page.
+  const [stores, campaigns] = await Promise.all([
+    Store.find({ merchant_id: merchant._id, isDeleted: { $ne: true } })
+      .select("store_name store_code address city state pincode status createdAt")
+      .sort({ createdAt: -1 })
+      .lean(),
+    Campaign.find({ merchantId: merchant._id })
+      .select("campaignName status startDate endDate allocated_scratch_cards used_scratch_cards redeemed_scratch_cards remaining_scratch_cards assignedStores createdAt")
+      .sort({ createdAt: -1 })
+      .lean(),
+  ]);
+
+  const storeIds = stores.map((s) => s._id);
+  const teamMembers = storeIds.length
+    ? await Account.find({ storeId: { $in: storeIds }, role: { $in: ["Store_Manager", "Store_Staff"] } })
+        .select("name email phone role status storeId createdAt lastLoginAt")
+        .sort({ createdAt: -1 })
+        .lean()
+    : [];
+
+  const storeNameById = new Map(stores.map((s) => [String(s._id), s.store_name]));
+  const managerNameByStoreId = new Map(
+    teamMembers.filter((t) => t.role === "Store_Manager" && t.storeId).map((t) => [String(t.storeId), t.name]),
+  );
+  const campaignCountByStoreId = new Map();
+  campaigns.forEach((c) => {
+    (c.assignedStores || []).forEach((a) => {
+      const key = String(a.storeId);
+      campaignCountByStoreId.set(key, (campaignCountByStoreId.get(key) || 0) + 1);
+    });
+  });
+
+  const storesWithDetails = stores.map((s) => ({
+    ...s,
+    managerName: managerNameByStoreId.get(String(s._id)) || null,
+    campaignCount: campaignCountByStoreId.get(String(s._id)) || 0,
+  }));
+  const campaignsWithDetails = campaigns.map((c) => ({
+    ...c,
+    assignedStoreCount: (c.assignedStores || []).length,
+  }));
+  const teamWithDetails = teamMembers.map((t) => ({
+    ...t,
+    storeName: t.storeId ? storeNameById.get(String(t.storeId)) || null : null,
+  }));
+
   let summary = null;
   if (account.role === "Super_Admin") {
-    const [distributor, storeCount, campaignCount, customerRows] = await Promise.all([
+    const [distributor, customerRows] = await Promise.all([
       merchant.parentId
         ? Account.findById(merchant.parentId).select("name profile.companyName")
         : null,
-      Store.countDocuments({ merchant_id: merchant._id, isDeleted: { $ne: true } }),
-      Campaign.countDocuments({ merchantId: merchant._id }),
       CustomerParticipation.aggregate([
         { $match: { merchant_id: merchant._id } },
         { $group: { _id: null, mobiles: { $addToSet: "$customer_mobile" } } },
@@ -53,8 +99,8 @@ export async function GET(request, { params }) {
     ]);
     summary = {
       distributorName: distributor ? distributor.profile?.companyName || distributor.name : null,
-      storeCount,
-      campaignCount,
+      storeCount: stores.length,
+      campaignCount: campaigns.length,
       customerCount: customerRows[0]?.mobiles.length || 0,
       scratchBalance: merchant.scratchCards || null,
     };
@@ -64,6 +110,9 @@ export async function GET(request, { params }) {
     {
       success: true,
       merchant: { ...merchant.toObject(), subscription: subscription ?? null },
+      stores: storesWithDetails,
+      campaigns: campaignsWithDetails,
+      team: teamWithDetails,
       summary,
     },
     { status: 200 },

@@ -503,6 +503,10 @@
   border-bottom: none;
 }
 
+.staticRow {
+  cursor: default !important;
+}
+
 .table tbody tr:hover {
   background: #f9fafb;
 }

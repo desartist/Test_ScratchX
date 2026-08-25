@@ -8,6 +8,7 @@ import {
   useInviteTeamMemberMutation,
   useUpdateTeamMemberMutation,
 } from "@/hooks/queries/useAdminTeamQuery";
+import { sanitizeNameInput } from "@/lib/nameInput";
 import styles from "./admin-team.module.css";
 
 function initials(name) {
@@ -72,7 +73,7 @@ function InviteModal({ onClose }) {
               <input
                 className={styles.formInput}
                 value={form.name}
-                onChange={(e) => handleChange("name", e.target.value)}
+                onChange={(e) => handleChange("name", sanitizeNameInput(e.target.value))}
                 placeholder="e.g. Priya Sharma"
               />
             </div>

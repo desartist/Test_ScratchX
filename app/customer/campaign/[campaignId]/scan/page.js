@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import confetti from "canvas-confetti";
+import { sanitizeNameInput } from "@/lib/nameInput";
 import styles from "./page.module.css";
 
 export default function ScanClientPage() {
@@ -336,7 +337,7 @@ export default function ScanClientPage() {
                 placeholder="Nimit"
                 value={formData.customerName}
                 onChange={(e) => {
-                  setFormData({ ...formData, customerName: e.target.value });
+                  setFormData({ ...formData, customerName: sanitizeNameInput(e.target.value) });
                   if (validationErrors.customerName) {
                     setValidationErrors({ ...validationErrors, customerName: null });
                   }

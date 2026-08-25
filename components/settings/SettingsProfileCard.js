@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Edit2, Save, X, Camera, Trash2 } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import { useSubscriptionCurrentQuery } from "@/hooks/queries/useSubscriptionQuery";
+import { sanitizeNameInput } from "@/lib/nameInput";
 import styles from "./SettingsProfileCard.module.css";
 
 export default function SettingsProfileCard({ merchant }) {
@@ -248,7 +249,7 @@ export default function SettingsProfileCard({ merchant }) {
                 type="text"
                 name="name"
                 value={formData.name}
-                onChange={handleChange}
+                onChange={(e) => handleChange({ target: { name: 'name', value: sanitizeNameInput(e.target.value) } })}
                 className={styles.input}
                 placeholder="Full Name"
               />

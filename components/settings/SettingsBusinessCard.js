@@ -154,11 +154,15 @@ export default function SettingsBusinessCard({ merchant }) {
     <div className={styles.card}>
       <h3>Business Information</h3>
 
-      {/* Business Type — read-only; set only by the distributor at creation time */}
-      <div className={styles.infoItem} style={{ marginBottom: 16 }}>
-        <span className={styles.label}>Business Type</span>
-        <span className={styles.value}>{businessModelLabel}</span>
-      </div>
+      {/* Business Type (Retailer/Wholesaler) — a merchant concept set by the
+          distributor at creation time; meaningless on the distributor's own
+          settings page, so hide it there. */}
+      {merchant?.role !== "Distributor" && (
+        <div className={styles.infoItem} style={{ marginBottom: 16 }}>
+          <span className={styles.label}>Business Type</span>
+          <span className={styles.value}>{businessModelLabel}</span>
+        </div>
+      )}
 
       {success && (
         <div className={styles.successMessage}>✓ Business details updated</div>

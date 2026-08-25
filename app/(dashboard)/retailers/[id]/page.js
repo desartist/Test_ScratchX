@@ -60,6 +60,26 @@ const STATUS_ICONS = {
   inactive: MinusCircle,
 };
 
+// Store status, Campaign status, and Account status (team members) each have
+// their own enum — mapped to the same dot-color language used for customer
+// participation status above, but kept separate since the value sets differ.
+const GENERIC_STATUS_COLORS = {
+  active: '#10b981',
+  inactive: '#6b7280',
+  suspended: '#ef4444',
+  deleted: '#ef4444',
+  deactivated: '#ef4444',
+  pending: '#f59e0b',
+  draft: '#6b7280',
+  paused: '#f59e0b',
+  ended: '#6b7280',
+};
+
+function formatDate(value) {
+  if (!value) return '—';
+  return new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 function formatWonReward(card) {
   if (!card) return null;
   const { reward_type, reward_value, reward_description } = card;
@@ -163,10 +183,18 @@ export default function RetailerDetailPage() {
   }
 
   const storeName = merchant.profile?.storeName || merchant.name;
-  const location = [merchant.profile?.storeLocation, merchant.profile?.storeAddress]
-    .filter(Boolean)
-    .join(' · ');
+  // Prefer the actual business address (filled in via Settings > Business
+  // Information); fall back to the legacy onboarding-time profile fields.
+  const location =
+    [merchant.businessInfo?.address, merchant.businessInfo?.city, merchant.businessInfo?.state, merchant.businessInfo?.pincode]
+      .filter(Boolean)
+      .join(', ') ||
+    [merchant.profile?.storeLocation, merchant.profile?.storeAddress].filter(Boolean).join(' · ');
+  const businessType = merchant.profile?.businessType || merchant.profile?.businessModel;
   const plan = merchant.subscription?.planType;
+  const stores = merchantData?.stores || [];
+  const campaigns = merchantData?.campaigns || [];
+  const team = merchantData?.team || [];
 
   return (
     <div className={styles.page}>
@@ -258,8 +286,8 @@ export default function RetailerDetailPage() {
               <Store size={18} />
             </div>
             <p className={styles.infoLabel}>Business Type</p>
-            <p className={`${styles.infoValue} ${!merchant.profile?.businessType ? styles.infoValueEmpty : ''}`}>
-              {merchant.profile?.businessType || 'Not provided'}
+            <p className={`${styles.infoValue} ${!businessType ? styles.infoValueEmpty : ''}`}>
+              {businessType || 'Not provided'}
             </p>
           </div>
 
@@ -282,6 +310,19 @@ export default function RetailerDetailPage() {
             <ClipboardList size={84} className={styles.infoWatermark} />
           </div>
         </div>
+
+        {/* Overview (Distributor view — Super_Admin gets the richer Business
+            Summary below instead, which already includes these counts) */}
+        {!isSuperAdmin && (
+          <>
+            <h2 className={styles.sectionHeading}>Overview</h2>
+            <div className={styles.statsGrid}>
+              <StatCard icon={<Store />} label="Stores" value={stores.length} />
+              <StatCard icon={<Megaphone />} label="Campaigns" value={campaigns.length} />
+              <StatCard icon={<Users />} label="Team Members" value={team.length} />
+            </div>
+          </>
+        )}
 
         {/* Business Summary (Super_Admin only — platform-wide view of this retailer) */}
         {isSuperAdmin && summary && (
@@ -306,6 +347,150 @@ export default function RetailerDetailPage() {
               </p>
             )}
           </>
+        )}
+
+        {/* Stores */}
+        <h2 className={styles.sectionHeading}>Stores ({stores.length})</h2>
+        {stores.length === 0 ? (
+          <div className={styles.tableWrap}>
+            <p className={styles.emptyText}>This retailer hasn&apos;t created any stores yet.</p>
+          </div>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Store</th>
+                  <th>Address</th>
+                  <th>Manager</th>
+                  <th>Campaigns</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stores.map((store) => (
+                  <tr key={store._id} className={styles.staticRow}>
+                    <td className={styles.customerName}>{store.store_name}</td>
+                    <td>{[store.city, store.state].filter(Boolean).join(', ') || '—'}</td>
+                    <td>{store.managerName || '—'}</td>
+                    <td>{store.campaignCount}</td>
+                    <td>
+                      <span
+                        className={styles.statusPill}
+                        style={{ borderColor: GENERIC_STATUS_COLORS[store.status] }}
+                      >
+                        <span
+                          className={styles.statusDot}
+                          style={{ backgroundColor: GENERIC_STATUS_COLORS[store.status] }}
+                        />
+                        {store.status}
+                      </span>
+                    </td>
+                    <td>{formatDate(store.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Campaigns */}
+        <h2 className={styles.sectionHeading}>Campaigns ({campaigns.length})</h2>
+        {campaigns.length === 0 ? (
+          <div className={styles.tableWrap}>
+            <p className={styles.emptyText}>This retailer hasn&apos;t created any campaigns yet.</p>
+          </div>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Campaign</th>
+                  <th>Status</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Allocated</th>
+                  <th>Used</th>
+                  <th>Redeemed</th>
+                  <th>Stores</th>
+                </tr>
+              </thead>
+              <tbody>
+                {campaigns.map((campaign) => (
+                  <tr key={campaign._id} className={styles.staticRow}>
+                    <td className={styles.customerName}>{campaign.campaignName}</td>
+                    <td>
+                      <span
+                        className={styles.statusPill}
+                        style={{ borderColor: GENERIC_STATUS_COLORS[campaign.status] }}
+                      >
+                        <span
+                          className={styles.statusDot}
+                          style={{ backgroundColor: GENERIC_STATUS_COLORS[campaign.status] }}
+                        />
+                        {campaign.status}
+                      </span>
+                    </td>
+                    <td>{formatDate(campaign.startDate)}</td>
+                    <td>{formatDate(campaign.endDate)}</td>
+                    <td>{campaign.allocated_scratch_cards ?? 0}</td>
+                    <td>{campaign.used_scratch_cards ?? 0}</td>
+                    <td>{campaign.redeemed_scratch_cards ?? 0}</td>
+                    <td>{campaign.assignedStoreCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Team Members */}
+        <h2 className={styles.sectionHeading}>Team Members ({team.length})</h2>
+        {team.length === 0 ? (
+          <div className={styles.tableWrap}>
+            <p className={styles.emptyText}>This retailer hasn&apos;t added any store staff yet.</p>
+          </div>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Store</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {team.map((member) => (
+                  <tr key={member._id} className={styles.staticRow}>
+                    <td className={styles.customerName}>{member.name}</td>
+                    <td>{member.role === 'Store_Manager' ? 'Store Manager' : 'Store Staff'}</td>
+                    <td>{member.storeName || '—'}</td>
+                    <td>{member.email}</td>
+                    <td>{member.phone || '—'}</td>
+                    <td>
+                      <span
+                        className={styles.statusPill}
+                        style={{ borderColor: GENERIC_STATUS_COLORS[member.status] }}
+                      >
+                        <span
+                          className={styles.statusDot}
+                          style={{ backgroundColor: GENERIC_STATUS_COLORS[member.status] }}
+                        />
+                        {member.status}
+                      </span>
+                    </td>
+                    <td>{formatDate(member.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* Customers */}

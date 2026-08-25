@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
 import Account from "@/models/accountModel";
 import Store from "@/models/storeModel";
+import CustomerParticipation from "@/models/customerParticipationModel";
 import { getStoreTeamLimitStatus, assertCanAddTeamMember } from "@/lib/services/teamLimitService";
 import passwordService from "@/lib/passwordService";
 import { sendTeamMemberInviteEmail } from "@/lib/emailService";
@@ -49,10 +50,22 @@ export async function GET(request) {
           role: { $in: STORE_TEAM_ROLES },
           status: { $ne: "deactivated" },
         })
-          .select("name email phone role status createdAt lastLoginAt")
+          .select("name email phone role status storeId createdAt lastLoginAt")
           .sort({ createdAt: -1 }),
         getStoreTeamLimitStatus(account, store),
       ]);
+
+      // Scan counts per member — how many customer scans were attributed to
+      // each team member's own personalized QR code (see CampaignQrStudio).
+      // Members who never had a personalized QR simply show 0, same as
+      // before this feature existed.
+      const scanCounts = members.length
+        ? await CustomerParticipation.aggregate([
+            { $match: { handled_by_staff_id: { $in: members.map((m) => m._id) } } },
+            { $group: { _id: "$handled_by_staff_id", count: { $sum: 1 } } },
+          ])
+        : [];
+      const scanCountByMemberId = new Map(scanCounts.map((row) => [String(row._id), row.count]));
 
       return Response.json(
         {
@@ -64,8 +77,10 @@ export async function GET(request) {
             phone: m.phone,
             role: m.role,
             status: m.status,
+            storeId: m.storeId,
             createdAt: m.createdAt,
             lastLoginAt: m.lastLoginAt,
+            scanCount: scanCountByMemberId.get(String(m._id)) || 0,
           })),
           count: members.length,
           limitStatus,
@@ -351,7 +366,7 @@ export async function PUT(request) {
     if (error) return error;
 
     const body = await request.json();
-    const { memberId, name, email, phone } = body;
+    const { memberId, name, email, phone, storeId } = body;
 
     if (!memberId) {
       return Response.json(
@@ -402,6 +417,36 @@ export async function PUT(request) {
     if (name) member.name = name;
     if (phone) member.phone = phone;
 
+    // Reassign to a different store (Store_Manager/Store_Staff only) — the
+    // legacy account-wide Manager role has no storeId concept.
+    if (storeId && STORE_TEAM_ROLES.includes(member.role) && String(storeId) !== String(member.storeId)) {
+      const newStore = await Store.findOne({
+        _id: storeId,
+        merchant_id: account._id,
+        isDeleted: false,
+      });
+      if (!newStore) {
+        return Response.json(
+          { success: false, error: "Store not found" },
+          { status: 404 }
+        );
+      }
+
+      try {
+        await assertCanAddTeamMember(account, newStore, member.role);
+      } catch (limitErr) {
+        if (limitErr.code === "TEAM_LIMIT_REACHED") {
+          return Response.json(
+            { success: false, error: limitErr.message, limitStatus: limitErr.limitStatus },
+            { status: 403 }
+          );
+        }
+        throw limitErr;
+      }
+
+      member.storeId = newStore._id;
+    }
+
     await member.save();
 
     return Response.json(
@@ -415,6 +460,7 @@ export async function PUT(request) {
           phone: member.phone,
           role: member.role,
           status: member.status,
+          storeId: member.storeId,
         },
       },
       { status: 200 }

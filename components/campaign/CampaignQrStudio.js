@@ -48,6 +48,26 @@ export default function CampaignQrStudio({
   campaignName,
   startDate,
   endDate,
+  // Optional: Store_Manager/Store_Staff accounts for the store(s) this
+  // campaign is assigned to. When provided, a picker lets the merchant
+  // generate a QR personalized to one team member — scans of that QR get
+  // attributed to them (see handled_by_staff_id on CustomerParticipation).
+  // Leaving no one selected produces the exact same QR as before this
+  // feature existed.
+  teamMembers = [],
+  // Optional: when a Store_Manager/Store_Staff is viewing their own
+  // campaign page, pass their own account id (and name, for the badge) here
+  // to always show *their* personalized QR — no picker, since there's
+  // nothing to choose.
+  fixedStaffId = null,
+  fixedStaffName = null,
+  // The store every pickable team member (or the fixed self) belongs to.
+  // Baked into the QR alongside the staff id so the scan flow checks the
+  // customer's location against *this* store specifically — without it, a
+  // multi-store campaign would GPS-match whichever assigned store happens
+  // to be closest, which can silently disagree with the staff's own store
+  // and drop the attribution.
+  staffStoreId = null,
 }) {
   const canvasRef = useRef(null);
   const { account } = useAuthContext();
@@ -91,8 +111,15 @@ export default function CampaignQrStudio({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [selectedStaffId, setSelectedStaffId] = useState(() => fixedStaffId || "");
 
-  const scanUrl = origin && campaignId ? `${origin}/scan/${campaignId}` : "";
+  const staffQueryString = selectedStaffId
+    ? `?staff=${selectedStaffId}${staffStoreId ? `&store=${staffStoreId}` : ""}`
+    : "";
+  const scanUrl =
+    origin && campaignId
+      ? `${origin}/scan/${campaignId}${staffQueryString}`
+      : "";
 
   // Render the QR to the live preview canvas whenever inputs change.
   // Uses a cancelled flag so a stale logo load can't draw over a newer render.
@@ -338,7 +365,15 @@ export default function CampaignQrStudio({
     if (revoke) URL.revokeObjectURL(href);
   }, []);
 
-  const fileBase = (campaignId || "campaign").toString();
+  const selectedStaffName = selectedStaffId
+    ? (fixedStaffId ? fixedStaffName : teamMembers.find((m) => m._id === selectedStaffId)?.name)
+    : null;
+  const fileBase = [
+    (campaignId || "campaign").toString(),
+    selectedStaffName ? selectedStaffName.toLowerCase().replace(/[^a-z0-9]+/g, "-") : null,
+  ]
+    .filter(Boolean)
+    .join("-");
 
   const handleDownloadPng = useCallback(async () => {
     const out = await buildExportCanvas();
@@ -477,6 +512,12 @@ export default function CampaignQrStudio({
             </div>
           )}
 
+          {/* {selectedStaffName && (
+            <p className={styles.staffBadge}>
+              {fixedStaffId ? "Your personalized QR" : `For: ${selectedStaffName}`}
+            </p>
+          )} */}
+
           <canvas
             ref={canvasRef}
             width={QR_SIZE}
@@ -499,6 +540,28 @@ export default function CampaignQrStudio({
 
       {/* Controls */}
       <div className={styles.controlsCol}>
+        {teamMembers.length > 0 && !fixedStaffId && (
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="qr-staff">
+              Attribute to team member (optional)
+            </label>
+            <select
+              id="qr-staff"
+              className={styles.textInput}
+              value={selectedStaffId}
+              onChange={(e) => setSelectedStaffId(e.target.value)}
+            >
+              <option value="">No one — general store QR</option>
+              {teamMembers.map((member) => (
+                <option key={member._id} value={member._id}>
+                  {member.name}
+                  {member.storeName ? ` — ${member.storeName}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className={styles.field}>
           <label className={styles.label} htmlFor="qr-brand-name">
             Brand name

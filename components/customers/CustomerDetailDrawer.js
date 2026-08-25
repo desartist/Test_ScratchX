@@ -278,6 +278,14 @@ export default function CustomerDetailDrawer({ isOpen, onClose, customer }) {
                   {customer.distance_from_store_meters?.toFixed(0) || 0}m
                 </span>
               </div>
+              <div className={styles.infoItem}>
+                <span className={styles.label}>Scanned Via</span>
+                <span className={styles.value}>
+                  {customer.handled_by_staff_id?.name
+                    ? `${customer.handled_by_staff_id.name}'s QR Code`
+                    : "General Store QR Code"}
+                </span>
+              </div>
             </div>
 
             {/* Matched Store (if different) */}

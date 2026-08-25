@@ -14,11 +14,16 @@ import {
   Zap,
   ShoppingCart,
   MapPin,
+  Wallet,
+  Clock,
 } from 'lucide-react';
 import { useDistributorDashboardQuery } from '@/hooks/queries/useDistributorDashboardQuery';
+import { useDistributorDashboardChartsQuery } from '@/hooks/queries/useDistributorDashboardChartsQuery';
 import { getAccountInitials } from '@/lib/accountDisplay';
 import LoadingState from '@/components/common/LoadingState';
 import AddBusinessModal from '@/components/distributor/AddBusinessModal';
+import StatCard from '@/components/dashboard/shared/StatCard';
+import { MultiLineChart, DonutChart, HBarList } from '@/components/dashboard/smart/charts';
 import styles from './distributor.module.css';
 
 function formatDaysLeft(daysLeft) {
@@ -31,6 +36,7 @@ function formatDaysLeft(daysLeft) {
 
 export default function DistributorDashboard() {
   const { data: dashboard, isPending: loading, error: queryError, refetch } = useDistributorDashboardQuery();
+  const { data: chartsData } = useDistributorDashboardChartsQuery(30);
   const error = queryError ? queryError.message : null;
   const [showAddBusinessModal, setShowAddBusinessModal] = useState(false);
 
@@ -63,6 +69,14 @@ export default function DistributorDashboard() {
   const { distributor, metrics, inventory, rechargeQueue } = dashboard;
   const totalRemaining = inventory.core.totalRemaining + inventory.smart.totalRemaining;
   const location = [distributor.territory, distributor.region].filter(Boolean).join(', ');
+
+  const commissionTrend = chartsData?.commissionTrend || [];
+  const topRetailers = (chartsData?.topRetailers || []).map((r) => ({ label: r.name, value: r.earned }));
+  const businessTypeSegments = [
+    { label: 'Retailers', value: metrics.retailBusinesses, color: '#6d5df6' },
+    { label: 'Wholesalers', value: metrics.wholesaleBusinesses, color: '#ef9e1b' },
+  ];
+  const totalBusinesses = metrics.retailBusinesses + metrics.wholesaleBusinesses;
 
   return (
     <div className={styles.page}>
@@ -135,50 +149,79 @@ export default function DistributorDashboard() {
         </div>
 
         <div className={styles.statGrid}>
-          <div className={styles.statCard}>
-            <div className={styles.statTopRow}>
-              <div className={`${styles.statIcon} ${styles['icon-purple']}`}>
-                <Users size={19} />
-              </div>
-              <div className={styles.statNumberCol}>
-                <span className={styles.statValue}> {totalRemaining} </span>
-                
-              </div>
-            </div>
-            <p className={styles.statLabel}>licenses remaining</p>
-          </div>
-
-          <div className={styles.statCard}>
-            <div className={styles.statTopRow}>
-              <div className={`${styles.statIcon} ${styles['icon-blue']}`}>
-                <CreditCard size={19} />
-              </div>
-              <div className={styles.statNumberCol}>
-                <span className={styles.statValue}>{metrics.licensesPurchased}</span>
-                <span className={styles.statTrend}>
-                  {inventory.core.totalPurchased} Core + {inventory.smart.totalPurchased} Smart
-                </span>
-              </div>
-            </div>
-            <p className={styles.statLabel}>Core + Smart Licenses Purchased</p>
-          </div>
-
-          <div className={styles.statCard}>
-            <span className={styles.statValueSolo}>₹{metrics.monthlyMargin.toLocaleString('en-IN')}</span>
-            <p className={styles.statLabelBold}>Estimated Margin</p>
-            <p className={styles.statCaption}>This month</p>
-          </div>
-
-          <div className={styles.statCard}>
-            <span className={styles.statValueSolo}>₹{metrics.pendingPayoutAmount.toLocaleString('en-IN')}</span>
-            <p className={styles.statLabelBold}>Pending Payments</p>
-            <p className={styles.statCaption}>
-              {metrics.pendingRetailerCount > 0
+          <StatCard
+            icon={<Users />}
+            value={totalRemaining}
+            label="Licenses Remaining"
+          />
+          <StatCard
+            icon={<CreditCard />}
+            value={metrics.licensesPurchased}
+            label="Core + Smart Licenses Purchased"
+            subtitle={`${inventory.core.totalPurchased} Core + ${inventory.smart.totalPurchased} Smart`}
+          />
+          <StatCard
+            icon={<Wallet />}
+            value={`₹${metrics.monthlyMargin.toLocaleString('en-IN')}`}
+            label="Estimated Margin"
+            subtitle="This month"
+          />
+          <StatCard
+            icon={<Clock />}
+            value={`₹${metrics.pendingPayoutAmount.toLocaleString('en-IN')}`}
+            label="Pending Payments"
+            tone="red"
+            subtitle={
+              metrics.pendingRetailerCount > 0
                 ? `From ${metrics.pendingRetailerCount} retailer${metrics.pendingRetailerCount === 1 ? '' : 's'}`
-                : 'No pending payments'}
-            </p>
+                : 'No pending payments'
+            }
+          />
+        </div>
+
+        {/* Charts: Commission Trend + Business Mix */}
+        <div className={styles.chartsGrid}>
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>Commission Earned</h2>
+              <span className={styles.chartRangeNote}>Last 30 Days</span>
+            </div>
+            <MultiLineChart
+              labels={commissionTrend.map((d) => d.label)}
+              series={[{ name: 'Commission', color: '#6d5df6', data: commissionTrend.map((d) => d.earned) }]}
+              ariaLabel="Daily commission earned over the last 30 days"
+            />
+          </div>
+
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>Business Mix</h2>
+            {totalBusinesses === 0 ? (
+              <p className={styles.emptyText}>No businesses onboarded yet.</p>
+            ) : (
+              <DonutChart
+                segments={businessTypeSegments}
+                centerLabel={totalBusinesses}
+                centerSubLabel="Total"
+                ariaLabel="Retailers vs wholesalers breakdown"
+              />
+            )}
           </div>
         </div>
+
+        {/* Top Retailers by Commission */}
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>Top Retailers by Commission</h2>
+          {topRetailers.length === 0 ? (
+            <p className={styles.emptyText}>No commission earned yet.</p>
+          ) : (
+            <HBarList
+              items={topRetailers}
+              valueFormatter={(v) => `₹${v.toLocaleString('en-IN')}`}
+              ariaLabel="Top retailers by commission earned"
+            />
+          )}
+        </div>
+
         {/* Recharge Queue */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>

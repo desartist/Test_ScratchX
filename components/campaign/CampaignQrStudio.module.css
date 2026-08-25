@@ -281,6 +281,16 @@
 }
 
 /* Store Name Container */
+.staffBadge {
+  margin: -12px 0 16px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #eef0ff;
+  color: #4c4ce6;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .storeNameContainer {
   width: 100%;
   text-align: center;

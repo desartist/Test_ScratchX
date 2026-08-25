@@ -50,3 +50,29 @@ export function useStoreCampaignDetailQuery(campaignId) {
     enabled: !!accountId && !!campaignId,
   });
 }
+
+export function myQrCustomersQueryKey(accountId, campaignId) {
+  return ["my-qr-customers", accountId, campaignId];
+}
+
+export async function fetchMyQrCustomers(campaignId) {
+  const res = await fetch(`/api/store-campaigns/${campaignId}/my-customers`, { credentials: "include" });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to load customers");
+  }
+  return json; // { customers, count }
+}
+
+// The customers who scanned *this* team member's own personalized QR code
+// for one campaign — see handled_by_staff_id on CustomerParticipation.
+export function useMyQrCustomersQuery(campaignId) {
+  const { account } = useAuthContext();
+  const accountId = account?.id || account?._id;
+
+  return useQuery({
+    queryKey: myQrCustomersQueryKey(accountId, campaignId),
+    queryFn: () => fetchMyQrCustomers(campaignId),
+    enabled: !!accountId && !!campaignId,
+  });
+}

@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
+import { useBackNavigationGuard } from "@/hooks/useBackNavigationGuard";
+import SessionExpiredIcon from "@/components/customer/SessionExpiredIcon";
 import styles from "./scratch.module.css";
 
 /**
@@ -127,6 +129,7 @@ function formatReward(reward) {
 export default function ScratchCardPage() {
   const params = useParams();
   const router = useRouter();
+  const backBlocked = useBackNavigationGuard();
   const canvasRef  = useRef(null);
   const cleanupRef = useRef(null);
   const hasTriggeredRef = useRef(false);
@@ -243,6 +246,21 @@ export default function ScratchCardPage() {
         <div className={styles.centeredState}>
           <div className={styles.spinner} />
           <p className={styles.stateText}>Loading your scratch card…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Back button pressed — block returning to the scan/participation form ──
+  if (backBlocked) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.centeredState}>
+          <SessionExpiredIcon size={56} color="#0d21a1" cutout="#fff" />
+          <h2 className={styles.errorTitle}>Session Expired</h2>
+          <p className={styles.stateText}>
+            Your session has expired. Please scan the QR code again to continue.
+          </p>
         </div>
       </div>
     );
