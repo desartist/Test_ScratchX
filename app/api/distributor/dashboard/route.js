@@ -8,6 +8,7 @@ import { requireAuth } from '@/lib/auth';
 import Account from '@/models/accountModel';
 import Commission from '@/models/commissionModel';
 import Subscription from '@/models/subscriptionModel';
+import Lead from '@/models/leadModel';
 import { inventoryService } from '@/lib/services/distributor';
 
 // Unit MRP (with 18% GST) — must match /api/subscription/plans (price.withGST)
@@ -72,6 +73,18 @@ export async function GET() {
       inventoryService.getDistributorInventory(account._id),
       Account.find({ role: 'Merchant', parentId: account._id }).select('_id name profile'),
     ]);
+
+    // Lead pipeline snapshot for this distributor's own network — see
+    // models/leadModel.js. Grouped in one aggregate rather than N counts.
+    const leadStatusRows = await Lead.aggregate([
+      { $match: { distributorId: account._id } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]);
+    const leadCountsByStatus = Object.fromEntries(leadStatusRows.map((r) => [r._id, r.count]));
+    const totalLeads = leadStatusRows.reduce((sum, r) => sum + r.count, 0);
+    const demosScheduled = leadCountsByStatus['Demo Scheduled'] || 0;
+    const followUpsPending = leadCountsByStatus['Follow-up Pending'] || 0;
+    const leadsConverted = leadCountsByStatus['Converted'] || 0;
 
     const commission = { earned: 0, approved: 0, paid: 0, pending: 0, pendingAmount: 0 };
     for (const row of commissionAgg) {
@@ -151,6 +164,10 @@ export async function GET() {
         licensesPurchased: core.totalPurchased + smart.totalPurchased,
         pendingPayoutAmount: commission.pendingAmount,
         pendingRetailerCount,
+        totalLeads,
+        demosScheduled,
+        followUpsPending,
+        leadConversionRate: totalLeads > 0 ? Math.round((leadsConverted / totalLeads) * 100) : 0,
       },
       inventory: {
         core: {

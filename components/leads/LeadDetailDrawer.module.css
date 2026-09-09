@@ -1,0 +1,169 @@
+.actionsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.fieldInput,
+.fieldSelect {
+  padding: 9px 10px;
+  border: 1.5px solid #e8eaff;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #010f44;
+  font-family: inherit;
+  background: #fff;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+
+.timelineDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef9e1b;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.timelineBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.timelineEvent {
+  font-weight: 700;
+  color: #010f44;
+  text-transform: capitalize;
+}
+
+.timelineDetail {
+  color: #637080;
+}
+
+.timelineMeta {
+  font-size: 0.72rem;
+  color: #9ba8b8;
+}
+
+.notesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.noteCard {
+  padding: 10px 12px;
+  background: #f8f9ff;
+  border-radius: 10px;
+  border: 1px solid #e8eaff;
+}
+
+.noteMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #9ba8b8;
+  margin-bottom: 4px;
+}
+
+.noteAuthor {
+  font-weight: 700;
+  color: #010f44;
+}
+
+.noteText {
+  font-size: 0.85rem;
+  color: #374151;
+  white-space: pre-wrap;
+}
+
+.noteForm {
+  display: flex;
+  gap: 8px;
+}
+
+.noteTextarea {
+  flex: 1;
+  padding: 9px 10px;
+  border: 1.5px solid #e8eaff;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 40px;
+}
+
+.noteSubmitBtn {
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.noteSubmitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.convertBtn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.convertBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.errorBanner {
+  background: #fff0f0;
+  border: 1.5px solid #ffc5c5;
+  color: #c0392b;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.emptyText {
+  color: #9ba8b8;
+  font-size: 0.85rem;
+}

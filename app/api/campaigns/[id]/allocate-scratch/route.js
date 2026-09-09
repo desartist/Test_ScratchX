@@ -121,10 +121,15 @@ export async function POST(request, { params }) {
     }
     // entitlement.type === 'unlimited' → no balance cap during the 365-day grant.
 
-    // Update campaign allocation
-    campaign.allocated_scratch_cards = allocationAmount;
+    // Update campaign allocation — additive. Each successful call tops up
+    // the campaign's existing pool rather than replacing it, so allocating
+    // 500 to a campaign that already has 2,000 results in 2,500, not 500.
+    // (allocationAmount itself, checked above, is only ever the *new* amount
+    // being added — never the intended new total.)
+    const previousAllocation = campaign.allocated_scratch_cards || 0;
+    campaign.allocated_scratch_cards = previousAllocation + allocationAmount;
     campaign.remaining_scratch_cards =
-      allocationAmount - (campaign.used_scratch_cards || 0);
+      campaign.allocated_scratch_cards - (campaign.used_scratch_cards || 0);
 
     await campaign.save();
 
@@ -136,6 +141,8 @@ export async function POST(request, { params }) {
         allocated_scratch_cards: campaign.allocated_scratch_cards,
         used_scratch_cards: campaign.used_scratch_cards,
         remaining_scratch_cards: campaign.remaining_scratch_cards,
+        previous_allocation: previousAllocation,
+        added: allocationAmount,
       },
     });
   } catch (error) {

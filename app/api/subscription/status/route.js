@@ -20,7 +20,9 @@ import CustomerParticipation from "@/models/customerParticipationModel";
  *   unlimitedScratchesExpiryDate: "2024-12-31T00:00:00.000Z" | null,
  *   scratchRemaining: number | "UNLIMITED",
  *   scratchPurchased: number,
- *   scratchConsumed: number
+ *   scratchConsumed: number,
+ *   scratchPacksPurchased: number,  // real purchased-pack total, always a number
+ *   scratchPacksRemaining: number   // real purchased-pack balance, always a number
  * }
  *
  * Response when NO plan:
@@ -34,7 +36,9 @@ import CustomerParticipation from "@/models/customerParticipationModel";
  *   unlimitedScratchesExpiryDate: null,
  *   scratchRemaining: 0,
  *   scratchPurchased: 0,
- *   scratchConsumed: 0
+ *   scratchConsumed: 0,
+ *   scratchPacksPurchased: 0,
+ *   scratchPacksRemaining: 0
  * }
  */
 export async function GET() {
@@ -72,6 +76,8 @@ export async function GET() {
           scratchRemaining: 0,
           scratchPurchased: 0,
           scratchConsumed: 0,
+          scratchPacksPurchased: 0,
+          scratchPacksRemaining: 0,
         },
         { status: 200 }
       );
@@ -84,6 +90,17 @@ export async function GET() {
     let unlimitedScratchesExpiryDate = null;
     let scratchRemaining = 0;
     let scratchPurchased = 0;
+
+    // Real purchased-pack numbers — computed unconditionally (regardless of
+    // whether the unlimited-scratches grant is currently active) so callers
+    // that want the actual figures a merchant has bought always have them,
+    // rather than only when the unlimited grant has lapsed. See
+    // scratchPacksPurchased/scratchPacksRemaining below — added alongside
+    // the existing scratchPurchased/scratchRemaining fields (kept exactly
+    // as before, "UNLIMITED" placeholder included) so nothing already
+    // reading those two fields changes behavior.
+    const scratchPacksPurchased = calculateTotalScratchPurchased(subscription);
+    const scratchPacksRemaining = calculateScratchRemaining(subscription);
 
     // Check if unlimitedScratches are active and not expired
     if (
@@ -98,13 +115,13 @@ export async function GET() {
         scratchRemaining = "UNLIMITED";
       } else {
         // Unlimited scratches expired - calculate from purchased packs
-        scratchRemaining = calculateScratchRemaining(subscription);
-        scratchPurchased = calculateTotalScratchPurchased(subscription);
+        scratchRemaining = scratchPacksRemaining;
+        scratchPurchased = scratchPacksPurchased;
       }
     } else {
       // No unlimited scratches - calculate from purchased packs
-      scratchRemaining = calculateScratchRemaining(subscription);
-      scratchPurchased = calculateTotalScratchPurchased(subscription);
+      scratchRemaining = scratchPacksRemaining;
+      scratchPurchased = scratchPacksPurchased;
     }
 
     // Get plan name — fall back to planType when planId is null (hardcoded plans)
@@ -131,6 +148,11 @@ export async function GET() {
         scratchRemaining,
         scratchPurchased,
         scratchConsumed,
+        // Real scratch-pack numbers, always a number (never "UNLIMITED") —
+        // for surfaces that show the merchant's actual purchased/remaining
+        // balance instead of the unlimited-grant framing above.
+        scratchPacksPurchased,
+        scratchPacksRemaining,
       },
       { status: 200 }
     );

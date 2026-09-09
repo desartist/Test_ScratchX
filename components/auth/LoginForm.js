@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthContext } from './AuthContext';
+import { isValidEmail } from '@/lib/authInputValidation';
 import styles from './LoginForm.module.css';
 import { Mail, Lock, Smartphone, Loader } from 'lucide-react';
 
@@ -94,7 +95,7 @@ export default function LoginForm() {
     const errors = {};
     if (!email || email.trim() === '') {
       errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    } else if (!isValidEmail(email)) {
       errors.email = 'Please enter a valid email address';
     }
     if (!password || password.trim() === '') {

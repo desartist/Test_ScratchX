@@ -101,7 +101,7 @@ function CustomSelect({ id, options, value, onChange, placeholder }) {
  * distributor dashboard's "Start Onboarding" button so both open the exact
  * same form in place, instead of navigating away.
  */
-export default function AddBusinessModal({ isOpen, onClose, onCreated }) {
+export default function AddBusinessModal({ isOpen, onClose, onCreated, initialValues }) {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -117,6 +117,12 @@ export default function AddBusinessModal({ isOpen, onClose, onCreated }) {
         if (json.success) setInventory(json.data);
       })
       .catch(() => {});
+    // Pre-fill from a Lead when converting one (see leads/[id]/convert) —
+    // no-op for the normal "Start Onboarding" flow, which never passes this.
+    if (initialValues) {
+      setFormData((prev) => ({ ...EMPTY_FORM, ...prev, ...initialValues }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleInputChange = (e) => {
@@ -149,9 +155,9 @@ export default function AddBusinessModal({ isOpen, onClose, onCreated }) {
     }
 
     try {
-      await createMutation.mutateAsync(formData);
+      const result = await createMutation.mutateAsync(formData);
       handleClose();
-      onCreated?.();
+      onCreated?.(result?.merchant);
     } catch (err) {
       setFormError(err.message);
     }

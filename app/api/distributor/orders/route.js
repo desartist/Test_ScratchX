@@ -89,19 +89,18 @@ export async function GET(request) {
 
     const result = await purchaseService.getOrderHistory(account._id, filters);
 
+    // Return the real order documents as-is — the UI (Plan Sales page)
+    // reads order._id, order.orderStatus, the full order.items array
+    // (quantity + planType per line), and the full order.pricing breakdown
+    // (subtotalMRP/totalDiscount/subtotal/gst/grandTotal), none of which
+    // survive the flattened { id, status, items: count } summary this used
+    // to build — that mismatch is what threw "Cannot read properties of
+    // undefined (reading 'slice')" on order._id.
     return NextResponse.json(
       {
         success: true,
         data: {
-          orders: result.orders.map((o) => ({
-            id: o._id,
-            orderNumber: o.orderNumber,
-            status: o.orderStatus,
-            paymentStatus: o.paymentStatus,
-            total: o.pricing.grandTotal,
-            items: o.items.length,
-            createdAt: o.createdAt,
-          })),
+          orders: result.orders,
           pagination: {
             page,
             limit,

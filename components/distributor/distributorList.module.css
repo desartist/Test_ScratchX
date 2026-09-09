@@ -1,0 +1,337 @@
+/* ── Main Container ────────────────────────────────────────── */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1600px;
+  padding: 24px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #f5f6ff 0%, #fafbff 60%, #fff8ee 100%);
+  min-height: 100vh;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #010f44;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  margin: 6px 0 0 0;
+  font-size: 0.9rem;
+  color: #637080;
+  font-weight: 400;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #ef9e1b 0%, #ff9500 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.addButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 158, 27, 0.3);
+}
+
+/* ── Stats Grid ────────────────────────────────────────────── */
+.statsGrid {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 0 0 10px 0;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.statsGrid > * {
+  min-width: 180px;
+  flex-shrink: 0;
+}
+
+/* ── Filters ───────────────────────────────────────────────── */
+.filtersSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1.5px solid #e8eaff;
+  padding: 18px 20px;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8f9ff;
+  border: 1.5px solid #e8eaff;
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #9ba8b8;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 0.9rem;
+  color: #010f44;
+  font-family: inherit;
+}
+
+.filterControls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.select {
+  padding: 10px 32px 10px 12px;
+  border: 1.5px solid #e8eaff;
+  border-radius: 10px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23637080' stroke-width='1.5' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E") no-repeat right 12px center;
+  appearance: none;
+  font-size: 0.85rem;
+  color: #010f44;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.errorBanner {
+  background: #fff0f0;
+  border: 1.5px solid #ffc5c5;
+  color: #c0392b;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+/* ── Table ─────────────────────────────────────────────────── */
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 16px;
+  border: 1.5px solid #e8eaff;
+  box-shadow: 0 4px 16px rgba(1, 15, 68, 0.06);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.table thead {
+  background: #f8f9ff;
+}
+
+.table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #9ba8b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 14px 16px;
+  font-size: 0.85rem;
+  color: #010f44;
+  white-space: nowrap;
+  border-top: 1px solid #f0f2ff;
+}
+
+.tableRow {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tableRow:hover {
+  background: #f8f9ff;
+}
+
+.leadName {
+  font-weight: 700;
+}
+
+.leadSub {
+  font-size: 0.75rem;
+  color: #9ba8b8;
+  font-weight: 500;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1.5px solid;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.interestPill {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.interestLow { background: #f3f4f6; color: #6b7280; }
+.interestMedium { background: #fef3c7; color: #92400e; }
+.interestHigh { background: #d1fae5; color: #065f46; }
+
+.emptyCell {
+  padding: 48px 16px;
+  text-align: center;
+  color: #9ba8b8;
+  font-size: 0.9rem;
+}
+
+.kebabWrap {
+  position: relative;
+}
+
+.kebabButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e8eaff;
+  background: white;
+  color: #637080;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.kebabButton:hover {
+  background: #f9f9f9;
+  border-color: #ef9e1b;
+  color: #ef9e1b;
+}
+
+.menuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+.kebabMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 21;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(1, 15, 68, 0.14);
+  min-width: 170px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+}
+
+.kebabMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.kebabMenuItem:hover {
+  background: #f9f9f9;
+}
+
+.kebabMenuDanger {
+  color: #dc2626;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.pageButton {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #e8eaff;
+  background: #fff;
+  color: #010f44;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pageButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 0.85rem;
+  color: #637080;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .container { padding: 16px; }
+  .title { font-size: 1.4rem; }
+  .filterControls { grid-template-columns: repeat(2, 1fr); }
+}

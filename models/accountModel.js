@@ -35,7 +35,7 @@ const accountSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["Super_Admin", "Admin", "Distributor", "Merchant", "Manager", "Store_Manager", "Store_Staff"],
+      enum: ["Super_Admin", "Admin", "Distributor", "Sales_Executive", "Merchant", "Manager", "Store_Manager", "Store_Staff"],
       required: true,
       index: true,
     },
@@ -54,7 +54,7 @@ const accountSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Immediate parent: Distributor for Merchant, Merchant for Manager, Manager for Store_Manager/Store_Staff
+    // Immediate parent: Distributor for Merchant/Sales_Executive, Merchant for Manager, Manager for Store_Manager/Store_Staff
     parentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Account",

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthContext } from '../../../components/auth/AuthContext';
+import { isValidEmail } from '@/lib/authInputValidation';
 import styles from './page.module.css';
 
 export default function ResetPasswordPage() {
@@ -27,7 +28,7 @@ export default function ResetPasswordPage() {
       setValidationError('Email is required');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!isValidEmail(email)) {
       setValidationError('Please enter a valid email address');
       return;
     }

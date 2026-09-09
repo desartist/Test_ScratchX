@@ -159,11 +159,20 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
   const currentRangeNumber = existingCount + 1;
 
   const handleCouponChange = useCallback((index, field, val) => {
-    let processed = val;
-    if (field === "amount" && val && /^\d/.test(val)) {
-      processed = formatIndian(val);
-    }
-    setCoupons((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: processed } : c)));
+    setCoupons((prev) =>
+      prev.map((c, i) => {
+        if (i !== index) return c;
+        // Indian comma-grouping is only for the flat (₹) amount field.
+        // Applying it to a percentage value strips its decimal point —
+        // formatIndian removes every non-digit character — turning "35.5"
+        // into "355", so only run it for "flat" coupons.
+        const processed =
+          field === "amount" && val && c.type === "flat" && /^\d/.test(val)
+            ? formatIndian(val)
+            : val;
+        return { ...c, [field]: processed };
+      }),
+    );
   }, []);
 
   // When user switches type, clear the amount to avoid stale values
@@ -366,9 +375,10 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
                         id={`rw-pct-${index}`}
                         type="number"
                         className={`${styles.input} ${styles.inputWithSuffix}`}
-                        placeholder="e.g. 10"
-                        min="1"
+                        placeholder="e.g. 10 or 12.5"
+                        min="0.1"
                         max="100"
+                        step="0.1"
                         value={coupon.amount}
                         onChange={(e) => handleCouponChange(index, "amount", e.target.value)}
                       />

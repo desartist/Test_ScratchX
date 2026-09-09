@@ -1,0 +1,86 @@
+.planGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.planCard {
+  background: #fff;
+  border-radius: 16px;
+  border: 1.5px solid #e8eaff;
+  box-shadow: 0 4px 16px rgba(1, 15, 68, 0.06);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.planHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.planIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.planIconBlue { background: rgba(109, 93, 246, 0.12); color: #6d5df6; }
+.planIconOrange { background: rgba(239, 158, 27, 0.12); color: #ef9e1b; }
+
+.planTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #010f44;
+}
+
+.planStatsRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.planStatsRow > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.planStatValue {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #010f44;
+}
+
+.planStatLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #9ba8b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.utilizationBar {
+  height: 8px;
+  border-radius: 999px;
+  background: #f0f2ff;
+  overflow: hidden;
+}
+
+.utilizationFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.utilizationLabel {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #637080;
+  font-weight: 600;
+}
