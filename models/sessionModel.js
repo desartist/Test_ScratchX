@@ -9,7 +9,7 @@ const sessionSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["Super_Admin", "Distributor", "Merchant", "Manager", "Store_Manager", "Store_Staff"],
+    enum: ["Super_Admin", "Distributor", "Sales_Executive", "Merchant", "Manager", "Store_Manager", "Store_Staff"],
     required: true,
   },
 

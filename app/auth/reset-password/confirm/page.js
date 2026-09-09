@@ -4,6 +4,7 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthContext } from '../../../../components/auth/AuthContext';
+import { getPasswordPolicyError } from '@/lib/authInputValidation';
 import styles from '../page.module.css';
 
 function EyeIcon({ open }) {
@@ -46,6 +47,9 @@ function ConfirmResetContent() {
       errors.password = 'Password is required';
     } else if (password.length < 8) {
       errors.password = 'Password must be at least 8 characters';
+    } else {
+      const passwordPolicyError = getPasswordPolicyError(password);
+      if (passwordPolicyError) errors.password = passwordPolicyError;
     }
     if (!confirmPassword) {
       errors.confirmPassword = 'Please confirm your password';

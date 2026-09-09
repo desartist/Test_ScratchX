@@ -4,6 +4,7 @@ import React, { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthContext } from '../../../components/auth/AuthContext';
 import { sanitizeNameInput } from '@/lib/nameInput';
+import { isValidEmail, getPasswordPolicyError } from '@/lib/authInputValidation';
 import styles from './form.module.css';
 
 function EyeIcon({ open }) {
@@ -46,7 +47,7 @@ export default function RegisterPage() {
     if (!form.yourName.trim()) errors.yourName = 'Full name is required';
     if (!form.email.trim()) {
       errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    } else if (!isValidEmail(form.email)) {
       errors.email = 'Please enter a valid email address';
     }
     if (!form.phoneNumber.trim()) errors.phoneNumber = 'Phone number is required';
@@ -54,6 +55,9 @@ export default function RegisterPage() {
       errors.password = 'Password is required';
     } else if (form.password.length < 8) {
       errors.password = 'Password must be at least 8 characters';
+    } else {
+      const passwordPolicyError = getPasswordPolicyError(form.password);
+      if (passwordPolicyError) errors.password = passwordPolicyError;
     }
     if (!form.confirmPassword) {
       errors.confirmPassword = 'Please confirm your password';
@@ -102,7 +106,7 @@ export default function RegisterPage() {
   return (
     <div className={styles.page}>
       <div className={styles.logoWrap}>
-        <img src="/horizontal_logo.webp" alt="ScratchX" className={styles.logoImg} />
+        <img src="/ScratchXlogo.png" alt="ScratchX" className={styles.logoImg} />
       </div>
 
       <div className={styles.card}>

@@ -16,6 +16,7 @@ import {
   MapPin,
   Wallet,
   Clock,
+  Target,
 } from 'lucide-react';
 import { useDistributorDashboardQuery } from '@/hooks/queries/useDistributorDashboardQuery';
 import { useDistributorDashboardChartsQuery } from '@/hooks/queries/useDistributorDashboardChartsQuery';
@@ -177,6 +178,27 @@ export default function DistributorDashboard() {
                 : 'No pending payments'
             }
           />
+        </div>
+
+        {/* Lead Pipeline */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>Lead Pipeline</h2>
+            <Link href="/leads" className={styles.viewLink}>
+              View All
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+          {metrics.totalLeads === 0 ? (
+            <p className={styles.emptyText}>No leads yet. Start tracking your retailer acquisition pipeline.</p>
+          ) : (
+            <div className={styles.statGrid}>
+              <StatCard icon={<Target />} value={metrics.totalLeads} label="Total Leads" />
+              <StatCard icon={<Clock />} value={metrics.demosScheduled} label="Demos Scheduled" />
+              <StatCard icon={<AlertCircle />} value={metrics.followUpsPending} label="Follow-ups Pending" tone={metrics.followUpsPending > 0 ? 'red' : undefined} />
+              <StatCard icon={<TrendingUp />} value={`${metrics.leadConversionRate}%`} label="Conversion Rate" />
+            </div>
+          )}
         </div>
 
         {/* Charts: Commission Trend + Business Mix */}

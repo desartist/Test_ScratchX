@@ -128,6 +128,8 @@ export default function DashboardLayout({ children, role }) {
         return "/merchant-overview";
       case "Distributor":
         return "/distributor-overview";
+      case "Sales_Executive":
+        return "/my-leads";
       case "Super_Admin":
         return "/admin-overview";
       case "Store_Manager":
@@ -211,24 +213,66 @@ export default function DashboardLayout({ children, role }) {
           secondary: [],
         };
       case "Distributor":
+        // Each group below is one L2 dropdown — same pattern as Merchant's
+        // "ScratchX Studio" > "WhatsApp Templates": the row itself is a
+        // real link (to the group's primary page) plus a chevron that
+        // expands the rest of the group underneath it. Dashboard alone
+        // stays a plain flat item, same as every other role's baseItems.
         return {
           primary: [
             ...baseItems,
-            { label: "Buy Plans", href: "/marketplace", iconKey: "marketplace" },
-            { label: "Retailers", href: "/retailers", iconKey: "merchants" },
-            { label: "Seat Requests", href: "/seat-requests", iconKey: "commission" },
-            // {
-            //   label: "Scratch Allocation",
-            //   href: "/scratch-allocation",
-            //   iconKey: "commission",
-            // },
-            // {
-            //   label: "Campaign Activity",
-            //   href: "/campaigns",
-            //   iconKey: "campaigns",
-            // },
-            // { label: "Analytics", href: "/analytics", iconKey: "analytics" },
-            { label: "Support Center", href: "/support", iconKey: "support" },
+            {
+              label: "Growth Pipeline",
+              href: "/leads",
+              iconKey: "customers",
+              children: [
+                { label: "Leads", href: "/leads" },
+                { label: "Demo Follow-ups", href: "/demo-follow-ups" },
+                { label: "Sales Executives", href: "/sales-executives" },
+              ],
+            },
+            {
+              label: "Retailer Success",
+              href: "/retailers",
+              iconKey: "merchants",
+              children: [
+                { label: "Retailers", href: "/retailers" },
+                { label: "Retailer Activation", href: "/retailer-activation" },
+                { label: "Campaign Support", href: "/campaign-support" },
+                { label: "Retailer Activity", href: "/retailer-activity" },
+              ],
+            },
+            {
+              label: "Scratch & Plan Sales",
+              href: "/distributor-inventory",
+              iconKey: "commission",
+              children: [
+                { label: "Scratch Inventory", href: "/distributor-inventory" },
+                { label: "Buy Scratches", href: "/marketplace" },
+                { label: "Sell / Allocate", href: "/sell-allocate" },
+                { label: "Plan Sales", href: "/distributor/orders" },
+              ],
+            },
+            {
+              label: "Finance",
+              href: "/payments",
+              iconKey: "analytics",
+              children: [
+                { label: "Payments", href: "/payments" },
+                { label: "Earnings", href: "/commissions" },
+                { label: "Seat Requests", href: "/seat-requests" },
+              ],
+            },
+            {
+              label: "Reports & Account",
+              href: "/distributor-reports",
+              iconKey: "studio",
+              children: [
+                { label: "Reports", href: "/distributor-reports" },
+                { label: "Support", href: "/support" },
+                { label: "Settings", href: "/settings" },
+              ],
+            },
           ],
           secondary: [
             {
@@ -236,16 +280,13 @@ export default function DashboardLayout({ children, role }) {
               href: "/notifications",
               iconKey: "operations",
             },
-            // {
-            //   label: "Territory Reports",
-            //   href: "/reports",
-            //   iconKey: "analytics",
-            // },
-            {
-              label: "Commission Summary",
-              href: "/commissions",
-              iconKey: "commission",
-            },
+          ],
+        };
+      case "Sales_Executive":
+        return {
+          primary: [...baseItems],
+          secondary: [
+            { label: "Notifications", href: "/notifications", iconKey: "operations" },
             { label: "Settings", href: "/settings", iconKey: "settings" },
           ],
         };
@@ -356,6 +397,7 @@ export default function DashboardLayout({ children, role }) {
     const roleMap = {
       Super_Admin: "Super Admin",
       Distributor: "Admin",
+      Sales_Executive: "Sales Executive",
       Merchant: "Merchant",
       Manager: "Manager",
       Store_Manager: "Store Manager",
@@ -369,6 +411,71 @@ export default function DashboardLayout({ children, role }) {
   const initials = account ? getAccountInitials(account) : "?";
   const canManageSubscription = role === "Merchant" || role === "Manager";
 
+  // Renders one flat nav item (with its optional expand/collapse children) —
+  // shared by both plain top-level items and items nested under a group
+  // label, so the two render paths never drift apart.
+  function renderPrimaryNavItem(item) {
+    const isActive = isNavItemActive(pathname, item.href);
+    const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
+    const hasChildren = item.children && item.children.length > 0;
+    const isExpanded = hasChildren
+      ? expandedNavGroups[item.href] ?? isNavGroupDefaultExpanded(pathname, item)
+      : false;
+
+    return (
+      <div key={item.href} className={styles.navGroup}>
+        <div className={styles.navItemRow}>
+          <Link
+            href={item.href}
+            className={`${styles.navItem} ${isActive ? styles.navItemActive : ""} ${hasChildren ? styles.navItemWithChildren : ""}`}
+            aria-current={isActive ? "page" : undefined}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <span className={styles.navIcon}><Icon /></span>
+            {item.label}
+          </Link>
+          {hasChildren && (
+            <button
+              type="button"
+              className={styles.navExpandBtn}
+              onClick={() =>
+                setExpandedNavGroups((prev) => ({ ...prev, [item.href]: !isExpanded }))
+              }
+              aria-label={isExpanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
+              aria-expanded={isExpanded}
+            >
+              <ChevronDown
+                size={16}
+                style={{
+                  transform: isExpanded ? "rotate(180deg)" : "none",
+                  transition: "transform 0.2s ease",
+                }}
+              />
+            </button>
+          )}
+        </div>
+
+        {hasChildren && isExpanded && (
+          <div className={styles.navSubItems}>
+            {item.children.map((child) => {
+              const childActive = isNavItemActive(pathname, child.href);
+              return (
+                <Link
+                  key={child.href}
+                  href={child.href}
+                  className={`${styles.navSubItem} ${childActive ? styles.navSubItemActive : ""}`}
+                  aria-current={childActive ? "page" : undefined}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  {child.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -433,68 +540,7 @@ export default function DashboardLayout({ children, role }) {
           </div>
 
           <nav className={styles.nav} aria-label="Main navigation">
-            {navItems.primary.map((item) => {
-              const isActive = isNavItemActive(pathname, item.href);
-              const Icon = NAV_ICONS[item.iconKey] || IconDashboard;
-              const hasChildren = item.children && item.children.length > 0;
-              const isExpanded = hasChildren
-                ? expandedNavGroups[item.href] ?? isNavGroupDefaultExpanded(pathname, item)
-                : false;
-
-              return (
-                <div key={item.href} className={styles.navGroup}>
-                  <div className={styles.navItemRow}>
-                    <Link
-                      href={item.href}
-                      className={`${styles.navItem} ${isActive ? styles.navItemActive : ""} ${hasChildren ? styles.navItemWithChildren : ""}`}
-                      aria-current={isActive ? "page" : undefined}
-                      onClick={() => setSidebarOpen(false)}
-                    >
-                      <span className={styles.navIcon}><Icon /></span>
-                      {item.label}
-                    </Link>
-                    {hasChildren && (
-                      <button
-                        type="button"
-                        className={styles.navExpandBtn}
-                        onClick={() =>
-                          setExpandedNavGroups((prev) => ({ ...prev, [item.href]: !isExpanded }))
-                        }
-                        aria-label={isExpanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
-                        aria-expanded={isExpanded}
-                      >
-                        <ChevronDown
-                          size={16}
-                          style={{
-                            transform: isExpanded ? "rotate(180deg)" : "none",
-                            transition: "transform 0.2s ease",
-                          }}
-                        />
-                      </button>
-                    )}
-                  </div>
-
-                  {hasChildren && isExpanded && (
-                    <div className={styles.navSubItems}>
-                      {item.children.map((child) => {
-                        const childActive = isNavItemActive(pathname, child.href);
-                        return (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            className={`${styles.navSubItem} ${childActive ? styles.navSubItemActive : ""}`}
-                            aria-current={childActive ? "page" : undefined}
-                            onClick={() => setSidebarOpen(false)}
-                          >
-                            {child.label}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {navItems.primary.map((entry) => renderPrimaryNavItem(entry))}
 
             {navItems.secondary && navItems.secondary.length > 0 && (
               <>

@@ -9,7 +9,6 @@ import {
   Download,
   Copy,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import { useCampaignQuery, useInvalidateCampaignCluster } from "@/hooks/queries/useCampaignQuery";
@@ -19,8 +18,12 @@ import styles from "./LaunchWizardModal.module.css";
 
 // Quick-select chip presets. "No Cap" is intentionally NOT a real "infinite"
 // value: the allocate-scratch API requires a positive number per campaign, so
-// "No Cap" = an effectively-unlimited cap. We send a very large allocation
-// (1,000,000) which the subscription entitlement still governs server-side.
+// "No Cap" = an effectively-unlimited cap. This sentinel is only safe to
+// submit as-is while the merchant's unlimited-scratches grant is active,
+// since the server skips the balance check entirely in that case — for a
+// pack-based merchant, handleSelectChip swaps it for their real remaining
+// balance instead (see there), so this stays 1,000,000 only as the chip's
+// nominal value / active-state key, not necessarily what gets submitted.
 const NO_CAP_AMOUNT = 1000000;
 const CHIPS = [
   { label: "1,000", value: 1000 },
@@ -31,18 +34,6 @@ const CHIPS = [
 ];
 
 const DEFAULT_ALLOCATION = 2000;
-
-// Format an ISO date for the unlimited-scratches card.
-function formatDate(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 /**
  * LaunchWizardModal
@@ -74,6 +65,10 @@ export default function LaunchWizardModal({
   // Allocate step state.
   const [allocation, setAllocation] = useState(DEFAULT_ALLOCATION);
   const [allocating, setAllocating] = useState(false);
+  // Tracks the "No Cap" chip separately from `allocation` itself, since the
+  // number actually submitted for it varies by entitlement — see
+  // handleSelectChip.
+  const [isNoCapSelected, setIsNoCapSelected] = useState(false);
 
   // Stores step state.
   const [selected, setSelected] = useState([]);
@@ -120,6 +115,7 @@ export default function LaunchWizardModal({
     setStep(initialStep || "allocate");
     setError(null);
     setAllocation(DEFAULT_ALLOCATION);
+    setIsNoCapSelected(false);
     setSelected([]);
     setQrCodeUrl("");
     setCopied(false);
@@ -140,8 +136,20 @@ export default function LaunchWizardModal({
   }, [loading, stores, assignedIds]);
 
   const handleSelectChip = useCallback((value) => {
+    if (value === NO_CAP_AMOUNT) {
+      setIsNoCapSelected(true);
+      // See the NO_CAP_AMOUNT comment above — a pack-based merchant gets
+      // their real remaining balance instead of the raw sentinel, so the
+      // request doesn't get rejected as "insufficient scratches".
+      const remaining = subscription?.scratchRemaining;
+      const isUnlimitedEntitlement =
+        subscription?.unlimitedScratches === true || remaining === "UNLIMITED";
+      setAllocation(isUnlimitedEntitlement ? NO_CAP_AMOUNT : Number(remaining) || 0);
+      return;
+    }
+    setIsNoCapSelected(false);
     setAllocation(value);
-  }, []);
+  }, [subscription]);
 
   const handleToggleStore = useCallback((storeId) => {
     setSelected((prev) =>
@@ -257,7 +265,6 @@ export default function LaunchWizardModal({
     [onClose],
   );
 
-  const isUnlimited = !!subscription?.unlimitedScratches;
   const isSingleStore = stores.length === 1;
 
   if (!open) return null;
@@ -291,45 +298,22 @@ export default function LaunchWizardModal({
               <h2 className={styles.title}>Allocate Scratches</h2>
             </header>
 
-            {isUnlimited ? (
-              <div className={styles.unlimitedCard}>
-                {(() => {
-                  const PLAN_DAYS = 30;
-                  const daysRemaining = Number.isFinite(subscription?.daysRemaining)
-                    ? subscription.daysRemaining
-                    : Number.isFinite(subscription?.remainingDays)
-                      ? subscription.remainingDays
-                      : null;
-                  const dayOf = daysRemaining !== null
-                    ? Math.max(1, PLAN_DAYS - daysRemaining)
-                    : null;
-                  return (
-                    <span className={styles.pill}>
-                      {dayOf !== null ? `Day ${dayOf} of ${PLAN_DAYS}` : "Unlimited Plan"}
-                    </span>
-                  );
-                })()}
-                <span className={styles.unlimitedTitle}>
-                  <Sparkles size={18} /> Unlimited Scratches
-                </span>
-                <span className={styles.unlimitedMeta}>
-                  Valid until {formatDate(subscription?.unlimitedScratchesExpiryDate)}
-                </span>
-              </div>
-            ) : (
-              <div className={styles.scratchCard}>
-                <span className={styles.scratchCardTitle}>Scratches</span>
-                <span className={styles.scratchCardMeta}>
-                  {subscription?.plan
-                    ? `${subscription.plan} plan`
-                    : "No active plan"}{" "}
-                  ·{" "}
-                  {subscription?.scratchRemaining === "UNLIMITED"
-                    ? "Unlimited"
-                    : `${subscription?.scratchRemaining ?? 0} remaining`}
-                </span>
-              </div>
-            )}
+            {/* Always shows the merchant's real purchased-pack balance —
+                even while the unlimited-scratches grant is active — rather
+                than an "Unlimited" placeholder. Same direction as the
+                allocation cap: real numbers, not unlimited framing, in the
+                merchant-facing UI. See scratchPacksRemaining in
+                app/api/subscription/status/route.js. */}
+            <div className={styles.scratchCard}>
+              <span className={styles.scratchCardTitle}>Scratches</span>
+              <span className={styles.scratchCardMeta}>
+                {subscription?.plan
+                  ? `${subscription.plan} plan`
+                  : "No active plan"}{" "}
+                ·{" "}
+                {(Number(subscription?.scratchPacksRemaining) || 0).toLocaleString()} remaining
+              </span>
+            </div>
 
             <div className={styles.field}>
               <label className={styles.label} htmlFor="lw-allocation">
@@ -341,13 +325,19 @@ export default function LaunchWizardModal({
                 min="1"
                 className={styles.input}
                 value={allocation}
-                onChange={(e) => setAllocation(e.target.value)}
+                onChange={(e) => {
+                  setIsNoCapSelected(false);
+                  setAllocation(e.target.value);
+                }}
               />
             </div>
 
             <div className={styles.chips}>
               {CHIPS.map((chip) => {
-                const isActive = Number(allocation) === chip.value;
+                const isActive =
+                  chip.value === NO_CAP_AMOUNT
+                    ? isNoCapSelected
+                    : !isNoCapSelected && Number(allocation) === chip.value;
                 return (
                   <button
                     key={chip.label}

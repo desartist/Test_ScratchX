@@ -333,15 +333,6 @@ export default function CampaignDetailsPage({ params }) {
       : Math.max(0, allocated - (campaign.used_scratch_cards || 0));
   const used = allocated - remaining;
 
-  // Available scratches from subscription entitlement (page-derived).
-  // "Unlimited" if the plan is unmetered, else the numeric remaining.
-  const scratchUnlimited =
-    subscription?.unlimitedScratches === true ||
-    subscription?.scratchRemaining === "UNLIMITED";
-  const availableScratches = scratchUnlimited
-    ? "Unlimited"
-    : Number(subscription?.scratchRemaining) || 0;
-
   // Price range from ranges (if available)
   let priceRange = null;
   if (ranges.length > 0) {
@@ -502,12 +493,6 @@ export default function CampaignDetailsPage({ params }) {
                 </button>
               </div>
               <div className={styles.detailsGrid}>
-                <div className={styles.detailItem}>
-                  <label className={styles.detailLabel}>Available</label>
-                  <p className={styles.detailValue} style={{ color: '#ef9e1b', fontSize: '1.2rem', fontWeight: '700' }}>
-                    {availableScratches === "Unlimited" ? "∞ Unlimited" : availableScratches}
-                  </p>
-                </div>
                 <div className={styles.detailItem}>
                   <label className={styles.detailLabel}>Allocated</label>
                   <p className={styles.detailValue}>{allocated.toLocaleString()}</p>

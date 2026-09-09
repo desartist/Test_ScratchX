@@ -71,40 +71,7 @@
   color: var(--color-muted, #637080);
 }
 
-/* Unlimited scratches card */
-.unlimitedCard {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 20px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #6d5df6, #8b7cf7);
-  color: #fff;
-}
-
-.pill {
-  align-self: flex-start;
-  font-size: var(--font-size-sm, 12px);
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.unlimitedTitle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.unlimitedMeta {
-  font-size: var(--font-size-base, 14px);
-  opacity: 0.92;
-}
-
-/* Fallback scratch card */
+/* Scratch balance card */
 .scratchCard {
   display: flex;
   flex-direction: column;
