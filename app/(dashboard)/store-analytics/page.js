@@ -6,21 +6,15 @@ import { useAuthContext } from "@/components/auth/AuthContext";
 import { useStoreAnalyticsQuery } from "@/hooks/queries/useStoreAnalyticsQuery";
 import LoadingState from "@/components/common/LoadingState";
 import styles from "./store-analytics.module.css";
+import Skeleton from "@/components/ui/Skeleton";
 
 export default function StoreAnalyticsPage() {
   const { account } = useAuthContext();
   const { data: analytics, isPending: loading, error: queryError } = useStoreAnalyticsQuery();
   const error = queryError ? queryError.message : null;
 
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <LoadingState message="Loading analytics..." />
-      </div>
-    );
-  }
 
-  if (error || !analytics) {
+  if (!loading && (error || !analytics)) {
     return (
       <div className={styles.container}>
         <div className={styles.errorState}>
@@ -50,7 +44,7 @@ export default function StoreAnalyticsPage() {
           <div className={styles.cardIcon}>
             <ScanLine size={20} />
           </div>
-          <span className={styles.cardValue}>{analytics.scans}</span>
+          <span className={styles.cardValue}>{loading ? <Skeleton w="3ch" h="0.8em" /> : analytics.scans}</span>
           <span className={styles.cardLabel}>Total Scans</span>
         </div>
 
@@ -58,7 +52,7 @@ export default function StoreAnalyticsPage() {
           <div className={styles.cardIcon}>
             <TrendingUp size={20} />
           </div>
-          <span className={styles.cardValue}>{analytics.used}</span>
+          <span className={styles.cardValue}>{loading ? <Skeleton w="3ch" h="0.8em" /> : analytics.used}</span>
           <span className={styles.cardLabel}>Cards Used</span>
         </div>
 
@@ -67,7 +61,7 @@ export default function StoreAnalyticsPage() {
             <div className={styles.cardIcon}>
               <Users size={20} />
             </div>
-            <span className={styles.cardValue}>{analytics.uniqueCustomers}</span>
+            <span className={styles.cardValue}>{loading ? <Skeleton w="3ch" h="0.8em" /> : analytics.uniqueCustomers}</span>
             <span className={styles.cardLabel}>Unique Customers</span>
           </div>
         )}

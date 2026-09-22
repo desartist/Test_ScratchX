@@ -16,8 +16,8 @@ import {
  */
 export async function POST(request) {
   try {
-    // Verify admin access
-    await requireAdmin();
+    // Verify admin access (returns the authenticated admin account)
+    const admin = await requireAdmin();
     await connectDB();
 
     // Parse request body
@@ -39,8 +39,9 @@ export async function POST(request) {
       );
     }
 
-    // Get admin ID for audit trail
-    const adminId = request.headers.get('x-user-id');
+    // Admin id for the audit trail — taken from the verified session, not
+    // from a client-supplied x-user-id header.
+    const adminId = admin._id.toString();
 
     // Allocate scratches
     const result = await allocateScratchCardsToMerchant({
@@ -85,8 +86,8 @@ export async function POST(request) {
  */
 export async function GET(request) {
   try {
-    // Verify admin access
-    await requireAdmin();
+    // Verify admin access (returns the authenticated admin account)
+    const admin = await requireAdmin();
     await connectDB();
 
     // Parse query parameter

@@ -13,6 +13,7 @@ import { useAdminCustomersQuery } from '@/hooks/queries/useAdminCustomersQuery';
 import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './admin-customers.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 function formatDate(date) {
   return date
@@ -82,7 +83,7 @@ export default function AdminCustomersPage() {
         </div>
 
         {loading ? (
-          <LoadingState message="Loading customers..." />
+          <SkeletonTableRows rows={6} cols={6} asTable />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />

@@ -4,7 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { Store as StoreIcon, Users, ShieldCheck, AlertCircle, Phone, MapPin, ArrowRight } from "lucide-react";
 import { useStoreDashboardQuery } from "@/hooks/queries/useStoreDashboardQuery";
-import LoadingState from "@/components/common/LoadingState";
+import Skeleton from "@/components/ui/Skeleton";
 import styles from "./store-dashboard.module.css";
 
 const ROLE_LABELS = { Store_Manager: "Store Manager", Store_Staff: "Store Staff" };
@@ -28,15 +28,7 @@ export default function StoreDashboardPage() {
   const { data, isPending: loading, error: queryError } = useStoreDashboardQuery();
   const error = queryError ? queryError.message : null;
 
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <LoadingState message="Loading your store..." />
-      </div>
-    );
-  }
-
-  if (error || !data) {
+  if (!loading && (error || !data)) {
     return (
       <div className={styles.container}>
         <div className={styles.errorState}>
@@ -47,14 +39,22 @@ export default function StoreDashboardPage() {
     );
   }
 
-  const { role, permissions, store, teammates } = data;
+  // Card frames, headings and icons are static; only the store's own details
+  // shimmer while the request is in flight.
+  const { role, permissions, store, teammates } = data || {
+    role: null, permissions: [], store: {}, teammates: [],
+  };
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.pageTitle}>{store.name}</h1>
+        <h1 className={styles.pageTitle}>
+          {loading ? <Skeleton w="12ch" /> : store.name}
+        </h1>
         <p className={styles.pageSubtitle}>
-          You're signed in as <strong>{ROLE_LABELS[role] || role}</strong> for this store.
+          You're signed in as{" "}
+          <strong>{loading ? <Skeleton w="8ch" /> : ROLE_LABELS[role] || role}</strong> for
+          this store.
         </p>
       </div>
 
@@ -68,16 +68,26 @@ export default function StoreDashboardPage() {
           <div className={styles.infoRow}>
             <MapPin size={14} />
             <span>
-              {store.address}, {store.city}, {store.state} {store.pincode}
+              {loading ? (
+                <Skeleton w="22ch" />
+              ) : (
+                `${store.address}, ${store.city}, ${store.state} ${store.pincode}`
+              )}
             </span>
           </div>
           <div className={styles.infoRow}>
             <Phone size={14} />
             <span>
-              {store.contactPerson} · {store.contactNumber}
+              {loading ? (
+                <Skeleton w="18ch" />
+              ) : (
+                `${store.contactPerson} · ${store.contactNumber}`
+              )}
             </span>
           </div>
-          <span className={`${styles.statusBadge} ${styles[store.status] || ""}`}>{store.status}</span>
+          <span className={`${styles.statusBadge} ${styles[store.status] || ""}`}>
+            {loading ? <Skeleton w="5ch" /> : store.status}
+          </span>
           <button type="button" className={styles.viewDetailsBtn} onClick={() => router.push("/store-details")}>
             View Full Store Details
             <ArrowRight size={14} />
@@ -90,7 +100,12 @@ export default function StoreDashboardPage() {
             <ShieldCheck size={18} />
             <h2>Your Access</h2>
           </div>
-          {permissions.length === 0 ? (
+          {loading ? (
+            <ul className={styles.permissionList}>
+              <li><Skeleton w="16ch" /></li>
+              <li><Skeleton w="13ch" /></li>
+            </ul>
+          ) : permissions.length === 0 ? (
             <p className={styles.emptyText}>No permissions configured for this role yet.</p>
           ) : (
             <ul className={styles.permissionList}>
@@ -107,7 +122,17 @@ export default function StoreDashboardPage() {
             <Users size={18} />
             <h2>Team at this Store</h2>
           </div>
-          {teammates.length === 0 ? (
+          {loading ? (
+            <div className={styles.teammateList}>
+              <div className={styles.teammateRow}>
+                <div>
+                  <div className={styles.teammateName}><Skeleton w="10ch" /></div>
+                  <div className={styles.teammateEmail}><Skeleton w="15ch" /></div>
+                </div>
+                <span className={styles.roleBadge}><Skeleton w="7ch" /></span>
+              </div>
+            </div>
+          ) : teammates.length === 0 ? (
             <p className={styles.emptyText}>No other team members at this store yet.</p>
           ) : (
             <div className={styles.teammateList}>

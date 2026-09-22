@@ -23,6 +23,7 @@ import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import { sanitizeNameInput } from '@/lib/nameInput';
 import styles from './distributors.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 const EMPTY_FORM = {
   name: '',
@@ -172,7 +173,7 @@ export default function DistributorsPage() {
 
         {/* Table */}
         {loading ? (
-          <LoadingState message="Loading distributors..." />
+          <SkeletonTableRows rows={6} cols={10} asTable />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />

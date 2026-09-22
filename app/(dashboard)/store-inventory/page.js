@@ -5,20 +5,15 @@ import { AlertCircle, Package } from "lucide-react";
 import { useStoreInventoryQuery } from "@/hooks/queries/useStoreInventoryQuery";
 import LoadingState from "@/components/common/LoadingState";
 import styles from "./store-inventory.module.css";
+import Skeleton from "@/components/ui/Skeleton";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 export default function StoreInventoryPage() {
   const { data, isPending: loading, error: queryError } = useStoreInventoryQuery();
   const error = queryError ? queryError.message : null;
 
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <LoadingState message="Loading inventory..." />
-      </div>
-    );
-  }
 
-  if (error || !data) {
+  if (!loading && (error || !data)) {
     return (
       <div className={styles.container}>
         <div className={styles.errorState}>
@@ -29,7 +24,12 @@ export default function StoreInventoryPage() {
     );
   }
 
-  const { inventory, campaignAllocations } = data;
+  // Card frames and labels render immediately; these zeroed defaults back the
+  // shimmering values until the request lands.
+  const { inventory, campaignAllocations } = data || {
+    inventory: { total: 0, allocated: 0, used: 0, redeemed: 0, utilizationPercentage: 0 },
+    campaignAllocations: [],
+  };
 
   return (
     <div className={styles.container}>
@@ -40,19 +40,19 @@ export default function StoreInventoryPage() {
 
       <div className={styles.summaryGrid}>
         <div className={styles.summaryCard}>
-          <span className={styles.summaryValue}>{inventory.total}</span>
+          <span className={styles.summaryValue}>{loading ? <Skeleton w="3ch" h="0.8em" /> : inventory.total}</span>
           <span className={styles.summaryLabel}>Store Total</span>
         </div>
         <div className={styles.summaryCard}>
-          <span className={styles.summaryValue}>{inventory.allocated}</span>
+          <span className={styles.summaryValue}>{loading ? <Skeleton w="3ch" h="0.8em" /> : inventory.allocated}</span>
           <span className={styles.summaryLabel}>Allocated</span>
         </div>
         <div className={styles.summaryCard}>
-          <span className={styles.summaryValue}>{inventory.used + inventory.redeemed}</span>
+          <span className={styles.summaryValue}>{loading ? <Skeleton w="3ch" h="0.8em" /> : inventory.used + inventory.redeemed}</span>
           <span className={styles.summaryLabel}>Used / Redeemed</span>
         </div>
         <div className={styles.summaryCard}>
-          <span className={styles.summaryValue}>{inventory.unallocated}</span>
+          <span className={styles.summaryValue}>{loading ? <Skeleton w="3ch" h="0.8em" /> : inventory.unallocated}</span>
           <span className={styles.summaryLabel}>Unallocated</span>
         </div>
       </div>
@@ -60,10 +60,12 @@ export default function StoreInventoryPage() {
       <div className={styles.utilizationBar}>
         <div className={styles.utilizationFill} style={{ width: `${Math.min(inventory.utilizationPercentage, 100)}%` }} />
       </div>
-      <p className={styles.utilizationLabel}>{inventory.utilizationPercentage}% utilized</p>
+      <p className={styles.utilizationLabel}>{loading ? <Skeleton w="3ch" h="0.8em" /> : inventory.utilizationPercentage}% utilized</p>
 
       <h2 className={styles.sectionTitle}>By Campaign</h2>
-      {campaignAllocations.length === 0 ? (
+      {loading ? (
+        <SkeletonCardList count={3} lines={2} />
+      ) : campaignAllocations.length === 0 ? (
         <div className={styles.emptyState}>
           <Package size={40} />
           <p>No campaigns are allocated to your store yet.</p>

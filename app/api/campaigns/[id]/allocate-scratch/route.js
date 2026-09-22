@@ -2,11 +2,17 @@ import { connectDB } from '@/lib/connectDB';
 import Campaign from '@/models/campaignModel';
 import subscriptionValidationService from '@/lib/services/subscriptionValidationService';
 import scratchEntitlementService from '@/lib/scratchEntitlementService';
+import { requireAuth } from '@/lib/auth';
 
 export async function POST(request, { params }) {
   try {
-    const userId = request.headers.get('x-user-id');
-    const userRole = request.headers.get('x-user-role');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
+
 
     if (!userId) {
       return Response.json(
@@ -74,7 +80,11 @@ export async function POST(request, { params }) {
     }
 
     // Verify campaign ownership
-    if (campaign.merchantId.toString() !== userId && userRole !== 'Merchant') {
+    // Owner, or an Admin acting on their behalf. (This previously read
+    // `userRole !== 'Merchant'`, which for a merchant caller is always
+    // false — so the deny never fired and any merchant could act on any
+    // campaign.)
+    if (campaign.merchantId.toString() !== userId && userRole !== 'Admin') {
       return Response.json(
         { success: false, message: 'Unauthorized' },
         { status: 403 }

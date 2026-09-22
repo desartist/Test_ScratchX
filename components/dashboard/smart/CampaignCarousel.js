@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Skeleton from "@/components/ui/Skeleton";
 import styles from "./CampaignCarousel.module.css";
 
 function formatDate(val) {
@@ -30,6 +31,45 @@ const STATUS_LABEL = {
   expired:   "EXPIRED",
   scheduled: "SCHEDULED",
 };
+
+/**
+ * Loading twin of <CampaignCard>. Reuses the same class names so the card's
+ * size, padding and internal layout are identical to the loaded state — only
+ * the values are replaced by shimmer, and the fixed labels ("Remaining",
+ * "Scratch Allocation") stay as real text.
+ */
+function CampaignCardSkeleton() {
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <div className={styles.cardLeft}>
+          <h3 className={styles.cardName}><Skeleton w="12ch" /></h3>
+          <p className={styles.cardDates}><Skeleton w="18ch" /></p>
+          <span className={styles.statusBadge} style={{ background: "#f3f4f6" }}>
+            <Skeleton w="6ch" />
+          </span>
+        </div>
+        <div className={styles.daysBox}>
+          <Skeleton w="7ch" />
+          <span className={styles.daysLabel}>Remaining</span>
+        </div>
+      </div>
+
+      <div className={styles.allocation}>
+        <div className={styles.allocHeader}>
+          <span className={styles.allocLabel}>Scratch Allocation</span>
+          <span className={styles.allocCount}><Skeleton w="8ch" /></span>
+        </div>
+        <div className={styles.bar}>
+          <div className={styles.barFill} style={{ width: "0%" }} />
+        </div>
+        <div className={styles.allocFooter}>
+          <Skeleton w="9ch" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function CampaignCard({ campaign, storeCount, onClick }) {
   const {
@@ -164,7 +204,7 @@ function CampaignCard({ campaign, storeCount, onClick }) {
   );
 }
 
-export default function CampaignCarousel({ campaigns, storeCount, viewAllHref }) {
+export default function CampaignCarousel({ campaigns, storeCount, viewAllHref, loading = false }) {
   const router = useRouter();
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
@@ -194,7 +234,33 @@ export default function CampaignCarousel({ campaigns, storeCount, viewAllHref })
     touchStartX.current = null;
   };
 
-  if (!total) return null;
+  // Only collapse the section once we actually know there are no campaigns.
+  // While loading, keep the heading and show a placeholder card instead.
+  if (!total && !loading) return null;
+
+  if (loading) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionTitle}>
+            Active Campaigns
+            <span className={styles.sectionCount}> <Skeleton w="3ch" /></span>
+          </span>
+          <a href={viewAllHref || "/campaign"} className={styles.viewAll}>
+            View all
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+        <div className={styles.stackArea}>
+          <div className={styles.frontCard}>
+            <CampaignCardSkeleton />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const shadowAnimClass = animating ? (exitDir === "left" ? styles.shadowExitLeft : styles.shadowExitRight) : "";
 

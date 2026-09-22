@@ -2,11 +2,17 @@ import { connectDB } from '@/lib/connectDB';
 import Campaign from '@/models/campaignModel';
 import Range from '@/models/rangeModel';
 import qrcode from 'qrcode';
+import { requireAuth } from '@/lib/auth';
 
 export async function POST(request, { params }) {
   try {
-    const userId = request.headers.get('x-user-id');
-    const userRole = request.headers.get('x-user-role');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
+
 
     if (!userId) {
       return Response.json(

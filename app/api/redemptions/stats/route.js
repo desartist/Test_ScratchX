@@ -3,13 +3,18 @@ import connectDB from '@/lib/db';
 import RedemptionService from '@/lib/redemptionService';
 import { hasPermission } from '@/lib/permissions';
 import { NotFoundError } from '@/lib/errors';
+import { requireAuth } from '@/lib/auth';
 
 export async function GET(request) {
   try {
     await connectDB();
 
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
 
     // Authorization
     if (!hasPermission(userRole, 'analytics:read')) {

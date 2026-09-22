@@ -13,10 +13,15 @@ import { sanitizeNameInput } from "@/lib/nameInput";
 // owned by a Distributor instead of a Merchant. Same cards, modal, and form
 // styling keeps this feeling like part of the same application.
 import styles from "@/app/(dashboard)/team/team.module.css";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
+import { SALES_EXECUTIVE_ENABLED } from "@/lib/featureFlags";
+import { notFound } from "next/navigation";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function SalesExecutivesPage() {
+// The real page. Left completely intact — it is only unreachable while the
+// feature is hidden.
+function SalesExecutivesPageInner() {
   const { data, isPending: loading } = useSalesExecutivesQuery();
   const executives = data?.executives || [];
 
@@ -149,16 +154,6 @@ export default function SalesExecutivesPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loadingContainer}>
-          <div className={styles.spinner} />
-          <p>Loading sales team...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.container}>
@@ -177,7 +172,11 @@ export default function SalesExecutivesPage() {
         )}
       </div>
 
-      {executives.length === 0 ? (
+      {loading ? (
+        <div className={styles.memberList}>
+          <SkeletonCardList count={3} lines={2} />
+        </div>
+      ) : executives.length === 0 ? (
         <div className={styles.emptyState}>
           <div className={styles.emptyStateIcon}>🧑‍💼</div>
           <h3 className={styles.emptyStateTitle}>No sales executives yet</h3>
@@ -401,4 +400,13 @@ export default function SalesExecutivesPage() {
       )}
     </div>
   );
+}
+
+// Hidden while the Sales Executive feature is unfinished. The nav entry is
+// gone, so this only catches someone hitting /sales-executives directly.
+// A wrapper rather than an early return inside the page, so the hooks below
+// stay unconditional. Flip SALES_EXECUTIVE_ENABLED to bring it all back.
+export default function SalesExecutivesPage() {
+  if (!SALES_EXECUTIVE_ENABLED) return notFound();
+  return <SalesExecutivesPageInner />;
 }

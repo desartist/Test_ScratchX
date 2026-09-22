@@ -3,6 +3,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin } from "lucide-react";
 import Badge from "../Badge";
+import Skeleton from "@/components/ui/Skeleton";
 import styles from "./StoreCarousel.module.css";
 
 const STATUS_VARIANT = { active: "success", inactive: "default", paused: "warning" };
@@ -53,7 +54,40 @@ function StoreCard({ store, stats, idx, onViewStore, onReview }) {
   );
 }
 
-export default function StoreCarousel({ stores, storePerf, viewAllHref }) {
+/**
+ * Loading twin of <StoreCard>. Same class names, so the card keeps its exact
+ * size and layout; only the store name, location and campaign count shimmer.
+ * The two action buttons are static and stay interactive-looking.
+ */
+function StoreCardSkeleton() {
+  return (
+    <article className={styles.card}>
+      <div className={styles.cardHeader}>
+        <h3 className={styles.cardName}><Skeleton w="10ch" /></h3>
+      </div>
+
+      <span className={styles.location}>
+        <MapPin size={13} />
+        <Skeleton w="12ch" />
+      </span>
+
+      <div className={styles.meta}>
+        <Skeleton w="11ch" />
+      </div>
+
+      <div className={styles.actions}>
+        <button type="button" className={`${styles.btn} ${styles.btnOutline}`} disabled>
+          View Store
+        </button>
+        <button type="button" className={`${styles.btn} ${styles.btnSolid}`} disabled>
+          Review
+        </button>
+      </div>
+    </article>
+  );
+}
+
+export default function StoreCarousel({ stores, storePerf, viewAllHref, loading = false }) {
   const router = useRouter();
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
@@ -79,7 +113,30 @@ export default function StoreCarousel({ stores, storePerf, viewAllHref }) {
     touchStartX.current = null;
   };
 
-  if (!total) return null;
+  // Only collapse the section once we know there are genuinely no stores.
+  if (!total && !loading) return null;
+
+  if (loading) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionTitle}>
+            Store Performance
+            <span className={styles.sectionCount}> <Skeleton w="3ch" /></span>
+          </span>
+          <a href={viewAllHref || "/stores"} className={styles.viewAll}>
+            View all
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <div className={styles.stackArea}>
+          <div className={styles.frontCard}>
+            <StoreCardSkeleton />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const shadowAnimClass = animating ? styles.shadowAnim : "";
   const s = stores[current];

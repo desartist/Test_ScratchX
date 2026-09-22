@@ -9,6 +9,7 @@ export default function WhatsAppButton({
   phoneNumber,
   countryCode = '+91',
   defaultMessage = '',
+  defaultImage = null,
   recipientType,
   customerId = null,
   businessId = null,
@@ -38,6 +39,7 @@ export default function WhatsAppButton({
         phoneNumber={phoneNumber}
         countryCode={countryCode}
         defaultMessage={defaultMessage}
+        defaultImage={defaultImage}
         recipientType={recipientType}
         customerId={customerId}
         businessId={businessId}

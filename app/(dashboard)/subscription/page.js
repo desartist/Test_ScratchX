@@ -9,6 +9,7 @@ import {
 } from "@/hooks/queries/useSubscriptionQuery";
 import styles from "./subscription.module.css";
 import { AlertCircle } from "lucide-react";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 const CHECK = (
   <svg data-type="check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{color:'#22c55e',flexShrink:0}}>
@@ -93,18 +94,6 @@ export default function SubscriptionPage() {
     router.push("/billing/scratches");
   };
 
-  if (loading) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.container}>
-          <div className={styles.loadingState}>
-            <div className={styles.loadingSpinner} />
-            <p>Loading subscription information...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -228,7 +217,8 @@ export default function SubscriptionPage() {
           </div>
 
           <div className={styles.plansGrid}>
-            {availablePlans.map((plan) => (
+            {loading && <SkeletonCardList count={2} lines={5} footer />}
+            {!loading && availablePlans.map((plan) => (
               <div
                 key={plan._id}
                 className={`${styles.planCard} ${

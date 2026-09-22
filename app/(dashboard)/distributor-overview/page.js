@@ -21,9 +21,9 @@ import {
 import { useDistributorDashboardQuery } from '@/hooks/queries/useDistributorDashboardQuery';
 import { useDistributorDashboardChartsQuery } from '@/hooks/queries/useDistributorDashboardChartsQuery';
 import { getAccountInitials } from '@/lib/accountDisplay';
-import LoadingState from '@/components/common/LoadingState';
 import AddBusinessModal from '@/components/distributor/AddBusinessModal';
 import StatCard from '@/components/dashboard/shared/StatCard';
+import Skeleton from '@/components/ui/Skeleton';
 import { MultiLineChart, DonutChart, HBarList } from '@/components/dashboard/smart/charts';
 import styles from './distributor.module.css';
 
@@ -41,14 +41,6 @@ export default function DistributorDashboard() {
   const error = queryError ? queryError.message : null;
   const [showAddBusinessModal, setShowAddBusinessModal] = useState(false);
 
-  if (loading) {
-    return (
-      <div className={styles.page}>
-        <LoadingState message="Loading dashboard..." />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className={styles.page}>
@@ -63,11 +55,28 @@ export default function DistributorDashboard() {
     );
   }
 
-  if (!dashboard) {
+  if (!loading && !dashboard) {
     return null;
   }
 
-  const { distributor, metrics, inventory, rechargeQueue } = dashboard;
+  // While the request is in flight the page still renders its full structure —
+  // headings, cards, labels, charts frames — with these zeroed placeholders
+  // behind it, and every value that comes from the API shimmers instead.
+  const EMPTY = {
+    distributor: {},
+    metrics: {
+      retailBusinesses: 0, wholesaleBusinesses: 0, licensesPurchased: 0,
+      monthlyMargin: 0, pendingPayoutAmount: 0, pendingRetailerCount: 0,
+      totalLeads: 0, demosScheduled: 0, followUpsPending: 0,
+      leadConversionRate: 0, retailerGrowthPercent: null,
+    },
+    inventory: {
+      core: { totalRemaining: 0, totalPurchased: 0, unitMRP: 0 },
+      smart: { totalRemaining: 0, totalPurchased: 0, unitMRP: 0 },
+    },
+    rechargeQueue: [],
+  };
+  const { distributor, metrics, inventory, rechargeQueue } = dashboard || EMPTY;
   const totalRemaining = inventory.core.totalRemaining + inventory.smart.totalRemaining;
   const location = [distributor.territory, distributor.region].filter(Boolean).join(', ');
 
@@ -86,7 +95,9 @@ export default function DistributorDashboard() {
         <div className={styles.profileHeader}>
           <div className={styles.avatar}>{getAccountInitials({ name: distributor.name })}</div>
           <div>
-            <h1 className={styles.profileName}>{distributor.name}</h1>
+            <h1 className={styles.profileName}>
+              {loading ? <Skeleton w="10ch" /> : distributor.name}
+            </h1>
             {location && (
               <p className={styles.profileLocation}>
                 <MapPin size={14} />
@@ -117,18 +128,24 @@ export default function DistributorDashboard() {
 
           <div className={styles.heroStats}>
             <div className={styles.heroStatMain}>
-              <span className={styles.heroStatValue}>{metrics.retailBusinesses + metrics.wholesaleBusinesses}</span>
+              <span className={styles.heroStatValue}>
+                {loading ? <Skeleton w="2ch" h="0.8em" onDark /> : metrics.retailBusinesses + metrics.wholesaleBusinesses}
+              </span>
               <span className={styles.heroStatLabel}>Total Businesses</span>
             </div>
 
             <div className={styles.heroSubstats}>
               <div className={styles.heroStatSub}>
-                <span className={styles.heroStatSubValue}>{metrics.retailBusinesses}</span>
+                <span className={styles.heroStatSubValue}>
+                  {loading ? <Skeleton w="2ch" onDark /> : metrics.retailBusinesses}
+                </span>
                 <span className={styles.heroStatSubLabel}>Retailers</span>
               </div>
               <div className={styles.heroStatDivider} />
               <div className={styles.heroStatSub}>
-                <span className={styles.heroStatSubValue}>{metrics.wholesaleBusinesses}</span>
+                <span className={styles.heroStatSubValue}>
+                  {loading ? <Skeleton w="2ch" onDark /> : metrics.wholesaleBusinesses}
+                </span>
                 <span className={styles.heroStatSubLabel}>Wholesalers</span>
               </div>
             </div>
@@ -151,23 +168,27 @@ export default function DistributorDashboard() {
 
         <div className={styles.statGrid}>
           <StatCard
+            loading={loading}
             icon={<Users />}
             value={totalRemaining}
             label="Licenses Remaining"
           />
           <StatCard
+            loading={loading}
             icon={<CreditCard />}
             value={metrics.licensesPurchased}
             label="Core + Smart Licenses Purchased"
             subtitle={`${inventory.core.totalPurchased} Core + ${inventory.smart.totalPurchased} Smart`}
           />
           <StatCard
+            loading={loading}
             icon={<Wallet />}
             value={`₹${metrics.monthlyMargin.toLocaleString('en-IN')}`}
             label="Estimated Margin"
             subtitle="This month"
           />
           <StatCard
+            loading={loading}
             icon={<Clock />}
             value={`₹${metrics.pendingPayoutAmount.toLocaleString('en-IN')}`}
             label="Pending Payments"
@@ -189,14 +210,18 @@ export default function DistributorDashboard() {
               <ArrowRight size={16} />
             </Link>
           </div>
-          {metrics.totalLeads === 0 ? (
+          {!loading && metrics.totalLeads === 0 ? (
             <p className={styles.emptyText}>No leads yet. Start tracking your retailer acquisition pipeline.</p>
           ) : (
             <div className={styles.statGrid}>
-              <StatCard icon={<Target />} value={metrics.totalLeads} label="Total Leads" />
-              <StatCard icon={<Clock />} value={metrics.demosScheduled} label="Demos Scheduled" />
-              <StatCard icon={<AlertCircle />} value={metrics.followUpsPending} label="Follow-ups Pending" tone={metrics.followUpsPending > 0 ? 'red' : undefined} />
-              <StatCard icon={<TrendingUp />} value={`${metrics.leadConversionRate}%`} label="Conversion Rate" />
+              <StatCard
+            loading={loading} icon={<Target />} value={metrics.totalLeads} label="Total Leads" />
+              <StatCard
+            loading={loading} icon={<Clock />} value={metrics.demosScheduled} label="Demos Scheduled" />
+              <StatCard
+            loading={loading} icon={<AlertCircle />} value={metrics.followUpsPending} label="Follow-ups Pending" tone={metrics.followUpsPending > 0 ? 'red' : undefined} />
+              <StatCard
+            loading={loading} icon={<TrendingUp />} value={`${metrics.leadConversionRate}%`} label="Conversion Rate" />
             </div>
           )}
         </div>
@@ -217,7 +242,7 @@ export default function DistributorDashboard() {
 
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Business Mix</h2>
-            {totalBusinesses === 0 ? (
+            {!loading && totalBusinesses === 0 ? (
               <p className={styles.emptyText}>No businesses onboarded yet.</p>
             ) : (
               <DonutChart
@@ -233,7 +258,7 @@ export default function DistributorDashboard() {
         {/* Top Retailers by Commission */}
         <div className={styles.card}>
           <h2 className={styles.cardTitle}>Top Retailers by Commission</h2>
-          {topRetailers.length === 0 ? (
+          {!loading && topRetailers.length === 0 ? (
             <p className={styles.emptyText}>No commission earned yet.</p>
           ) : (
             <HBarList
@@ -254,7 +279,7 @@ export default function DistributorDashboard() {
             </Link>
           </div>
 
-          {rechargeQueue.length === 0 ? (
+          {!loading && rechargeQueue.length === 0 ? (
             <p className={styles.emptyText}>No retailers need a recharge right now.</p>
           ) : (
             <div className={styles.queueList}>

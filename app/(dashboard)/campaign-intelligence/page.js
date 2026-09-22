@@ -13,6 +13,7 @@ import { useAdminCampaignsQuery } from '@/hooks/queries/useAdminCampaignsQuery';
 import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './campaign-intelligence.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 function formatDate(date) {
   return date
@@ -87,7 +88,7 @@ export default function CampaignIntelligencePage() {
         </div>
 
         {loading ? (
-          <LoadingState message="Loading campaigns..." />
+          <SkeletonTableRows rows={6} cols={11} asTable />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />

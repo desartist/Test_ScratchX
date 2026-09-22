@@ -12,6 +12,7 @@ import platformAccessService from '@/lib/services/platformAccessService';
 import mainStoreService from '@/lib/mainStoreService';
 import Account from '@/models/accountModel';
 import Store from '@/models/storeModel';
+import { requireAuth } from '@/lib/auth';
 
 function toObjId(id) {
   if (mongoose.Types.ObjectId.isValid(id) && !(id instanceof mongoose.Types.ObjectId)) {
@@ -108,9 +109,12 @@ export async function POST(request) {
   try {
     await connectDB();
 
-    // Get user info from headers
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account: authAccount, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = authAccount.role;
+    const userId = authAccount._id.toString();
 
     // Authorization: Only Merchant and Super_Admin can create stores
     if (!hasPermission(userRole, 'store:create')) {
@@ -375,9 +379,12 @@ export async function GET(request) {
   try {
     await connectDB();
 
-    // Get user info from headers
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account: authAccount, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = authAccount.role;
+    const userId = authAccount._id.toString();
 
     // Authorization: User must have store:read permission
     if (!hasPermission(userRole, 'store:read')) {

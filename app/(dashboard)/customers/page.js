@@ -8,6 +8,7 @@ import CustomerDetailDrawer from '@/components/customers/CustomerDetailDrawer';
 import WhatsAppButton from '@/components/whatsapp/WhatsAppButton';
 import { useSubscription } from '@/components/subscription/SubscriptionContext';
 import styles from './customers.module.css';
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 // Matches the seed data's canUseWhatsAppIntegration flag (Smart-only feature)
 const WHATSAPP_ENABLED_PLAN_TYPES = ['SMART'];
@@ -244,7 +245,9 @@ export default function CustomersPage() {
       )}
 
       {loading ? (
-        <div className={styles.loading}>Loading customers...</div>
+        <div className={styles.customersList}>
+          <SkeletonCardList count={6} lines={3} />
+        </div>
       ) : customers.length === 0 ? (
         <div className={styles.empty}>
           <p>No customers found</p>
@@ -338,6 +341,11 @@ export default function CustomersPage() {
                           : ''
                       }`}
                       recipientType="customer"
+                      defaultImage={
+                        customer.scratch_card_id?.reward_type === 'freeItem'
+                          ? customer.scratch_card_id.reward_image || null
+                          : null
+                      }
                       customerId={customer._id}
                       campaignId={customer.campaign_id?._id}
                       placeholderValues={{

@@ -1,10 +1,14 @@
 import { connectDB } from '@/lib/connectDB';
 import account from '@/models/accountModel';
+import { requireAuth } from '@/lib/auth';
 
 export async function GET(request) {
   try {
-    const userId = request.headers.get('x-user-id');
-    const userRole = request.headers.get('x-user-role');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account: authAccount, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userId = authAccount._id.toString();
 
     if (!userId) {
       return Response.json(

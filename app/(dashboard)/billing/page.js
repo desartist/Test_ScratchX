@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { criticalFetchService } from "@/lib/criticalFetchService";
 import styles from "./billing.module.css";
 import { CheckCircle, AlertCircle } from "lucide-react";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 const CHECK = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -103,17 +104,6 @@ export default function BillingPage() {
     fetchPlans();
   }, []);
 
-  if (loading) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.container}>
-          <div className={styles.loadingState}>
-            <p>Loading plans...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -140,7 +130,8 @@ export default function BillingPage() {
 
         {/* Plans Grid */}
         <div className={styles.plansGrid}>
-          {plans.map((plan) => (
+          {loading && <SkeletonCardList count={3} lines={5} footer />}
+          {!loading && plans.map((plan) => (
             <div
               key={plan._id}
               className={`${styles.planCard} ${plan.recommended ? styles.planCardPopular : ""}`}

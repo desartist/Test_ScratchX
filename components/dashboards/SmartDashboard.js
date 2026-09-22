@@ -27,7 +27,6 @@ import QuickActions from "@/components/dashboard/smart/QuickActions";
 import RecentActivity from "@/components/dashboard/smart/RecentActivity";
 import SectionHeader from "@/components/dashboard/smart/SectionHeader";
 import EmptyState from "@/components/dashboard/smart/EmptyState";
-import DashboardSkeleton from "@/components/dashboard/smart/DashboardSkeleton";
 import {
   BarChart,
   LineAreaChart,
@@ -318,9 +317,11 @@ export default function SmartDashboard() {
     [account, token, loadPending, loadKpi],
   );
 
-  if (loading) {
-    return <DashboardSkeleton />;
-  }
+  // NOTE: deliberately no `if (loading) return <DashboardSkeleton />` here.
+  // The whole point is that the page's structure — the hero card and its
+  // gradient, the tile grid, section headings, buttons — is static markup that
+  // renders on the first paint. Only the values that come from the API/DB get
+  // a shimmer, via the `loading` prop passed to each card below.
 
   const subscription = dashboard?.subscription || null;
   const stores = Array.isArray(dashboard?.stores) ? dashboard.stores : [];
@@ -425,6 +426,7 @@ export default function SmartDashboard() {
         onBellClick={() => router.push("/notifications")}
       />
       <SubscriptionHero
+        loading={loading}
         planName={planName}
         status={subscription?.status}
         dayOf={heroDayOf}
@@ -435,23 +437,26 @@ export default function SmartDashboard() {
         onViewUsage={() => router.push("/analytics")}
         onChoosePlans={() => router.push("/subscription")}
       />
-      <KpiTileGrid kpi={kpi} />
+      <KpiTileGrid kpi={kpi} loading={loading} />
 
-      {/* Top Campaigns — stacked carousel */}
-      {topCampaigns.length > 0 && (
+      {/* Top Campaigns — stacked carousel. Rendered while loading too, so the
+          section shows a placeholder card instead of popping in later. */}
+      {(loading || topCampaigns.length > 0) && (
         <CampaignCarousel
           campaigns={topCampaigns}
           storeCount={stores.length}
           viewAllHref="/campaign"
+          loading={loading}
         />
       )}
 
       {/* Store Performance — stacked carousel */}
-      {storePerformance.length > 0 && (
+      {(loading || storePerformance.length > 0) && (
         <StoreCarousel
           stores={storePerformance}
           storePerf={storePerf}
           viewAllHref="/stores"
+          loading={loading}
         />
       )}
 

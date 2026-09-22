@@ -17,6 +17,7 @@ import {
 import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './admin-notifications.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 const SEVERITY_ICON = {
   info: <Info />,
@@ -184,7 +185,7 @@ export default function AdminNotificationsPage() {
         </div>
 
         {loading ? (
-          <LoadingState message="Loading notifications..." />
+          <SkeletonTableRows rows={6} cols={7} asTable />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />

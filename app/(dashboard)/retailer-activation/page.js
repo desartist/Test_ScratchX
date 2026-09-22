@@ -9,6 +9,7 @@ import StatCard from "@/components/dashboard/shared/StatCard";
 // see leads/page.js for the same reuse rationale.
 import modalStyles from "@/app/(dashboard)/team/team.module.css";
 import styles from "@/components/distributor/distributorList.module.css";
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 // Retailers onboarded but not yet running on a plan — no subscription set
 // means AddBusinessModal created them without granting one at creation time.
@@ -67,7 +68,7 @@ export default function RetailerActivationPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} className={styles.emptyCell}>Loading...</td></tr>
+              <SkeletonTableRows rows={5} cols={5} />
             ) : pending.length === 0 ? (
               <tr>
                 <td colSpan={5} className={styles.emptyCell}>

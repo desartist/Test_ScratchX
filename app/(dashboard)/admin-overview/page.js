@@ -36,7 +36,6 @@ import { useDistributorMerchantsQuery } from '@/hooks/queries/useDistributorMerc
 import { sanitizeNameInput } from '@/lib/nameInput';
 import { MultiLineChart, DonutChart, HBarList } from '@/components/dashboard/smart/charts';
 import StatCard from '@/components/dashboard/shared/StatCard';
-import LoadingState from '@/components/common/LoadingState';
 import styles from './admin.module.css';
 
 const CAMPAIGN_CONSUMPTION_COLORS = ['#6d5df6', '#ef9e1b', '#00b0b1', '#4c6ef5', '#b9b0f7'];
@@ -164,14 +163,6 @@ export default function AdminOverviewPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className={styles.page}>
-        <LoadingState message="Loading admin dashboard..." />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className={styles.page}>
@@ -207,24 +198,28 @@ export default function AdminOverviewPage() {
         <h2 className={styles.sectionTitle}>Platform Overview</h2>
         <div className={styles.statGrid}>
           <StatCard
+            loading={loading}
             href="/retailers"
             icon={<UsersRound />}
             value={metrics.totalMerchants}
             label="Retailers"
           />
           <StatCard
+            loading={loading}
             href="/distributors"
             icon={<Users />}
             value={metrics.totalDistributors}
             label="Distributors"
           />
           <StatCard
+            loading={loading}
             href="/campaign-intelligence"
             icon={<Megaphone />}
             value={`${platform.activeCampaigns} / ${platform.totalCampaigns}`}
             label="Live Campaigns"
           />
           <StatCard
+            loading={loading}
             href="/revenue"
             icon={<Wallet />}
             value={formatCurrency(revenue30d)}
@@ -236,36 +231,42 @@ export default function AdminOverviewPage() {
         <h2 className={styles.subsectionTitle}>Engagement</h2>
         <div className={styles.statGrid}>
           <StatCard
+            loading={loading}
             href="/admin-customers"
             icon={<Users />}
             value={platform.totalCustomers.toLocaleString('en-IN')}
             label="Customers"
           />
           <StatCard
+            loading={loading}
             href="/scratch-economy"
             icon={<Ticket />}
             value={`${platform.scratchUsed.toLocaleString('en-IN')} / ${platform.scratchAllocated.toLocaleString('en-IN')}`}
             label="Scratches Used"
           />
           <StatCard
+            loading={loading}
             href="/admin-redemptions"
             icon={<Gift />}
             value={platform.totalRedemptions.toLocaleString('en-IN')}
             label="Redemptions"
           />
           <StatCard
+            loading={loading}
             href="/admin-stores"
             icon={<StoreIcon />}
             value={`${platform.activeStores} / ${platform.totalStores}`}
             label="Active Stores"
           />
           <StatCard
+            loading={loading}
             href="/retailers"
             icon={<Building2 />}
             value={wholesalerCount}
             label="Wholesalers"
           />
           <StatCard
+            loading={loading}
             href="/admin-customers"
             icon={<Repeat />}
             value={`${retentionRate}%`}
@@ -278,6 +279,7 @@ export default function AdminOverviewPage() {
         <h2 className={styles.subsectionTitle}>Platform Health</h2>
         <div className={styles.statGrid}>
           <StatCard
+            loading={loading}
             href="/subscriptions"
             tone="red"
             icon={<Clock />}
@@ -285,6 +287,7 @@ export default function AdminOverviewPage() {
             label="Expiring Subscriptions (30d)"
           />
           <StatCard
+            loading={loading}
             href="/scratch-economy"
             tone="red"
             icon={<AlertTriangle />}
@@ -292,6 +295,7 @@ export default function AdminOverviewPage() {
             label="Low Scratch Balances"
           />
           <StatCard
+            loading={loading}
             href="/revenue"
             tone="red"
             icon={<FileText />}
@@ -304,6 +308,7 @@ export default function AdminOverviewPage() {
         <h2 className={styles.subsectionTitle}>Quick Actions</h2>
         <div className={styles.statGrid}>
           <StatCard
+            loading={loading}
             href="/admin-stores"
             icon={<StoreIcon />}
             value={String(platform.activeStores).padStart(2, '0')}
@@ -311,6 +316,7 @@ export default function AdminOverviewPage() {
             subtitle={`${platform.activeStores} active out of ${platform.totalStores}`}
           />
           <StatCard
+            loading={loading}
             href="/campaign-intelligence"
             icon={<Megaphone />}
             value={String(platform.totalCampaigns).padStart(2, '0')}
@@ -318,6 +324,7 @@ export default function AdminOverviewPage() {
             subtitle={`${platform.activeCampaigns} campaign${platform.activeCampaigns === 1 ? '' : 's'} live now`}
           />
           <StatCard
+            loading={loading}
             href="/admin-support"
             icon={<ClipboardList />}
             value=""
@@ -325,6 +332,7 @@ export default function AdminOverviewPage() {
             subtitle="Review open support & escalations"
           />
           <StatCard
+            loading={loading}
             href="/admin-team"
             icon={<Users />}
             value=""

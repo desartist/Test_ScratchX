@@ -1,0 +1,48 @@
+/* Inline shimmer placeholder for a single dynamic value.
+   Sized in `em` so it inherits the font-size of whatever text it stands in
+   for — the layout stays identical when the real value swaps in. */
+.skeleton {
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.08);
+  background-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.06) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.4s ease-in-out infinite;
+  /* Keeps the line box the same height as the text it replaces. */
+  line-height: 1;
+}
+
+/* For use on dark/gradient surfaces (e.g. the purple subscription hero). */
+.onDark {
+  background-color: rgba(255, 255, 255, 0.22);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Respect users who ask for less motion — keep the placeholder, drop the
+   animation. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

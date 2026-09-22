@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './orders.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -92,14 +93,6 @@ export default function OrdersPage() {
 
   const hasActiveFilters =
     statusFilter !== 'all' || searchTerm || dateRange.startDate || dateRange.endDate;
-
-  if (loading && orders.length === 0) {
-    return (
-      <div className={styles.page}>
-        <LoadingState message="Loading orders..." />
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -261,7 +254,9 @@ export default function OrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {orders.length === 0 ? (
+              {loading && orders.length === 0 ? (
+                <SkeletonTableRows rows={5} cols={7} />
+              ) : orders.length === 0 ? (
                 <tr>
                   <td colSpan="7" className={styles.emptyState}>
                     <AlertCircle size={32} />

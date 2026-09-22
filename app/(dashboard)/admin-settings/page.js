@@ -12,6 +12,12 @@ import styles from "./admin-settings.module.css";
 export default function AdminSettingsPage() {
   const { data: settings, isLoading } = useAdminSettingsQuery();
 
+  // NOTE: deliberately still an all-or-nothing gate. Every useState below is
+  // initialised from `settings` (e.g. defaultCommissionRate), and those
+  // initialisers only run once — so rendering the form before the data lands
+  // would either crash on undefined or leave the fields permanently blank.
+  // Giving this page field-level loading means lifting that state out of
+  // useState initialisers first, which is a bigger change than a skeleton.
   if (isLoading || !settings) {
     return <div className={styles.page}><div className={styles.container}>Loading settings...</div></div>;
   }

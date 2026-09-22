@@ -12,6 +12,7 @@ import { useAdminRedemptionsQuery } from '@/hooks/queries/useAdminRedemptionsQue
 import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './admin-redemptions.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 function formatDate(date) {
   return date
@@ -94,7 +95,7 @@ export default function AdminRedemptionsPage() {
         </div>
 
         {loading ? (
-          <LoadingState message="Loading redemptions..." />
+          <SkeletonTableRows rows={6} cols={8} asTable />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />

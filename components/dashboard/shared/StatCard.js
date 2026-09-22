@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import Skeleton from "@/components/ui/Skeleton";
 import styles from "./StatCard.module.css";
 
 // Shared metric/stat card used across all Super Admin pages — icon chip +
@@ -9,8 +10,11 @@ import styles from "./StatCard.module.css";
 // (#6d5df6) already used elsewhere in the app for charts (DonutChart,
 // LineAreaChart) — this ties the new card language to an existing color
 // rather than inventing a one-off hex.
-export default function StatCard({ icon, value, label, subtitle, href, onClick, tone = "indigo" }) {
-  const hasValue = value !== undefined && value !== null && value !== '';
+// `loading` shimmers just the value (and subtitle, when the card has one)
+// while the icon chip and label render as normal text — the card keeps its
+// exact size, so nothing moves when the number arrives.
+export default function StatCard({ icon, value, label, subtitle, href, onClick, tone = "indigo", loading = false }) {
+  const hasValue = loading || (value !== undefined && value !== null && value !== '');
 
   const content = (
     <>
@@ -19,7 +23,9 @@ export default function StatCard({ icon, value, label, subtitle, href, onClick, 
         <div className={styles.textGroup}>
           {hasValue ? (
             <>
-              <p className={styles.value}>{value}</p>
+              <p className={styles.value}>
+                {loading ? <Skeleton w="3ch" h="0.8em" /> : value}
+              </p>
               <p className={styles.label}>{label}</p>
             </>
           ) : (
@@ -27,7 +33,11 @@ export default function StatCard({ icon, value, label, subtitle, href, onClick, 
           )}
         </div>
       </div>
-      {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+      {subtitle !== undefined && (
+        <p className={styles.subtitle}>
+          {loading ? <Skeleton w="10ch" /> : subtitle}
+        </p>
+      )}
     </>
   );
 

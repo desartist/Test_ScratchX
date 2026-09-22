@@ -10,6 +10,7 @@ import {
 } from "@/hooks/queries/useAdminTeamQuery";
 import { sanitizeNameInput } from "@/lib/nameInput";
 import styles from "./admin-team.module.css";
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 function initials(name) {
   if (!name) return "?";
@@ -184,7 +185,7 @@ export default function AdminTeamPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan={6} className={styles.emptyState}>Loading team members...</td></tr>
+                  <SkeletonTableRows rows={5} cols={6} />
                 ) : !members || members.length === 0 ? (
                   <tr>
                     <td colSpan={6} className={styles.emptyState}>

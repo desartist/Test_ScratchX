@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/connectDB';
 import { hasPermission } from '@/lib/permissions';
 import { ValidationError, NotFoundError } from '@/lib/errors';
+import { requireAuth } from '@/lib/auth';
 
 /**
  * POST /api/stores/[id]/assign-campaigns
@@ -30,8 +31,12 @@ export async function POST(request, { params }) {
     await connectDB();
 
     const { id: storeId } = await params;
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
 
     // Authorization: Only Merchant, Manager, and Super_Admin can assign campaigns
     if (!hasPermission(userRole, 'store:update')) {
