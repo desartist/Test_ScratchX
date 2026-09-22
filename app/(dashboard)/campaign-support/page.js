@@ -7,6 +7,7 @@ import { useCreateSupportTicketMutation } from "@/hooks/queries/useDistributorNe
 import StatCard from "@/components/dashboard/shared/StatCard";
 import modalStyles from "@/app/(dashboard)/team/team.module.css";
 import styles from "@/components/distributor/distributorList.module.css";
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 const STATUS_COLORS = { active: "#10b981", paused: "#f59e0b", ended: "#6b7280", draft: "#6b7280" };
 
@@ -95,7 +96,7 @@ export default function CampaignSupportPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className={styles.emptyCell}>Loading...</td></tr>
+              <SkeletonTableRows rows={5} cols={7} />
             ) : campaigns.length === 0 ? (
               <tr><td colSpan={7} className={styles.emptyCell}>No campaigns found across your retailer network.</td></tr>
             ) : (

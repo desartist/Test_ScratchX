@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/connectDB';
 import CampaignService from '@/lib/campaignService';
 import { hasPermission } from '@/lib/permissions';
 import { ValidationError, NotFoundError } from '@/lib/errors';
+import { requireAuth } from '@/lib/auth';
 
 /**
  * DELETE /api/campaigns/[id]/stores/[storeId]
@@ -22,8 +23,12 @@ export async function DELETE(request, { params }) {
     await connectDB();
 
     const { id: campaignId, storeId } = await params;
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
 
     // Authorization: Only Merchant, Manager, and Super_Admin can remove stores from campaigns
     if (!hasPermission(userRole, 'campaign:update')) {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, AlertCircle } from 'lucide-react';
 import MessageEditor from './MessageEditor';
@@ -24,6 +24,7 @@ export default function WhatsAppModal({
   phoneNumber,
   countryCode = '+91',
   defaultMessage = '',
+  defaultImage = null,
   recipientType,
   customerId = null,
   businessId = null,
@@ -35,10 +36,43 @@ export default function WhatsAppModal({
   const [error, setError] = useState(null);
   const [sending, setSending] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [defaultImageDone, setDefaultImageDone] = useState(false);
+  const uploadingDefault = Boolean(defaultImage) && !defaultImageDone;
 
   // Only fetches once the modal is actually opened; cached afterward so
   // reopening never re-fetches unnecessarily.
   const { data: templates } = useWhatsAppTemplatesQuery({ enabled: isOpen });
+
+  // A won gift's image (a data URL on the scratch card) can't go in a
+  // wa.me link as-is, so on open it's uploaded through the same endpoint the
+  // manual uploader uses, and the resulting public link is appended to the
+  // message like any other attached image.
+  useEffect(() => {
+    if (!isOpen || !defaultImage) return undefined;
+    let cancelled = false;
+    fetch('/api/whatsapp/upload-image', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageData: defaultImage }),
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (!json.success) throw new Error(json.error || 'Upload failed');
+        setImage({ url: json.url, previewSrc: defaultImage });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(`Could not attach the gift image: ${err.message}`);
+      })
+      .finally(() => {
+        if (!cancelled) setDefaultImageDone(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, defaultImage]);
 
   if (!isOpen) return null;
 
@@ -48,6 +82,7 @@ export default function WhatsAppModal({
     setImage(null);
     setError(null);
     setSelectedTemplateId('');
+    setDefaultImageDone(false);
   };
 
   const handleTemplateSelect = (templateId) => {
@@ -56,7 +91,8 @@ export default function WhatsAppModal({
     const template = (templates || []).find((t) => t._id === templateId);
     if (!template) return;
     setMessage(substituteTemplate(template.message, placeholderValues));
-    setImage(template.imageUrl ? { url: template.imageUrl, previewSrc: template.imageUrl } : null);
+    // A template without its own image keeps whatever is attached (e.g. the won gift).
+    if (template.imageUrl) setImage({ url: template.imageUrl, previewSrc: template.imageUrl });
   };
 
   const digitsOnly = (phoneNumber || '').replace(/\D/g, '');
@@ -164,7 +200,7 @@ export default function WhatsAppModal({
             type="button"
             className={styles.sendButton}
             onClick={handleSend}
-            disabled={sending || !phoneNumber}
+            disabled={sending || !phoneNumber || uploadingDefault}
           >
             Send 
           </button>

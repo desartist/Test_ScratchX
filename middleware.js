@@ -1,28 +1,94 @@
 import { NextResponse } from "next/server";
-import jwtService from "@/lib/jwtService";
+import { dashboardForRole } from "@/lib/permissions";
 
 const LOGIN_PATH = "/auth/login";
 
-export function middleware(request) {
+// Cookies cleared when a session is rejected, so a stale or forged token
+// doesn't keep getting resent on every subsequent request.
+const AUTH_COOKIES = [
+  'authToken',
+  'refreshToken',
+  'sessionId',
+  'accountId',
+  'accountRole',
+  'userEmail',
+  'merchantHasStore',
+  'merchantHasSub',
+];
+
+/**
+ * The authToken cookie is HMAC-SHA256(COOKIE_SECRET, sessionId), minted at
+ * login (lib/setAuthSession.js). Middleware runs on the Edge runtime, so this
+ * uses Web Crypto rather than node:crypto — but it must produce the exact same
+ * hex digest that lib/auth.js verifies server-side.
+ *
+ * This is a signature check only. Middleware cannot reach the database, so it
+ * cannot know whether the session is still active or the account still exists;
+ * that remains the job of requireAuth()/getLoginToken() in the API routes and
+ * the dashboard layout. The point here is that a fabricated cookie no longer
+ * buys an attacker a rendered dashboard shell.
+ */
+async function isValidAuthToken(token, sessionId) {
+  const secret = process.env.COOKIE_SECRET;
+  if (!secret || !token || !sessionId) return false;
+
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(sessionId));
+  const expected = Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  // Constant-time comparison.
+  if (token.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < token.length; i++) {
+    diff |= token.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+function clearAuthCookies(response) {
+  for (const name of AUTH_COOKIES) {
+    response.cookies.set(name, '', { maxAge: 0, path: '/' });
+  }
+  return response;
+}
+
+export async function middleware(request) {
   const pathname = request.nextUrl.pathname;
 
   // Build request headers once — always include x-pathname so server
   // components (layouts) can read the current path without JS.
+  //
+  // Deliberately does NOT forward x-user-id / x-user-role / x-user-email.
+  // Those were derived from the accountRole/accountId cookies, which are not
+  // httpOnly and so are attacker-controlled; forwarding them as if they were
+  // authoritative is what let a forged header act as another account. Every
+  // route now derives identity from requireAuth() instead.
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', pathname);
 
-  const authToken        = request.cookies.get('authToken')?.value;
+  const authTokenCookie  = request.cookies.get('authToken')?.value;
+  const sessionId        = request.cookies.get('sessionId')?.value;
   const role             = request.cookies.get('accountRole')?.value;
-  const userId           = request.cookies.get('accountId')?.value;
-  const userEmail        = request.cookies.get('userEmail')?.value;
   const merchantHasStore = request.cookies.get('merchantHasStore')?.value;
   const merchantHasSub   = request.cookies.get('merchantHasSub')?.value;
 
-  if (role)      requestHeaders.set('x-user-role', role);
-  if (userId)    requestHeaders.set('x-user-id', userId);
-  if (userEmail) requestHeaders.set('x-user-email', userEmail);
-
   const withHeaders = { request: { headers: requestHeaders } };
+
+  // A session counts as present only if the cookie's signature checks out.
+  const hasSession = await isValidAuthToken(authTokenCookie, sessionId);
+
+  // A token that was supplied but failed verification is stale or forged —
+  // strip the cookies so the browser stops resending it.
+  const hasRejectedToken = Boolean(authTokenCookie) && !hasSession;
 
   // ── Redirect already-authenticated users away from auth pages ─────────
   if (
@@ -30,10 +96,32 @@ export function middleware(request) {
     pathname.startsWith('/auth/register') ||
     pathname.startsWith('/auth/signup')
   ) {
-    if (authToken) {
-      return NextResponse.redirect(new URL('/merchant-overview', request.url));
+    if (hasSession) {
+      // Send them to their own dashboard, not always the merchant one — a
+      // signed-in Distributor or Super_Admin hitting /auth/login was being
+      // bounced into /merchant-overview regardless of role.
+      const target = dashboardForRole(role) || '/dashboard';
+      return NextResponse.redirect(new URL(target, request.url));
     }
-    return NextResponse.next(withHeaders);
+    // Let them reach the login page, but drop the bad cookies on the way in —
+    // otherwise the branch above would bounce them straight back out.
+    return hasRejectedToken
+      ? clearAuthCookies(NextResponse.next(withHeaders))
+      : NextResponse.next(withHeaders);
+  }
+
+  // ── /dashboard is just a router: send each role to its real dashboard ──
+  // This used to be done by the page itself, which rendered a full-screen
+  // spinner, fetched /api/auth/me to learn the role, then client-side pushed —
+  // an extra round trip and a blank screen on every single login. The role is
+  // already in a cookie, so resolve it here and the browser never loads that
+  // page at all. If the cookie is missing or unrecognised we fall through and
+  // let the page do its /api/auth/me lookup as before.
+  if (pathname === '/dashboard' && hasSession) {
+    const target = dashboardForRole(role);
+    if (target) {
+      return NextResponse.redirect(new URL(target, request.url));
+    }
   }
 
   // ── Merchant subscription + store onboarding gates ────────────────────
@@ -54,7 +142,7 @@ export function middleware(request) {
     '/billing', '/subscription', '/stores/create',
   ];
 
-  const isMerchant = role === 'Merchant' && authToken;
+  const isMerchant = role === 'Merchant' && hasSession;
   const isOnboardingBypass = ONBOARDING_BYPASS.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),
   );
@@ -80,6 +168,7 @@ export function middleware(request) {
 
   // ── Protect all merchant-overview / store / campaign / subscription pages ──────
   const isProtectedPage =
+    pathname === '/dashboard' ||
     pathname === '/subscription-required' ||
     pathname.startsWith('/onboarding') ||
     pathname.startsWith('/merchant-overview') ||
@@ -105,18 +194,24 @@ export function middleware(request) {
     pathname.startsWith('/api/subscription');
 
   if (isProtectedPage || isProtectedApi) {
-    if (!authToken) {
+    if (!hasSession) {
       if (isProtectedApi) {
-        return NextResponse.json(
-          { success: false, error: 'Unauthorized', data: null },
-          { status: 401 },
+        return clearAuthCookies(
+          NextResponse.json(
+            { success: false, error: 'Unauthorized', data: null },
+            { status: 401 },
+          ),
         );
       }
-      return NextResponse.redirect(new URL(LOGIN_PATH, request.url));
+      return clearAuthCookies(
+        NextResponse.redirect(new URL(LOGIN_PATH, request.url)),
+      );
     }
   }
 
-  return NextResponse.next(withHeaders);
+  return hasRejectedToken
+    ? clearAuthCookies(NextResponse.next(withHeaders))
+    : NextResponse.next(withHeaders);
 }
 
 export const config = {

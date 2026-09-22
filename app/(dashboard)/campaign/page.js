@@ -13,6 +13,7 @@ import {
   useDeleteCampaignMutation,
 } from "@/hooks/queries/useCampaignsListQuery";
 import styles from "./campaign.module.css";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 // Low-scratch threshold: allocated > 0 AND remaining/allocated <= 10%.
 const LOW_SCRATCH_RATIO = 0.1;
@@ -202,19 +203,15 @@ export default function CampaignPage() {
     return filtered;
   }, [campaigns, searchQuery, activeTab]);
 
-  if (authLoading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Loading...</div>
-      </div>
-    );
-  }
 
   // Onboarding empty state: merchant has no campaigns at all (not a filtered/search miss).
   const hasActiveSearchOrFilter =
     searchQuery.trim() !== "" || activeTab !== "all";
+  // Treat "still resolving the session" as loading too — otherwise the
+  // onboarding empty state flashes before we know whether there are campaigns.
+  const isLoading = loading || authLoading;
   const showOnboarding =
-    !loading && !error && !hasActiveSearchOrFilter && campaigns.length === 0;
+    !isLoading && !error && !hasActiveSearchOrFilter && campaigns.length === 0;
 
   const hasActivePlan = Boolean(account?.activePlan);
 
@@ -253,8 +250,10 @@ export default function CampaignPage() {
       />
 
       {/* Content */}
-      {loading ? (
-        <div className={styles.loading}>Loading campaigns...</div>
+      {isLoading ? (
+        <div className={styles.campaignsGrid}>
+          <SkeletonCardList count={4} lines={4} footer />
+        </div>
       ) : error ? (
         <div className={styles.error}>{error}</div>
       ) : filteredCampaigns.length === 0 ? (

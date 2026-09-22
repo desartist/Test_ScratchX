@@ -5,6 +5,7 @@ import { CheckCircle2, Clock, XCircle, Undo2 } from "lucide-react";
 import { useDistributorPaymentsQuery } from "@/hooks/queries/useDistributorNetworkQuery";
 import StatCard from "@/components/dashboard/shared/StatCard";
 import styles from "@/components/distributor/distributorList.module.css";
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 const STATUS_COLORS = { success: "#10b981", pending: "#f59e0b", created: "#6b7280", failed: "#ef4444", refunded: "#8b5cf6" };
 const STATUS_LABELS = { success: "Paid", pending: "Pending", created: "Created", failed: "Failed", refunded: "Refunded" };
@@ -64,7 +65,7 @@ export default function PaymentsPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className={styles.emptyCell}>Loading...</td></tr>
+              <SkeletonTableRows rows={5} cols={7} />
             ) : payments.length === 0 ? (
               <tr><td colSpan={7} className={styles.emptyCell}>No payments recorded for your network yet.</td></tr>
             ) : (

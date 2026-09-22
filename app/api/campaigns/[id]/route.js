@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/connectDB';
 import Campaign from '@/models/campaignModel';
 import CampaignService from '@/lib/campaignService';
+import { requireAuth } from '@/lib/auth';
 
 /**
  * Helper to check campaign ownership
@@ -25,8 +26,13 @@ export async function GET(request, { params }) {
   try {
     await connectDB();
     const { id: campaignId } = await params;
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
+
 
     if (!userRole || !userId) {
       return Response.json(
@@ -83,8 +89,12 @@ export async function PUT(request, { params }) {
     await connectDB();
     const { id: campaignId } = await params;
     console.log("headers", request.headers)
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
     if (!userRole || !userId) {
       return Response.json(
         { success: false, error: 'Unauthorized', data: null, message: null },
@@ -141,8 +151,13 @@ export async function DELETE(request, { params }) {
   try {
     await connectDB();
     const { id: campaignId } = await params;
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
+
 
     if (!userRole || !userId) {
       return Response.json(

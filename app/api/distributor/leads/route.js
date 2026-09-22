@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
 import Account from "@/models/accountModel";
 import Lead, { LEAD_STATUSES } from "@/models/leadModel";
+import { SALES_EXECUTIVE_ENABLED } from "@/lib/featureFlags";
 
 const ALLOWED_ROLES = ["Super_Admin", "Distributor", "Sales_Executive"];
 
@@ -115,9 +116,21 @@ export async function POST(request) {
   await connectDB();
   const { account, error } = await requireAuth();
   if (error) return error;
-  if (!["Sales_Executive", "Super_Admin"].includes(account.role)) {
+  // Creation was scoped to Sales_Executive while that feature was being built.
+  // It's hidden for now (see lib/featureFlags.js), and leaving the rule in
+  // place would mean nobody could create a lead at all — so Distributors do it
+  // themselves until the feature ships. The UI check reads the same flag.
+  const creatorRoles = SALES_EXECUTIVE_ENABLED
+    ? ["Sales_Executive", "Super_Admin"]
+    : ["Distributor", "Super_Admin"];
+  if (!creatorRoles.includes(account.role)) {
     return Response.json(
-      { success: false, error: "Only Sales Executives can create leads right now" },
+      {
+        success: false,
+        error: SALES_EXECUTIVE_ENABLED
+          ? "Only Sales Executives can create leads right now"
+          : "Only Distributors can create leads right now",
+      },
       { status: 403 },
     );
   }
@@ -136,13 +149,15 @@ export async function POST(request) {
   }
 
   // Sales_Executive: leads belong to their own distributor (parentId) and
-  // default to self-assigned. Super_Admin must specify which distributor
-  // this lead belongs to.
+  // default to self-assigned. A Distributor creating a lead owns it directly.
+  // Super_Admin must specify which distributor this lead belongs to.
   let distributorId;
   let effectiveAssignedTo = assignedTo || null;
   if (account.role === "Sales_Executive") {
     distributorId = account.parentId;
     effectiveAssignedTo = assignedTo || account._id;
+  } else if (account.role === "Distributor") {
+    distributorId = account._id;
   } else {
     distributorId = bodyDistributorId;
   }

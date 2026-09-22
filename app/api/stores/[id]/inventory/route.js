@@ -3,14 +3,19 @@ import connectDB from '@/lib/db';
 import StoreService from '@/lib/storeService';
 import { hasPermission } from '@/lib/permissions';
 import { ValidationError, NotFoundError } from '@/lib/errors';
+import { requireAuth } from '@/lib/auth';
 
 export async function PATCH(request, { params }) {
   try {
     await connectDB();
 
     const { id: storeId } = params;
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
 
     // Authorization: Only Merchant, Manager, and Super_Admin can update inventory
     if (!hasPermission(userRole, 'inventory:allocate')) {
@@ -84,8 +89,12 @@ export async function GET(request, { params }) {
     await connectDB();
 
     const { id: storeId } = params;
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
 
     // Authorization
     if (!hasPermission(userRole, 'inventory:read')) {

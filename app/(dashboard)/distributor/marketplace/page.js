@@ -302,7 +302,7 @@ export default function MarketplacePage() {
             </div>
 
             <div className={styles.confirmationActions}>
-              <Link href="/distributor" className={styles.primaryButton}>
+              <Link href="/distributor-overview" className={styles.primaryButton}>
                 Back to Dashboard
               </Link>
               <Link href="/distributor/retailers" className={styles.secondaryButton}>

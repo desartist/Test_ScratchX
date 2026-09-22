@@ -7,6 +7,7 @@ import Range from "@/models/rangeModel";
 import CustomerParticipation from "@/models/customerParticipationModel";
 import { hasPermission } from "@/lib/permissions";
 import { ValidationError, NotFoundError } from "@/lib/errors";
+import { requireAuth } from "@/lib/auth";
 
 /**
  * Cast a value to a mongoose ObjectId when it is a valid id string.
@@ -121,9 +122,12 @@ export async function GET(request, { params }) {
 
     const { id: storeId } = await params;
 
-    // Get user info from headers
-    const userRole = request.headers.get("x-user-role");
-    const userId = request.headers.get("x-user-id");
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
 
     // Authorization
     if (!hasPermission(userRole, "store:read")) {
@@ -199,9 +203,12 @@ export async function PATCH(request, { params }) {
 
     const { id: storeId } = await params;
 
-    // Get user info from headers
-    const userRole = request.headers.get("x-user-role");
-    const userId = request.headers.get("x-user-id");
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
 
     // Authorization: Only store owner and Super_Admin can update
     if (!hasPermission(userRole, "store:update")) {
@@ -264,9 +271,12 @@ export async function DELETE(request, { params }) {
 
     const { id: storeId } = await params;
 
-    // Get user info from headers
-    const userRole = request.headers.get("x-user-role");
-    const userId = request.headers.get("x-user-id");
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
 
     // Authorization: Only store owner and Super_Admin can delete
     if (!hasPermission(userRole, "store:delete")) {

@@ -20,6 +20,7 @@ import {
 import { useSubscriptionPlansQuery } from '@/hooks/queries/useSubscriptionQuery';
 import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
+import SkeletonTableRows from '@/components/ui/SkeletonTableRows';
 import styles from './subscriptions.module.css';
 
 function formatDate(date) {
@@ -112,7 +113,7 @@ function SubscriptionsView() {
       </div>
 
       {loading ? (
-        <LoadingState message="Loading subscriptions..." />
+        <SkeletonTableRows rows={6} cols={8} asTable />
       ) : error ? (
         <div className={styles.errorState}>
           <AlertCircle size={48} />

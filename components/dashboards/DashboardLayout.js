@@ -25,6 +25,7 @@ import {
   IconWallet,
 } from "./shared/NavIcons";
 import styles from "./DashboardLayout.module.css";
+import { SALES_EXECUTIVE_ENABLED } from "@/lib/featureFlags";
 
 const NAV_ICONS = {
   dashboard: IconDashboard,
@@ -57,19 +58,20 @@ function isNavGroupDefaultExpanded(pathname, item) {
   );
 }
 
-function readMerchantHasStoreCookie() {
-  if (typeof document === "undefined") return null; // SSR — unknown
-  const match = document.cookie.match(/(?:^|;\s*)merchantHasStore=([^;]*)/);
-  if (!match) return null; // cookie not set yet
-  return match[1] === "1";
-}
-
 export default function DashboardLayout({ children, role }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // Read cookie synchronously before first paint — no flash for cookie-bearing sessions.
-  const [hasStore, setHasStore] = useState(() =>
-    role !== "Merchant" ? true : readMerchantHasStoreCookie()
-  );
+  // NOTE: store-ownership is NOT checked here. app/(dashboard)/layout.js is a
+  // server component that already resolves it authoritatively (merchantHasStore
+  // cookie, falling back to a Store.countDocuments query) and renders a bare
+  // wrapper *without* this component when the merchant has no store. By the
+  // time we mount, the answer is always "yes".
+  //
+  // A client-side copy of that check used to live here, seeded from
+  // document.cookie in a useState initializer. That initializer also runs
+  // during the hydration render, where `document` exists — so the server
+  // rendered null and the client rendered the whole shell, which is a
+  // hydration mismatch. It also meant the merchant dashboard chrome was never
+  // server-rendered at all.
   const pathname = usePathname();
   const { account, logout } = useAuthContext();
   const { data: notificationsData } = useNotificationsQuery();
@@ -86,21 +88,6 @@ export default function DashboardLayout({ children, role }) {
   // currently on that item or one of its children (see isNavGroupExpanded).
   const [expandedNavGroups, setExpandedNavGroups] = useState({});
 
-  // Only needed for old sessions where the cookie was never written (rare).
-  useEffect(() => {
-    if (hasStore !== null || role !== "Merchant" || !account?.id) return;
-    fetch("/api/stores", {
-      credentials: "include",
-      headers: { "x-user-id": account.id, "x-user-role": "Merchant" },
-    })
-      .then((r) => r.json())
-      .catch(() => ({}))
-      .then((data) => {
-        const stores = data?.data || data?.stores || [];
-        setHasStore(Array.isArray(stores) && stores.length > 0);
-      });
-  }, [hasStore, role, account?.id]);
-
   // Platform-wide maintenance mode (Super_Admin always bypasses so they can
   // manage the platform while it's shown to everyone else).
   if (mounted && maintenanceMode?.enabled && role !== "Super_Admin") {
@@ -116,11 +103,6 @@ export default function DashboardLayout({ children, role }) {
       </div>
     );
   }
-
-  // Cookie says no store OR API confirmed no store → bare page, no chrome.
-  if (hasStore === false) return <><PlatformNoticeModal />{children}</>;
-  // Still checking (null) → render nothing briefly to avoid wrong chrome flash.
-  if (hasStore === null) return null;
 
   const getDashboardHref = () => {
     switch (role) {
@@ -228,7 +210,10 @@ export default function DashboardLayout({ children, role }) {
               children: [
                 { label: "Leads", href: "/leads" },
                 { label: "Demo Follow-ups", href: "/demo-follow-ups" },
-                { label: "Sales Executives", href: "/sales-executives" },
+                // Hidden until the Sales Executive feature is finished.
+                ...(SALES_EXECUTIVE_ENABLED
+                  ? [{ label: "Sales Executives", href: "/sales-executives" }]
+                  : []),
               ],
             },
             {

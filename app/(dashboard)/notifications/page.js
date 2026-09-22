@@ -20,6 +20,7 @@ import {
 } from '@/hooks/queries/useNotificationsQuery';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './notifications.module.css';
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 export default function NotificationsPage() {
   const { data, isPending: loading, error: queryError, refetch } = useNotificationsQuery();
@@ -64,14 +65,6 @@ export default function NotificationsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className={styles.page}>
-        <LoadingState message="Loading notifications..." />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className={styles.page}>
@@ -108,7 +101,9 @@ export default function NotificationsPage() {
 
         {/* Notifications List */}
         <div className={styles.notificationsList}>
-          {notifications.length === 0 ? (
+          {loading ? (
+            <SkeletonCardList count={5} lines={2} />
+          ) : notifications.length === 0 ? (
             <div className={styles.emptyState}>
               <Bell size={48} />
               <p>No notifications</p>

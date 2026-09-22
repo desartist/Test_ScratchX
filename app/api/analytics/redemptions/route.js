@@ -4,13 +4,18 @@ import ScratchCardTransaction from '@/models/scratchCardTransactionModel';
 import Campaign from '@/models/campaignModel';
 import Store from '@/models/storeModel';
 import { hasPermission } from '@/lib/permissions';
+import { requireAuth } from '@/lib/auth';
 
 export async function GET(request) {
   try {
     await connectDB();
 
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
     const merchantId = request.headers.get('x-merchant-id') || userId;
 
     // Authorization - check for analytics permission

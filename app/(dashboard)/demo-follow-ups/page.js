@@ -6,6 +6,7 @@ import { useLeadsQuery } from "@/hooks/queries/useLeadsQuery";
 import { STATUS_COLORS, INTEREST_CLASS } from "@/lib/leadDisplay";
 import StatCard from "@/components/dashboard/shared/StatCard";
 import styles from "@/components/distributor/distributorList.module.css";
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 // A focused work-queue view of the same Lead data as /leads — every lead
 // currently in "Demo Scheduled" or "Follow-up Pending", soonest
@@ -53,7 +54,7 @@ export default function DemoFollowUpsPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} className={styles.emptyCell}>Loading...</td></tr>
+              <SkeletonTableRows rows={5} cols={5} />
             ) : leads.length === 0 ? (
               <tr>
                 <td colSpan={5} className={styles.emptyCell}>

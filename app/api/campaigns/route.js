@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/connectDB';
 import Campaign from '@/models/campaignModel';
 import Subscription from '@/models/subscriptionModel';
 import CampaignService from '@/lib/campaignService';
+import { requireAuth } from '@/lib/auth';
 
 async function checkMerchantSubscription(userId) {
   const sub = await Subscription.findOne({
@@ -26,8 +27,13 @@ export async function POST(request) {
     await connectDB();
 
     // Check authorization
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
+
 
     if (!userRole || !userId) {
       return Response.json(
@@ -100,8 +106,13 @@ export async function GET(request) {
     await connectDB();
 
     // Check authorization
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
+
 
     if (!userRole || !userId) {
       return Response.json(

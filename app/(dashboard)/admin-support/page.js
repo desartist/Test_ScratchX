@@ -22,6 +22,7 @@ import { useAdminDistributorsQuery } from '@/hooks/queries/useAdminDistributorsQ
 import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './admin-support.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 function formatDateTime(date) {
   return date
@@ -257,11 +258,11 @@ export default function AdminSupportPage() {
         </div>
 
         <div className={styles.statGrid}>
-          <StatCard icon={<AlertCircle />} value={metrics.Open} label="Open" onClick={() => { setStatusFilter('Open'); setPage(1); }} />
-          <StatCard icon={<Clock />} value={metrics['In Progress']} label="In Progress" onClick={() => { setStatusFilter('In Progress'); setPage(1); }} />
-          <StatCard icon={<Hourglass />} value={metrics.Waiting} label="Waiting" onClick={() => { setStatusFilter('Waiting'); setPage(1); }} />
-          <StatCard icon={<CheckCircle2 />} value={metrics.Resolved} label="Resolved" tone="green" onClick={() => { setStatusFilter('Resolved'); setPage(1); }} />
-          <StatCard icon={<Archive />} value={metrics.Closed} label="Closed" tone="gray" onClick={() => { setStatusFilter('Closed'); setPage(1); }} />
+          <StatCard loading={loading} icon={<AlertCircle />} value={metrics.Open} label="Open" onClick={() => { setStatusFilter('Open'); setPage(1); }} />
+          <StatCard loading={loading} icon={<Clock />} value={metrics['In Progress']} label="In Progress" onClick={() => { setStatusFilter('In Progress'); setPage(1); }} />
+          <StatCard loading={loading} icon={<Hourglass />} value={metrics.Waiting} label="Waiting" onClick={() => { setStatusFilter('Waiting'); setPage(1); }} />
+          <StatCard loading={loading} icon={<CheckCircle2 />} value={metrics.Resolved} label="Resolved" tone="green" onClick={() => { setStatusFilter('Resolved'); setPage(1); }} />
+          <StatCard loading={loading} icon={<Archive />} value={metrics.Closed} label="Closed" tone="gray" onClick={() => { setStatusFilter('Closed'); setPage(1); }} />
         </div>
 
         <div className={styles.filterSection}>
@@ -279,7 +280,7 @@ export default function AdminSupportPage() {
         </div>
 
         {loading ? (
-          <LoadingState message="Loading tickets..." />
+          <SkeletonTableRows rows={6} cols={6} asTable />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />

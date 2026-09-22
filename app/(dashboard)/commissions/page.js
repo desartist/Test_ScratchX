@@ -46,13 +46,6 @@ export default function CommissionsPage() {
     alert('Commission export would generate CSV file');
   };
 
-  if (loading) {
-    return (
-      <div className={styles.page}>
-        <LoadingState message="Loading commissions..." />
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -104,26 +97,26 @@ export default function CommissionsPage() {
 
         {/* Summary Cards */}
         <div className={styles.statGrid}>
-          <StatCard
+          <StatCard loading={loading}
             icon={<TrendingUp />}
             value={`₹${(summary.totalEarned || 0).toLocaleString('en-IN')}`}
             label="Total Earned"
             subtitle={`${summary.pendingCount} pending`}
           />
-          <StatCard
+          <StatCard loading={loading}
             icon={<CheckCircle />}
             value={`₹${(summary.totalApproved || 0).toLocaleString('en-IN')}`}
             label="Total Approved"
             tone="green"
             subtitle={`${summary.approvedCount} approved`}
           />
-          <StatCard
+          <StatCard loading={loading}
             icon={<DollarSign />}
             value={`₹${(summary.totalPaid || 0).toLocaleString('en-IN')}`}
             label="Total Paid"
             subtitle={`${summary.paidCount} paid`}
           />
-          <StatCard
+          <StatCard loading={loading}
             icon={<BarChart3 />}
             value={`₹${Math.max(0, (summary.totalEarned || 0) - (summary.totalPaid || 0)).toLocaleString('en-IN')}`}
             label="Pending Payout"

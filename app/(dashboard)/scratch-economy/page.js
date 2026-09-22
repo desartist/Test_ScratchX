@@ -13,6 +13,7 @@ import { useAdminScratchInventoryQuery } from '@/hooks/queries/useAdminScratchIn
 import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './scratch-economy.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 export default function ScratchEconomyPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,7 +98,7 @@ export default function ScratchEconomyPage() {
         </div>
 
         {loading ? (
-          <LoadingState message="Loading scratch inventory..." />
+          <SkeletonTableRows rows={6} cols={8} asTable />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />

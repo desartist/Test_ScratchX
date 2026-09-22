@@ -26,18 +26,8 @@ export default function SettingsPage() {
   const merchant = data?.account || account;
   const isStoreRole = STORE_ROLES.includes(merchant?.role);
 
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>
-          <div className={styles.loadingSpinner} />
-          Loading settings...
-        </div>
-      </div>
-    );
-  }
 
-  if (!merchant) {
+  if (!loading && !merchant) {
     return (
       <div className={styles.container}>
         <div className={styles.error}>

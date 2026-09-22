@@ -17,6 +17,7 @@ import LoadingState from '@/components/common/LoadingState';
 import AddBusinessModal from '@/components/distributor/AddBusinessModal';
 import WhatsAppButton from '@/components/whatsapp/WhatsAppButton';
 import styles from './retailers.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 const STATUS_OPTIONS = ['all', 'active', 'pending', 'suspended'];
 
@@ -154,7 +155,7 @@ export default function RetailersPage() {
 
         {/* Table */}
         {loading ? (
-          <LoadingState message="Loading retailers..." />
+          <SkeletonTableRows rows={6} cols={13} asTable />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />

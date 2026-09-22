@@ -5,6 +5,7 @@ import { AlertCircle, Check, X, Users } from "lucide-react";
 import { useDistributorSeatRequestsQuery, useResolveSeatRequestMutation } from "@/hooks/queries/useSeatRequestsQuery";
 import LoadingState from "@/components/common/LoadingState";
 import styles from "./seat-requests.module.css";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 const ROLE_LABELS = { Store_Manager: "Store Manager", Store_Staff: "Store Staff" };
 const TABS = ["pending", "paid", "rejected"];
@@ -64,7 +65,7 @@ export default function SeatRequestsPage() {
       )}
 
       {loading ? (
-        <LoadingState message="Loading seat requests..." />
+        <SkeletonCardList count={5} lines={2} />
       ) : error ? (
         <div className={styles.errorState}>
           <AlertCircle size={40} />

@@ -72,7 +72,10 @@ export function useSubscriptionPlansQuery(options = {}) {
   return useQuery({
     queryKey: subscriptionPlansQueryKey(),
     queryFn: fetchSubscriptionPlans,
-    staleTime: 5 * 60 * 1000,
+    // The plan catalogue is the same for every account and changes only when
+    // pricing is edited in admin — cache it hard for the session.
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
     enabled: options.enabled !== false,
   });
 }

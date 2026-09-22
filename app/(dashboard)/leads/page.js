@@ -13,11 +13,16 @@ import { LEAD_STATUSES, LEAD_INTEREST_LEVELS, STATUS_COLORS, INTEREST_CLASS } fr
 // for the same reuse rationale.
 import modalStyles from "@/app/(dashboard)/team/team.module.css";
 import styles from "./leads.module.css";
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
+import { SALES_EXECUTIVE_ENABLED } from "@/lib/featureFlags";
 
 const EMPTY_FORM = {
   businessName: "", ownerName: "", phone: "", email: "",
   businessCategory: "", city: "", state: "", territory: "", assignedTo: "",
 };
+
+// 7 columns normally; the "Assigned To" column is hidden with the feature.
+const LEAD_COLUMNS = SALES_EXECUTIVE_ENABLED ? 7 : 6;
 
 export default function LeadsPage() {
   const { account } = useAuthContext();
@@ -26,7 +31,11 @@ export default function LeadsPage() {
   // view/manage (assign, status, notes, convert) but not creation. This is
   // a deliberate, temporary product decision; Distributor-side creation is
   // planned for later, not a gap to "fix" by reverting this.
-  const canCreateLead = account?.role === "Sales_Executive";
+  // While Sales Executive is hidden, Distributors create leads themselves —
+  // otherwise nobody could, since creation was scoped to that role.
+  const canCreateLead = SALES_EXECUTIVE_ENABLED
+    ? account?.role === "Sales_Executive"
+    : isDistributorOrAdmin;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -124,10 +133,10 @@ export default function LeadsPage() {
       </div>
 
       <div className={styles.statsGrid}>
-        <StatCard icon={<ClipboardList />} label="Total Leads" value={metrics.total} tone="indigo" />
-        <StatCard icon={<Video />} label="Demos Scheduled" value={metrics.demosScheduled} tone="indigo" />
-        <StatCard icon={<Clock />} label="Follow-ups Pending" value={metrics.followUpsPending} tone={metrics.followUpsPending > 0 ? "red" : "gray"} />
-        <StatCard icon={<CheckCircle2 />} label="Conversion Rate" value={`${metrics.conversionRate}%`} tone="green" />
+        <StatCard icon={<ClipboardList />} label="Total Leads" value={metrics.total} tone="indigo" loading={loading} />
+        <StatCard icon={<Video />} label="Demos Scheduled" value={metrics.demosScheduled} tone="indigo" loading={loading} />
+        <StatCard icon={<Clock />} label="Follow-ups Pending" value={metrics.followUpsPending} tone={metrics.followUpsPending > 0 ? "red" : "gray"} loading={loading} />
+        <StatCard icon={<CheckCircle2 />} label="Conversion Rate" value={`${metrics.conversionRate}%`} tone="green" loading={loading} />
       </div>
 
       <div className={styles.filtersSection}>
@@ -148,7 +157,7 @@ export default function LeadsPage() {
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
-          {isDistributorOrAdmin && (
+          {SALES_EXECUTIVE_ENABLED && isDistributorOrAdmin && (
             <select className={styles.select} value={assignedFilter} onChange={(e) => { setAssignedFilter(e.target.value); setPage(1); }}>
               <option value="all">All Executives</option>
               <option value="unassigned">Unassigned</option>
@@ -176,7 +185,7 @@ export default function LeadsPage() {
             <tr>
               <th>Lead</th>
               <th>Contact</th>
-              <th>Assigned To</th>
+              {SALES_EXECUTIVE_ENABLED && <th>Assigned To</th>}
               <th>Status</th>
               <th>Interest</th>
               <th>Next Follow-up</th>
@@ -185,10 +194,10 @@ export default function LeadsPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className={styles.emptyCell}>Loading leads...</td></tr>
+              <SkeletonTableRows rows={5} cols={LEAD_COLUMNS} />
             ) : leads.length === 0 ? (
               <tr>
-                <td colSpan={7} className={styles.emptyCell}>
+                <td colSpan={LEAD_COLUMNS} className={styles.emptyCell}>
                   {canCreateLead ? "No leads found. Add your first lead to get started." : "No leads found."}
                 </td>
               </tr>
@@ -203,7 +212,7 @@ export default function LeadsPage() {
                     <div>{lead.phone}</div>
                     {lead.city && <div className={styles.leadSub}>{lead.city}</div>}
                   </td>
-                  <td>{lead.assignedTo?.name || "—"}</td>
+                  {SALES_EXECUTIVE_ENABLED && <td>{lead.assignedTo?.name || "—"}</td>}
                   <td>
                     <span className={styles.statusPill} style={{ borderColor: STATUS_COLORS[lead.status] }}>
                       <span className={styles.statusDot} style={{ background: STATUS_COLORS[lead.status] }} />
@@ -230,7 +239,7 @@ export default function LeadsPage() {
                             <button className={styles.kebabMenuItem} onClick={() => { setOpenMenuId(null); handleRowClick(lead._id); }}>
                               <Eye size={14} /> View Details
                             </button>
-                            {isDistributorOrAdmin && lead.status !== "Not Interested" && lead.status !== "Converted" && (
+                            {SALES_EXECUTIVE_ENABLED && isDistributorOrAdmin && lead.status !== "Not Interested" && lead.status !== "Converted" && (
                               <button className={`${styles.kebabMenuItem} ${styles.kebabMenuDanger}`} onClick={() => handleMarkLost(lead._id)}>
                                 <X size={14} /> Mark Not Interested
                               </button>
@@ -317,7 +326,7 @@ export default function LeadsPage() {
                   placeholder="State" className={modalStyles.formInput}
                 />
               </div>
-              {isDistributorOrAdmin && executives.length > 0 && (
+              {SALES_EXECUTIVE_ENABLED && isDistributorOrAdmin && executives.length > 0 && (
                 <div className={modalStyles.formGroup}>
                   <label className={modalStyles.formLabel}>Assign To (optional)</label>
                   <select name="assignedTo" value={formData.assignedTo} onChange={handleInputChange} className={modalStyles.formInput}>

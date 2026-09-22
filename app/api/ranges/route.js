@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/connectDB';
 import Campaign from '@/models/campaignModel';
 import CampaignService from '@/lib/campaignService';
+import { requireAuth } from '@/lib/auth';
 
 /**
  * POST /api/ranges - Create a coupon range for a campaign
@@ -11,8 +12,13 @@ export async function POST(request) {
   try {
     await connectDB();
 
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
+
 
     if (!userRole || !userId) {
       return Response.json(

@@ -15,6 +15,7 @@ import {
 import { useAuthContext } from '@/components/auth/AuthContext';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './marketplace.module.css';
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 const MIN_QUANTITY = 5;
 const PLAN_ORDER = ['SMART', 'CORE'];
@@ -350,13 +351,6 @@ export default function MarketplacePage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className={styles.page}>
-        <LoadingState message="Loading marketplace..." />
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -458,7 +452,8 @@ export default function MarketplacePage() {
 
             {/* License cards */}
             <div className={styles.licenseList}>
-              {PLAN_ORDER.map((planType) => {
+              {loading && <SkeletonCardList count={2} lines={4} footer />}
+              {!loading && PLAN_ORDER.map((planType) => {
                 const plan = plans[planType];
                 const selection = selections[planType];
                 if (!plan) return null;

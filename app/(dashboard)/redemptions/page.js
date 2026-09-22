@@ -9,6 +9,7 @@ import {
 } from "@/hooks/queries/useStoreRedemptionsQuery";
 import LoadingState from "@/components/common/LoadingState";
 import styles from "./redemptions.module.css";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 const STATUS_META = {
   generated: { label: "Not opened yet", icon: Clock, tone: "pending" },

@@ -13,6 +13,11 @@ export function usePlatformSettingsQuery() {
       if (!json.success) throw new Error(json.error || "Failed to load settings");
       return json;
     },
-    staleTime: 60_000,
+    // Maintenance banner + support contacts change very rarely, and this is
+    // fetched on every dashboard load. Ten minutes removes the repeat request
+    // without any meaningful staleness (a Super_Admin toggling maintenance
+    // mode reaches everyone on their next navigation after the window).
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 
 const SubscriptionContext = createContext();
 
@@ -8,21 +8,30 @@ export function SubscriptionProvider({ children }) {
   const [planData, setPlanData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load plan data from API
-  const loadPlanData = useCallback(async () => {
+  const lastLoadedAt = useRef(0);
+  const inFlight = useRef(null);
+  const hasData = useRef(false);
+
+  // Load plan data from API. PlanStatusCard asks for a refresh on every
+  // navigation and tab-focus, which fired a burst of identical requests (and
+  // flashed the skeleton each time) — so unless `force` is passed (payment
+  // flows), reuse a load that is in flight or finished in the last 15s, and
+  // only show the loading state when there is nothing to display yet.
+  const loadPlanData = useCallback(async ({ force = false } = {}) => {
+    if (!force) {
+      if (inFlight.current) return inFlight.current;
+      if (Date.now() - lastLoadedAt.current < 15_000) return undefined;
+    }
+    const run = (async () => {
     try {
-      setLoading(true);
-      console.log('[SubscriptionContext] Loading plan data...');
+      if (!hasData.current) setLoading(true);
       const response = await fetch('/api/subscription/current', {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
 
-      console.log('[SubscriptionContext] Response status:', response.status);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('[SubscriptionContext] API Response:', data);
 
         if (data?.displayName) {
           const newPlanData = {
@@ -30,16 +39,22 @@ export function SubscriptionProvider({ children }) {
             planType: data.subscription?.planType,
             subscription: data.subscription,
           };
-          console.log('[SubscriptionContext] Setting plan data:', newPlanData);
+          hasData.current = true;
           setPlanData(newPlanData);
         }
-      } else {
-        console.warn('[SubscriptionContext] API returned non-OK status:', response.status);
       }
     } catch (err) {
       console.error('[SubscriptionContext] Error loading plan data:', err);
     } finally {
+      lastLoadedAt.current = Date.now();
       setLoading(false);
+    }
+    })();
+    inFlight.current = run;
+    try {
+      await run;
+    } finally {
+      inFlight.current = null;
     }
   }, []);
 
@@ -57,7 +72,7 @@ export function SubscriptionProvider({ children }) {
     }
 
     // Then load fresh data
-    await loadPlanData();
+    await loadPlanData({ force: true });
   }, [loadPlanData]);
 
   // Initialize plan data on mount

@@ -20,6 +20,7 @@ import { useDistributorMerchantsQuery } from '@/hooks/queries/useDistributorMerc
 import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './revenue.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 const RANGE_OPTIONS = [
   { label: '30 Days', value: 30 },
@@ -82,7 +83,7 @@ function PaymentsPanel() {
       </div>
 
       {loading ? (
-        <LoadingState message="Loading payments..." />
+        <SkeletonTableRows rows={6} cols={14} asTable />
       ) : error ? (
         <p className={styles.emptyInline}>{error}</p>
       ) : (
@@ -233,7 +234,7 @@ export default function RevenueAnalyticsPage() {
   if (isPending) {
     return (
       <div className={styles.page}>
-        <LoadingState message="Loading revenue analytics..." />
+        <SkeletonTableRows rows={4} cols={4} asTable />
       </div>
     );
   }
@@ -281,10 +282,10 @@ export default function RevenueAnalyticsPage() {
 
         {/* Metrics */}
         <div className={styles.statGrid}>
-          <StatCard icon={<IndianRupee />} value={`₹${Number(revenue.total).toLocaleString('en-IN')}`} label="Total Revenue" />
-          <StatCard icon={<Receipt />} value={revenue.transactions} label="Transactions" tone="green" />
-          <StatCard icon={<TrendingUp />} value={`₹${Number(revenue.average).toLocaleString('en-IN')}`} label="Avg. Transaction" />
-          <StatCard icon={<FileWarning />} value={`₹${Number(invoices.totalOutstanding).toLocaleString('en-IN')}`} label="Outstanding Invoices" tone="red" />
+          <StatCard loading={loading} icon={<IndianRupee />} value={`₹${Number(revenue.total).toLocaleString('en-IN')}`} label="Total Revenue" />
+          <StatCard loading={loading} icon={<Receipt />} value={revenue.transactions} label="Transactions" tone="green" />
+          <StatCard loading={loading} icon={<TrendingUp />} value={`₹${Number(revenue.average).toLocaleString('en-IN')}`} label="Avg. Transaction" />
+          <StatCard loading={loading} icon={<FileWarning />} value={`₹${Number(invoices.totalOutstanding).toLocaleString('en-IN')}`} label="Outstanding Invoices" tone="red" />
         </div>
 
         {/* Revenue trend */}

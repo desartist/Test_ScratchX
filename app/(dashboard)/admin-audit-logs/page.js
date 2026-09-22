@@ -5,6 +5,7 @@ import { ShieldCheck, AlertCircle, ScrollText } from 'lucide-react';
 import { useAdminAuditLogsQuery } from '@/hooks/queries/useAdminAuditLogsQuery';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './admin-audit-logs.module.css';
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 function formatDateTime(date) {
   return date
@@ -61,7 +62,7 @@ export default function AdminAuditLogsPage() {
         )}
 
         {loading ? (
-          <LoadingState message="Loading audit logs..." />
+          <SkeletonCardList count={5} lines={2} />
         ) : error ? (
           <div className={styles.errorState}>
             <AlertCircle size={48} />

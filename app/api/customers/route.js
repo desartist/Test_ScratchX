@@ -5,13 +5,19 @@ import Store from "@/models/storeModel";
 import Account from "@/models/accountModel";
 import Range from "@/models/rangeModel";
 import "@/models/scratchCardRecordModel";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(request) {
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
-    const merchantId = request.headers.get("x-user-id");
-    const userRole = request.headers.get("x-user-role") || "merchant";
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const merchantId = account._id.toString();
+
 
     if (!merchantId) {
       return new Response(
@@ -96,7 +102,7 @@ export async function GET(request) {
       .populate("campaign_id", "campaignName name status")
       .populate("store_id", "store_name city state store_code")
       .populate("range_id", "minAmount maxAmount")
-      .populate("scratch_card_id", "reward_type reward_value reward_description coupon_code")
+      .populate("scratch_card_id", "reward_type reward_value reward_description reward_image coupon_code")
       .populate("handled_by_staff_id", "name role")
       .sort(sortObj)
       .skip(skip)

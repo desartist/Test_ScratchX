@@ -15,6 +15,8 @@ import {
 import TeamEmptyState from "@/components/team/TeamEmptyState";
 import { sanitizeNameInput } from "@/lib/nameInput";
 import styles from "./team.module.css";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
+import Skeleton from "@/components/ui/Skeleton";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ROLE_LABELS = { Store_Manager: "Store Manager", Store_Staff: "Store Staff", Manager: "Manager" };
@@ -249,20 +251,12 @@ export default function TeamPage() {
     }
   };
 
-  if (loading || storesLoading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loadingContainer}>
-          <div className={styles.spinner} />
-          <p>Loading team...</p>
-        </div>
-      </div>
-    );
-  }
 
   const currentStoreName = stores.find((s) => s._id === selectedStoreId)?.store_name;
 
-  if (stores.length > 0 && teamMembers.length === 0) {
+  const isLoading = loading || storesLoading;
+
+  if (!isLoading && stores.length > 0 && teamMembers.length === 0) {
     return (
       <div className={styles.container}>
         <TeamEmptyState storeName={currentStoreName} onAddClick={openCreateModal} />
@@ -324,15 +318,22 @@ export default function TeamPage() {
 
           {/* Usage Stats — one combined card, not three peer-level ones, since
               Managers/Staff/Total aren't independent budgets (they sum to Total). */}
-          {limitStatus && (
+          {(isLoading || limitStatus) && (
             <div className={styles.teamStatCard}>
               <div className={styles.statValue}>
-                {limitStatus.totalCount}/{limitStatus.maxTotal}
+                {isLoading ? (
+                  <Skeleton w="4ch" h="0.8em" />
+                ) : (
+                  `${limitStatus.totalCount}/${limitStatus.maxTotal}`
+                )}
               </div>
               <div className={styles.statLabel}>Team Seats Used</div>
               <div className={styles.teamStatBreakdown}>
-                {limitStatus.managerCount}/{limitStatus.maxManagers} Manager ·{" "}
-                {limitStatus.staffCount} Staff
+                {isLoading ? (
+                  <Skeleton w="16ch" />
+                ) : (
+                  `${limitStatus.managerCount}/${limitStatus.maxManagers} Manager · ${limitStatus.staffCount} Staff`
+                )}
               </div>
             </div>
           )}
@@ -367,7 +368,8 @@ export default function TeamPage() {
 
           {/* Team Members List */}
           <div className={styles.memberList}>
-            {teamMembers.map((member) => (
+            {isLoading && <SkeletonCardList count={3} lines={2} />}
+            {!isLoading && teamMembers.map((member) => (
               <div key={member._id} className={styles.memberCard}>
                 <div className={styles.memberInfo}>
                   <div className={styles.memberAvatar}>{getInitials(member.name)}</div>

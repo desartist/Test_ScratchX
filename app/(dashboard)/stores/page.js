@@ -13,6 +13,7 @@ import StoreCard from "@/components/stores/StoreCard";
 import StatsCard from "@/components/stores/StatsCard";
 import SearchBar from "@/components/dashboard/SearchBar";
 import styles from "./page.module.css";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 export default function StoresPage() {
   const router = useRouter();
@@ -250,7 +251,7 @@ export default function StoresPage() {
       {/* Stores Grid */}
       <div className={styles.storesGrid}>
         {loading ? (
-          <div className={styles.loading}>Loading stores...</div>
+          <SkeletonCardList count={4} lines={4} footer />
         ) : orderedStores.length === 0 ? (
           <div className={styles.empty}>
             {stores.length === 0 ? (

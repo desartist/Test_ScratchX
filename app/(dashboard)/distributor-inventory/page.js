@@ -7,6 +7,7 @@ import { useDistributorInventoryQuery } from "@/hooks/queries/useDistributorNetw
 import StatCard from "@/components/dashboard/shared/StatCard";
 import styles from "@/components/distributor/distributorList.module.css";
 import invStyles from "./distributorInventory.module.css";
+import Skeleton from "@/components/ui/Skeleton";
 
 // Named "Scratch Inventory" in the sidebar to match the merchant-facing
 // vocabulary, but what a Distributor actually holds is license inventory
@@ -32,14 +33,12 @@ export default function DistributorInventoryPage() {
         </Link>
       </div>
 
-      {loading ? (
-        <p className={styles.emptyCell}>Loading...</p>
-      ) : (
+      {(
         <>
           <div className={styles.statsGrid}>
-            <StatCard icon={<Package />} label="Total Remaining" value={totalRemaining} tone="indigo" />
-            <StatCard icon={<Package />} label="Core Remaining" value={core.totalRemaining} tone={core.totalRemaining > 0 ? "green" : "red"} />
-            <StatCard icon={<Zap />} label="Smart Remaining" value={smart.totalRemaining} tone={smart.totalRemaining > 0 ? "green" : "red"} />
+            <StatCard loading={loading} icon={<Package />} label="Total Remaining" value={totalRemaining} tone="indigo" />
+            <StatCard loading={loading} icon={<Package />} label="Core Remaining" value={core.totalRemaining} tone={core.totalRemaining > 0 ? "green" : "red"} />
+            <StatCard loading={loading} icon={<Zap />} label="Smart Remaining" value={smart.totalRemaining} tone={smart.totalRemaining > 0 ? "green" : "red"} />
           </div>
 
           <div className={invStyles.planGrid}>
@@ -51,9 +50,9 @@ export default function DistributorInventoryPage() {
                 <h2 className={invStyles.planTitle}>Core License</h2>
               </div>
               <div className={invStyles.planStatsRow}>
-                <div><span className={invStyles.planStatValue}>{core.totalPurchased}</span><span className={invStyles.planStatLabel}>Purchased</span></div>
-                <div><span className={invStyles.planStatValue}>{core.totalAssigned}</span><span className={invStyles.planStatLabel}>Assigned</span></div>
-                <div><span className={invStyles.planStatValue}>{core.totalRemaining}</span><span className={invStyles.planStatLabel}>Remaining</span></div>
+                <div><span className={invStyles.planStatValue}>{loading ? <Skeleton w="2ch" /> : core.totalPurchased}</span><span className={invStyles.planStatLabel}>Purchased</span></div>
+                <div><span className={invStyles.planStatValue}>{loading ? <Skeleton w="2ch" /> : core.totalAssigned}</span><span className={invStyles.planStatLabel}>Assigned</span></div>
+                <div><span className={invStyles.planStatValue}>{loading ? <Skeleton w="2ch" /> : core.totalRemaining}</span><span className={invStyles.planStatLabel}>Remaining</span></div>
               </div>
               <div className={invStyles.utilizationBar}>
                 <div className={invStyles.utilizationFill} style={{ width: `${core.percentageUtilized || 0}%`, background: "#6d5df6" }} />
@@ -69,9 +68,9 @@ export default function DistributorInventoryPage() {
                 <h2 className={invStyles.planTitle}>Smart License</h2>
               </div>
               <div className={invStyles.planStatsRow}>
-                <div><span className={invStyles.planStatValue}>{smart.totalPurchased}</span><span className={invStyles.planStatLabel}>Purchased</span></div>
-                <div><span className={invStyles.planStatValue}>{smart.totalAssigned}</span><span className={invStyles.planStatLabel}>Assigned</span></div>
-                <div><span className={invStyles.planStatValue}>{smart.totalRemaining}</span><span className={invStyles.planStatLabel}>Remaining</span></div>
+                <div><span className={invStyles.planStatValue}>{loading ? <Skeleton w="2ch" /> : smart.totalPurchased}</span><span className={invStyles.planStatLabel}>Purchased</span></div>
+                <div><span className={invStyles.planStatValue}>{loading ? <Skeleton w="2ch" /> : smart.totalAssigned}</span><span className={invStyles.planStatLabel}>Assigned</span></div>
+                <div><span className={invStyles.planStatValue}>{loading ? <Skeleton w="2ch" /> : smart.totalRemaining}</span><span className={invStyles.planStatLabel}>Remaining</span></div>
               </div>
               <div className={invStyles.utilizationBar}>
                 <div className={invStyles.utilizationFill} style={{ width: `${smart.percentageUtilized || 0}%`, background: "#ef9e1b" }} />

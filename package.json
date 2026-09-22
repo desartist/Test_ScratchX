@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage",
     "test:unit": "jest __tests__/unit",
     "test:integration": "jest __tests__/integration",
+    "db:sync-indexes": "node --env-file-if-exists=.env.local scripts/sync-indexes.mjs",
     "migrate:subscriptions": "node scripts/migrate-subscription-ownership.js",
     "migrate:platform-notice": "node scripts/migrations/addPlatformNoticeConsent.js",
     "migrate:store-soft-delete": "node scripts/migrations/backfillStoreSoftDelete.js",

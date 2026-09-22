@@ -16,6 +16,7 @@ import { LEAD_STATUSES, LEAD_INTEREST_LEVELS, STATUS_COLORS } from "@/lib/leadDi
 // feels like the same application, not a bolted-on CRM screen.
 import drawerStyles from "@/components/customers/CustomerDetailDrawer.module.css";
 import styles from "./LeadDetailDrawer.module.css";
+import { SALES_EXECUTIVE_ENABLED } from "@/lib/featureFlags";
 
 function toDateInputValue(value) {
   if (!value) return "";
@@ -171,7 +172,7 @@ export default function LeadDetailDrawer({ isOpen, onClose, leadId }) {
                     </select>
                   </div>
 
-                  {isDistributorOrAdmin && (
+                  {SALES_EXECUTIVE_ENABLED && isDistributorOrAdmin && (
                     <div className={styles.fieldGroup}>
                       <label className={styles.fieldLabel}>Assigned To</label>
                       <select

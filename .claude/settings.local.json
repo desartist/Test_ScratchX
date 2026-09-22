@@ -54,7 +54,18 @@
       "Bash(chmod u+w /Users/abhishekpratapsingh/Desktop/coupon_campaigns/scripts)",
       "Bash(sed -i '' \"s#/Users/abhishekpratapsingh/Desktop/coupon_campaigns/##g\" /Users/abhishekpratapsingh/Desktop/coupon_campaigns/scripts/_tmp-quick-seed-store.mjs)",
       "Bash(sed -i '' \"s#await import\\('lib/connectDB.js'\\)#await import\\('../lib/connectDB.js'\\)#; s#await import\\('models/accountModel.js'\\)#await import\\('../models/accountModel.js'\\)#; s#await import\\('models/storeModel.js'\\)#await import\\('../models/storeModel.js'\\)#\" /Users/abhishekpratapsingh/Desktop/coupon_campaigns/scripts/_tmp-quick-seed-store.mjs)",
-      
+      "Bash(git restore *)",
+      "Bash(awk '/^\\\\/Users/{f=$0} /error/{print f\" :: \"$0}')",
+      "Bash(xargs -I{} echo \"  worktrees: {} \\(yours + the pre-existing goofy-elion one\\)\")",
+      "Bash(xargs -I{} echo \"  stashes: {} \\(both yours, 3 months old, untouched\\)\")",
+      "Bash(python3 -)",
+      "Bash(awk 'NR>420 && NR<450' \"app/\\(dashboard\\)/marketplace/page.js\")",
+      "Bash(xargs -I{} echo \"  eslint errors: {} \\(HEAD baseline was 18\\)\")",
+      "Bash(xargs -I{} echo \"  stashes: {} \\(both yours, untouched\\)\")",
+      "Bash(xargs -I{} echo \"  errors on original DashboardLayout: {} → pre-existing ✓\")",
+      "Bash(xargs -I{} echo \"  accountModel.js: {} occurrence\\(s\\)\")",
+      "Bash(awk -F: '{s+=$2} END {print s\" index declarations\"}')",
+      "Bash(xargs git log --oneline -1)"
     ]
   }
 }

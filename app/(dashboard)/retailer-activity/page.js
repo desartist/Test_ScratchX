@@ -5,6 +5,7 @@ import { UserPlus, CreditCard, Megaphone, Activity } from "lucide-react";
 import { useRetailerActivityQuery } from "@/hooks/queries/useDistributorNetworkQuery";
 import styles from "@/components/distributor/distributorList.module.css";
 import feedStyles from "./retailerActivity.module.css";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 const EVENT_ICON = {
   retailer_added: UserPlus,
@@ -45,7 +46,7 @@ export default function RetailerActivityPage() {
 
       <div className={feedStyles.feedCard}>
         {loading ? (
-          <p className={styles.emptyCell}>Loading...</p>
+          <SkeletonCardList count={5} lines={2} />
         ) : events.length === 0 ? (
           <div className={styles.emptyCell}>
             <Activity size={28} style={{ opacity: 0.4, marginBottom: 8 }} />

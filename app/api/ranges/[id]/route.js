@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/connectDB';
 import CouponRange from '@/models/couponRangeModel';
 import Campaign from '@/models/campaignModel';
 import CampaignService from '@/lib/campaignService';
+import { requireAuth } from '@/lib/auth';
 
 /**
  * DELETE /api/ranges/[id] - Delete a coupon range
@@ -12,8 +13,13 @@ export async function DELETE(request, { params }) {
   try {
     await connectDB();
 
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
+
 
     if (!userRole || !userId) {
       return Response.json(

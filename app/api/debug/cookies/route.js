@@ -5,6 +5,11 @@ import Account from '@/models/accountModel';
 import { getLoginToken } from '@/lib/auth';
 
 export async function GET() {
+  // Diagnostic endpoint (leaks cookie/secret metadata and DB counts, no auth).
+  if (process.env.NODE_ENV === 'production') {
+    return new Response('Not found', { status: 404 });
+  }
+
   try {
     await connectDB();
 

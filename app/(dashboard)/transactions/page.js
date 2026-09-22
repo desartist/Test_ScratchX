@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './transactions.module.css';
+import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
@@ -125,13 +126,6 @@ export default function TransactionsPage() {
     return type === 'credit' ? styles.credit : styles.debit;
   };
 
-  if (loading && transactions.length === 0) {
-    return (
-      <div className={styles.page}>
-        <LoadingState message="Loading transactions..." />
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -273,7 +267,9 @@ export default function TransactionsPage() {
               </tr>
             </thead>
             <tbody>
-              {transactions.length === 0 ? (
+              {loading && transactions.length === 0 ? (
+                <SkeletonTableRows rows={5} cols={6} />
+              ) : transactions.length === 0 ? (
                 <tr>
                   <td colSpan="6" className={styles.emptyState}>
                     <AlertCircle size={32} />

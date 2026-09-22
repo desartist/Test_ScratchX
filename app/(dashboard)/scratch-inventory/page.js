@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { criticalFetchService } from '@/lib/criticalFetchService';
 import DataTable from '@/components/common/DataTable';
 import styles from './page.module.css';
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 export default function ScratchInventoryPage() {
   const { account } = useAuthContext();

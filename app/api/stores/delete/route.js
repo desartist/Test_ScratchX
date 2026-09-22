@@ -3,6 +3,7 @@ import connectDB from '@/lib/db';
 import StoreService from '@/lib/storeService';
 import { hasPermission } from '@/lib/permissions';
 import { ValidationError, NotFoundError } from '@/lib/errors';
+import { requireAuth } from '@/lib/auth';
 
 /**
  * DELETE /api/stores/delete
@@ -16,8 +17,12 @@ export async function POST(request) {
   try {
     await connectDB();
 
-    // Get user info
-    const userRole = request.headers.get('x-user-role');
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
 
     // Authorization check
     if (!hasPermission(userRole, 'store:delete')) {
@@ -33,6 +38,17 @@ export async function POST(request) {
       return NextResponse.json(
         { success: false, error: 'Store ID is required' },
         { status: 400 }
+      );
+    }
+
+    // Verify ownership — this route previously checked only that the caller's
+    // ROLE had store:delete, never that the store was theirs, so any merchant
+    // could delete any store by id. Mirrors /api/stores/[id] DELETE.
+    const existing = await StoreService.getStoreById(storeId);
+    if (userRole !== 'Super_Admin' && existing.merchant_id.toString() !== userId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 403 }
       );
     }
 

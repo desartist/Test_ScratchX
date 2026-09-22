@@ -7,6 +7,7 @@ import FilterTabs from "@/components/dashboard/FilterTabs";
 import SearchBar from "@/components/dashboard/SearchBar";
 import { useStoreCampaignsQuery } from "@/hooks/queries/useStoreCampaignsQuery";
 import styles from "./store-campaigns.module.css";
+import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 
 // Same low-scratch threshold and status-calculation logic as the merchant's
 // own Campaigns page (app/(dashboard)/campaign/page.js), kept in sync so a

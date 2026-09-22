@@ -15,7 +15,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 import { getSubscriptionDetails } from "@/lib/subscriptionAccessGuard";
-import { getLoginToken } from "@/lib/auth";
+import { getLoginToken, requireAuth } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import SubscriptionPlan from "@/models/subscriptionPlanModel";
 
@@ -23,9 +23,12 @@ export async function GET(request) {
   try {
     await connectDB();
 
-    // Get user info from headers
-    const userRole = request.headers.get("x-user-role");
-    const userId = request.headers.get("x-user-id");
+    // Identity comes from the signed session cookie, never from
+    // client-supplied x-user-* headers (those are trivially forged).
+    const { account, error: authError } = await requireAuth();
+    if (authError) return authError;
+    const userRole = account.role;
+    const userId = account._id.toString();
 
     // Authorization: Only Merchant and Distributor can purchase/upgrade plans
     if (!hasPermission(userRole, "subscription:upgrade")) {
@@ -35,10 +38,10 @@ export async function GET(request) {
       );
     }
 
-    let merchantId = userId;
-    if (userRole === "Super_Admin" && body.merchantId) {
-      merchantId = body.merchantId;
-    }
+    // (A Super_Admin "act as merchant" branch used to live here, but it read
+    // `body.merchantId` on a GET with no body — it always threw. Removed; this
+    // route now always reports the caller's own subscription.)
+    const merchantId = userId;
     // Get subscription details
     const details = await getSubscriptionDetails(merchantId);
 
@@ -53,6 +56,18 @@ export async function GET(request) {
     }
 
     const plan = details.plan;
+
+    // A subscription can exist with no plan document attached (planId is
+    // nullable). Everything below dereferences `plan`, so treat that the same
+    // as having no subscription instead of throwing a 500. Previously
+    // unreachable: this route read the id from an `x-user-id` header fed by an
+    // `accountId` cookie that login never sets, so it 404'd for everyone.
+    if (!plan) {
+      return NextResponse.json(
+        { success: false, error: "Subscription has no plan attached" },
+        { status: 404 },
+      );
+    }
 
     // Get recommended upgrade plan (next tier up)
     const upgradePlan =
