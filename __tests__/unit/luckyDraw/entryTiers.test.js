@@ -1,4 +1,4 @@
-import { validateEntryTiers, resolveEntries } from '@/lib/luckyDraw/entryTiers';
+import { validateEntryTiers, resolveEntries, resolveTier } from '@/lib/luckyDraw/entryTiers';
 
 const tiers = [
   { minAmount: 500, maxAmount: 1000, entriesGranted: 1 },
@@ -104,5 +104,19 @@ describe('validateEntryTiers', () => {
     expect(validateEntryTiers([{ minAmount: -1, maxAmount: null, entriesGranted: 1 }])).toBe(
       'Tier minimum must be 0 or more',
     );
+  });
+});
+
+describe('resolveTier', () => {
+  it('returns the position of the range and its entries', () => {
+    expect(resolveTier(tiers, 750)).toEqual({ index: 0, entriesGranted: 1 });
+    expect(resolveTier(tiers, 2500)).toEqual({ index: 1, entriesGranted: 3 });
+    expect(resolveTier(tiers, 5000)).toEqual({ index: 2, entriesGranted: 10 });
+  });
+
+  it('returns null when the bill does not qualify', () => {
+    expect(resolveTier(tiers, 100)).toBeNull();
+    expect(resolveTier(tiers, NaN)).toBeNull();
+    expect(resolveTier(tiers, '2500')).toBeNull();
   });
 });

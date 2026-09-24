@@ -10,7 +10,7 @@ import LuckyDrawWinner from '@/models/luckyDrawWinnerModel';
 import { sendSms } from '@/lib/services/luckyDraw/notifier';
 import { runDraw } from '@/lib/services/luckyDraw/drawService';
 import { notifyPendingWinners } from '@/lib/services/luckyDraw/winnerNotifications';
-import { createSeededRng, selectWinners } from '@/lib/services/luckyDraw/winnerSelection';
+import { createSeededRng, selectWinners, orderPrizesForDraw } from '@/lib/services/luckyDraw/winnerSelection';
 import { ConflictError, NotFoundError } from '@/lib/errors';
 import { createCampaign, createOpenDraw, createEntry, newId, nextPhone, DAY } from '../../helpers/luckyDrawFixtures';
 
@@ -180,6 +180,71 @@ describe('runDraw', () => {
     expect((await LuckyDraw.findById(draw._id)).status).toBe('scheduled');
     expect(await LuckyDrawWinner.countDocuments({ drawId: draw._id })).toBe(0);
     await expect(runDraw(draw._id, { source: 'cron' })).resolves.toBeDefined();
+  });
+});
+
+describe('runDraw with prizes tied to bill ranges', () => {
+  const TV = (extra = {}) => ({ rank: 1, prizeDescription: 'Smart TV', prizeValue: 0, ...extra });
+  const PHONE = (extra = {}) => ({ rank: 2, prizeDescription: 'Smart Phone', prizeValue: 0, ...extra });
+
+  async function seedRanges({ prizeMode, prizes, high = 2, low = 3 }) {
+    const campaign = await createCampaign({ prizeMode, prizeTiers: prizes });
+    const draw = await createOpenDraw(campaign);
+    const highPhones = []; const lowPhones = [];
+    for (let i = 0; i < high; i++) { const phone = nextPhone(); highPhones.push(phone); await createEntry(campaign, draw, { customerPhone: phone, tierIndex: 1, entriesGranted: 3 }); }
+    for (let i = 0; i < low; i++) { const phone = nextPhone(); lowPhones.push(phone); await createEntry(campaign, draw, { customerPhone: phone, tierIndex: 0, entriesGranted: 1 }); }
+    return { campaign, draw, highPhones, lowPhones };
+  }
+
+  it('separate pools: each range only wins its own prizes', async () => {
+    const { draw, highPhones, lowPhones } = await seedRanges({ prizeMode: 'pool_per_tier', prizes: [TV({ tierIndexes: [1] }), PHONE({ tierIndexes: [0] })] });
+    const result = await runDraw(draw._id, { source: 'manual' });
+    const byPrize = Object.fromEntries(result.winners.map((w) => [w.prizeDescription, w.customerPhone]));
+    expect(highPhones).toContain(byPrize['Smart TV']);
+    expect(lowPhones).toContain(byPrize['Smart Phone']);
+    expect(result.draw.prizeMode).toBe('pool_per_tier');
+    expect(result.draw.prizeTiersSnapshot.map((p) => p.tierIndexes)).toEqual([[1], [0]]);
+  });
+
+  it('separate pools: a customer with entries in both ranges wins only once, settled in the top range first', async () => {
+    const campaign = await createCampaign({ prizeMode: 'pool_per_tier', prizeTiers: [PHONE({ rank: 1, tierIndexes: [0] }), TV({ rank: 2, tierIndexes: [1] })] });
+    const draw = await createOpenDraw(campaign);
+    await createEntry(campaign, draw, { customerPhone: '9500000001', tierIndex: 0, entriesGranted: 50 });
+    await createEntry(campaign, draw, { customerPhone: '9500000001', tierIndex: 1, entriesGranted: 50 });
+    await createEntry(campaign, draw, { customerPhone: '9500000002', tierIndex: 0, entriesGranted: 1 });
+    const result = await runDraw(draw._id, { source: 'manual' });
+    const byPrize = Object.fromEntries(result.winners.map((w) => [w.prizeDescription, w.customerPhone]));
+    expect(new Set(result.winners.map((w) => w.customerPhone)).size).toBe(result.winners.length);
+    if (byPrize['Smart TV'] === '9500000001') expect(byPrize['Smart Phone']).toBe('9500000002');
+  });
+
+  it('restricted: the restricted prize goes to an eligible range, the open prize to anyone left', async () => {
+    const { draw, highPhones } = await seedRanges({ prizeMode: 'restricted', prizes: [TV({ tierIndexes: [1] }), PHONE()] });
+    const result = await runDraw(draw._id, { source: 'manual' });
+    expect(highPhones).toContain(result.winners.find((w) => w.prizeDescription === 'Smart TV').customerPhone);
+    expect(result.winners).toHaveLength(2);
+  });
+
+  it('a prize whose range has no entries is left unawarded, the others are still drawn', async () => {
+    const { draw } = await seedRanges({ prizeMode: 'pool_per_tier', prizes: [TV({ tierIndexes: [1] }), PHONE({ tierIndexes: [0] })], high: 0 });
+    const result = await runDraw(draw._id, { source: 'manual' });
+    expect(result.winners.map((w) => w.prizeDescription)).toEqual(['Smart Phone']);
+    expect(result.draw.winnerCount).toBe(1);
+  });
+
+  it('shared prizes ignore ranges entirely (today\'s behaviour)', async () => {
+    const { draw } = await seedRanges({ prizeMode: 'shared', prizes: [TV(), PHONE()] });
+    const result = await runDraw(draw._id, { source: 'manual' });
+    expect(result.winners).toHaveLength(2);
+    expect(result.draw.prizeMode).toBe('shared');
+  });
+
+  it('can be replayed from the stored seed in the draw order for its mode', async () => {
+    const { campaign, draw } = await seedRanges({ prizeMode: 'pool_per_tier', prizes: [TV({ tierIndexes: [1] }), PHONE({ tierIndexes: [0] })], high: 4, low: 6 });
+    const result = await runDraw(draw._id, { source: 'cron' });
+    const entries = await LuckyDrawEntry.find({ drawId: draw._id }).sort({ _id: 1 }).lean();
+    const replay = selectWinners(entries, orderPrizesForDraw(campaign.prizeTiers.map((p) => p.toObject()), campaign.prizeMode), createSeededRng(result.draw.randomSeed), { ordered: true });
+    expect(replay.map((w) => String(w.entry._id)).sort()).toEqual(result.winners.map((w) => String(w.entryId)).sort());
   });
 });
 

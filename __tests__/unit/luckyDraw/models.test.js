@@ -120,3 +120,37 @@ describe('LuckyDrawWinner', () => {
     await expect(LuckyDrawWinner.create(winner())).rejects.toMatchObject({ code: 11000 });
   });
 });
+
+describe('prize modes and ranges', () => {
+  it('a campaign defaults to shared prizes and rejects an unknown mode', async () => {
+    const campaign = await createCampaign();
+    expect(campaign.prizeMode).toBe('shared');
+    await expect(LuckyDrawCampaign.create(campaignData({ prizeMode: 'per-tier' }))).rejects.toThrow();
+  });
+
+  it('keeps the ranges a prize is tied to', async () => {
+    const campaign = await createCampaign({
+      prizeMode: 'restricted',
+      prizeTiers: [{ rank: 1, prizeDescription: 'TV', prizeValue: 0, tierIndexes: [1] }, { rank: 2, prizeDescription: 'Phone', prizeValue: 0 }],
+    });
+    expect(campaign.prizeTiers[0].tierIndexes).toEqual([1]);
+    expect(campaign.prizeTiers[1].tierIndexes).toEqual([]);
+  });
+
+  it('an entry records the range it fell in (null for older entries)', async () => {
+    const campaign = await createCampaign();
+    const draw = await createOpenDraw(campaign);
+    expect((await createEntry(campaign, draw)).tierIndex).toBeNull();
+    expect((await createEntry(campaign, draw, { tierIndex: 1 })).tierIndex).toBe(1);
+  });
+
+  it('a draw records the prize mode and the ranges in its prize snapshot', async () => {
+    const campaign = await createCampaign();
+    const draw = await LuckyDraw.create({
+      campaignId: campaign._id, periodStart: new Date(), drawDate: new Date(), status: 'completed',
+      prizeMode: 'pool_per_tier', prizeTiersSnapshot: [{ rank: 1, prizeDescription: 'TV', prizeValue: 0, tierIndexes: [1] }],
+    });
+    expect(draw.prizeMode).toBe('pool_per_tier');
+    expect(draw.prizeTiersSnapshot[0].tierIndexes).toEqual([1]);
+  });
+});

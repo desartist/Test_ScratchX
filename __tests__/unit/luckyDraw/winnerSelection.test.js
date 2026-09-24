@@ -1,4 +1,4 @@
-import { createSeededRng, selectWinners } from '@/lib/services/luckyDraw/winnerSelection';
+import { createSeededRng, selectWinners, orderPrizesForDraw } from '@/lib/services/luckyDraw/winnerSelection';
 
 const entry = (id, phone, entriesGranted = 1) => ({ _id: id, customerPhone: phone, entriesGranted });
 const prizes = [
@@ -85,5 +85,86 @@ describe('selectWinners', () => {
     const first = selectWinners(entries, prizes, createSeededRng('cafebabe')).map((w) => w.entry._id);
     const second = selectWinners(entries, prizes, createSeededRng('cafebabe')).map((w) => w.entry._id);
     expect(first).toEqual(second);
+  });
+});
+
+describe('prizes tied to bill ranges', () => {
+  const at = (id, phone, tierIndex, entriesGranted = 1) => ({ _id: id, customerPhone: phone, tierIndex, entriesGranted });
+  const seed = (i) => createSeededRng(i.toString(16).padStart(8, '0'));
+
+  it('only draws a restricted prize from entries in an eligible range', () => {
+    const entries = [at('low1', '9000000001', 0, 5), at('low2', '9000000002', 0, 5), at('high', '9000000003', 1, 1)];
+    for (let i = 0; i < 100; i++) {
+      const [winner] = selectWinners(entries, [{ rank: 1, prizeDescription: 'TV', tierIndexes: [1] }], seed(i));
+      expect(winner.entry._id).toBe('high'); // even though the low range holds far more entries
+    }
+  });
+
+  it('a prize with no ranges listed is open to everyone', () => {
+    const entries = [at('low', '9000000001', 0), at('high', '9000000002', 1)];
+    const winners = new Set();
+    for (let i = 0; i < 100; i++) winners.add(selectWinners(entries, [{ rank: 1, prizeDescription: 'P', tierIndexes: [] }], seed(i))[0].entry._id);
+    expect(winners).toEqual(new Set(['low', 'high']));
+  });
+
+  it('skips a prize nobody is eligible for and still draws the rest', () => {
+    const entries = [at('low1', '9000000001', 0), at('low2', '9000000002', 0)];
+    const winners = selectWinners(
+      entries,
+      [{ rank: 1, prizeDescription: 'TV', tierIndexes: [1] }, { rank: 2, prizeDescription: 'Phone', tierIndexes: [0] }],
+      seed(1),
+      { ordered: true },
+    );
+    expect(winners.map((w) => w.rank)).toEqual([2]);
+  });
+
+  it('entries with no recorded range cannot win a range-restricted prize', () => {
+    const entries = [{ _id: 'old', customerPhone: '9000000001', entriesGranted: 3 }];
+    expect(selectWinners(entries, [{ rank: 1, prizeDescription: 'TV', tierIndexes: [0] }], seed(1))).toEqual([]);
+  });
+
+  it('a customer with entries in two ranges still wins at most one prize', () => {
+    const entries = [at('a-low', '9000000001', 0, 9), at('a-high', '9000000001', 1, 9), at('b-low', '9000000002', 0, 1)];
+    const prizes = [{ rank: 1, prizeDescription: 'TV', tierIndexes: [1] }, { rank: 2, prizeDescription: 'Phone', tierIndexes: [0] }];
+    for (let i = 0; i < 100; i++) {
+      const winners = selectWinners(entries, prizes, seed(i), { ordered: true });
+      expect(winners.map((w) => w.entry.customerPhone)).toEqual(['9000000001', '9000000002']);
+    }
+  });
+
+  it('keeps the given order when told it is already ordered', () => {
+    const entries = [at('e1', '9000000001', 0), at('e2', '9000000002', 0)];
+    const winners = selectWinners(entries, [{ rank: 2, prizeDescription: 'Phone', tierIndexes: [] }, { rank: 1, prizeDescription: 'TV', tierIndexes: [] }], seed(3), { ordered: true });
+    expect(winners.map((w) => w.rank)).toEqual([2, 1]);
+  });
+});
+
+describe('orderPrizesForDraw', () => {
+  const prizes = [
+    { rank: 1, prizeDescription: 'Phone', tierIndexes: [0] },
+    { rank: 2, prizeDescription: 'Mixer', tierIndexes: [0] },
+    { rank: 3, prizeDescription: 'TV', tierIndexes: [1] },
+  ];
+
+  it('shared: rank order, and range restrictions are ignored', () => {
+    const ordered = orderPrizesForDraw(prizes, 'shared');
+    expect(ordered.map((p) => p.rank)).toEqual([1, 2, 3]);
+    expect(ordered.every((p) => p.tierIndexes.length === 0)).toBe(true);
+  });
+
+  it('restricted: rank order, restrictions kept', () => {
+    const ordered = orderPrizesForDraw(prizes, 'restricted');
+    expect(ordered.map((p) => p.rank)).toEqual([1, 2, 3]);
+    expect(ordered[2].tierIndexes).toEqual([1]);
+  });
+
+  it('pool_per_tier: highest range first, then by rank', () => {
+    expect(orderPrizesForDraw(prizes, 'pool_per_tier').map((p) => p.rank)).toEqual([3, 1, 2]);
+  });
+
+  it('does not change the input', () => {
+    const copy = JSON.parse(JSON.stringify(prizes));
+    orderPrizesForDraw(prizes, 'pool_per_tier');
+    expect(prizes).toEqual(copy);
   });
 });

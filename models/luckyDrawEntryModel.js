@@ -15,6 +15,8 @@ const luckyDrawEntrySchema = new mongoose.Schema(
     },
     billAmount: { type: Number, required: true, min: 0 },
     entriesGranted: { type: Number, required: true, min: 1 },
+    // Position of the bill range this entry fell in (campaign ranges are stored sorted); null for older entries.
+    tierIndex: { type: Number, default: null, min: 0 },
     distanceMeters: { type: Number, default: null },
     customerLatitude: { type: Number, default: null },
     customerLongitude: { type: Number, default: null },

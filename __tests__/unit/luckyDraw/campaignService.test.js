@@ -122,6 +122,66 @@ describe('createCampaign', () => {
   });
 });
 
+describe('createCampaign: prizes tied to bill ranges', () => {
+  const TV = { prizeDescription: 'Smart TV', prizeValue: 30000 };
+  const PHONE = { prizeDescription: 'Smart Phone', prizeValue: 9000 };
+
+  async function setup() {
+    const merchantId = newId();
+    const store = await seedStore(merchantId);
+    return { merchantId: String(merchantId), store };
+  }
+
+  it('defaults to shared prizes and ignores range choices in that mode', async () => {
+    const { merchantId, store } = await setup();
+    const campaign = await createCampaign(merchantId, { ...baseInput(store._id), prizes: [{ ...TV, tierIndexes: [1] }, PHONE] });
+    expect(campaign.prizeMode).toBe('shared');
+    expect(campaign.prizeTiers.map((p) => p.tierIndexes)).toEqual([[], []]);
+  });
+
+  it('pool per range: each prize belongs to one range', async () => {
+    const { merchantId, store } = await setup();
+    const campaign = await createCampaign(merchantId, {
+      ...baseInput(store._id), prizeMode: 'pool_per_tier', prizes: [{ ...TV, tierIndexes: [1] }, { ...PHONE, tierIndexes: [0] }],
+    });
+    expect(campaign.prizeMode).toBe('pool_per_tier');
+    expect(campaign.prizeTiers.map((p) => [p.rank, p.prizeDescription, p.tierIndexes])).toEqual([[1, 'Smart TV', [1]], [2, 'Smart Phone', [0]]]);
+  });
+
+  it('restricted: a prize can be limited to some ranges, or open to all', async () => {
+    const { merchantId, store } = await setup();
+    const campaign = await createCampaign(merchantId, {
+      ...baseInput(store._id), prizeMode: 'restricted', prizes: [{ ...TV, tierIndexes: [1] }, PHONE],
+    });
+    expect(campaign.prizeTiers.map((p) => p.tierIndexes)).toEqual([[1], []]);
+  });
+
+  it('stores ranges sorted by minimum, and range numbers refer to that sorted order', async () => {
+    const { merchantId, store } = await setup();
+    const campaign = await createCampaign(merchantId, {
+      ...baseInput(store._id),
+      entryTiers: [{ minAmount: 1000, maxAmount: null, entriesGranted: 3 }, { minAmount: 500, maxAmount: 1000, entriesGranted: 1 }],
+      prizeMode: 'pool_per_tier',
+      prizes: [{ ...TV, tierIndexes: [1] }, { ...PHONE, tierIndexes: [0] }],
+    });
+    expect(campaign.entryTiers.map((t) => t.minAmount)).toEqual([500, 1000]);
+    expect(campaign.prizeTiers[0].tierIndexes).toEqual([1]);
+  });
+
+  it.each([
+    ['an unknown mode', { prizeMode: 'weird', prizes: [TV, PHONE] }, /how prizes are split/i],
+    ['a pool prize with no range', { prizeMode: 'pool_per_tier', prizes: [TV, { ...PHONE, tierIndexes: [0] }] }, /exactly one/i],
+    ['a range with no prize', { prizeMode: 'pool_per_tier', prizes: [{ ...TV, tierIndexes: [1] }, { ...PHONE, tierIndexes: [1] }] }, /every entry range needs/i],
+    ['a restricted set that leaves a range unable to win', { prizeMode: 'restricted', prizes: [{ ...TV, tierIndexes: [1] }, { ...PHONE, tierIndexes: [1] }] }, /must be able to win/i],
+    ['a prize pointing at a missing range', { prizeMode: 'restricted', prizes: [{ ...TV, tierIndexes: [7] }, PHONE] }, /does not exist/i],
+    ['tying prizes to ranges with only one range', { prizeMode: 'restricted', entryTiers: [{ minAmount: 0, maxAmount: null, entriesGranted: 1 }], prizes: [{ ...TV, tierIndexes: [0] }, PHONE] }, /at least two/i],
+  ])('rejects %s', async (_label, patch, message) => {
+    const { merchantId, store } = await setup();
+    await expect(createCampaign(merchantId, { ...baseInput(store._id), ...patch })).rejects.toThrow(ValidationError);
+    await expect(createCampaign(merchantId, { ...baseInput(store._id), ...patch })).rejects.toThrow(message);
+  });
+});
+
 describe('setCampaignStatus', () => {
   async function draftCampaign(merchantId, overrides = {}) {
     return LuckyDrawCampaign.create(campaignData({ merchantId, status: 'draft', ...overrides }));

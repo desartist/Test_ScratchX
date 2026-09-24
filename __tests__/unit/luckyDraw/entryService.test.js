@@ -60,6 +60,14 @@ describe('createEntry', () => {
     expect(result.entry.distanceMeters).toBeLessThan(2000);
   });
 
+  it('records which bill range the entry fell in', async () => {
+    const campaign = await createCampaign();
+    const small = await createEntry(submit(campaign, { billAmount: 300 }));
+    const big = await createEntry(submit(campaign, { billAmount: 1300, customerMobile: '9876543211' }));
+    expect(small.entry.tierIndex).toBe(0);
+    expect(big.entry.tierIndex).toBe(1);
+  });
+
   it('accumulates entries across bills from the same customer', async () => {
     const campaign = await createCampaign();
     await createEntry(submit(campaign, { billAmount: 1200 }));

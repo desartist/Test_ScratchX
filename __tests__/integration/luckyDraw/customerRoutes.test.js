@@ -58,6 +58,20 @@ describe('GET /api/customer/lucky-draw/campaigns/:id', () => {
     expect(text).not.toContain(String(campaign.assignedStores[0].storeId));
   });
 
+  it('says how prizes are split and which ranges each prize is open to', async () => {
+    const campaign = await createCampaign({
+      prizeMode: 'restricted',
+      prizeTiers: [{ rank: 1, prizeDescription: 'Smart TV', prizeValue: 0, tierIndexes: [1] }, { rank: 2, prizeDescription: 'Mixer', prizeValue: 0 }],
+    });
+    const res = await getCampaignInfo(new Request('http://localhost/x'), { params: Promise.resolve({ id: String(campaign._id) }) });
+    const { data } = await res.json();
+    expect(data.prizeMode).toBe('restricted');
+    expect(data.prizes).toEqual([
+      { rank: 1, prizeDescription: 'Smart TV', tierIndexes: [1] },
+      { rank: 2, prizeDescription: 'Mixer', tierIndexes: [] },
+    ]);
+  });
+
   it('marks paused or ended campaigns as not open', async () => {
     const campaign = await createCampaign({ status: 'paused' });
     const res = await getCampaignInfo(new Request('http://localhost/x'), { params: Promise.resolve({ id: String(campaign._id) }) });

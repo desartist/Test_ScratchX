@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { DRAW_STATUSES } from '../lib/luckyDraw/constants.js';
+import { DRAW_STATUSES, PRIZE_MODES } from '../lib/luckyDraw/constants.js';
 
 // Append-only record of every change the store owner makes to the draw date.
 const dateChangeSchema = new mongoose.Schema(
@@ -20,6 +20,7 @@ const prizeSnapshotSchema = new mongoose.Schema(
     rank: Number,
     prizeDescription: String,
     prizeValue: Number,
+    tierIndexes: { type: [Number], default: [] },
   },
   { _id: false },
 );
@@ -39,6 +40,7 @@ const luckyDrawSchema = new mongoose.Schema(
     // Stored so the draw can be replayed: same entries (sorted by _id) + seed = same winners.
     randomSeed: { type: String },
     prizeTiersSnapshot: { type: [prizeSnapshotSchema], default: [] },
+    prizeMode: { type: String, enum: PRIZE_MODES, default: 'shared' },
     entryCount: { type: Number, default: 0 },
     winnerCount: { type: Number, default: 0 },
   },

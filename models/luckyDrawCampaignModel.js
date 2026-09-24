@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import {
   CAMPAIGN_STATUSES,
+  PRIZE_MODES,
   RECURRENCE_FREQUENCIES,
   SCHEDULE_TYPES,
   TRIGGER_MODES,
@@ -20,6 +21,8 @@ const prizeTierSchema = new mongoose.Schema(
     rank: { type: Number, required: true, min: 1 },
     prizeDescription: { type: String, required: true, trim: true, maxlength: 200 },
     prizeValue: { type: Number, default: 0, min: 0 },
+    // Ranges (positions in entryTiers, sorted by minAmount) whose entries may win this prize; none = everyone.
+    tierIndexes: { type: [Number], default: [] },
   },
   { _id: false },
 );
@@ -57,6 +60,8 @@ const luckyDrawCampaignSchema = new mongoose.Schema(
     status: { type: String, enum: CAMPAIGN_STATUSES, default: 'draft', index: true },
     entryTiers: { type: [entryTierSchema], validate: nonEmpty('entry tier') },
     prizeTiers: { type: [prizeTierSchema], validate: nonEmpty('prize') },
+    // shared: one prize list for everyone | pool_per_tier: each range has its own prizes | restricted: some prizes only for some ranges
+    prizeMode: { type: String, enum: PRIZE_MODES, default: 'shared' },
     // Cap on total entries one phone number can hold in a single draw; null = uncapped.
     maxEntriesPerCustomerPerPeriod: { type: Number, default: null, min: 1 },
     drawConfig: {
