@@ -5,6 +5,9 @@ import {
   istInputToIso,
   formatRupees,
   describeTier,
+  describeRange,
+  describePrizeScope,
+  pluralEntries,
 } from '@/lib/luckyDraw/clientApi';
 
 describe('IST date input helpers', () => {
@@ -75,5 +78,33 @@ describe('api', () => {
   it('falls back to a generic message when the response is not JSON', async () => {
     global.fetch = jest.fn().mockResolvedValue(respond(false, 502, null, true));
     await expect(api('/x')).rejects.toMatchObject({ message: 'Something went wrong. Please try again.', status: 502 });
+  });
+});
+
+describe('range and prize scope wording', () => {
+  const tiers = [{ minAmount: 0, maxAmount: 1000, entriesGranted: 1 }, { minAmount: 1000, maxAmount: null, entriesGranted: 3 }];
+
+  it('describes a bill range', () => {
+    expect(describeRange(tiers[0])).toBe('₹0 to under ₹1,000');
+    expect(describeRange(tiers[1])).toBe('₹1,000 and above');
+  });
+
+  it('says which bills a prize is open to', () => {
+    expect(describePrizeScope([1], tiers)).toBe('For bills of ₹1,000 and above');
+    expect(describePrizeScope([0, 1], tiers)).toBe('For bills of ₹0 to under ₹1,000 or ₹1,000 and above');
+  });
+
+  it('says nothing for a prize open to everyone', () => {
+    expect(describePrizeScope([], tiers)).toBe('');
+    expect(describePrizeScope(undefined, tiers)).toBe('');
+  });
+
+  it('ignores a range that no longer exists instead of crashing', () => {
+    expect(describePrizeScope([5], tiers)).toBe('');
+  });
+
+  it('uses singular and plural for entries', () => {
+    expect(pluralEntries(1)).toBe('1 entry');
+    expect(pluralEntries(5)).toBe('5 entries');
   });
 });

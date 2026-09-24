@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import FlagGate from "@/components/luckyDraw/FlagGate";
-import { api, istInputToIso, toISTInputValue } from "@/lib/luckyDraw/clientApi";
+import { api, describeRange, istInputToIso, toISTInputValue } from "@/lib/luckyDraw/clientApi";
+import { dropTierRow, effectiveMode, formHints, prizeTierIndexes } from "@/lib/luckyDraw/prizeForm";
 import styles from "../luckyDraws.module.css";
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -15,7 +16,8 @@ const initialForm = {
   endDate: "",
   storeIds: [],
   tiers: [{ minAmount: "0", maxAmount: "", entriesGranted: "1" }],
-  prizes: [{ prizeDescription: "", prizeValue: "" }],
+  prizeMode: "shared",
+  prizes: [{ prizeDescription: "", prizeValue: "", rows: [] }],
   maxEntries: "",
   scheduleType: "end_of_campaign",
   frequency: "daily",
@@ -62,6 +64,33 @@ function NewLuckyDrawForm() {
     setForm((f) => ({ ...f, [key]: f[key].map((row, i) => (i === index ? { ...row, ...patch } : row)) }));
   const addRow = (key, row) => setForm((f) => ({ ...f, [key]: [...f[key], row] }));
   const removeRow = (key, index) => setForm((f) => ({ ...f, [key]: f[key].filter((_, i) => i !== index) }));
+  const removeTier = (index) =>
+    setForm((f) => ({ ...f, tiers: f.tiers.filter((_, i) => i !== index), prizes: dropTierRow(f.prizes, index) }));
+  const setPrizeMode = (mode) =>
+    setForm((f) => ({
+      ...f,
+      prizeMode: mode,
+      // A separate pool needs exactly one range per prize; default to the first.
+      prizes: f.prizes.map((p) => {
+        if (mode !== "pool_per_tier") return p;
+        return { ...p, rows: p.rows.length ? [p.rows[0]] : [0] };
+      }),
+    }));
+  const setPrizeRows = (prizeIndex, rows) =>
+    setForm((f) => ({ ...f, prizes: f.prizes.map((p, i) => (i === prizeIndex ? { ...p, rows } : p)) }));
+  const togglePrizeRow = (prizeIndex, row) => {
+    const current = form.prizes[prizeIndex].rows;
+    setPrizeRows(prizeIndex, current.includes(row) ? current.filter((r) => r !== row) : [...current, row]);
+  };
+  const rangeLabel = (tier, i) =>
+    `Range ${i + 1}: ${
+      tier.minAmount === ""
+        ? "fill in the range above"
+        : describeRange({ minAmount: Number(tier.minAmount), maxAmount: tier.maxAmount === "" ? null : Number(tier.maxAmount) })
+    }`;
+  const mode = effectiveMode(form.prizeMode, form.tiers.length);
+  const hints = formHints({ tiers: form.tiers, maxEntries: form.maxEntries });
+
   const toggleStore = (id) =>
     setForm((f) => ({
       ...f,
@@ -90,9 +119,11 @@ function NewLuckyDrawForm() {
         maxAmount: t.maxAmount === "" ? null : Number(t.maxAmount),
         entriesGranted: Number(t.entriesGranted),
       })),
+      prizeMode: mode,
       prizes: form.prizes.map((p) => ({
         prizeDescription: p.prizeDescription,
         prizeValue: p.prizeValue === "" ? 0 : Number(p.prizeValue),
+        tierIndexes: mode === "shared" ? [] : prizeTierIndexes(p.rows, form.tiers),
       })),
       maxEntriesPerCustomerPerPeriod: form.maxEntries === "" ? null : Number(form.maxEntries),
       scheduleType: form.scheduleType,
@@ -179,7 +210,7 @@ function NewLuckyDrawForm() {
                 <input id={`ld-tent-${index}`} type="number" min="1" step="1" className={styles.input} value={tier.entriesGranted} onChange={(e) => setRow("tiers", index, { entriesGranted: e.target.value })} required />
               </div>
               {form.tiers.length > 1 && (
-                <button type="button" className={styles.secondaryButton} onClick={() => removeRow("tiers", index)}>Remove</button>
+                <button type="button" className={styles.secondaryButton} onClick={() => removeTier(index)}>Remove</button>
               )}
             </div>
           ))}
@@ -188,27 +219,71 @@ function NewLuckyDrawForm() {
             <label className={styles.label} htmlFor="ld-max">Most entries one customer can hold per draw (optional)</label>
             <input id="ld-max" type="number" min="1" step="1" className={styles.input} value={form.maxEntries} onChange={(e) => set("maxEntries", e.target.value)} placeholder="No limit" />
           </div>
+          {hints.map((hint) => (
+            <p key={hint} className={styles.notice} role="note">{hint}</p>
+          ))}
         </section>
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Prizes</h2>
           <p className={styles.hint}>Listed in order: the first prize is drawn first. One customer can win only one prize per draw.</p>
+
+          {form.tiers.length >= 2 && (
+            <div className={styles.radioGroup}>
+              <label className={styles.radioCard}>
+                <input type="radio" name="prizeMode" checked={mode === "shared"} onChange={() => setPrizeMode("shared")} />
+                <span><strong>Same prizes for everyone</strong><br /><span className={styles.hint}>All bill ranges compete for the same prizes. A bigger bill only earns more entries.</span></span>
+              </label>
+              <label className={styles.radioCard}>
+                <input type="radio" name="prizeMode" checked={mode === "pool_per_tier"} onChange={() => setPrizeMode("pool_per_tier")} />
+                <span><strong>A separate prize pool for each bill range</strong><br /><span className={styles.hint}>Each range has its own prizes and its own winners. Choose the range for every prize below.</span></span>
+              </label>
+              <label className={styles.radioCard}>
+                <input type="radio" name="prizeMode" checked={mode === "restricted"} onChange={() => setPrizeMode("restricted")} />
+                <span><strong>Some prizes only for certain ranges</strong><br /><span className={styles.hint}>One shared list, but you can reserve a prize for bigger bills. A prize with no range ticked is open to everyone.</span></span>
+              </label>
+            </div>
+          )}
+
           {form.prizes.map((prize, index) => (
-            <div key={index} className={styles.prizeRow}>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor={`ld-p-${index}`}>Prize {index + 1}</label>
-                <input id={`ld-p-${index}`} className={styles.input} value={prize.prizeDescription} onChange={(e) => setRow("prizes", index, { prizeDescription: e.target.value })} placeholder="e.g. 43-inch Smart TV" required maxLength={200} />
+            <div key={index} className={styles.prizeBlock}>
+              <div className={styles.prizeRow}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor={`ld-p-${index}`}>Prize {index + 1}</label>
+                  <input id={`ld-p-${index}`} className={styles.input} value={prize.prizeDescription} onChange={(e) => setRow("prizes", index, { prizeDescription: e.target.value })} placeholder="e.g. 43-inch Smart TV" required maxLength={200} />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor={`ld-pv-${index}`}>Worth (₹, optional)</label>
+                  <input id={`ld-pv-${index}`} type="number" min="0" className={styles.input} value={prize.prizeValue} onChange={(e) => setRow("prizes", index, { prizeValue: e.target.value })} />
+                </div>
+                {form.prizes.length > 1 && (
+                  <button type="button" className={styles.secondaryButton} onClick={() => removeRow("prizes", index)}>Remove</button>
+                )}
               </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor={`ld-pv-${index}`}>Worth (₹, optional)</label>
-                <input id={`ld-pv-${index}`} type="number" min="0" className={styles.input} value={prize.prizeValue} onChange={(e) => setRow("prizes", index, { prizeValue: e.target.value })} />
-              </div>
-              {form.prizes.length > 1 && (
-                <button type="button" className={styles.secondaryButton} onClick={() => removeRow("prizes", index)}>Remove</button>
+
+              {mode === "pool_per_tier" && (
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor={`ld-ps-${index}`}>Won by customers in</label>
+                  <select id={`ld-ps-${index}`} className={styles.input} value={prize.rows[0] ?? 0} onChange={(e) => setPrizeRows(index, [Number(e.target.value)])}>
+                    {form.tiers.map((tier, i) => <option key={i} value={i}>{rangeLabel(tier, i)}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {mode === "restricted" && (
+                <fieldset className={styles.scope}>
+                  <legend className={styles.label}>Open to (tick none for everyone)</legend>
+                  {form.tiers.map((tier, i) => (
+                    <label key={i} className={styles.checkRow}>
+                      <input type="checkbox" checked={prize.rows.includes(i)} onChange={() => togglePrizeRow(index, i)} />
+                      <span>{rangeLabel(tier, i)}</span>
+                    </label>
+                  ))}
+                </fieldset>
               )}
             </div>
           ))}
-          <div><button type="button" className={styles.secondaryButton} onClick={() => addRow("prizes", { prizeDescription: "", prizeValue: "" })}>Add a prize</button></div>
+          <div><button type="button" className={styles.secondaryButton} onClick={() => addRow("prizes", { prizeDescription: "", prizeValue: "", rows: mode === "pool_per_tier" ? [0] : [] })}>Add a prize</button></div>
         </section>
 
         <section className={styles.section}>

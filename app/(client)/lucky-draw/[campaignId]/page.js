@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import FlagGate from "@/components/luckyDraw/FlagGate";
-import { api, describeTier, formatDateTime } from "@/lib/luckyDraw/clientApi";
+import { api, describePrizeScope, describeTier, formatDateTime } from "@/lib/luckyDraw/clientApi";
 import styles from "./page.module.css";
 
 function getPosition() {
@@ -123,7 +123,15 @@ function EntryPage() {
         <div className={styles.panel}>
           <h2 className={styles.heading}>Prizes</h2>
           <ol className={styles.list}>
-            {campaign.prizes.map((prize) => <li key={prize.rank}>{prize.prizeDescription}</li>)}
+            {campaign.prizes.map((prize) => {
+              const scope = describePrizeScope(prize.tierIndexes, campaign.entryTiers);
+              return (
+                <li key={prize.rank}>
+                  {prize.prizeDescription}
+                  {scope && <span className={styles.muted}> ({scope.charAt(0).toLowerCase() + scope.slice(1)})</span>}
+                </li>
+              );
+            })}
           </ol>
           <h2 className={styles.heading}>How to earn entries</h2>
           <ul className={styles.list}>

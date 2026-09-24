@@ -4,11 +4,16 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import FlagGate from "@/components/luckyDraw/FlagGate";
-import { api, describeTier, formatDateTime, istInputToIso, toISTInputValue } from "@/lib/luckyDraw/clientApi";
+import { api, describePrizeScope, describeTier, formatDateTime, istInputToIso, pluralEntries, toISTInputValue } from "@/lib/luckyDraw/clientApi";
 import { DATE_CHANGE_NOTICE } from "@/lib/luckyDraw/constants";
 import styles from "../luckyDraws.module.css";
 
 const STATUS_LABEL = { draft: "Draft", active: "Active", paused: "Paused", ended: "Ended" };
+const PRIZE_HEADING = {
+  shared: "Prizes, drawn in order",
+  pool_per_tier: "Prizes, one pool per bill range",
+  restricted: "Prizes, some reserved for bigger bills",
+};
 const maskPhone = (phone) => `XXXXXX${String(phone).slice(-4)}`;
 
 function LuckyDrawDetail() {
@@ -73,7 +78,11 @@ function LuckyDrawDetail() {
     perform("run", async () => {
       const result = await api(`/api/lucky-draws/draws/${openDraw._id}/run`, { method: "POST" });
       setConfirmRun(false);
-      setNotice(`Draw complete: ${result.winners.length} winner${result.winners.length === 1 ? "" : "s"} picked, ${result.notified.sent} told by SMS.`);
+      const unawarded = campaign.prizeTiers.length - result.winners.length;
+      setNotice(
+        `Draw complete: ${result.winners.length} winner${result.winners.length === 1 ? "" : "s"} picked, ${result.notified.sent} told by SMS.` +
+          (unawarded > 0 ? ` ${unawarded} prize${unawarded === 1 ? "" : "s"} could not be awarded because no eligible customer had entered.` : ""),
+      );
     });
 
   const changeDate = (event) => {
@@ -224,13 +233,21 @@ function LuckyDrawDetail() {
             </ul>
           </div>
           <div>
-            <h3 className={styles.subTitle}>Prizes, drawn in order</h3>
+            <h3 className={styles.subTitle}>{PRIZE_HEADING[campaign.prizeMode || "shared"]}</h3>
             <ol className={styles.list}>
-              {campaign.prizeTiers.map((prize) => <li key={prize.rank}>{prize.prizeDescription}</li>)}
+              {campaign.prizeTiers.map((prize) => {
+                const scope = describePrizeScope(prize.tierIndexes, campaign.entryTiers);
+                return (
+                  <li key={prize.rank}>
+                    {prize.prizeDescription}
+                    {scope && <span className={styles.muted}> · {scope}</span>}
+                  </li>
+                );
+              })}
             </ol>
           </div>
         </div>
-        {campaign.maxEntriesPerCustomerPerPeriod && <p className={styles.muted}>Limit: {campaign.maxEntriesPerCustomerPerPeriod} entries per customer per draw.</p>}
+        {campaign.maxEntriesPerCustomerPerPeriod && <p className={styles.muted}>Limit: {pluralEntries(campaign.maxEntriesPerCustomerPerPeriod)} per customer per draw.</p>}
       </section>
 
       <section className={styles.section}>
