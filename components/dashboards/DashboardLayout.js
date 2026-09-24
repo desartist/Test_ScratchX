@@ -25,7 +25,7 @@ import {
   IconWallet,
 } from "./shared/NavIcons";
 import styles from "./DashboardLayout.module.css";
-import { SALES_EXECUTIVE_ENABLED } from "@/lib/featureFlags";
+import { SALES_EXECUTIVE_ENABLED, LUCKY_DRAW_ENABLED } from "@/lib/featureFlags";
 
 const NAV_ICONS = {
   dashboard: IconDashboard,
@@ -280,6 +280,9 @@ export default function DashboardLayout({ children, role }) {
           primary: [
             ...baseItems,
             { label: "Campaigns", href: "/campaign", iconKey: "campaigns" },
+            ...(LUCKY_DRAW_ENABLED
+              ? [{ label: "Lucky Draw", href: "/lucky-draws", iconKey: "campaigns" }]
+              : []),
             { label: "Customers", href: "/customers", iconKey: "customers" },
             { label: "Analytics", href: "/analytics", iconKey: "analytics" },
             { label: "Stores", href: "/stores", iconKey: "stores" },
@@ -360,6 +363,9 @@ export default function DashboardLayout({ children, role }) {
           primary: [
             ...baseItems,
             { label: "Campaigns", href: "/store-campaigns", iconKey: "campaigns" },
+            ...(LUCKY_DRAW_ENABLED
+              ? [{ label: "Lucky Draw Prizes", href: "/lucky-draws/redeem", iconKey: "operations" }]
+              : []),
             // { label: "Redemptions", href: "/redemptions", iconKey: "operations" },
             // { label: "Inventory", href: "/store-inventory", iconKey: "commission" },
             { label: "Analytics", href: "/store-analytics", iconKey: "analytics" },

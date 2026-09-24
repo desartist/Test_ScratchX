@@ -128,11 +128,11 @@ export async function middleware(request) {
   // Routes that require an active subscription
   const SUBSCRIPTION_REQUIRED_ROUTES = [
     '/merchant-overview', '/campaign', '/stores', '/customers',
-    '/analytics', '/team', '/studio',
+    '/analytics', '/team', '/studio', '/lucky-draws',
   ];
   // Routes that additionally require at least one store
   const STORE_REQUIRED_ROUTES = [
-    '/merchant-overview', '/campaign', '/customers', '/analytics', '/team', '/studio',
+    '/merchant-overview', '/campaign', '/customers', '/analytics', '/team', '/studio', '/lucky-draws',
   ];
   // Pages that are part of the onboarding/recovery flow — never redirect these
   // These routes are exempt from the subscription/store gates so merchants
@@ -175,6 +175,7 @@ export async function middleware(request) {
     pathname.startsWith('/stores') ||
     pathname.startsWith('/campaign') ||
     pathname.startsWith('/campaigns') ||
+    pathname.startsWith('/lucky-draws') ||
     pathname.startsWith('/analytics') ||
     pathname.startsWith('/customers') ||
     pathname.startsWith('/team') ||
@@ -187,6 +188,7 @@ export async function middleware(request) {
   const isProtectedApi =
     pathname.startsWith('/api/dashboard') ||
     pathname.startsWith('/api/campaigns') ||
+    pathname.startsWith('/api/lucky-draws') ||
     pathname.startsWith('/api/ranges') ||
     pathname.startsWith('/api/stores') ||
     pathname.startsWith('/api/inventory') ||
@@ -232,6 +234,8 @@ export const config = {
     '/campaign',
     '/campaign/:path*',
     '/campaigns/:path*',
+    '/lucky-draws',
+    '/lucky-draws/:path*',
     '/analytics/:path*',
     '/customers/:path*',
     '/team/:path*',
@@ -243,6 +247,7 @@ export const config = {
     '/privacy-policy/:path*',
     '/api/dashboard/:path*',
     '/api/campaigns/:path*',
+    '/api/lucky-draws/:path*',
     '/api/ranges/:path*',
     '/api/stores/:path*',
     '/api/inventory/:path*',

@@ -120,6 +120,7 @@ const subscriptionPlanSchema = new mongoose.Schema(
       canDuplicateCampaign: { type: Boolean, default: false },
       canScheduleCampaign: { type: Boolean, default: false },
       canUseDynamicRewards: { type: Boolean, default: false },
+      canUseLuckyDraw: { type: Boolean, default: false },
 
       // Store Features
       canAddStore: { type: Boolean, default: true },
