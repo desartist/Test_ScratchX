@@ -92,6 +92,36 @@ describe('redeemClaimCode', () => {
     expect(String(result.redeemedByAccountId)).toBe(String(staff._id));
   });
 
+  it('uses the staff member\'s own store: recorded when it is one of the campaign\'s stores', async () => {
+    const { campaign } = await seedWinner();
+    await insertAccount({ _id: campaign.merchantId, role: 'Merchant' });
+    const ownStore = campaign.assignedStores[0].storeId;
+    const staff = { _id: newId(), role: 'Store_Staff', parentId: campaign.merchantId, storeId: ownStore };
+
+    const result = await redeemClaimCode({ claimCode: 'ABCD2345', account: staff });
+
+    expect(String(result.redeemedAtStoreId)).toBe(String(ownStore));
+  });
+
+  it('refuses store staff whose store is not part of the campaign, and leaves the prize unredeemed', async () => {
+    const { campaign } = await seedWinner();
+    await insertAccount({ _id: campaign.merchantId, role: 'Merchant' });
+    const staff = { _id: newId(), role: 'Store_Staff', parentId: campaign.merchantId, storeId: newId() };
+
+    await expect(redeemClaimCode({ claimCode: 'ABCD2345', account: staff })).rejects.toThrow(/not valid at that store/);
+    expect((await LuckyDrawWinner.findOne({ claimCode: 'ABCD2345' })).status).toBe('notified');
+  });
+
+  it('does not apply a store rule to the merchant or a manager', async () => {
+    const { campaign } = await seedWinner();
+    const result = await redeemClaimCode({
+      claimCode: 'ABCD2345',
+      account: { _id: campaign.merchantId, role: 'Merchant', storeId: newId() },
+    });
+    expect(result.status).toBe('redeemed');
+    expect(result.redeemedAtStoreId).toBeUndefined();
+  });
+
   it('can redeem a winner whose SMS never went out (still pending)', async () => {
     const { campaign } = await seedWinner({ status: 'pending' });
     await expect(redeemClaimCode({ claimCode: 'ABCD2345', account: merchantAccount(campaign) })).resolves.toBeDefined();
