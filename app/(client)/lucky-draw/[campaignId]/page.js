@@ -92,7 +92,13 @@ function EntryPage() {
   if (loadError) {
     return (
       <div className={styles.page}>
-        <div className={styles.card}><p className={styles.error} role="alert">{loadError}</p></div>
+        <div className={styles.card}>
+          <div className={styles.panel}>
+            <h1 className={styles.title}>We couldn&rsquo;t open this Lucky Draw</h1>
+            <p className={styles.error} role="alert">{loadError}</p>
+            <p className={styles.muted}>Please scan the QR code at the store again, or ask a member of staff for help.</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -110,8 +116,8 @@ function EntryPage() {
         <div className={styles.panel}>
           <h1 className={styles.title}>{campaign.name}</h1>
           {campaign.description && <p className={styles.muted}>{campaign.description}</p>}
-          <DrawDate drawDate={campaign.drawDate} previousDrawDate={campaign.previousDrawDate} />
-          <p className={styles.notice} role="note">{campaign.notice}</p>
+          {!entered && <DrawDate drawDate={campaign.drawDate} previousDrawDate={campaign.previousDrawDate} />}
+          {!entered && <p className={styles.notice} role="note">{campaign.notice}</p>}
         </div>
 
         <div className={styles.panel}>
@@ -177,7 +183,7 @@ function EntryPage() {
           </form>
           {statusError && <p className={styles.error} role="alert">{statusError}</p>}
           {status && (
-            <div role="status">
+            <div role="status" className={styles.result}>
               <p><strong>{status.totalEntries}</strong> {status.totalEntries === 1 ? "entry" : "entries"} in the next draw.</p>
               <DrawDate drawDate={status.drawDate} previousDrawDate={status.previousDrawDate} />
               {status.wins.map((win, i) => (

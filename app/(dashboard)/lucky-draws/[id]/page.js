@@ -107,10 +107,11 @@ function LuckyDrawDetail() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>{campaign.name}</h1>
-          <p className={styles.subtitle}>
-            <span className={`${styles.chip} ${styles[`chip_${campaign.status}`]}`}>{STATUS_LABEL[campaign.status]}</span>{" "}
-            {isManual ? "You run the draw" : "Draws automatically"} · Entries {formatDateTime(campaign.startDate)} to {formatDateTime(campaign.endDate)}
-          </p>
+          <div className={styles.metaRow}>
+            <span className={`${styles.chip} ${styles[`chip_${campaign.status}`]}`}>{STATUS_LABEL[campaign.status]}</span>
+            <span className={styles.metaText}>{isManual ? "You run the draw" : "Draws automatically"}</span>
+          </div>
+          <p className={styles.subtitle}>Entries open {formatDateTime(campaign.startDate)} and close {formatDateTime(campaign.endDate)}</p>
         </div>
         <div className={styles.actions}>
           {(campaign.status === "draft" || campaign.status === "paused") && (
@@ -189,8 +190,8 @@ function LuckyDrawDetail() {
           <p className={styles.notice}><strong>What customers are told:</strong> {DATE_CHANGE_NOTICE}</p>
 
           {openDraw.dateHistory?.length > 0 && (
-            <div>
-              <h3 className={styles.sectionTitle}>Date changes</h3>
+            <div className={styles.historyList}>
+              <h3 className={styles.subTitle}>Date changes</h3>
               {[...openDraw.dateHistory].reverse().map((change) => (
                 <div key={change.changedAt} className={styles.historyItem}>
                   <div>{formatDateTime(change.previousDate)} → <strong>{formatDateTime(change.newDate)}</strong></div>
@@ -215,12 +216,20 @@ function LuckyDrawDetail() {
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Entries and prizes</h2>
-        <ul>
-          {campaign.entryTiers.map((tier, i) => <li key={i}>{describeTier(tier)}</li>)}
-        </ul>
-        <ol>
-          {campaign.prizeTiers.map((prize) => <li key={prize.rank}>{prize.prizeDescription}</li>)}
-        </ol>
+        <div className={styles.twoCol}>
+          <div>
+            <h3 className={styles.subTitle}>Entries per bill</h3>
+            <ul className={styles.list}>
+              {campaign.entryTiers.map((tier, i) => <li key={i}>{describeTier(tier)}</li>)}
+            </ul>
+          </div>
+          <div>
+            <h3 className={styles.subTitle}>Prizes, drawn in order</h3>
+            <ol className={styles.list}>
+              {campaign.prizeTiers.map((prize) => <li key={prize.rank}>{prize.prizeDescription}</li>)}
+            </ol>
+          </div>
+        </div>
         {campaign.maxEntriesPerCustomerPerPeriod && <p className={styles.muted}>Limit: {campaign.maxEntriesPerCustomerPerPeriod} entries per customer per draw.</p>}
       </section>
 
@@ -247,6 +256,21 @@ function LuckyDrawDetail() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {winners.length > 0 && (
+          <div className={styles.winnerCards}>
+            {winners.map((winner) => (
+              <div key={winner._id} className={styles.winnerCard}>
+                <div className={styles.cardTop}>
+                  <strong>#{winner.rank} {winner.prizeDescription}</strong>
+                  <span className={`${styles.chip} ${styles[`chip_${winner.status}`]}`}>{winner.status}</span>
+                </div>
+                <div>{winner.customerName} <span className={styles.muted}>{maskPhone(winner.customerPhone)}</span></div>
+                <div>Claim code <span className={styles.mono}>{winner.claimCode}</span></div>
+                <div className={styles.muted}>Claim by {formatDateTime(winner.expiresAt)}</div>
+              </div>
+            ))}
           </div>
         )}
         {pastDraws.length > 0 && (

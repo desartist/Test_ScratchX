@@ -43,7 +43,13 @@ function NewLuckyDrawForm() {
       }));
 
     api("/api/stores?limit=100&status=active")
-      .then((data) => !cancelled && setStores(Array.isArray(data) ? data : data?.stores || []))
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : data?.stores || [];
+        setStores(list);
+        // A merchant with a single store almost certainly means that one: preselect it.
+        if (list.length === 1) setForm((f) => (f.storeIds.length ? f : { ...f, storeIds: [list[0]._id] }));
+      })
       .catch((err) => !cancelled && setError(err.message))
       .finally(() => !cancelled && applyDefaults());
     return () => {
@@ -188,8 +194,8 @@ function NewLuckyDrawForm() {
           <h2 className={styles.sectionTitle}>Prizes</h2>
           <p className={styles.hint}>Listed in order: the first prize is drawn first. One customer can win only one prize per draw.</p>
           {form.prizes.map((prize, index) => (
-            <div key={index} className={styles.tierRow}>
-              <div className={styles.field} style={{ gridColumn: "span 2" }}>
+            <div key={index} className={styles.prizeRow}>
+              <div className={styles.field}>
                 <label className={styles.label} htmlFor={`ld-p-${index}`}>Prize {index + 1}</label>
                 <input id={`ld-p-${index}`} className={styles.input} value={prize.prizeDescription} onChange={(e) => setRow("prizes", index, { prizeDescription: e.target.value })} placeholder="e.g. 43-inch Smart TV" required maxLength={200} />
               </div>

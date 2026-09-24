@@ -11,16 +11,36 @@ const STATUS_LABEL = { draft: "Draft", active: "Active", paused: "Paused", ended
 function LuckyDrawList() {
   const [campaigns, setCampaigns] = useState(null);
   const [error, setError] = useState("");
+  const [notOwner, setNotOwner] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     api("/api/lucky-draws/campaigns")
       .then((data) => !cancelled && setCampaigns(data))
-      .catch((err) => !cancelled && setError(err.message));
+      .catch((err) => {
+        if (cancelled) return;
+        if (err.status === 403) setNotOwner(true);
+        else setError(err.message);
+      });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  if (notOwner) {
+    return (
+      <div className={styles.container}>
+        <div>
+          <h1 className={styles.title}>Lucky Draw</h1>
+          <p className={styles.subtitle}>Only the store owner can create and manage Lucky Draws.</p>
+        </div>
+        <div className={styles.empty}>
+          <p>If you hand out prizes at a store, you can redeem a winner&rsquo;s claim code here.</p>
+          <Link href="/lucky-draws/redeem" className={styles.primaryButton}>Redeem a prize</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -46,7 +66,7 @@ function LuckyDrawList() {
         </div>
       )}
 
-      <div className={styles.list}>
+      <div className={styles.campaignList}>
         {(campaigns || []).map((campaign) => (
           <Link key={campaign._id} href={`/lucky-draws/${campaign._id}`} className={styles.card}>
             <div className={styles.cardTop}>
