@@ -10,6 +10,7 @@ import {
   setCampaignStatus,
   listCampaigns,
   getCampaignDetail,
+  getOwnedCampaign,
 } from '@/lib/services/luckyDraw/campaignService';
 import { AuthorizationError, ValidationError, NotFoundError, ConflictError } from '@/lib/errors';
 import { createEntry, createOpenDraw, campaignData, newId, DAY } from '../../helpers/luckyDrawFixtures';
@@ -229,5 +230,15 @@ describe('listCampaigns and getCampaignDetail', () => {
     const campaign = await LuckyDrawCampaign.create(campaignData());
     await expect(getCampaignDetail(String(newId()), String(campaign._id))).rejects.toThrow(NotFoundError);
     await expect(getCampaignDetail(String(newId()), 'nope')).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe('getOwnedCampaign', () => {
+  it('returns the merchant\'s own campaign and hides everyone else\'s', async () => {
+    const merchantId = newId();
+    const mine = await LuckyDrawCampaign.create(campaignData({ merchantId }));
+    expect(String((await getOwnedCampaign(String(merchantId), String(mine._id)))._id)).toBe(String(mine._id));
+    await expect(getOwnedCampaign(String(newId()), String(mine._id))).rejects.toThrow(NotFoundError);
+    await expect(getOwnedCampaign(String(merchantId), 'nope')).rejects.toThrow(NotFoundError);
   });
 });
