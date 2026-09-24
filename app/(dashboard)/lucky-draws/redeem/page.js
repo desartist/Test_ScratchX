@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api, formatDateTime } from "@/lib/luckyDraw/clientApi";
 import styles from "../luckyDraws.module.css";

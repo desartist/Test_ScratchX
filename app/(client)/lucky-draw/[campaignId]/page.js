@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api, describeTier, formatDateTime } from "@/lib/luckyDraw/clientApi";
