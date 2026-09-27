@@ -65,7 +65,21 @@
       "Bash(xargs -I{} echo \"  errors on original DashboardLayout: {} → pre-existing ✓\")",
       "Bash(xargs -I{} echo \"  accountModel.js: {} occurrence\\(s\\)\")",
       "Bash(awk -F: '{s+=$2} END {print s\" index declarations\"}')",
-      "Bash(xargs git log --oneline -1)"
+      "Bash(xargs git log --oneline -1)",
+      "Bash(grep -v \"\\\\.css$\")",
+      "Bash(grep -n '$inc\\\\|used_scratch\\\\|allocated\\\\|create\\(\\\\|new CustomerParticipation\\\\|ScratchCard\\\\|expires_at\\\\|status:' app/api/customer/participate/route.js)",
+      "Bash(npx jest *)",
+      "Bash(awk '/export async function GET/,/^}/' \"app/api/campaigns/[id]/route.js\")",
+      "Bash(sed -i '' 's/const merchantId = new mongoose.Types.ObjectId\\(\\);/\\\\/\\\\/ `mock` prefix: jest hoists jest.mock\\(\\) above this line, and only\\\\n\\\\/\\\\/ mock*-named variables may be referenced from a factory.\\\\nconst mockMerchantId = new mongoose.Types.ObjectId\\(\\);\\\\nconst merchantId = mockMerchantId;/' __tests__/unit/allocateScratchSetMode.test.js)",
+      "Bash(sed -i '' 's/account: { _id: merchantId, role/account: { _id: mockMerchantId, role/' __tests__/unit/allocateScratchSetMode.test.js)",
+      "Bash(cp app/api/campaigns/[id]/allocate-scratch/route.js /private/tmp/claude-501/-Users-abhishekpratapsingh-Desktop-coupon-campaigns/8dd81ca1-2be6-4bfc-b6f2-7ad5d310c0ce/scratchpad/route.bak)",
+      "Bash(sed -i '' 's/const newTotal = isSetMode ? requested : previousAllocation + requested;/const newTotal = previousAllocation + requested; \\\\/\\\\/ MUTATION/' app/api/campaigns/[id]/allocate-scratch/route.js)",
+      "Bash(grep -E \"^jest-environment-jsdom$|^jsdom$\")",
+      "Bash(awk '/^\\\\.\\(filtersSection|searchBar|searchInput|filterControls|select\\)[ :{.]/,/^}/' \"app/\\(dashboard\\)/customers/customers.module.css\")",
+      "Bash(node -e \"const l=require\\('lucide-react'\\); for \\(const n of ['Search','Users','CalendarCheck','Gift','AlertCircle']\\) console.log\\(n, typeof l[n] === 'object' || typeof l[n] === 'function' ? 'ok' : 'MISSING'\\)\")",
+      "Bash(awk '/^\\\\.\\(container|main|mainContent|content|pageContent|contentArea|mainWrapper\\)[ {]/,/^}/' components/dashboards/DashboardLayout.module.css)",
+      "Bash(awk '/^\\\\.whatsappBtn[ {]/,/^}/' components/whatsapp/whatsapp.module.css)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/__srleak_repro.html)"
     ]
   }
 }

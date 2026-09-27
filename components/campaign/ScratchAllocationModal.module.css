@@ -173,10 +173,21 @@
   font-family: var(--font-afacad), system-ui, sans-serif;
 }
 
-.chip:hover {
-  border-color: #ef9e1b;
-  color: #ef9e1b;
-  background: #fffbf7;
+/* Hover only on devices that really hover. On touch screens :hover sticks to
+   the last-tapped chip, which then looks like a second selection. Also
+   skip the active chip, whose filled style the hover would otherwise wash
+   out. */
+@media (hover: hover) {
+  .chip:not(.chipActive):not(:disabled):hover {
+    border-color: #ef9e1b;
+    color: #ef9e1b;
+    background: #fffbf7;
+  }
+}
+
+.chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .chipActive {
@@ -234,6 +245,15 @@
   font-weight: 800;
   color: #010f44;
   letter-spacing: -0.2px;
+}
+
+/* "+2,000 from the current 13,100" under the new-total box. */
+.deltaHint {
+  margin: -8px 0 0;
+  padding: 0 4px;
+  font-size: 0.8rem;
+  color: #637080;
+  text-align: right;
 }
 
 /* ── Info & Error Boxes ────────────────────────────────────────────── */
