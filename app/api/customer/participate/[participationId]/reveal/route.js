@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/connectDB";
 import CustomerParticipation from "@/models/customerParticipationModel";
 import ScratchCardRecord from "@/models/scratchCardRecordModel";
 import { redeemInventory } from "@/lib/services/inventoryManagementService";
+import { isWithinRevealWindow, REVEAL_GRACE_MS } from "@/lib/participationCooldown";
 
 /**
  * POST /api/customer/participate/[participationId]/reveal
@@ -77,6 +78,32 @@ export async function POST(request, { params }) {
       return NextResponse.json(
         { success: false, error: "Reward already revealed" },
         { status: 400 },
+      );
+    }
+
+    // A retired attempt (the customer resubmitted with a different bill range,
+    // see /api/customer/participate) must not be revealable — otherwise the
+    // old tab could still reveal a second coupon alongside the new one.
+    if (participation.status === "expired" || participation.status === "failed") {
+      return NextResponse.json(
+        { success: false, error: "This session has expired. Please scan the QR code again.", expired: true },
+        { status: 410 },
+      );
+    }
+
+    // Stale session — the 5-minute reveal window has passed. The scratch page
+    // checks this on load, but a tab left open past the window could still
+    // scratch and reveal, so enforce it here too (with a short grace period
+    // for a customer who was mid-scratch when the window closed).
+    // Only "verified" is produced by the live flow; "initiated" / "scratched"
+    // are covered too since they're equally unrevealed.
+    if (
+      ["initiated", "verified", "scratched"].includes(participation.status) &&
+      !isWithinRevealWindow(participation, { graceMs: REVEAL_GRACE_MS })
+    ) {
+      return NextResponse.json(
+        { success: false, error: "This session has expired. Please scan the QR code again.", expired: true },
+        { status: 410 },
       );
     }
 

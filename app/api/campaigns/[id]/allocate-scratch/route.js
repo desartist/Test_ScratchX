@@ -23,7 +23,7 @@ export async function POST(request, { params }) {
 
     const { id: campaignId } = await params;
     const body = await request.json();
-    const { allocationAmount } = body;
+    const { allocationAmount, targetTotal } = body;
 
     if (!campaignId) {
       return Response.json(
@@ -32,14 +32,23 @@ export async function POST(request, { params }) {
       );
     }
 
-    if (allocationAmount === undefined || allocationAmount === null) {
+    // Two modes:
+    //   • { allocationAmount } — ADD that many to the existing allocation.
+    //     The default; the launch wizard and other callers rely on it.
+    //   • { targetTotal }      — SET the campaign's allocation to exactly this
+    //     total (the Allocate Scratches popup on the campaign page). May be
+    //     lower than today's allocation, but never below what's been used.
+    const isSetMode = targetTotal !== undefined && targetTotal !== null;
+    const requested = isSetMode ? targetTotal : allocationAmount;
+
+    if (requested === undefined || requested === null) {
       return Response.json(
         { success: false, message: 'Allocation amount is required' },
         { status: 400 }
       );
     }
 
-    if (allocationAmount <= 0) {
+    if (!Number.isFinite(requested) || requested <= 0) {
       return Response.json(
         { success: false, message: 'Allocation amount must be greater than 0' },
         { status: 400 }
@@ -47,27 +56,6 @@ export async function POST(request, { params }) {
     }
 
     await connectDB();
-
-    // Validate subscription against monthly scratch limits
-    const canAllocate = await subscriptionValidationService.canAllocateScratchCards(
-      userId,
-      allocationAmount,
-      'merchant'
-    );
-
-    if (!canAllocate.allowed) {
-      return Response.json(
-        {
-          success: false,
-          error: canAllocate.message,
-          details: {
-            limit: canAllocate.limit,
-            available: canAllocate.available
-          }
-        },
-        { status: 403 }
-      );
-    }
 
     // Fetch campaign
     const campaign = await Campaign.findById(campaignId);
@@ -91,55 +79,111 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Gate allocation on the subscription scratch entitlement.
-    // Business rule: during the 365-day unlimited grant, allocation is unlimited.
-    // After it expires, the merchant must have purchased scratch packs; otherwise
-    // they are prompted to buy more.
-    const entitlement = await scratchEntitlementService.checkEntitlement(
-      userId,
-      'merchant'
-    );
+    const previousAllocation = campaign.allocated_scratch_cards || 0;
+    const used = campaign.used_scratch_cards || 0;
 
-    if (entitlement.type === 'none') {
+    // In set mode the requested value is the new total, so the amount being
+    // added is the difference — which can be zero or negative (a reduction).
+    const newTotal = isSetMode ? requested : previousAllocation + requested;
+    const amountToAdd = newTotal - previousAllocation;
+
+    // Scratches customers have already used can't be taken back.
+    if (newTotal < used) {
       return Response.json(
         {
           success: false,
-          error:
-            'Your unlimited scratches have expired. Purchase a scratch package to allocate scratches to this campaign.',
-          actionRequired: 'purchase_scratches',
-          actionUrl: '/billing/scratch-packs',
+          error: `${used.toLocaleString()} scratches have already been used on this campaign, so the allocation can't go below ${used.toLocaleString()}.`,
+          details: { used, requested: newTotal },
         },
-        { status: 403 }
+        { status: 400 }
       );
     }
 
-    if (entitlement.type === 'pack') {
-      // Limited by remaining balance in purchased packs.
-      const packRemaining = entitlement.totalRemaining || 0;
-      if (allocationAmount > packRemaining) {
+    if (amountToAdd === 0) {
+      return Response.json({
+        success: true,
+        message: 'Allocation unchanged',
+        data: {
+          _id: campaign._id,
+          allocated_scratch_cards: previousAllocation,
+          used_scratch_cards: used,
+          remaining_scratch_cards: campaign.remaining_scratch_cards,
+          previous_allocation: previousAllocation,
+          added: 0,
+        },
+      });
+    }
+
+    // Plan limits and scratch balance only gate an INCREASE. Allocation is a
+    // per-campaign cap — the merchant's pack balance is only debited when a
+    // customer actually scans (scratchEntitlementService.consumeScratch) — so
+    // lowering it never needs a balance, and a merchant whose grant has
+    // expired can still trim an existing campaign.
+    if (amountToAdd > 0) {
+      // Validate subscription against monthly scratch limits
+      const canAllocate = await subscriptionValidationService.canAllocateScratchCards(
+        userId,
+        amountToAdd,
+        'merchant'
+      );
+
+      if (!canAllocate.allowed) {
         return Response.json(
           {
             success: false,
-            error: `Insufficient scratches. Available: ${packRemaining}, Requested: ${allocationAmount}. Purchase more to continue.`,
-            actionRequired: 'purchase_scratches',
-            actionUrl: '/billing/scratch-packs',
-            details: { available: packRemaining, requested: allocationAmount },
+            error: canAllocate.message,
+            details: {
+              limit: canAllocate.limit,
+              available: canAllocate.available
+            }
           },
-          { status: 400 }
+          { status: 403 }
         );
       }
-    }
-    // entitlement.type === 'unlimited' → no balance cap during the 365-day grant.
 
-    // Update campaign allocation — additive. Each successful call tops up
-    // the campaign's existing pool rather than replacing it, so allocating
-    // 500 to a campaign that already has 2,000 results in 2,500, not 500.
-    // (allocationAmount itself, checked above, is only ever the *new* amount
-    // being added — never the intended new total.)
-    const previousAllocation = campaign.allocated_scratch_cards || 0;
-    campaign.allocated_scratch_cards = previousAllocation + allocationAmount;
-    campaign.remaining_scratch_cards =
-      campaign.allocated_scratch_cards - (campaign.used_scratch_cards || 0);
+      // Gate allocation on the subscription scratch entitlement.
+      // Business rule: during the 365-day unlimited grant, allocation is unlimited.
+      // After it expires, the merchant must have purchased scratch packs; otherwise
+      // they are prompted to buy more.
+      const entitlement = await scratchEntitlementService.checkEntitlement(
+        userId,
+        'merchant'
+      );
+
+      if (entitlement.type === 'none') {
+        return Response.json(
+          {
+            success: false,
+            error:
+              'Your unlimited scratches have expired. Purchase a scratch package to allocate scratches to this campaign.',
+            actionRequired: 'purchase_scratches',
+            actionUrl: '/billing/scratch-packs',
+          },
+          { status: 403 }
+        );
+      }
+
+      if (entitlement.type === 'pack') {
+        // Limited by remaining balance in purchased packs.
+        const packRemaining = entitlement.totalRemaining || 0;
+        if (amountToAdd > packRemaining) {
+          return Response.json(
+            {
+              success: false,
+              error: `Insufficient scratches. Available: ${packRemaining}, Requested: ${amountToAdd}. Purchase more to continue.`,
+              actionRequired: 'purchase_scratches',
+              actionUrl: '/billing/scratch-packs',
+              details: { available: packRemaining, requested: amountToAdd },
+            },
+            { status: 400 }
+          );
+        }
+      }
+      // entitlement.type === 'unlimited' → no balance cap during the 365-day grant.
+    }
+
+    campaign.allocated_scratch_cards = newTotal;
+    campaign.remaining_scratch_cards = newTotal - used;
 
     await campaign.save();
 
@@ -152,7 +196,8 @@ export async function POST(request, { params }) {
         used_scratch_cards: campaign.used_scratch_cards,
         remaining_scratch_cards: campaign.remaining_scratch_cards,
         previous_allocation: previousAllocation,
-        added: allocationAmount,
+        // Negative when set mode lowered the allocation.
+        added: amountToAdd,
       },
     });
   } catch (error) {

@@ -9,6 +9,10 @@ import CustomerParticipation from "@/models/customerParticipationModel";
 import ScratchCardRecord from "@/models/scratchCardRecordModel";
 import { consumeInventory } from "@/lib/services/inventoryManagementService";
 import { validateCoordinates } from "@/lib/utils/geoUtils";
+import {
+  getCooldown,
+  findResumableParticipation,
+} from "@/lib/participationCooldown";
 
 /**
  * POST /api/customer/participate
@@ -214,49 +218,31 @@ export async function POST(request) {
     });
 
     // ===== REPEAT CUSTOMER / COOLDOWN CHECK =====
-    // This is a time-based cooldown, not a permanent one-participation-ever
-    // block — the same mobile number can participate again once the cooldown
-    // window has passed, since customers may visit the store multiple times
-    // in a single day. (The frontend already gates this via
-    // /api/customer/check-participation before reaching here; this check is
-    // a defense-in-depth backup against direct API calls.)
-    // Reveal/redeem window is 5 minutes (see expires_at below); cooldown is
-    // an additional 10 minutes on top of that — 15 minutes total from the
-    // original scan before the same number can participate again.
-    const REVEAL_WINDOW_MINUTES = 5;
-    const POST_REVEAL_COOLDOWN_MINUTES = 10;
-    const PARTICIPATION_COOLDOWN_MINUTES = REVEAL_WINDOW_MINUTES + POST_REVEAL_COOLDOWN_MINUTES;
+    // Time-based, not one-participation-ever — customers may visit the store
+    // several times a day. The scan page already gates this via
+    // /api/customer/check-participation; this is the defense-in-depth backup
+    // against direct API calls. Both use the same rule: only a REVEALED coupon
+    // starts the cooldown (lib/participationCooldown.js).
+    const cooldown = await getCooldown(campaignId, customerMobile);
 
-    const lastParticipation = await CustomerParticipation.findOne({
-      campaign_id: campaignId,
-      customer_mobile: customerMobile,
-    })
-      .sort({ createdAt: -1 })
-      .lean();
+    // A repeat customer is one who has actually won before — abandoned form
+    // submissions don't count as a visit.
+    const isRepeatCustomer = !!cooldown.last;
 
-    const isRepeatCustomer = !!lastParticipation;
-
-    if (lastParticipation) {
-      const minutesSinceLast =
-        (Date.now() - new Date(lastParticipation.createdAt).getTime()) / 60000;
-
-      if (minutesSinceLast < PARTICIPATION_COOLDOWN_MINUTES) {
-        const remainingMinutes = Math.ceil(
-          PARTICIPATION_COOLDOWN_MINUTES - minutesSinceLast,
-        );
-        return NextResponse.json(
-          {
-            success: false,
-            error: `You can participate again in ${remainingMinutes} minute${remainingMinutes === 1 ? "" : "s"}.`,
-            data: {
-              cooldown: true,
-              remainingMinutes,
-              lastParticipationAt: lastParticipation.createdAt,
-            },
+    if (cooldown.inCooldown) {
+      const { remainingMinutes } = cooldown;
+      return NextResponse.json(
+        {
+          success: false,
+          error: `You can participate again in ${remainingMinutes} minute${remainingMinutes === 1 ? "" : "s"}.`,
+          data: {
+            cooldown: true,
+            remainingMinutes,
+            lastParticipationAt: cooldown.revealedAt,
           },
-          { status: 429 },
-        );
-      }
+        },
+        { status: 429 },
+      );
     }
 
     // ===== VALIDATE CAMPAIGN (already fetched above for the wholesale check) =====
@@ -430,6 +416,54 @@ export async function POST(request) {
         },
         { status: 400 },
       );
+    }
+
+    // ===== RESUME AN UNREVEALED ATTEMPT =====
+    // Since only a revealed coupon triggers the cooldown, a customer can now
+    // submit, go back, and submit again. Every fresh participation consumes a
+    // scratch card from the merchant's inventory and rolls a new reward, so
+    // re-creating one on each resubmit would drain inventory. Instead, hand
+    // back the attempt they already have — same coupon, nothing consumed.
+    const resumable = await findResumableParticipation(campaignId, customerMobile);
+    if (resumable) {
+      if (
+        String(resumable.range_id) === String(rangeId) &&
+        resumable.scratch_card_id
+      ) {
+        const participationIdString = resumable._id.toString();
+        console.log("↩️ Resuming unrevealed participation:", participationIdString);
+        return NextResponse.json(
+          {
+            success: true,
+            data: {
+              resumed: true,
+              participation: {
+                _id: resumable._id,
+                campaignId: resumable.campaign_id,
+                storeId: resumable.store_id,
+                matchedStoreId: resumable.matched_store_id,
+                matchedStoreName: resumable.matched_store_name,
+                customerName: resumable.customer_name,
+                customerMobile: resumable.customer_mobile,
+                status: resumable.status,
+                createdAt: resumable.createdAt,
+              },
+              participationId: participationIdString,
+              scratchCardId: resumable.scratch_card_id.toString(),
+              expiresAt: resumable.expires_at,
+              rewardScreenUrl: `/customer/campaign/${campaign._id}/scratch/${participationIdString}`,
+            },
+          },
+          { status: 200 },
+        );
+      }
+
+      // They picked a different bill range this time, so the old attempt's
+      // pre-rolled reward is for the wrong range. Retire it — otherwise it
+      // stays revealable in another tab alongside the new one, and the
+      // customer could reveal two coupons in a single visit.
+      resumable.status = "expired";
+      await resumable.save();
     }
 
     // Select random reward from the range

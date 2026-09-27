@@ -244,11 +244,16 @@ export default function CouponPage() {
     }, 350);
 
     try {
-      await fetch(`/api/customer/participate/${participationId}/reveal`, {
+      const res = await fetch(`/api/customer/participate/${participationId}/reveal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scratchCardId: participationRef.current?.scratchCardId }),
       });
+      // The reveal above is optimistic. If the server says this session was
+      // retired (the customer started a newer attempt in another tab), swap
+      // the reward for the expired screen — otherwise the cashier would see
+      // and honour a coupon that was never recorded as won.
+      if (res.status === 410) setExpired(true);
     } catch (_) {}
   }, [participationId]);
 

@@ -150,7 +150,11 @@ export default function ScanClientPage() {
     if (campaignId) {
       fetchCampaign();
     }
-  }, [campaignId, step]);
+    // Deliberately NOT keyed on `step`. It used to be, so any step change —
+    // e.g. submitting into COOLDOWN — re-ran this load, which calls
+    // setStep("FORM") above: the "Try Again Later" screen was knocked back to
+    // the form after the 1–2 s the refetch took, before anyone could read it.
+  }, [campaignId]);
 
   // ===== FORM VALIDATION =====
   const validateForm = () => {

@@ -223,6 +223,12 @@ export default function ScratchCardPage() {
         body: JSON.stringify({ scratchCardId: participation?.scratchCardId }),
       });
       const revealData = await res.json();
+      // Optimistic reveal above — if the server retired this session (a newer
+      // attempt superseded it), replace the reward so it can't be redeemed.
+      if (res.status === 410) {
+        setError(revealData?.error || "This session has expired. Please scan the QR code again.");
+        return;
+      }
       if (revealData?.data?.rewardClaimExpiresAt) {
         startTimer(revealData.data.rewardClaimExpiresAt);
       }

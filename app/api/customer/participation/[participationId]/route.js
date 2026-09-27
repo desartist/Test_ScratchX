@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/connectDB';
 import rangeModel from '@/models/rangeModel';
+import { isWithinRevealWindow } from '@/lib/participationCooldown';
 
 /**
  * GET /api/customer/participation/[participationId]
@@ -75,16 +76,25 @@ export async function GET(request, { params }) {
     // Only enforce 5-min expiry for sessions in "verified" status that haven't been revealed yet
     // Revealed/redeemed sessions should always be accessible
     if (participation.status === 'verified') {
-      const createdAt = new Date(participation.createdAt);
-      const ageInSeconds = (Date.now() - createdAt.getTime()) / 1000;
-      // 5-minute (300 second) window to reveal the reward
-      if (ageInSeconds > 300) {
+      // 5-minute window to reveal the reward — same definition the reveal
+      // API enforces (lib/participationCooldown.js). No grace here: grace only
+      // covers a scratch already in progress, not opening a stale card.
+      if (!isWithinRevealWindow(participation)) {
+        const ageInSeconds = Math.round((Date.now() - new Date(participation.createdAt).getTime()) / 1000);
         console.log(`[Participation Expiry] Status: ${participation.status}, Age: ${ageInSeconds}s, Expired: true`);
         return NextResponse.json(
           { success: false, error: 'Reward session has expired', expired: true },
           { status: 410 }
         );
       }
+    } else if (participation.status === 'expired' || participation.status === 'failed') {
+      // Retired attempt — e.g. the customer resubmitted the scan form with a
+      // different bill range, which supersedes this one (see
+      // /api/customer/participate). It must not be scratchable.
+      return NextResponse.json(
+        { success: false, error: 'Reward session has expired', expired: true },
+        { status: 410 }
+      );
     } else if (participation.status === 'revealed' || participation.status === 'redeemed') {
       // Already revealed/redeemed sessions have a longer expiry - allow indefinite access
       // User can show coupon to cashier for a reasonable period (no hard expiry on access)

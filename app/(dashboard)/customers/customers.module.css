@@ -1,8 +1,16 @@
+/* Customers page — merchant view.
+ *
+ * Stat cards, status tabs, table and badges follow the Super Admin customers
+ * page (app/(dashboard)/admin-customers) so every dashboard lists customers
+ * the same way. The page shell, header, search box and selects keep the
+ * merchant dashboard's own look.
+ */
+
 /* ── Main Container ────────────────────────────────────────── */
 .container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   max-width: 1600px;
   padding: 24px;
   margin: 0 auto;
@@ -10,6 +18,7 @@
   min-height: 100vh;
   font-family: var(--font-afacad), system-ui, sans-serif;
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* ── Header ────────────────────────────────────────────────── */
@@ -39,90 +48,26 @@
   font-family: var(--font-afacad-flux), system-ui, sans-serif;
 }
 
-/* ── Stats Grid (Horizontal Scroll) ────────────────────────── */
-.statsGrid {
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
-  overflow-x: auto;
-  overflow-y: visible;
-  padding: 0 0 10px 0;
-  scroll-behavior: smooth;
-  margin: 0;
-  width: 100%;
-  -webkit-overflow-scrolling: touch;
-  min-height: auto;
+/* ── Stats (shared StatCard) ───────────────────────────────── */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.statsGrid::-webkit-scrollbar {
-  height: 6px;
-  margin-top: 4px;
-}
-
-.statsGrid::-webkit-scrollbar-track {
-  background: #f0f2ff;
-  border-radius: 10px;
-  margin-top: 4px;
-}
-
-.statsGrid::-webkit-scrollbar-thumb {
-  background: #d0d8e4;
-  border-radius: 10px;
-}
-
-.statsGrid::-webkit-scrollbar-thumb:hover {
-  background: #b8c1d6;
-}
-
-.statsGrid > * {
-  min-width: 180px;
-  flex-shrink: 0;
-}
-
-@media (max-width: 1200px) {
-  .statsGrid > * {
-    min-width: 160px;
-  }
-}
-
-@media (max-width: 768px) {
-  .statsGrid {
-    gap: 10px;
-    padding-bottom: 8px;
-  }
-
-  .statsGrid > * {
-    min-width: 140px;
-  }
-}
-
-@media (max-width: 480px) {
-  .statsGrid {
-    gap: 8px;
-    padding-bottom: 6px;
-  }
-
-  .statsGrid > * {
-    min-width: 130px;
-  }
-}
-
-/* ── Filters Section ───────────────────────────────────────── */
-.filtersSection {
+/* ── Filters ───────────────────────────────────────────────── */
+.filterPanel {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 16px;
   background: #fff;
-  border: 1.5px solid #e8eaff;
+  border: 1px solid #ECECF3;
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(1, 15, 68, 0.08);
-  width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
+  min-width: 0;
 }
 
-/* ── Search Bar ────────────────────────────────────────────── */
 .searchBar {
   display: flex;
   align-items: center;
@@ -132,9 +77,7 @@
   border-radius: 12px;
   background: #fafbff;
   transition: all 0.2s ease;
-  width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
 }
 
 .searchBar:focus-within {
@@ -154,7 +97,7 @@
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #010f44;
   outline: none;
   font-family: var(--font-afacad), system-ui, sans-serif;
@@ -166,40 +109,57 @@
   color: #9ba8b8;
 }
 
-/* ── Filter Controls ───────────────────────────────────────── */
-.filterControls {
+/* Status tabs — scroll sideways on narrow screens rather than wrapping. */
+.filterTabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: #f5f6fb;
+  border-radius: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filterTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.filterTab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .filterTab:not(.active):hover {
+    color: #ef9e1b;
+  }
+}
+
+.filterTab.active {
+  background: #ef9e1b;
+  color: #fff;
+}
+
+.filterGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-@media (max-width: 1200px) {
-  .filterControls {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-}
-
-@media (max-width: 768px) {
-  .filterControls {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .filterControls {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
 }
 
 .select {
   width: 100%;
-  padding: 10px 12px;
-  padding-right: 32px;
+  padding: 10px 32px 10px 12px;
   border: 1.5px solid #e0e4ff;
   border-radius: 11px;
   background: #fafbff;
@@ -215,9 +175,9 @@
   background-position: right 8px center;
   background-size: 14px;
   box-sizing: border-box;
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .select:hover:not(:disabled) {
@@ -232,264 +192,234 @@
   background-color: #fff;
 }
 
-/* ── Error Banner ──────────────────────────────────────────── */
-.errorBanner {
-  padding: 14px 16px;
-  background: #fff0f0;
-  border: 1.5px solid #ffc5c5;
-  border-radius: 12px;
-  color: #c0392b;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-/* ── Loading & Empty State ─────────────────────────────────── */
-.loading,
-.empty {
-  text-align: center;
-  padding: 80px 20px;
-  color: #637080;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-/* ── Customers List ────────────────────────────────────────── */
-.customersList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
-
-/* ── Customer Card ─────────────────────────────────────────── */
-.customerCard {
-  display: grid;
-  grid-template-columns: 1fr minmax(50px, auto);
-  gap: 12px;
-  align-items: flex-start;
-  padding: 14px;
+/* ── Table ─────────────────────────────────────────────────── */
+.tableSection {
   background: #fff;
-  border: 1.5px solid #e8eaff;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(1, 15, 68, 0.05);
-  width: 100%;
-  box-sizing: border-box;
-  overflow: visible;
-  min-width: 0;
-}
-
-.customerCard:hover {
-  box-shadow: 0 12px 32px rgba(1, 15, 68, 0.12);
-  border-color: #ef9e1b;
-  transform: translateY(-2px);
-}
-
-/* ── Customer Main Content ─────────────────────────────────── */
-.customerMainContent {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1.5fr;
-  gap: 16px;
-  align-items: flex-start;
-  min-width: 0;
-  width: 100%;
+  border: 1px solid #ECECF3;
+  border-radius: 16px;
   overflow: hidden;
+  min-width: 0;
 }
 
-/* ── Customer Info ─────────────────────────────────────────── */
-.customerInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.tableScroll {
+  /* position: relative is load-bearing. Absolutely positioned descendants
+     (e.g. .srOnly in the actions header) are only clipped by overflow on an
+     ancestor that is inside their containing block. Without a positioned
+     ancestor here, .srOnly sat at the far end of the 880px table, escaped
+     every overflow guard, widened the whole document on phones, and made
+     the browser zoom the page out to fit. */
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  background: #f9fafb;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #eef0f4;
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #010f44;
+  vertical-align: middle;
+  background: #fff;
+}
+
+.row {
+  cursor: pointer;
+  outline: none;
+}
+
+.row:hover td,
+.row:focus-visible td {
+  background: #f9fafb;
+}
+
+.row:focus-visible td:first-child {
+  box-shadow: inset 3px 0 0 #ef9e1b;
+}
+
+/* Keep the customer visible while the rest of the row scrolls sideways. */
+.stickyCol {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.actionsCol {
+  /* Containing block for .srOnly, so it stays inside this cell. */
+  position: relative;
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .customerName {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #010f44;
-  letter-spacing: -0.3px;
-}
-
-.customerMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 0.85rem;
-  color: #637080;
-}
-
-.mobile,
-.email {
   display: flex;
   align-items: center;
   gap: 6px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 700;
   white-space: nowrap;
 }
 
-/* ── Campaign & Store Section ──────────────────────────────── */
-.campaignStore {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 24px;
+.muted {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: #6b7280;
 }
 
-.campaign,
-.store {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.label {
-  font-size: 0.7rem;
-  color: #9ba8b8;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-}
-
-.value {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #010f44;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.nowrap {
   white-space: nowrap;
-  letter-spacing: -0.2px;
-}
-
-.city {
-  font-size: 0.8rem;
-  color: #9ba8b8;
-  font-weight: 500;
-}
-
-/* ── Reward & Status Section ───────────────────────────────── */
-.rewardStatus {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: flex-end;
 }
 
 .reward {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-end;
-}
-
-.reward .value {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #ef9e1b;
-  background: linear-gradient(135deg, #ef9e1b, #f5b23a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.statusBadge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border: 1.5px solid;
-  border-radius: 10px;
   font-weight: 700;
-  font-size: 0.8rem;
-  color: #010f44;
+  color: #ef9e1b;
   white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  background: #f8f9ff;
-  transition: all 0.2s ease;
 }
 
-.statusDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.repeatBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* ── Date Section ──────────────────────────────────────────── */
-.dateSection {
-  display: flex;
-  flex-direction: column;
+/* Status badges — same palette as the Super Admin customers table. */
+.badge {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-width: fit-content;
-  flex-shrink: 0;
-}
-
-.date {
-  font-size: 0.75rem;
-  color: #9ba8b8;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  text-align: center;
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
 }
 
-.participationIcon {
-  width: 36px;
-  height: 36px;
+.badge-verified { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.badge-scratched,
+.badge-revealed { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.badge-redeemed { background: rgba(16, 185, 129, 0.1); color: #059669; }
+.badge-expired,
+.badge-failed { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
+
+.emptyState {
+  padding: 56px 24px !important;
+  text-align: center;
+  color: #6b7280;
+}
+
+.emptyState p {
+  margin: 10px 0 0;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Pagination ────────────────────────────────────────────── */
+.pagination {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: #f0f2ff;
-  border-radius: 10px;
-  font-size: 1.1rem;
-  flex-shrink: 0;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border-top: 1px solid #eef0f4;
 }
 
-/* ── Responsive Design ─────────────────────────────────────── */
-@media (max-width: 1200px) {
-  .customerCard {
-    grid-template-columns: 200px 250px 180px 120px;
-    gap: 16px;
-    padding: 12px 16px;
-  }
+.pageSummary {
+  font-size: 13px;
+  color: #6b7280;
 }
 
+.pageControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pageButton {
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #010f44;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageLabel {
+  font-size: 13px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+/* ── Error ─────────────────────────────────────────────────── */
+.errorState {
+  background: #fff;
+  border: 1px solid #ECECF3;
+  border-radius: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.errorState svg {
+  color: #ef4444;
+  margin-bottom: 12px;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .container {
-    padding: 24px 20px;
-    gap: 24px;
-  }
-
-  .title {
-    font-size: 1.8rem;
-  }
-
-  .customerMainContent {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .campaignStore {
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-  }
-
-  .filtersSection {
-    padding: 16px;
-  }
-
-  .filterControls {
-    grid-template-columns: repeat(2, 1fr);
+  .filterGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -500,235 +430,41 @@
   }
 
   .title {
-    font-size: 1.3rem;
+    font-size: 1.6rem;
   }
 
-  .subtitle {
-    font-size: 0.85rem;
+  /* The table scrolls sideways on phones, like the other dashboards. */
+  .table {
+    min-width: 880px;
   }
 
-  .filtersSection {
-    padding: 12px;
-    gap: 10px;
+  .stickyCol {
+    box-shadow: 1px 0 0 #eef0f4;
   }
 
-  .filterControls {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .select {
-    padding: 9px 10px;
-    padding-right: 28px;
-    font-size: 0.8rem;
-    background-size: 12px;
-    background-position: right 6px center;
-  }
-
-  .searchBar {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-
-  .searchInput {
-    font-size: 0.8rem;
-  }
-
-  .searchBar svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .customerCard {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .customerMainContent {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .customerName {
-    font-size: 0.9rem;
-  }
-
-  .customerMeta {
-    gap: 4px;
-    font-size: 0.75rem;
-  }
-
-  .campaignStore {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .label {
-    font-size: 0.65rem;
-  }
-
-  .value {
-    font-size: 0.85rem;
-  }
-
-  .city {
-    font-size: 0.75rem;
-  }
-
-  .rewardStatus {
-    gap: 10px;
-  }
-
-  .statusBadge {
-    padding: 5px 10px;
-    font-size: 0.7rem;
-  }
-
-  .date {
-    font-size: 0.75rem;
-  }
-
-  .participationIcon {
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
+  .table th,
+  .table td {
+    padding: 12px 14px;
   }
 }
 
 @media (max-width: 480px) {
-  .container {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .title {
-    font-size: 1.1rem;
-  }
-
-  .subtitle {
-    font-size: 0.8rem;
-  }
-
-  .filtersSection {
-    padding: 10px;
-    gap: 8px;
-  }
-
-  .filterControls {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .statsGrid {
-    gap: 8px;
-    padding-bottom: 6px;
-  }
-
-  .statsGrid > * {
-    min-width: 115px;
-  }
-
-  .select {
-    padding: 7px 8px;
-    padding-right: 24px;
-    font-size: 0.7rem;
-  }
-
-  .searchBar {
-    padding: 8px 10px;
-    gap: 8px;
-  }
-
-  .searchInput {
-    font-size: 0.72rem;
-  }
-
-  .searchBar svg {
-    width: 13px;
-    height: 13px;
-  }
-
-  .customersList {
+  /* StatCard is icon-beside-text, which doesn't fit three across on a
+     phone — two per row, with the third taking the full row. */
+  .statGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 
-  .customerCard {
-    padding: 10px;
-    gap: 8px;
-    grid-template-columns: 1fr minmax(35px, auto);
+  .statGrid > :nth-child(3):last-child {
+    grid-column: 1 / -1;
   }
 
-  .customerMainContent {
-    grid-template-columns: 1fr;
-    gap: 8px;
+  .filterPanel {
+    padding: 12px;
   }
 
-  .customerInfo {
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .customerName {
-    font-size: 0.8rem;
-  }
-
-  .customerMeta {
-    font-size: 0.68rem;
-    gap: 2px;
-  }
-
-  .campaignStore {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-
-  .label {
-    font-size: 0.58rem;
-  }
-
-  .value {
-    font-size: 0.74rem;
-  }
-
-  .city {
-    font-size: 0.65rem;
-  }
-
-  .rewardStatus {
-    flex-direction: column;
-    gap: 6px;
-    align-items: flex-start;
-  }
-
-  .reward .value {
-    font-size: 0.76rem;
-  }
-
-  .statusBadge {
-    padding: 3px 6px;
-    font-size: 0.6rem;
-  }
-
-  .statusDot {
-    width: 6px;
-    height: 6px;
-  }
-
-  .dateSection {
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    min-width: 35px;
-  }
-
-  .date {
-    font-size: 0.63rem;
-    line-height: 1.2;
-  }
-
-  .participationIcon {
-    width: 28px;
-    height: 28px;
-    font-size: 0.85rem;
+  .pagination {
+    justify-content: center;
   }
 }
