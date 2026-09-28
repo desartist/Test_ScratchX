@@ -2,6 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "@/components/auth/AuthContext";
+import { dashboardQueryKey } from "@/hooks/queries/useDashboardQuery";
+import { storesQueryKey } from "@/hooks/queries/useStoresQuery";
+import { dashboardCache } from "@/lib/dashboardCache";
 
 export function campaignsListQueryKey(accountId) {
   return ["campaigns", accountId];
@@ -93,6 +96,14 @@ export function useDeleteCampaignMutation() {
         if (!old?.data) return old;
         return { ...old, data: old.data.filter((c) => c._id !== campaignId) };
       });
+      // Live campaigns can be deleted now, so they also show up elsewhere —
+      // the dashboard carousel, store pages and the Customers campaign filter.
+      queryClient.invalidateQueries({ queryKey: dashboardQueryKey(accountId) });
+      queryClient.invalidateQueries({ queryKey: storesQueryKey(accountId) });
+      queryClient.invalidateQueries({ queryKey: ["customers", accountId] });
+      queryClient.removeQueries({ queryKey: ["campaign", campaignId] });
+      // SmartDashboard keeps its own 60 s sessionStorage cache as well.
+      dashboardCache.clearKey(`dashboard_${accountId}`);
     },
   });
 }

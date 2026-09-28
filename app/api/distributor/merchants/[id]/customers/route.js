@@ -77,7 +77,7 @@ export async function GET(request, { params }) {
 
     const [participants, total, statsCounts, campaigns, stores] = await Promise.all([
       CustomerParticipation.find(query)
-        .populate("campaign_id", "campaignName name status")
+        .populate({ path: "campaign_id", select: "campaignName name status", options: { includeDeleted: true } })
         .populate("store_id", "store_name city state store_code")
         .populate("range_id", "minAmount maxAmount")
         .populate("scratch_card_id", "reward_type reward_value reward_description coupon_code")

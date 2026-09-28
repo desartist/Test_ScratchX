@@ -118,7 +118,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 0px;
   text-align: center;
   animation: slideUp 0.22s ease;
   font-family: var(--font-afacad), system-ui, sans-serif;
@@ -207,7 +207,7 @@
 }
 
 .modalTitle {
-  margin: 0;
+  margin: 12px;
   font-size: 1.2rem;
   font-weight: 800;
   color: #010f44;
@@ -215,7 +215,15 @@
 }
 
 .modalText {
-  margin: 0;
+  margin: 0px;
+  font-size: 0.88rem;
+  color: #637080;
+  line-height: 1.55;
+  font-family: var(--font-afacad-flux), system-ui, sans-serif;
+  max-width: 300px;
+}
+.modalText2 {
+  margin-bottom: 12px;
   font-size: 0.88rem;
   color: #637080;
   line-height: 1.55;
@@ -223,22 +231,23 @@
   max-width: 300px;
 }
 
+
 .modalActions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   margin-top: 8px;
 }
 
 .modalCancel {
   flex: 1;
-  padding: 11px 16px;
-  border: 1.5px solid #e0e4ff;
-  background: transparent;
+  padding: 12px 16px;
+  border: 1.5px solid #e8eaff;
+  background: #fff;
   color: #637080;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   font-family: var(--font-afacad), system-ui, sans-serif;
@@ -254,11 +263,11 @@
 
 .modalDelete {
   flex: 1;
-  padding: 11px 16px;
+  padding: 12px 16px;
   background: linear-gradient(135deg, #c0392b, #e74c3c);
   color: #fff;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
@@ -284,6 +293,7 @@
   .modal { padding: 28px 20px 22px; border-radius: 16px; }
   .modalTitle { font-size: 1.05rem; }
   .modalText { font-size: 0.82rem; }
-  .modalActions { flex-direction: column; gap: 8px; }
-  .modalCancel, .modalDelete, .modalCancelFull { width: 100%; padding: 12px; font-size: 0.88rem; }
+  /* Two CTAs stay side by side on phones too — same as every other
+     two-button modal in the app (e.g. ScratchAllocationModal's footer). */
+  .modalCancel, .modalDelete, .modalCancelFull { padding: 12px; font-size: 0.88rem; }
 }

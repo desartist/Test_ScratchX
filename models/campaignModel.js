@@ -266,12 +266,56 @@ const campaignSchema = new mongoose.Schema(
       bgColor: { type: String, default: "#ffffff" },
       brandName: { type: String, default: "" },
       logoUrl: { type: String, default: null }, // data URL or remote URL
-    }
+    },
+    // Soft delete ("archive"). A campaign customers have already used can't be
+    // hard-deleted without orphaning their participations, won coupons and
+    // scan history, so CampaignService.deleteCampaign archives it instead.
+    // Archived campaigns are hidden from every query by the middleware below.
+    // Deliberately NOT indexed: a `$ne: true` filter can't use one, and
+    // skipping it avoids a `db:sync-indexes` step in production.
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date, default: null },
   },
   {
     timestamps: true
   }
 );
+
+// ── Hide archived campaigns by default ───────────────────────────────────
+// Every find / findOne / findById / count / distinct / aggregate on Campaign
+// excludes archived campaigns unless the caller opts in. That covers all the
+// list, dashboard and dropdown queries at once, and makes an archived
+// campaign's QR stop working (the scan flow's findById returns null).
+//
+// Opt in — for places that show HISTORY, e.g. a customer's past
+// participation — with the `includeDeleted` query option:
+//   Campaign.find(filter).setOptions({ includeDeleted: true })
+//   .populate({ path: 'campaign_id', options: { includeDeleted: true } })
+//   Campaign.aggregate(pipeline).option({ includeDeleted: true })
+// A filter that names `isDeleted` itself is also left alone.
+function excludeArchivedCampaigns() {
+  if (this.getOptions().includeDeleted) return;
+  if (Object.prototype.hasOwnProperty.call(this.getFilter(), 'isDeleted')) return;
+  this.where({ isDeleted: { $ne: true } });
+}
+
+campaignSchema.pre(
+  ['find', 'findOne', 'findOneAndUpdate', 'countDocuments', 'distinct'],
+  excludeArchivedCampaigns
+);
+
+campaignSchema.pre('aggregate', function () {
+  if (this.options?.includeDeleted) return;
+  const pipeline = this.pipeline();
+  const match = { $match: { isDeleted: { $ne: true } } };
+  // These stages must stay first in a pipeline.
+  const first = pipeline[0] || {};
+  if (first.$geoNear || first.$search || first.$searchMeta || first.$vectorSearch) {
+    pipeline.splice(1, 0, match);
+  } else {
+    pipeline.unshift(match);
+  }
+});
 
 // Validation: endDate must be after startDate and inventory consistency
 campaignSchema.pre('validate', function () {

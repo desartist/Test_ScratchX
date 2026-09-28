@@ -81,8 +81,12 @@ export default function ScratchAllocationModal({
   // the chosen value replaces currentAllocated rather than adding to it.
   const { data: campaignJson, isPending: campaignLoading } = useCampaignQuery(campaignId, { enabled: open });
   const currentAllocated = Number(campaignJson?.data?.allocated_scratch_cards) || 0;
-  // Scratches customers already used — the allocation can't go below this.
-  const used = Number(campaignJson?.data?.used_scratch_cards) || 0;
+  // Scratches customers already consumed — the allocation can't go below
+  // this. used and redeemed are separate buckets, so both count (matches the
+  // floor in /api/campaigns/[id]/allocate-scratch).
+  const used =
+    (Number(campaignJson?.data?.used_scratch_cards) || 0) +
+    (Number(campaignJson?.data?.redeemed_scratch_cards) || 0);
 
   const loading = subLoading || campaignLoading;
   const invalidateCluster = useInvalidateCampaignCluster();
