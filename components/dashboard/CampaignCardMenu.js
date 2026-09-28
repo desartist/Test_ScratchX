@@ -31,14 +31,16 @@ function DeleteModal({ onConfirm, onCancel, loading, apiError }) {
             </div>
             <h3 className={styles.modalTitle}>Delete Campaign?</h3>
             <p className={styles.modalText}>
-              The campaign will be removed and its QR code will stop working, even if it&apos;s live. This can&apos;t be undone.
+              This campaign will be permanently deleted.
             </p>
+              <p className={styles.modalText2}>
+              Customer and reward data can be viewed anytime from the Customers page.
+            </p>
+
             {/* Campaigns with customer activity are archived, not erased
                 (CampaignService.deleteCampaign) — say so, so nobody fears
                 losing their customer list. */}
-            <div className={styles.modalHint}>
-              Customers who already took part, and the coupons they won, stay in your Customers list.
-            </div>
+            
             <div className={styles.modalActions}>
               <button type="button" className={styles.modalCancel} onClick={onCancel} disabled={loading}>
                 Cancel

@@ -14,6 +14,7 @@ import {
 } from "@/hooks/queries/useCampaignsListQuery";
 import styles from "./campaign.module.css";
 import { SkeletonCardList } from "@/components/ui/SkeletonCard";
+import Snackbar from "@/components/ui/Snackbar";
 
 // Low-scratch threshold: allocated > 0 AND remaining/allocated <= 10%.
 const LOW_SCRATCH_RATIO = 0.1;
@@ -71,6 +72,12 @@ export default function CampaignPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  // Top-of-screen confirmation. Lives on the page, not in the card menu —
+  // the deleted card unmounts as soon as it leaves the list.
+  const [snackbar, setSnackbar] = useState(null);
+  // Stable, so the Snackbar's auto-hide timer isn't restarted every time the
+  // page re-renders (e.g. the list refetching right after the delete).
+  const closeSnackbar = useCallback(() => setSnackbar(null), []);
 
   const {
     data: campaignsJson,
@@ -114,6 +121,7 @@ export default function CampaignPage() {
     async (campaignId) => {
       try {
         await deleteMutation.mutateAsync(campaignId);
+        setSnackbar("Campaign deleted successfully");
         return { success: true };
       } catch (err) {
         return { error: err.message || "Failed to delete campaign." };
@@ -215,10 +223,15 @@ export default function CampaignPage() {
 
   const hasActivePlan = Boolean(account?.activePlan);
 
+  // Rendered in both returns below: deleting the last campaign flips the page
+  // to the empty state, and the confirmation must still show there.
+  const snackbarEl = <Snackbar message={snackbar} onClose={closeSnackbar} />;
+
   if (showOnboarding) {
     return (
       <div className={styles.container}>
         <CampaignEmptyState hasActivePlan={hasActivePlan} />
+        {snackbarEl}
       </div>
     );
   }
@@ -303,6 +316,7 @@ export default function CampaignPage() {
           })}
         </div>
       )}
+      {snackbarEl}
     </div>
   );
 }

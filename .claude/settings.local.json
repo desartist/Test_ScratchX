@@ -87,7 +87,13 @@
       "Bash(python3 - __tests__/unit/deleteCampaign.test.js)",
       "Bash(python3 - __tests__/unit/allocateScratchSetMode.test.js)",
       "Bash(cp app/api/campaigns/[id]/allocate-scratch/route.js /private/tmp/claude-501/-Users-abhishekpratapsingh-Desktop-coupon-campaigns/8dd81ca1-2be6-4bfc-b6f2-7ad5d310c0ce/scratchpad/alloc.bak)",
-      "Bash(sed -i '' 's/const used = \\(campaign.used_scratch_cards || 0\\) + \\(campaign.redeemed_scratch_cards || 0\\);/const used = campaign.used_scratch_cards || 0; \\\\/\\\\/ MUTATION/' app/api/campaigns/[id]/allocate-scratch/route.js)"
+      "Bash(sed -i '' 's/const used = \\(campaign.used_scratch_cards || 0\\) + \\(campaign.redeemed_scratch_cards || 0\\);/const used = campaign.used_scratch_cards || 0; \\\\/\\\\/ MUTATION/' app/api/campaigns/[id]/allocate-scratch/route.js)",
+      "Bash(grep -v \"\\\\.css$\\\\|__tests__\\\\|node_modules\")",
+      "Bash(awk '/^\\\\.modalActions/,/^}/' components/dashboard/CampaignCardMenu.module.css)",
+      "Bash(awk '/^\\\\.modalCancel[ ,{]/,/^}/;/^\\\\.modalDelete[ ,{]/,/^}/' components/dashboard/CampaignCardMenu.module.css)",
+      "Bash(awk '/^\\\\.footer[ {]/,/^}/;/^\\\\.secondaryBtn, *$/,/^}/;/^\\\\.secondaryBtn[ {]/,/^}/;/^\\\\.primaryBtn[ {]/,/^}/' components/campaign/ScratchAllocationModal.module.css)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/__modal_snack_check.html)",
+      "Bash(xargs -I{} echo \"temp files left in public/: {}\")"
     ]
   }
 }
