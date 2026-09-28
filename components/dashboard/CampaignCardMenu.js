@@ -18,11 +18,8 @@ function DeleteModal({ onConfirm, onCancel, loading, apiError }) {
             <div className={`${styles.modalIcon} ${styles.modalIconWarn}`}>
               <AlertTriangle size={28} />
             </div>
-            <h3 className={styles.modalTitle}>Cannot Delete Campaign</h3>
+            <h3 className={styles.modalTitle}>Couldn&apos;t Delete Campaign</h3>
             <p className={styles.modalText}>{apiError}</p>
-            <div className={styles.modalHint}>
-              Only draft and ended campaigns can be deleted. To delete an active campaign, wait for it to end or change its status from the campaign detail page.
-            </div>
             <button type="button" className={styles.modalCancelFull} onClick={onCancel}>
               Got it
             </button>
@@ -34,8 +31,14 @@ function DeleteModal({ onConfirm, onCancel, loading, apiError }) {
             </div>
             <h3 className={styles.modalTitle}>Delete Campaign?</h3>
             <p className={styles.modalText}>
-              This will permanently delete the campaign and all its data. This action cannot be undone.
+              The campaign will be removed and its QR code will stop working, even if it&apos;s live. This can&apos;t be undone.
             </p>
+            {/* Campaigns with customer activity are archived, not erased
+                (CampaignService.deleteCampaign) — say so, so nobody fears
+                losing their customer list. */}
+            <div className={styles.modalHint}>
+              Customers who already took part, and the coupons they won, stay in your Customers list.
+            </div>
             <div className={styles.modalActions}>
               <button type="button" className={styles.modalCancel} onClick={onCancel} disabled={loading}>
                 Cancel

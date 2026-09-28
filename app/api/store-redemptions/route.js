@@ -50,7 +50,7 @@ export async function GET(request) {
       customer_mobile: phone,
     })
       .populate("scratch_card_id", "status expires_at redeemed_at")
-      .populate("campaign_id", "campaignName")
+      .populate({ path: "campaign_id", select: "campaignName", options: { includeDeleted: true } })
       .sort({ createdAt: -1 });
 
     const cards = participations

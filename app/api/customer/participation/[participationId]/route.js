@@ -54,7 +54,11 @@ export async function GET(request, { params }) {
     const participation = await CustomerParticipation.findById(participationId)
       .populate({
         path: 'campaign_id',
-        select: '_id name campaignName status startDate endDate scratchTotal'
+        select: '_id name campaignName status startDate endDate scratchTotal',
+        // A customer's own coupon must still load if the merchant archived
+        // the campaign afterwards — and this handler reads
+        // participation.campaign_id.status, which would throw on null.
+        options: { includeDeleted: true },
       })
       .populate({
         path: 'store_id',

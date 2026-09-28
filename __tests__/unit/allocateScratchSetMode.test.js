@@ -36,7 +36,7 @@ const Campaign = require('@/models/campaignModel').default;
 const subscriptionValidationService = require('@/lib/services/subscriptionValidationService').default;
 const scratchEntitlementService = require('@/lib/scratchEntitlementService').default;
 
-async function makeCampaign({ allocated = 13100, used = 0 } = {}) {
+async function makeCampaign({ allocated = 13100, used = 0, redeemed = 0 } = {}) {
   return Campaign.create({
     merchantId,
     campaignName: 'Test Campaign',
@@ -44,7 +44,8 @@ async function makeCampaign({ allocated = 13100, used = 0 } = {}) {
     endDate: new Date(Date.now() + 30 * 24 * 3600 * 1000),
     allocated_scratch_cards: allocated,
     used_scratch_cards: used,
-    remaining_scratch_cards: allocated - used,
+    redeemed_scratch_cards: redeemed,
+    remaining_scratch_cards: allocated - used - redeemed,
   });
 }
 
@@ -109,6 +110,25 @@ describe('set mode ({ targetTotal })', () => {
     const c = await makeCampaign({ allocated: 13100, used: 3000 });
     const { status, body } = await call(c._id, { targetTotal: 3000 });
     expect(status).toBe(200);
+    expect(body.data.remaining_scratch_cards).toBe(0);
+  });
+
+  // used and redeemed are separate buckets in campaignModel (pre-validate:
+  // used + redeemed <= allocated). Flooring at `used` alone let a total
+  // through that the model then rejected on save — a generic 500.
+  test('floor is used + redeemed, not used alone', async () => {
+    const c = await makeCampaign({ allocated: 13100, used: 3000, redeemed: 1000 });
+    const below = await call(c._id, { targetTotal: 3500 }); // >= used, < used + redeemed
+    expect(below.status).toBe(400);
+    expect(below.body.error).toMatch(/4,000/);
+    expect((await Campaign.findById(c._id).lean()).allocated_scratch_cards).toBe(13100);
+  });
+
+  test('exactly used + redeemed saves through real model validation', async () => {
+    const c = await makeCampaign({ allocated: 13100, used: 3000, redeemed: 1000 });
+    const { status, body } = await call(c._id, { targetTotal: 4000 });
+    expect(status).toBe(200);
+    expect(body.data.allocated_scratch_cards).toBe(4000);
     expect(body.data.remaining_scratch_cards).toBe(0);
   });
 

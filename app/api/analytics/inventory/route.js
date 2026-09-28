@@ -154,7 +154,7 @@ export async function GET(request) {
       const allocations = await CampaignStoreMapping.find({
         store_id: storeId
       })
-        .populate('campaign_id', 'campaignName campaign_code status')
+        .populate({ path: 'campaign_id', select: 'campaignName campaign_code status', options: { includeDeleted: true } })
         .lean();
 
       const totalAllocated = allocations.reduce((sum, a) => sum + a.allocated_scratch_cards, 0);

@@ -79,7 +79,15 @@
       "Bash(node -e \"const l=require\\('lucide-react'\\); for \\(const n of ['Search','Users','CalendarCheck','Gift','AlertCircle']\\) console.log\\(n, typeof l[n] === 'object' || typeof l[n] === 'function' ? 'ok' : 'MISSING'\\)\")",
       "Bash(awk '/^\\\\.\\(container|main|mainContent|content|pageContent|contentArea|mainWrapper\\)[ {]/,/^}/' components/dashboards/DashboardLayout.module.css)",
       "Bash(awk '/^\\\\.whatsappBtn[ {]/,/^}/' components/whatsapp/whatsapp.module.css)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/__srleak_repro.html)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/__srleak_repro.html)",
+      "Bash(grep -rn 'Campaign\\\\.find\\(\\\\s*{\\\\s*_id: *{ *$in\\\\|Campaign\\\\.find\\({ *_id: *{ *$in' app/api lib)",
+      "Bash(grep -B1 -A1 '$in')",
+      "Bash(grep -rn '$in' app/api lib)",
+      "Bash(grep -iv 'status\\\\|campaign_id: *{ *$in\\\\|campaignId: *{ *$in')",
+      "Bash(python3 - __tests__/unit/deleteCampaign.test.js)",
+      "Bash(python3 - __tests__/unit/allocateScratchSetMode.test.js)",
+      "Bash(cp app/api/campaigns/[id]/allocate-scratch/route.js /private/tmp/claude-501/-Users-abhishekpratapsingh-Desktop-coupon-campaigns/8dd81ca1-2be6-4bfc-b6f2-7ad5d310c0ce/scratchpad/alloc.bak)",
+      "Bash(sed -i '' 's/const used = \\(campaign.used_scratch_cards || 0\\) + \\(campaign.redeemed_scratch_cards || 0\\);/const used = campaign.used_scratch_cards || 0; \\\\/\\\\/ MUTATION/' app/api/campaigns/[id]/allocate-scratch/route.js)"
     ]
   }
 }

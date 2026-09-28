@@ -80,7 +80,12 @@ export async function POST(request, { params }) {
     }
 
     const previousAllocation = campaign.allocated_scratch_cards || 0;
-    const used = campaign.used_scratch_cards || 0;
+    // used and redeemed are separate buckets (campaignModel pre-validate:
+    // remaining = allocated − used − redeemed, and used + redeemed may not
+    // exceed allocated). Both have been consumed and can't be taken back, so
+    // the floor is their sum — flooring at `used` alone let a total through
+    // that then failed model validation on save as a generic 500.
+    const used = (campaign.used_scratch_cards || 0) + (campaign.redeemed_scratch_cards || 0);
 
     // In set mode the requested value is the new total, so the amount being
     // added is the difference — which can be zero or negative (a reduction).
