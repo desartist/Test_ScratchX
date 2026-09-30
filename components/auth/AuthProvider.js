@@ -6,6 +6,7 @@ import { AuthContext } from './AuthContext';
 import { tokenService } from '@/lib/tokenService';
 import { authService } from '@/lib/authService';
 import { dashboardCache } from '@/lib/dashboardCache';
+import { dashboardForRole } from '@/lib/permissions';
 
 // Public, unauthenticated customer-facing routes (QR scan, scratch card
 // reveal, coupon view). These pages never call useAuthContext() and have no
@@ -114,6 +115,11 @@ export function AuthProvider({ children }) {
     setAccount(profile ?? userData);
   };
 
+  /**
+   * @returns {Promise<boolean>} true once navigation to the dashboard has
+   *   started — the caller should keep its "Signing in…" state (the page is
+   *   about to change); false on failure (the error is in `error`).
+   */
   const login = async (email, password) => {
     setIsLoading(true);
     setError(null);
@@ -126,10 +132,30 @@ export function AuthProvider({ children }) {
         redirectTo,
       } = await authService.passwordLogin(email, password);
 
-      await applyAuthResult(userData, newAccessToken, newRefreshToken);
-      router.push(redirectTo || '/dashboard');
+      tokenService.setAccessToken(newAccessToken);
+      tokenService.setRefreshToken(newRefreshToken);
+      setAccessToken(newAccessToken);
+      setRefreshToken(newRefreshToken);
+      // The login response already carries what the dashboard shell needs
+      // (id, name, role, createdAt). The full profile (photo, etc.) from
+      // /api/auth/me fills in behind it — it used to be awaited here, which
+      // put one more sequential round trip between "Sign In" and the page.
+      setAccount(userData);
+      refreshAccount().catch(() => {});
+
+      // Go straight to the role's own dashboard. /dashboard only redirects
+      // there (in middleware), so pushing it cost an extra request. Keep any
+      // other explicit destination the API asks for.
+      const target =
+        redirectTo && redirectTo !== '/dashboard'
+          ? redirectTo
+          : dashboardForRole(userData?.role) || '/dashboard';
+      // replace, not push — Back from the dashboard shouldn't land on login.
+      router.replace(target);
+      return true;
     } catch (err) {
       setError(err.message);
+      return false;
     } finally {
       setIsLoading(false);
     }
