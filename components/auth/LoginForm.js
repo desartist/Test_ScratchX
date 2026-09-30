@@ -163,8 +163,9 @@ export default function LoginForm() {
     }
 
     setSubmitting(true);
+    let navigating = false;
     try {
-      await login(email, password);
+      navigating = await login(email, password);
 
       if (rememberMe && window.PasswordCredential && navigator.credentials) {
         try {
@@ -180,7 +181,11 @@ export default function LoginForm() {
     } catch (err) {
       // Handle deactivated account
     } finally {
-      setSubmitting(false);
+      // On success, stay on "Signing in…" until the dashboard replaces this
+      // page. login() returns as soon as navigation starts, and resetting the
+      // button then left an idle form on screen for several seconds while the
+      // dashboard loaded — it looked like the login had failed.
+      if (!navigating) setSubmitting(false);
     }
   };
 

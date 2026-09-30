@@ -93,7 +93,19 @@
       "Bash(awk '/^\\\\.modalCancel[ ,{]/,/^}/;/^\\\\.modalDelete[ ,{]/,/^}/' components/dashboard/CampaignCardMenu.module.css)",
       "Bash(awk '/^\\\\.footer[ {]/,/^}/;/^\\\\.secondaryBtn, *$/,/^}/;/^\\\\.secondaryBtn[ {]/,/^}/;/^\\\\.primaryBtn[ {]/,/^}/' components/campaign/ScratchAllocationModal.module.css)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/__modal_snack_check.html)",
-      "Bash(xargs -I{} echo \"temp files left in public/: {}\")"
+      "Bash(xargs -I{} echo \"temp files left in public/: {}\")",
+      "Bash(ffprobe -v error -show_entries format=duration:stream=width,height,r_frame_rate,codec_type -of default=nw=1 \"/Users/abhishekpratapsingh/Downloads/WhatsApp Video 2026-09-29 at 20.52.58.mp4\")",
+      "Bash(swift --version)",
+      "Bash(python3 -c \"import cv2\")",
+      "Bash(mkdir -p /private/tmp/claude-501/-Users-abhishekpratapsingh-Desktop-coupon-campaigns/8dd81ca1-2be6-4bfc-b6f2-7ad5d310c0ce/scratchpad/frames)",
+      "Bash(swift frames.swift '/Users/abhishekpratapsingh/Downloads/WhatsApp Video 2026-09-29 at 20.52.58.mp4' /private/tmp/claude-501/-Users-abhishekpratapsingh-Desktop-coupon-campaigns/8dd81ca1-2be6-4bfc-b6f2-7ad5d310c0ce/scratchpad/frames 1)",
+      "Bash(python3 -c \"import PIL; print\\('PIL', PIL.__version__\\)\")",
+      "Bash(swift sheet.swift /private/tmp/claude-501/-Users-abhishekpratapsingh-Desktop-coupon-campaigns/8dd81ca1-2be6-4bfc-b6f2-7ad5d310c0ce/scratchpad/frames /private/tmp/claude-501/-Users-abhishekpratapsingh-Desktop-coupon-campaigns/8dd81ca1-2be6-4bfc-b6f2-7ad5d310c0ce/scratchpad/sheet 8 24)",
+      "Bash(curl -s -o /dev/null -w \"%{time_connect}\\\\n\" --connect-timeout 5 telnet://ac-u3se6pl-shard-00-01.v8pppjg.mongodb.net:27017 -m 2)",
+      "Bash(awk '{printf \"  %.0f ms\\\\n\", $1*1000}')",
+      "Bash(curl -s -o /dev/null -D - https://app.thescratchx.com/auth/login -m 20)",
+      "Bash(curl -s -o /dev/null -D - https://app.thescratchx.com/api/auth/me -m 20 -w \"total=%{time_total}s ttfb=%{time_starttransfer}s\\\\n\")",
+      "Bash(node --input-type=module -e \"const c=\\(await import\\('./next.config.mjs'\\)\\).default; console.log\\(JSON.stringify\\({root:c.turbopack.root, ext:c.serverExternalPackages, redirects:\\(await c.redirects\\(\\)\\).length}\\)\\)\")"
     ]
   }
 }
