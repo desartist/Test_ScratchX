@@ -265,13 +265,6 @@
   box-shadow: inset 3px 0 0 #ef9e1b;
 }
 
-/* Keep the customer visible while the rest of the row scrolls sideways. */
-.stickyCol {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-}
-
 .actionsCol {
   /* Containing block for .srOnly, so it stays inside this cell. */
   position: relative;
@@ -436,10 +429,6 @@
   /* The table scrolls sideways on phones, like the other dashboards. */
   .table {
     min-width: 880px;
-  }
-
-  .stickyCol {
-    box-shadow: 1px 0 0 #eef0f4;
   }
 
   .table th,

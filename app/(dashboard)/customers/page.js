@@ -261,7 +261,7 @@ export default function CustomersPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th className={styles.stickyCol}>Customer</th>
+                  <th>Customer</th>
                   <th>Campaign</th>
                   <th>Store</th>
                   <th>Staff</th>
@@ -301,7 +301,7 @@ export default function CustomersPage() {
                         tabIndex={0}
                         aria-label={`View ${customer.customer_name}`}
                       >
-                        <td className={styles.stickyCol}>
+                        <td>
                           <div className={styles.customerName}>
                             {customer.customer_name}
                             {customer.is_repeat_customer && (
