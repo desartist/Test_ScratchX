@@ -3,7 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import FlagGate from "@/components/luckyDraw/FlagGate";
+import Link from "next/link";
+import { Gift } from "lucide-react";
 import { api, describePrizeScope, describeTier, formatDateTime } from "@/lib/luckyDraw/clientApi";
+import { formatINR } from "@/lib/luckyDraw/calculator";
+import { formatDayTime } from "@/lib/luckyDraw/display";
 import styles from "./page.module.css";
 
 function getPosition() {
@@ -110,39 +114,67 @@ function EntryPage() {
     );
   }
 
+  const manual = campaign.distributionMode && campaign.distributionMode !== "online";
+
   return (
     <div className={styles.page}>
       <div className={styles.card}>
         <div className={styles.panel}>
           <h1 className={styles.title}>{campaign.name}</h1>
           {campaign.description && <p className={styles.muted}>{campaign.description}</p>}
-          {!entered && <DrawDate drawDate={campaign.drawDate} previousDrawDate={campaign.previousDrawDate} />}
+          {!entered && !manual && <DrawDate drawDate={campaign.drawDate} previousDrawDate={campaign.previousDrawDate} />}
           {!entered && <p className={styles.notice} role="note">{campaign.notice}</p>}
         </div>
 
         <div className={styles.panel}>
           <h2 className={styles.heading}>Prizes</h2>
-          <ol className={styles.list}>
+          <div className={styles.prizeGrid}>
             {campaign.prizes.map((prize) => {
               const scope = describePrizeScope(prize.tierIndexes, campaign.entryTiers);
               return (
-                <li key={prize.rank}>
-                  {prize.prizeDescription}
-                  {scope && <span className={styles.muted}> ({scope.charAt(0).toLowerCase() + scope.slice(1)})</span>}
-                </li>
+                <div key={prize.rank} className={styles.prizeCard}>
+                  {prize.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className={styles.prizeImg} src={prize.imageUrl} alt={prize.prizeDescription} />
+                  ) : (
+                    <span className={styles.prizeImg} aria-hidden="true"><Gift size={26} color="#8a5300" /></span>
+                  )}
+                  <div>
+                    <strong>{prize.prizeDescription}</strong>
+                    <div className={styles.muted}>
+                      {prize.quantity > 1 ? `${prize.quantity} winners · ` : ""}
+                      {prize.prizeValue ? `worth ${formatINR(prize.prizeValue)}${prize.quantity > 1 ? " each" : ""}` : ""}
+                    </div>
+                    {scope && <div className={styles.muted}>{scope}</div>}
+                  </div>
+                </div>
               );
             })}
-          </ol>
-          <h2 className={styles.heading}>How to earn entries</h2>
-          <ul className={styles.list}>
-            {campaign.entryTiers.map((tier, i) => <li key={i}>{describeTier(tier)}</li>)}
+          </div>
+          <ul className={styles.dates}>
+            <li><span>Entries open</span><b>{formatDayTime(campaign.startDate)}</b></li>
+            <li><span>Entries close</span><b>{formatDayTime(campaign.endDate)}</b></li>
+            <li><span>Winners revealed</span><b>{formatDayTime(campaign.revealDate || campaign.drawDate)}</b></li>
           </ul>
-          {campaign.maxEntriesPerCustomerPerPeriod && (
-            <p className={styles.muted}>You can hold up to {campaign.maxEntriesPerCustomerPerPeriod} entries per draw.</p>
+          {manual ? (
+            <p className={styles.muted}>Ask at the store counter for a numbered entry slip when you shop. Keep your slip safe: you need it to collect a prize.</p>
+          ) : (
+            <>
+              <h2 className={styles.heading}>How to earn entries</h2>
+              <ul className={styles.list}>
+                {campaign.entryTiers.map((tier, i) => <li key={i}>{describeTier(tier)}</li>)}
+              </ul>
+              {campaign.maxEntriesPerCustomerPerPeriod && (
+                <p className={styles.muted}>You can hold up to {campaign.maxEntriesPerCustomerPerPeriod} entries per draw.</p>
+              )}
+            </>
           )}
+          <Link className={styles.linkButton} href={`/lucky-draw/${campaignId}/reveal`}>
+            {manual ? "Watch the reveal and check your slip" : "See the winners"}
+          </Link>
         </div>
 
-        {entered ? (
+        {manual ? null : entered ? (
           <div className={styles.panel} role="status">
             <p className={styles.success}>
               <span className={styles.big}>You&rsquo;re in!</span><br />
@@ -180,6 +212,7 @@ function EntryPage() {
           <div className={styles.panel}><p className={styles.muted}>This Lucky Draw is not open for entries right now.</p></div>
         )}
 
+        {!manual && (
         <div className={styles.panel}>
           <h2 className={styles.heading}>Check my entries</h2>
           <form className={styles.form} onSubmit={checkStatus}>
@@ -203,6 +236,7 @@ function EntryPage() {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

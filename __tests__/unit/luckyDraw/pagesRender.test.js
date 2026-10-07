@@ -19,13 +19,18 @@ jest.mock('next/link', () => {
 // Jest has no CSS transform in this repo: every class name just echoes its key.
 jest.mock('@/app/(dashboard)/lucky-draws/luckyDraws.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
 jest.mock('@/app/(client)/lucky-draw/[campaignId]/page.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
+jest.mock('@/app/(client)/lucky-draw/[campaignId]/reveal/reveal.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
 
 const React = require('react');
 const { renderToString } = require('react-dom/server');
 
 const pages = [
   ['merchant list', '@/app/(dashboard)/lucky-draws/page', 'Loading'],
-  ['new campaign form', '@/app/(dashboard)/lucky-draws/new/page', 'New Lucky Draw'],
+  ['new campaign form', '@/app/(dashboard)/lucky-draws/new/page', 'New lucky draw'],
+  ['prize calculator', '@/app/(dashboard)/lucky-draws/calculator/page', 'Prize calculator'],
+  ['record winners', '@/app/(dashboard)/lucky-draws/[id]/record/page', 'Loading'],
+  ['live reveal (owner)', '@/app/(dashboard)/lucky-draws/[id]/live/page', 'Loading'],
+  ['public reveal', '@/app/(client)/lucky-draw/[campaignId]/reveal/page', 'Loading'],
   ['campaign detail', '@/app/(dashboard)/lucky-draws/[id]/page', 'Loading'],
   ['redeem', '@/app/(dashboard)/lucky-draws/redeem/page', 'Redeem a Lucky Draw prize'],
   ['customer entry', '@/app/(client)/lucky-draw/[campaignId]/page', 'Loading'],

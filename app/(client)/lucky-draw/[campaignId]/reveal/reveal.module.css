@@ -1,0 +1,60 @@
+/* Public reveal page: the live "stage" customers watch on their phones. ScratchX navy with the amber
+   brand colour; winning codes are scratched open like a ScratchX card. */
+.page { min-height: 100vh; background: #050d33; color: #e9ecfb; font-family: var(--font-afacad), system-ui, sans-serif; display: flex; justify-content: center; }
+.stage {
+  width: 100%; max-width: 520px; min-height: 100vh; display: flex; flex-direction: column;
+  background: radial-gradient(120% 50% at 50% -10%, rgba(239, 158, 27, 0.22), transparent 60%), #050d33;
+}
+.top { display: flex; justify-content: space-between; align-items: center; padding: 18px 18px 4px; font-size: 0.85rem; color: #a9b2d6; gap: 12px; }
+.live { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: rgba(239, 158, 27, 0.16); color: #ef9e1b; font-weight: 700; letter-spacing: 0.06em; font-size: 0.75rem; }
+.live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #ef9e1b; animation: pulse 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+.done { background: rgba(255, 255, 255, 0.08); color: #e9ecfb; }
+.done::before { display: none; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.head { padding: 8px 18px 16px; display: flex; flex-direction: column; gap: 4px; }
+.head h1 { margin: 0; color: #fff; font-size: 1.6rem; line-height: 1.15; letter-spacing: -0.01em; }
+.sub { color: #a9b2d6; font-size: 0.9rem; margin: 0; }
+.tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(96px, 1fr); gap: 6px; padding: 0 14px; overflow-x: auto; }
+.tab { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 6px; border-radius: 12px; border: 1px solid #24336f; background: transparent; color: #a9b2d6; font-size: 0.78rem; cursor: pointer; }
+.tab b { font-size: 0.98rem; color: #e9ecfb; font-variant-numeric: tabular-nums; }
+.tabOn { background: #ef9e1b; border-color: #ef9e1b; color: #3a2300; }
+.tabOn b { color: #010f44; }
+.tab:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.lockLabel { display: inline-flex; align-items: center; gap: 4px; }
+.panel { padding: 16px 14px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.prizeHead { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; padding: 10px; border-radius: 16px; background: rgba(255, 255, 255, 0.05); }
+.prizeImg { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; background: #0d1a52; display: grid; place-items: center; color: #ef9e1b; }
+.prizeHead strong { color: #fff; font-size: 1.05rem; display: block; }
+.prizeHead span { color: #a9b2d6; font-size: 0.88rem; }
+.codes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.win { position: relative; overflow: hidden; padding: 12px 12px 10px; border-radius: 14px; background: #0d1a52; border: 1px solid #24336f; display: flex; flex-direction: column; gap: 2px; }
+.win b { font-size: 1.15rem; letter-spacing: 0.06em; color: #fff; }
+.win small { color: #a9b2d6; font-size: 0.8rem; }
+.mine { border-color: #ef9e1b; box-shadow: 0 0 0 1px #ef9e1b inset; }
+/* The scratch: a foil layer wipes off each newly revealed code, one after another. */
+.fresh::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.35) 0 1px, transparent 1.5px) 0 0 / 9px 9px,
+    linear-gradient(115deg, #f6b740, #ef9e1b 45%, #c97a06);
+  clip-path: inset(0 0 0 0);
+  animation: scratch 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 380ms + 200ms);
+}
+@keyframes scratch { to { clip-path: inset(0 0 0 100%); } }
+@media (prefers-reduced-motion: reduce) { .fresh::after { display: none; } .live::before { animation: none; } }
+.locked { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 30px 18px; border-radius: 16px; border: 1px dashed #24336f; }
+.locked svg { color: #ef9e1b; }
+.locked b { color: #fff; font-size: 1.1rem; }
+.locked span { color: #a9b2d6; font-size: 0.92rem; }
+.checker { margin: 0 14px 16px; padding: 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.06); display: flex; flex-direction: column; gap: 10px; }
+.checker label { font-weight: 600; font-size: 0.9rem; }
+.checkRow { display: flex; gap: 8px; }
+.input { font: inherit; flex: 1; min-width: 0; padding: 11px 12px; border-radius: 10px; border: 1px solid #24336f; background: #0d1a52; color: #fff; letter-spacing: 0.06em; }
+.input::placeholder { color: #7f8ab8; letter-spacing: 0; }
+.input:focus-visible, .button:focus-visible { outline: 2px solid #ef9e1b; outline-offset: 2px; }
+.button { font: inherit; font-weight: 700; padding: 11px 16px; border-radius: 10px; border: 0; background: #ef9e1b; color: #010f44; cursor: pointer; white-space: nowrap; }
+.result { margin: 0; font-size: 0.95rem; }
+.resultWin { color: #ef9e1b; font-weight: 700; }
+.foot { padding: 0 18px 22px; color: #7f8ab8; font-size: 0.82rem; text-align: center; }
+.error { margin: 18px; padding: 12px 14px; border-radius: 12px; background: rgba(253, 232, 232, 0.12); color: #ffd7d7; }

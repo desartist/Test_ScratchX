@@ -25,3 +25,11 @@
 .big { font-size: 1.6rem; font-weight: 800; }
 .win { background: #e0e4ff; color: #01188e; padding: 10px 14px; border-radius: 10px; margin: 0; }
 .result { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.prizeGrid { display: flex; flex-direction: column; gap: 10px; }
+.prizeCard { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; padding: 10px; border: 1px solid #eef1f6; border-radius: 12px; }
+.prizeImg { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: #fff3e0; display: grid; place-items: center; font-size: 1.6rem; }
+.dates { list-style: none; margin: 0; padding: 12px 0 0; border-top: 1px solid #eef1f6; display: flex; flex-direction: column; gap: 6px; }
+.dates li { display: flex; justify-content: space-between; gap: 12px; font-size: 0.92rem; }
+.dates span { color: #637080; }
+.linkButton { display: inline-flex; justify-content: center; font-weight: 700; padding: 12px 16px; border-radius: 10px; border: 1.5px solid #010f44; color: #010f44; text-decoration: none; }
+.linkButton:hover { background: #f3f5ff; }
