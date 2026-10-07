@@ -4,6 +4,8 @@ import { DRAW_STATUSES, PRIZE_MODES } from '../lib/luckyDraw/constants.js';
 // Append-only record of every change the store owner makes to the draw date.
 const dateChangeSchema = new mongoose.Schema(
   {
+    // Which date moved: the draw/reveal date, or the date entries close.
+    kind: { type: String, enum: ['draw', 'reveal', 'entries_close'], default: 'draw' },
     previousDate: { type: Date, required: true },
     newDate: { type: Date, required: true },
     changedByAccountId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
