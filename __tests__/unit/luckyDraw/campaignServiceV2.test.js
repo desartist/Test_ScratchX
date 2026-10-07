@@ -3,7 +3,9 @@ jest.mock('@/lib/subscriptionAccessGuard', () => ({ checkPlanAccess: jest.fn() }
 import { checkPlanAccess } from '@/lib/subscriptionAccessGuard';
 import Store from '@/models/storeModel';
 import LuckyDraw from '@/models/luckyDrawModel';
-import { createCampaign, setCampaignStatus } from '@/lib/services/luckyDraw/campaignService';
+import { createCampaign, setCampaignStatus, listCampaigns } from '@/lib/services/luckyDraw/campaignService';
+import LuckyDrawWinner from '@/models/luckyDrawWinnerModel';
+import * as fixtures from '../../helpers/luckyDrawFixtures';
 import { ValidationError } from '@/lib/errors';
 import { newId, DAY } from '../../helpers/luckyDrawFixtures';
 
@@ -130,5 +132,31 @@ describe('createCampaign (v2)', () => {
 
     const draw = await LuckyDraw.findOne({ campaignId: campaign._id, status: 'scheduled' }).lean();
     expect(draw.drawDate.toISOString()).toBe(input.revealDate);
+  });
+});
+
+describe('listCampaigns (v2)', () => {
+  it('adds entry counts for the open draw and unclaimed prizes', async () => {
+    const campaign = await fixtures.createCampaign();
+    const draw = await fixtures.createOpenDraw(campaign);
+    await fixtures.createEntry(campaign, draw);
+    await fixtures.createEntry(campaign, draw);
+    const ended = await fixtures.createCampaign({ merchantId: campaign.merchantId, status: 'ended' });
+    const base = {
+      drawId: newId(),
+      campaignId: ended._id,
+      merchantId: campaign.merchantId,
+      rank: 1,
+      prizeDescription: 'TV',
+      expiresAt: new Date(Date.now() + DAY),
+    };
+    await LuckyDrawWinner.create({ ...base, slipNumber: 1, claimCode: 'CLAIMV2A' });
+    await LuckyDrawWinner.create({ ...base, slipNumber: 2, claimCode: 'CLAIMV2B', status: 'redeemed' });
+
+    const list = await listCampaigns(String(campaign.merchantId));
+    const open = list.find((c) => String(c._id) === String(campaign._id));
+    const done = list.find((c) => String(c._id) === String(ended._id));
+    expect(open.entryCount).toBe(2);
+    expect(done.unclaimedCount).toBe(1);
   });
 });
