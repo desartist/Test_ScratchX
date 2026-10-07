@@ -12,6 +12,14 @@ const routes = [
   ['app/api/customer/lucky-draw/participate/route', ['POST']],
   ['app/api/customer/lucky-draw/status/route', ['POST']],
   ['app/api/cron/lucky-draw/route', ['GET']],
+  ['app/api/lucky-draws/campaigns/[id]/dates/route', ['PATCH']],
+  ['app/api/lucky-draws/campaigns/[id]/slips/route', ['PATCH']],
+  ['app/api/lucky-draws/draws/[drawId]/picks/route', ['PUT']],
+  ['app/api/lucky-draws/draws/[drawId]/publish/route', ['POST']],
+  ['app/api/lucky-draws/draws/[drawId]/reveal/start/route', ['POST']],
+  ['app/api/lucky-draws/draws/[drawId]/reveal/next/route', ['POST']],
+  ['app/api/lucky-draws/winners/[winnerId]/claim/route', ['PATCH']],
+  ['app/api/customer/lucky-draw/campaigns/[id]/reveal/route', ['GET']],
 ];
 
 describe('Lucky Draw routes while the feature flag is off', () => {
@@ -25,7 +33,7 @@ describe('Lucky Draw routes while the feature flag is off', () => {
   it.each(routes.flatMap(([path, methods]) => methods.map((method) => [path, method])))('%s %s -> 404', async (path, method) => {
     const handler = require(`@/${path}`)[method];
     const res = await handler(new Request('http://localhost/x', { method }), {
-      params: Promise.resolve({ id: 'x', drawId: 'x' }),
+      params: Promise.resolve({ id: 'x', drawId: 'x', winnerId: 'x' }),
     });
     expect(res.status).toBe(404);
   });

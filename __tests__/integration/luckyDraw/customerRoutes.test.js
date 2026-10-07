@@ -67,8 +67,8 @@ describe('GET /api/customer/lucky-draw/campaigns/:id', () => {
     const { data } = await res.json();
     expect(data.prizeMode).toBe('restricted');
     expect(data.prizes).toEqual([
-      { rank: 1, prizeDescription: 'Smart TV', tierIndexes: [1] },
-      { rank: 2, prizeDescription: 'Mixer', tierIndexes: [] },
+      { rank: 1, prizeDescription: 'Smart TV', prizeValue: 0, quantity: 1, imageUrl: null, tierIndexes: [1] },
+      { rank: 2, prizeDescription: 'Mixer', prizeValue: 0, quantity: 1, imageUrl: null, tierIndexes: [] },
     ]);
   });
 
