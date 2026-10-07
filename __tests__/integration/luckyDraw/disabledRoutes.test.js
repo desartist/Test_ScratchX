@@ -1,4 +1,4 @@
-// With LUCKY_DRAW_ENABLED false (as shipped), every Lucky Draw route must answer 404
+// With LUCKY_DRAW_ENABLED false, every Lucky Draw route must answer 404
 // and touch nothing, so the app behaves exactly as it does without the feature.
 const routes = [
   ['app/api/lucky-draws/campaigns/route', ['GET', 'POST']],
@@ -17,6 +17,7 @@ const routes = [
 describe('Lucky Draw routes while the feature flag is off', () => {
   beforeEach(() => {
     jest.resetModules();
+    jest.doMock('@/lib/featureFlags', () => ({ LUCKY_DRAW_ENABLED: false }));
     jest.doMock('@/lib/connectDB', () => ({ connectDB: jest.fn(() => { throw new Error('must not connect'); }) }));
     jest.doMock('@/lib/auth', () => ({ requireAuth: jest.fn(() => { throw new Error('must not authenticate'); }) }));
   });

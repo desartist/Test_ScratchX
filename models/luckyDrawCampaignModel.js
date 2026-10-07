@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import {
   CAMPAIGN_STATUSES,
+  DISTRIBUTION_MODES,
   PRIZE_MODES,
   RECURRENCE_FREQUENCIES,
   SCHEDULE_TYPES,
@@ -21,6 +22,10 @@ const prizeTierSchema = new mongoose.Schema(
     rank: { type: Number, required: true, min: 1 },
     prizeDescription: { type: String, required: true, trim: true, maxlength: 200 },
     prizeValue: { type: Number, default: 0, min: 0 },
+    // How many winners get this prize (a prize category, e.g. 10 x ₹3,000).
+    quantity: { type: Number, default: 1, min: 1 },
+    // Compressed data URL (same pattern as scratch-card gift images); null = no picture.
+    imageUrl: { type: String, default: null },
     // Ranges (positions in entryTiers, sorted by minAmount) whose entries may win this prize; none = everyone.
     tierIndexes: { type: [Number], default: [] },
   },
@@ -49,16 +54,32 @@ const nonEmpty = (label) => ({
   message: `At least one ${label} is required`,
 });
 
+// Bill ranges only matter when customers enter online; slip-based draws have none.
+const entryTiersRequiredOnline = {
+  validator(value) {
+    const mode = typeof this.get === 'function' ? this.get('distributionMode') : this.distributionMode;
+    if (mode && mode !== 'online') return true;
+    return Array.isArray(value) && value.length > 0;
+  },
+  message: 'At least one entry tier is required',
+};
+
 const luckyDrawCampaignSchema = new mongoose.Schema(
   {
     merchantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true, index: true },
     name: { type: String, required: true, trim: true, maxlength: 120 },
     description: { type: String, trim: true, maxlength: 1000, default: '' },
     assignedStores: { type: [storeSnapshotSchema], default: [] },
+    distributionMode: { type: String, enum: DISTRIBUTION_MODES, default: 'online' },
     startDate: { type: Date, required: true },
+    // Entries close (registration end).
     endDate: { type: Date, required: true },
+    // When winners are revealed; null on campaigns made before v2 (the draw date then follows endDate).
+    revealDate: { type: Date, default: null },
+    // Manual modes: slips numbered 1..slipCount have been handed out.
+    slipCount: { type: Number, default: 0, min: 0 },
     status: { type: String, enum: CAMPAIGN_STATUSES, default: 'draft', index: true },
-    entryTiers: { type: [entryTierSchema], validate: nonEmpty('entry tier') },
+    entryTiers: { type: [entryTierSchema], validate: entryTiersRequiredOnline },
     prizeTiers: { type: [prizeTierSchema], validate: nonEmpty('prize') },
     // shared: one prize list for everyone | pool_per_tier: each range has its own prizes | restricted: some prizes only for some ranges
     prizeMode: { type: String, enum: PRIZE_MODES, default: 'shared' },
@@ -80,6 +101,9 @@ const luckyDrawCampaignSchema = new mongoose.Schema(
 luckyDrawCampaignSchema.pre('validate', function () {
   if (this.startDate && this.endDate && this.endDate <= this.startDate) {
     this.invalidate('endDate', 'End date must be after start date');
+  }
+  if (this.revealDate && this.endDate && this.revealDate < this.endDate) {
+    this.invalidate('revealDate', 'The reveal date must be on or after the date entries close');
   }
 
   const config = this.drawConfig || {};

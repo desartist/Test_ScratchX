@@ -21,8 +21,8 @@ describe('luckyDrawDisabledResponse', () => {
     expect(luckyDrawDisabledResponse()).toBeNull();
   });
 
-  it('ships disabled', () => {
+  it('is switched on (the store owner turned the feature on)', () => {
     const { LUCKY_DRAW_ENABLED } = jest.requireActual('@/lib/featureFlags');
-    expect(LUCKY_DRAW_ENABLED).toBe(false);
+    expect(LUCKY_DRAW_ENABLED).toBe(true);
   });
 });
