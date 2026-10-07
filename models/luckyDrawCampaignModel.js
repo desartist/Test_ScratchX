@@ -42,8 +42,9 @@ const storeSnapshotSchema = new mongoose.Schema(
     city: { type: String, trim: true },
     state: { type: String, trim: true },
     pincode: { type: String, trim: true },
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
+    // Needed for the online geofence; slip-based (manual) draws can use stores without a location.
+    latitude: { type: Number, default: null },
+    longitude: { type: Number, default: null },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   },
   { _id: false },

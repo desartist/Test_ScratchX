@@ -59,7 +59,7 @@ const newCampaignBody = (storeId) => ({
   endDate: new Date(Date.now() + 30 * DAY).toISOString(),
   storeIds: [String(storeId)],
   entryTiers: [{ minAmount: 0, maxAmount: null, entriesGranted: 1 }],
-  prizes: [{ prizeDescription: 'Smart TV' }],
+  prizes: [{ prizeDescription: 'Smart TV', prizeValue: 30000 }],
   scheduleType: 'end_of_campaign',
 });
 

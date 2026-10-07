@@ -38,7 +38,7 @@ const baseInput = (storeId) => ({
     { minAmount: 500, maxAmount: 1000, entriesGranted: 1 },
     { minAmount: 1000, maxAmount: null, entriesGranted: 3 },
   ],
-  prizes: [{ prizeDescription: 'Smart TV', prizeValue: 30000 }, { prizeDescription: 'Mixer' }],
+  prizes: [{ prizeDescription: 'Smart TV', prizeValue: 30000 }, { prizeDescription: 'Mixer', prizeValue: 2000 }],
   scheduleType: 'end_of_campaign',
 });
 
