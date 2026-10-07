@@ -143,7 +143,7 @@ function ClaimButton({ winner, onClaimed }) {
     <form className={styles.claimForm} onSubmit={claim}>
       <input className={styles.input} aria-label="Collected by (optional)" placeholder="Name (optional)" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} />
       <input className={styles.input} aria-label="Mobile (optional)" placeholder="Mobile (optional)" inputMode="numeric" value={phone} onChange={(e) => setPhone(e.target.value.replace(/[^\d]/g, "").slice(0, 10))} />
-      <button type="submit" className={`${styles.primaryButton} ${styles.smallButton}`} disabled={busy}>{busy ? "Saving…" : "Claimed"}</button>
+      <button type="submit" className={`${styles.primaryButton} ${styles.smallButton}`} disabled={busy}>{busy ? "Saving…" : "Confirm claim"}</button>
       <button type="button" className={styles.ghostButton} onClick={() => setOpen(false)}>Cancel</button>
       {error && <p className={styles.fieldError} role="alert" style={{ width: "100%" }}>{error}</p>}
     </form>

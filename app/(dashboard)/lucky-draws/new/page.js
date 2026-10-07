@@ -308,7 +308,7 @@ function NewLuckyDrawForm() {
                 ))}
               </div>
             </fieldset>
-            <p className={styles.info}><Info size={16} aria-hidden="true" />You can&rsquo;t change the mode after the draw is published.</p>
+            <p className={styles.info}><Info size={16} aria-hidden="true" /><span>You can&rsquo;t change the mode after the draw is published.</span></p>
           </>
         )}
 
@@ -591,9 +591,11 @@ function NewLuckyDrawForm() {
 
             {form.prizes.length > 1 && (
               <p className={styles.info}><ListOrdered size={16} aria-hidden="true" />
-                Reveal order on draw day: {revealRanks.map((rank, i) => (
-                  <React.Fragment key={rank}>{i > 0 && (i === revealRanks.length - 1 ? ", then " : ", ")}<strong>{form.prizes[rank - 1].prizeDescription || `Prize ${rank}`}</strong></React.Fragment>
-                ))} last. A customer can win only once.
+                <span>
+                  Reveal order on draw day: {revealRanks.map((rank, i) => (
+                    <React.Fragment key={rank}>{i > 0 && (i === revealRanks.length - 1 ? ", then " : ", ")}<strong>{form.prizes[rank - 1].prizeDescription || `Prize ${rank}`}</strong></React.Fragment>
+                  ))} last. A customer can win only once.
+                </span>
               </p>
             )}
           </>

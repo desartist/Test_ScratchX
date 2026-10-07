@@ -58,6 +58,7 @@ function RevealStage() {
 
   async function checkSlip(event) {
     event.preventDefault();
+    setChecked(null);
     try {
       const data = await api(`/api/customer/lucky-draw/campaigns/${campaignId}/reveal?slip=${encodeURIComponent(slip)}`);
       setChecked({ slip, ...data.mySlip });
@@ -84,7 +85,7 @@ function RevealStage() {
 
   return (
     <div className={styles.page}>
-      <main className={styles.stage}>
+      <div className={styles.stage}>
         <div className={styles.top}>
           <span>{view.storeNames.join(" · ")}</span>
           {view.status === "live" && <span className={styles.live}>LIVE</span>}
@@ -170,7 +171,7 @@ function RevealStage() {
         )}
 
         <p className={styles.foot}>Winners are picked at random by ScratchX. Each {isSlipDraw ? "slip" : "customer"} can win only once.</p>
-      </main>
+      </div>
     </div>
   );
 }
