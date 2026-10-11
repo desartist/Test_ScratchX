@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Calculator, Check, ImagePlus, Info, ListOrdered, Pencil, Plus, QrCode, Radio, Send, Trophy, X } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
@@ -76,6 +76,19 @@ function dateProblems(form) {
   return problems;
 }
 
+/** Inline "leave without saving?" prompt; nothing is saved until the last step, so leaving loses the form. */
+function LeavePrompt({ onStay, onLeave }) {
+  return (
+    <div className={styles.leaveBar} role="group" aria-labelledby="leave-title" onKeyDown={(e) => e.key === "Escape" && onStay()}>
+      <p id="leave-title"><strong>Leave without saving?</strong> This lucky draw has not been saved yet, so what you entered will be lost.</p>
+      <div className={styles.actions}>
+        <button type="button" className={styles.secondaryButton} onClick={onStay} autoFocus>Keep editing</button>
+        <button type="button" className={styles.dangerButton} onClick={onLeave}>Leave</button>
+      </div>
+    </div>
+  );
+}
+
 function NewLuckyDrawForm() {
   const router = useRouter();
   const [form, setForm] = useState(initialForm);
@@ -87,6 +100,10 @@ function NewLuckyDrawForm() {
   const [confirmed, setConfirmed] = useState(false);
   const [fromCalculator, setFromCalculator] = useState(false);
   const [imageBusy, setImageBusy] = useState(null);
+  // Where the owner asked to leave from ("top" or "foot"), while the leave prompt is open.
+  const [leaving, setLeaving] = useState(null);
+  // The form as it stood once defaults were filled in; anything different is unsaved work.
+  const baseline = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,6 +128,7 @@ function NewLuckyDrawForm() {
             // Ignore unreadable storage; the owner can type the prizes.
           }
         }
+        baseline.current = next;
         return next;
       });
 
@@ -258,6 +276,10 @@ function NewLuckyDrawForm() {
     }
   }
 
+  const dirty = baseline.current !== null && JSON.stringify(form) !== JSON.stringify(baseline.current);
+  const requestLeave = (where) => (dirty ? setLeaving(where) : router.push("/lucky-draws"));
+  const leavePrompt = <LeavePrompt onStay={() => setLeaving(null)} onLeave={() => router.push("/lucky-draws")} />;
+
   const fieldClass = (key) => `${styles.input} ${showErrors && dates[key] ? styles.inputError : ""}`;
   const revealRanks = revealOrder(form.prizes.map((p, i) => ({ rank: i + 1, prizeValue: parseAmount(p.prizeValue) })));
   const start = istInputToIso(form.startDate);
@@ -269,18 +291,22 @@ function NewLuckyDrawForm() {
   return (
     <div className={styles.container}>
       <div className={styles.wizard}>
-        <Link href="/lucky-draws" className={styles.backLink}><ArrowLeft size={16} aria-hidden="true" />Cancel</Link>
-        <div>
-          <h1 className={styles.title}>{["New lucky draw", "Details and dates", "Prizes", "Review and publish"][step - 1]}</h1>
-          <p className={styles.subtitle}>
-            {[
-              "Customers enter by scanning your QR code with their bill. Choose how the winners are shown.",
-              "Name the draw, choose your stores, and set the three dates.",
-              "Add each prize with a picture, its value and how many winners get it. List the biggest prize first.",
-              "Check everything once more. After publishing, dates can only be extended.",
-            ][step - 1]}
-          </p>
+        <div className={styles.wizardHead}>
+          <div>
+            <h1 className={styles.title}>{["New lucky draw", "Details and dates", "Prizes", "Review and publish"][step - 1]}</h1>
+            <p className={styles.subtitle}>
+              {[
+                "Customers enter by scanning your QR code with their bill. Choose how the winners are shown.",
+                "Name the draw, choose your stores, and set the three dates.",
+                "Add each prize with a picture, its value and how many winners get it. List the biggest prize first.",
+                "Check everything once more. After publishing, dates can only be extended.",
+              ][step - 1]}
+            </p>
+          </div>
+          {/* Leaving the wizard is a close action, not "back"; on phones it lives in the footer instead. */}
+          <button type="button" className={`${styles.ghostButton} ${styles.wizardClose}`} onClick={() => requestLeave("top")}><X size={16} aria-hidden="true" />Cancel</button>
         </div>
+        {leaving === "top" && leavePrompt}
         <Steps step={step} />
 
         {error && <p className={styles.error} role="alert">{error}</p>}
@@ -305,6 +331,7 @@ function NewLuckyDrawForm() {
             </fieldset>
             <p className={styles.info}><QrCode size={16} aria-hidden="true" /><span>Customers always enter by scanning your QR code at the store with their bill, so every customer and what they spent is recorded on ScratchX.</span></p>
             <p className={styles.info}><Info size={16} aria-hidden="true" /><span>You can&rsquo;t change how winners are shown after the draw is published.</span></p>
+            <p className={styles.hint}>Not sure what the prizes should cost? <Link href="/lucky-draws/calculator" className={styles.inlineLink}><Calculator size={14} aria-hidden="true" />Check the cost first</Link></p>
           </>
         )}
 
@@ -639,9 +666,10 @@ function NewLuckyDrawForm() {
           </>
         )}
 
+        {leaving === "foot" && leavePrompt}
         <div className={styles.wizardFoot}>
           {step === 1 ? (
-            <Link href="/lucky-draws/calculator" className={styles.ghostButton}><Calculator size={16} aria-hidden="true" />Check the cost first</Link>
+            <button type="button" className={`${styles.ghostButton} ${styles.mobileOnly}`} onClick={() => requestLeave("foot")}>Cancel</button>
           ) : (
             <button type="button" className={styles.ghostButton} onClick={() => goTo(step - 1)}><ArrowLeft size={16} aria-hidden="true" />Back</button>
           )}
