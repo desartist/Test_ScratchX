@@ -11,16 +11,14 @@ import LuckyDraw from '@/models/luckyDrawModel';
 import { requireAuth } from '@/lib/auth';
 import { checkPlanAccess } from '@/lib/subscriptionAccessGuard';
 import { PATCH as patchDates } from '@/app/api/lucky-draws/campaigns/[id]/dates/route';
-import { PATCH as patchSlips } from '@/app/api/lucky-draws/campaigns/[id]/slips/route';
-import { PUT as putPicks } from '@/app/api/lucky-draws/draws/[drawId]/picks/route';
-import { POST as publish } from '@/app/api/lucky-draws/draws/[drawId]/publish/route';
 import { POST as startReveal } from '@/app/api/lucky-draws/draws/[drawId]/reveal/start/route';
 import { POST as nextReveal } from '@/app/api/lucky-draws/draws/[drawId]/reveal/next/route';
 import { PATCH as claim } from '@/app/api/lucky-draws/winners/[winnerId]/claim/route';
 import { GET as publicReveal } from '@/app/api/customer/lucky-draw/campaigns/[id]/reveal/route';
 import { GET as publicCampaign } from '@/app/api/customer/lucky-draw/campaigns/[id]/route';
 import { POST as participate } from '@/app/api/customer/lucky-draw/participate/route';
-import { createCampaign, createOpenDraw, newId, DAY } from '../../helpers/luckyDrawFixtures';
+import LuckyDrawWinner from '@/models/luckyDrawWinnerModel';
+import { createCampaign, createOpenDraw, createEntry, nextPhone, newId, DAY } from '../../helpers/luckyDrawFixtures';
 
 beforeAll(() => LuckyDraw.init());
 beforeEach(() => {
@@ -43,19 +41,18 @@ const categories = [
   { rank: 2, prizeDescription: 'Third prize', prizeValue: 1000, quantity: 2 },
 ];
 
-async function slipDraw(distributionMode, { closed = true } = {}) {
+async function qrDraw(revealMode, { closed = true } = {}) {
   const endDate = closed ? new Date(Date.now() - DAY) : new Date(Date.now() + 5 * DAY);
   const campaign = await createCampaign({
-    distributionMode,
-    entryTiers: [],
+    revealMode,
     prizeTiers: categories,
-    slipCount: 100,
     startDate: new Date(endDate.getTime() - 10 * DAY),
     endDate,
     revealDate: endDate,
     drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'manual' },
   });
   const draw = await createOpenDraw(campaign, { drawDate: endDate });
+  for (let i = 0; i < 5; i += 1) await createEntry(campaign, draw, { customerName: 'Kunal Desai', customerPhone: nextPhone() });
   return { campaign, draw, merchantId: campaign.merchantId };
 }
 
@@ -65,9 +62,6 @@ describe('merchant-only routes', () => {
     const p = params({ id: String(newId()), drawId: String(newId()), winnerId: String(newId()) });
     for (const res of [
       await patchDates(req('PATCH', '/x', {}), p),
-      await patchSlips(req('PATCH', '/x', {}), p),
-      await putPicks(req('PUT', '/x', {}), p),
-      await publish(req('POST', '/x'), p),
       await startReveal(req('POST', '/x'), p),
       await nextReveal(req('POST', '/x'), p),
       await claim(req('PATCH', '/x', {}), p),
@@ -77,41 +71,9 @@ describe('merchant-only routes', () => {
   });
 });
 
-describe('in-store reveal', () => {
-  it('records slips, saves picks, rejects a duplicate, publishes and shows results', async () => {
-    const { campaign, draw, merchantId } = await slipDraw('manual_offline_reveal');
-    as('Merchant', merchantId);
-
-    const slips = await patchSlips(req('PATCH', '/x', { slipCount: 150 }), params({ id: String(campaign._id) }));
-    expect((await json(slips)).slipCount).toBe(150);
-
-    const dup = await putPicks(
-      req('PUT', '/x', { picks: [{ rank: 2, slipNumbers: [7, 7] }] }),
-      params({ drawId: String(draw._id) }),
-    );
-    expect(dup.status).toBe(400);
-    expect((await dup.json()).error).toBe('Slip 0007 already won Third prize. Draw another slip.');
-
-    const saved = await putPicks(
-      req('PUT', '/x', { picks: [{ rank: 2, slipNumbers: [7, 8] }, { rank: 1, slipNumbers: [99] }] }),
-      params({ drawId: String(draw._id) }),
-    );
-    expect(saved.status).toBe(200);
-
-    const published = await publish(req('POST', '/x'), params({ drawId: String(draw._id) }));
-    expect(published.status).toBe(200);
-    expect((await json(published)).winners).toHaveLength(3);
-
-    const results = await json(await publicReveal(req('GET', `/x?slip=99`), params({ id: String(campaign._id) })));
-    expect(results.status).toBe('done');
-    expect(results.mySlip).toMatchObject({ won: true, prize: 'Grand prize' });
-    expect(JSON.stringify(results)).not.toMatch(/claimCode/);
-  });
-});
-
-describe('online reveal of slips', () => {
-  it('starts without exposing winners, reveals one category at a time, and the owner can mark a claim', async () => {
-    const { campaign, draw, merchantId } = await slipDraw('manual_online_reveal');
+describe('live reveal from QR entries', () => {
+  it('starts without exposing winners, reveals one prize at a time, and the owner can mark a claim', async () => {
+    const { campaign, draw, merchantId } = await qrDraw('live');
     as('Merchant', merchantId);
 
     const started = await startReveal(req('POST', '/x'), params({ drawId: String(draw._id) }));
@@ -122,26 +84,36 @@ describe('online reveal of slips', () => {
 
     let view = await json(await publicReveal(req('GET', '/x'), params({ id: String(campaign._id) })));
     expect(view.status).toBe('live');
+    expect(view.revealMode).toBe('live');
     expect(view.categories.every((c) => c.winners.length === 0)).toBe(true);
 
     await nextReveal(req('POST', '/x'), params({ drawId: String(draw._id) }));
     view = await json(await publicReveal(req('GET', '/x'), params({ id: String(campaign._id) })));
     expect(view.categories[0]).toMatchObject({ name: 'Third prize', revealed: true });
-    expect(view.categories[0].winners).toHaveLength(2);
+    expect(view.categories[0].winners.map((w) => w.label)).toEqual(['Kunal D.', 'Kunal D.']);
+    expect(JSON.stringify(view)).not.toMatch(/claimCode|customerPhone/);
 
-    const winners = await (await import('@/models/luckyDrawWinnerModel')).default.find({ drawId: draw._id }).lean();
-    const claimed = await claim(
-      req('PATCH', '/x', { customerName: 'Kunal Desai', customerPhone: '9876500000' }),
-      params({ winnerId: String(winners[0]._id) }),
-    );
+    const revealed = await LuckyDrawWinner.findOne({ drawId: draw._id, rank: 2 }).lean();
+    const claimed = await claim(req('PATCH', '/x', {}), params({ winnerId: String(revealed._id) }));
     expect(claimed.status).toBe(200);
     expect((await json(claimed)).status).toBe('redeemed');
+
+    // The grand prize is still hidden, so even the owner cannot mark it yet.
+    const hidden = await LuckyDrawWinner.findOne({ drawId: draw._id, rank: 1 }).lean();
+    expect((await claim(req('PATCH', '/x', {}), params({ winnerId: String(hidden._id) }))).status).toBe(404);
+  });
+
+  it('refuses to start a reveal for a draw that shows winners at once', async () => {
+    const { draw, merchantId } = await qrDraw('instant');
+    as('Merchant', merchantId);
+    const res = await startReveal(req('POST', '/x'), params({ drawId: String(draw._id) }));
+    expect(res.status).toBe(409);
   });
 });
 
 describe('extending dates', () => {
   it('extends entries close for the owner and 404s for anyone else', async () => {
-    const { campaign, merchantId } = await slipDraw('manual_offline_reveal', { closed: false });
+    const { campaign, merchantId } = await qrDraw('live', { closed: false });
     as('Merchant', merchantId);
     const newDate = new Date(new Date(campaign.endDate).getTime() + 7 * DAY).toISOString();
 
@@ -158,11 +130,11 @@ describe('extending dates', () => {
 });
 
 describe('public pages', () => {
-  it('shows prize images, values and the mode, and refuses online entry for slip draws', async () => {
-    const { campaign } = await slipDraw('manual_online_reveal', { closed: false });
+  it('shows prize images, values and how winners are shown, and takes QR entries for a live reveal', async () => {
+    const { campaign } = await qrDraw('live', { closed: false });
 
     const info = await json(await publicCampaign(req('GET', '/x'), params({ id: String(campaign._id) })));
-    expect(info.distributionMode).toBe('manual_online_reveal');
+    expect(info.revealMode).toBe('live');
     expect(info.prizes[0]).toMatchObject({ prizeDescription: 'Grand prize', prizeValue: 8000, quantity: 1 });
     expect(info.prizes[0].imageUrl).toMatch(/^data:image/);
 
@@ -173,9 +145,10 @@ describe('public pages', () => {
         customerMobile: '9876543210',
         billAmount: 5000,
         consent: true,
+        latitude: 19.0772,
+        longitude: 72.8785,
       }),
     );
-    expect(entry.status).toBe(409);
-    expect((await entry.json()).error).toMatch(/slip/i);
+    expect(entry.status).toBe(201);
   });
 });

@@ -8,10 +8,9 @@ import LuckyDrawWinner from '@/models/luckyDrawWinnerModel';
 import { sendSms } from '@/lib/services/luckyDraw/notifier';
 import { markWinnerClaimed } from '@/lib/services/luckyDraw/claimService';
 import { getPublicReveal } from '@/lib/services/luckyDraw/revealService';
-import { notifyPendingWinners } from '@/lib/services/luckyDraw/winnerNotifications';
-import { startLiveReveal, revealNextCategory } from '@/lib/services/luckyDraw/slipDrawService';
+import { startLiveReveal, revealNextCategory } from '@/lib/services/luckyDraw/liveRevealService';
 import { runDraw } from '@/lib/services/luckyDraw/drawService';
-import { NotFoundError, ValidationError } from '@/lib/errors';
+import { NotFoundError } from '@/lib/errors';
 import { createCampaign, createOpenDraw, createEntry, nextPhone, newId, DAY } from '../../helpers/luckyDrawFixtures';
 
 beforeAll(() => LuckyDraw.init());
@@ -29,66 +28,59 @@ const categories = [
   { rank: 3, prizeDescription: 'Third prize', prizeValue: 3000, quantity: 3 },
 ];
 
-async function liveSlipDraw() {
+async function liveDraw() {
   const campaign = await createCampaign({
-    distributionMode: 'manual_online_reveal',
-    entryTiers: [],
+    revealMode: 'live',
     prizeTiers: categories,
-    slipCount: 50,
     startDate: new Date(CLOSE.getTime() - 10 * DAY),
     endDate: CLOSE,
     revealDate: CLOSE,
     drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'manual' },
   });
   const draw = await createOpenDraw(campaign, { drawDate: CLOSE });
+  for (let i = 0; i < 8; i += 1) await createEntry(campaign, draw, { customerName: 'Priya Shah', customerPhone: nextPhone() });
   const merchantId = String(campaign.merchantId);
   const started = await startLiveReveal(merchantId, String(draw._id), { now: LATER });
   return { campaign, draw, merchantId, winners: started.winners };
 }
 
+async function instantDraw() {
+  const campaign = await createCampaign({ prizeTiers: categories });
+  const draw = await createOpenDraw(campaign);
+  for (let i = 0; i < 8; i += 1) await createEntry(campaign, draw, { customerPhone: nextPhone() });
+  const { winners } = await runDraw(draw._id, { source: 'manual', now: LATER });
+  return { campaign, merchantId: String(campaign.merchantId), winners };
+}
+
 describe('markWinnerClaimed', () => {
-  it('marks a slip winner as claimed and can record who collected it', async () => {
-    const { merchantId, winners } = await liveSlipDraw();
+  it('marks a winner as claimed and keeps the customer the QR entry recorded', async () => {
+    const { merchantId, winners } = await instantDraw();
     const account = { _id: newId(), role: 'Merchant' };
 
-    const claimed = await markWinnerClaimed(merchantId, String(winners[0]._id), {
-      account,
-      customerName: 'Priya Shah',
-      customerPhone: '9876543210',
-      now: LATER,
-    });
+    const claimed = await markWinnerClaimed(merchantId, String(winners[0]._id), { account, now: LATER });
 
-    expect(claimed).toMatchObject({ status: 'redeemed', customerName: 'Priya Shah', customerPhone: '9876543210' });
+    expect(claimed).toMatchObject({ status: 'redeemed', customerName: winners[0].customerName, customerPhone: winners[0].customerPhone });
     expect(claimed.redeemedAt.toISOString()).toBe(LATER.toISOString());
   });
 
-  it('refuses twice, after expiry, a bad phone and other merchants’ winners', async () => {
-    const { merchantId, winners } = await liveSlipDraw();
+  it('refuses twice, after expiry, before a live prize is revealed, and other merchants’ winners', async () => {
+    const { merchantId, winners } = await instantDraw();
     const account = { _id: newId(), role: 'Merchant' };
-    await expect(markWinnerClaimed(merchantId, String(winners[0]._id), { account, customerPhone: '123' })).rejects.toThrow(
-      ValidationError,
-    );
     await markWinnerClaimed(merchantId, String(winners[0]._id), { account, now: LATER });
     await expect(markWinnerClaimed(merchantId, String(winners[0]._id), { account, now: LATER })).rejects.toThrow(/already/i);
     await expect(
       markWinnerClaimed(merchantId, String(winners[1]._id), { account, now: new Date(LATER.getTime() + 60 * DAY) }),
     ).rejects.toThrow(/expired/i);
     await expect(markWinnerClaimed(String(newId()), String(winners[2]._id), { account })).rejects.toThrow(NotFoundError);
-  });
-});
 
-describe('notifyPendingWinners', () => {
-  it('never texts slip winners, who have no phone number', async () => {
-    await liveSlipDraw();
-    const result = await notifyPendingWinners({ now: LATER });
-    expect(sendSms).not.toHaveBeenCalled();
-    expect(result.failed).toBe(0);
+    const live = await liveDraw();
+    await expect(markWinnerClaimed(live.merchantId, String(live.winners[0]._id), { account, now: LATER })).rejects.toThrow(NotFoundError);
   });
 });
 
 describe('getPublicReveal', () => {
   it('shows prizes in reveal order and hides winners until their category is revealed', async () => {
-    const { campaign, draw, merchantId, winners } = await liveSlipDraw();
+    const { campaign, draw, merchantId } = await liveDraw();
 
     let view = await getPublicReveal(String(campaign._id));
     expect(view.status).toBe('live');
@@ -100,17 +92,9 @@ describe('getPublicReveal', () => {
     view = await getPublicReveal(String(campaign._id));
     expect(view.categories[0].revealed).toBe(true);
     expect(view.categories[0].winners).toHaveLength(3);
-    expect(view.categories[0].winners[0].label).toMatch(/^Slip \d{4}$/);
+    expect(view.categories[0].winners[0]).toMatchObject({ label: 'Priya S.', sub: expect.stringMatching(/^Phone ending \d{4}$/) });
     expect(view.categories[1].winners).toEqual([]);
-
-    const thirdPrizeSlip = winners.find((w) => w.rank === 3).slipNumber;
-    const grandSlip = winners.find((w) => w.rank === 1).slipNumber;
-    expect((await getPublicReveal(String(campaign._id), { slipNumber: thirdPrizeSlip })).mySlip).toMatchObject({
-      won: true,
-      prize: 'Third prize',
-    });
-    // Not revealed yet, so the answer must not give the grand prize away.
-    expect((await getPublicReveal(String(campaign._id), { slipNumber: grandSlip })).mySlip).toEqual({ won: false, pending: true });
+    expect(JSON.stringify(view)).not.toMatch(/claimCode|customerPhone/);
   });
 
   it('says the reveal has not started before the draw', async () => {

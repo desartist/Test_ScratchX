@@ -1,7 +1,7 @@
 import { ok, errorResponse, requireMerchant } from '@/lib/luckyDraw/http';
-import { revealNextCategory } from '@/lib/services/luckyDraw/slipDrawService';
+import { revealNextCategory } from '@/lib/services/luckyDraw/liveRevealService';
 
-// Online reveal: makes the next prize category public (smallest prize first).
+// Live reveal: makes the next prize public (smallest prize first) and texts its winners.
 export async function POST(_request, { params }) {
   try {
     const { error, merchantId } = await requireMerchant();

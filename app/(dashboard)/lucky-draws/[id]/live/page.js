@@ -19,6 +19,8 @@ function LiveReveal() {
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("");
   const [frameKey, setFrameKey] = useState(0);
+  // The phone preview is a second copy of the reveal page; on a phone the owner opens the real one instead.
+  const [showPreview, setShowPreview] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -35,6 +37,14 @@ function LiveReveal() {
     load();
     setOrigin(window.location.origin);
   }, [load]);
+
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 768px)");
+    const update = () => setShowPreview(wide.matches);
+    update();
+    wide.addEventListener("change", update);
+    return () => wide.removeEventListener("change", update);
+  }, []);
 
   async function act(label, path) {
     setBusy(label);
@@ -60,7 +70,8 @@ function LiveReveal() {
 
   const { campaign, openDraw, pastDraws } = detail;
   const draw = pastDraws[0];
-  const slipOnline = campaign.distributionMode === "manual_online_reveal";
+  const isLive = campaign.revealMode === "live";
+  const entryCount = openDraw?.entryCount ?? 0;
   const started = view.status !== "not_started";
   const done = view.status === "done";
   const next = view.categories[view.revealedCount];
@@ -88,7 +99,7 @@ function LiveReveal() {
           </h1>
           <p className={styles.subtitle}>
             {formatDayTime(view.revealDate)}
-            {draw ? ` · ${formatNumber(draw.entryCount)} ${slipOnline ? "slips" : "entries"} in the draw` : campaign.slipCount ? ` · ${formatNumber(campaign.slipCount)} slips handed out` : ""}
+            {draw ? ` · ${formatNumber(draw.entryCount)} entries in the draw` : openDraw ? ` · ${formatNumber(entryCount)} ${entryCount === 1 ? "entry" : "entries"} so far` : ""}
           </p>
         </div>
         <div className={styles.actions}>
@@ -99,26 +110,26 @@ function LiveReveal() {
 
       {error && <p className={styles.error} role="alert">{error}</p>}
 
-      <div className={styles.detailGrid} style={{ gridTemplateColumns: "minmax(0, 1fr) 380px" }}>
+      <div className={styles.liveGrid}>
         <div className={styles.stack}>
-          {!started && slipOnline && (
+          {!started && isLive && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Ready when you are</h2>
               <p className={styles.muted}>
-                Share the watch link with your customers, then start. ScratchX picks the winning slips at random from slips 0001 to {String(campaign.slipCount || 0).padStart(4, "0")}. Nothing is shown until you reveal each prize.
+                Share the watch link with your customers, then start. ScratchX picks the winners at random from all {formatNumber(entryCount)} QR {entryCount === 1 ? "entry" : "entries"}. Nothing is shown until you reveal each prize, and each winner gets an SMS when their prize is revealed.
               </p>
               {entriesOpen && <p className={styles.notice}>Entries are open until {formatDayTime(campaign.endDate)}. You can start the reveal after that.</p>}
-              {!campaign.slipCount && <p className={styles.notice}>Record how many slips were handed out on the draw&rsquo;s page first.</p>}
+              {!entriesOpen && entryCount === 0 && <p className={styles.notice}>Nobody entered this draw, so there are no winners to reveal.</p>}
               <div>
-                <button type="button" className={styles.primaryButton} disabled={busy !== "" || entriesOpen || !campaign.slipCount || !openDraw} onClick={() => act("start", `/api/lucky-draws/draws/${openDraw._id}/reveal/start`)}>
+                <button type="button" className={styles.primaryButton} disabled={busy !== "" || entriesOpen || entryCount === 0 || !openDraw} onClick={() => act("start", `/api/lucky-draws/draws/${openDraw._id}/reveal/start`)}>
                   <Play size={16} aria-hidden="true" />{busy === "start" ? "Picking winners…" : "Start live reveal"}
                 </button>
               </div>
             </section>
           )}
 
-          {!slipOnline && !started && (
-            <p className={styles.notice}>Results appear here once the draw has run.</p>
+          {!isLive && !started && (
+            <p className={styles.notice}>This draw shows every winner at once. Results appear here once the draw has run.</p>
           )}
 
           <div className={styles.panel}>
@@ -140,7 +151,7 @@ function LiveReveal() {
                       )}
                     </div>
                     <span>
-                      {isNext && slipOnline && (
+                      {isNext && isLive && (
                         <button type="button" className={`${styles.primaryButton} ${styles.smallButton}`} disabled={busy !== ""} onClick={() => act("next", `/api/lucky-draws/draws/${draw._id}/reveal/next`)}>
                           {busy === "next" ? "Revealing…" : `Reveal ${cat.name.toLowerCase()}`}
                         </button>
@@ -152,19 +163,21 @@ function LiveReveal() {
             </ol>
           </div>
 
-          {done && <p className={styles.okBox}><Check size={16} aria-hidden="true" />Every prize has been revealed. Winners show their slip at the store to collect; mark each one as claimed on the draw&rsquo;s page.</p>}
+          {done && <p className={styles.okBox}><Check size={16} aria-hidden="true" />Every prize has been revealed and every winner has an SMS with their claim code. Redeem the code at the store when they collect their prize.</p>}
           {next && started && !done && (
             <p className={styles.info}><Info size={16} aria-hidden="true" />Customers on the reveal page see each prize as you reveal it. Take your time and build up to the grand prize.</p>
           )}
-          <p className={styles.info}><Lock size={16} aria-hidden="true" /><span><strong>How winners are picked.</strong> Winners are picked at random by ScratchX once, when the reveal starts, and stored. Each slip can win only once.</span></p>
+          <p className={styles.info}><Lock size={16} aria-hidden="true" /><span><strong>How winners are picked.</strong> Winners are picked at random by ScratchX once, when the reveal starts, from every QR entry. Bigger bills earn more entries, and each customer can win only once.</span></p>
         </div>
 
-        <div className={styles.stack} style={{ alignItems: "center" }}>
-          <span className={styles.modeTag}><Smartphone size={16} aria-hidden="true" />What customers see</span>
-          <div style={{ width: "100%", maxWidth: 360, borderRadius: 36, padding: 10, background: "#0b0f1f", boxShadow: "0 30px 60px -20px rgba(1,15,68,0.45)" }}>
-            <iframe key={frameKey} title="Customer reveal page preview" src={`/lucky-draw/${id}/reveal`} style={{ width: "100%", height: 640, border: 0, borderRadius: 28, background: "#050d33" }} />
+        {showPreview && (
+          <div className={styles.previewCol}>
+            <span className={styles.modeTag}><Smartphone size={16} aria-hidden="true" />What customers see</span>
+            <div className={styles.phoneFrame}>
+              <iframe key={frameKey} className={styles.phoneScreen} title="Customer reveal page preview" src={`/lucky-draw/${id}/reveal`} loading="lazy" />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import React, { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api, formatDateTime } from "@/lib/luckyDraw/clientApi";
 import styles from "../luckyDraws.module.css";
@@ -28,6 +30,7 @@ function RedeemForm() {
 
   return (
     <div className={styles.container}>
+      <Link href="/lucky-draws" className={styles.backLink}><ArrowLeft size={16} aria-hidden="true" />All lucky draws</Link>
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Redeem a Lucky Draw prize</h1>
@@ -38,9 +41,9 @@ function RedeemForm() {
       <form className={styles.section} onSubmit={submit}>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="claim-code">Claim code</label>
-          <input id="claim-code" className={`${styles.input} ${styles.mono}`} value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} autoComplete="off" autoCapitalize="characters" maxLength={12} required />
+          <input id="claim-code" className={`${styles.input} ${styles.mono}`} value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} autoComplete="off" autoCapitalize="characters" spellCheck={false} enterKeyHint="go" maxLength={12} required />
         </div>
-        <div><button type="submit" className={styles.primaryButton} disabled={busy || code.trim() === ""}>{busy ? "Checking…" : "Redeem prize"}</button></div>
+        <div><button type="submit" className={`${styles.primaryButton} ${styles.blockOnMobile}`} disabled={busy || code.trim() === ""}>{busy ? "Checking…" : "Redeem prize"}</button></div>
       </form>
 
       {error && <p className={styles.error} role="alert">{error}</p>}

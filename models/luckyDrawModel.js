@@ -29,14 +29,6 @@ const prizeSnapshotSchema = new mongoose.Schema(
   { _id: false },
 );
 
-const manualPickSchema = new mongoose.Schema(
-  {
-    rank: { type: Number, required: true, min: 1 },
-    slipNumbers: { type: [Number], default: [] },
-  },
-  { _id: false },
-);
-
 const luckyDrawSchema = new mongoose.Schema(
   {
     campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'LuckyDrawCampaign', required: true },
@@ -55,14 +47,13 @@ const luckyDrawSchema = new mongoose.Schema(
     prizeMode: { type: String, enum: PRIZE_MODES, default: 'shared' },
     entryCount: { type: Number, default: 0 },
     winnerCount: { type: Number, default: 0 },
-    // Live reveal progress: categories are revealed smallest prize first; revealedCount of them are public.
+    // Reveal progress: categories are revealed smallest prize first; revealedCount of them are public.
+    // Instant draws are fully revealed when they run; live draws are revealed by the owner one at a time.
     reveal: {
       revealedCount: { type: Number, default: 0, min: 0 },
       startedAt: { type: Date },
       completedAt: { type: Date },
     },
-    // Offline reveal: winning slip numbers the owner has typed in but not yet published.
-    manualPicks: { type: [manualPickSchema], default: [] },
   },
   { timestamps: true },
 );

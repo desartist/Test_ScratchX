@@ -3,7 +3,7 @@ jest.mock('@/lib/subscriptionAccessGuard', () => ({ checkPlanAccess: jest.fn() }
 import { checkPlanAccess } from '@/lib/subscriptionAccessGuard';
 import Store from '@/models/storeModel';
 import LuckyDraw from '@/models/luckyDrawModel';
-import { createCampaign, setCampaignStatus, listCampaigns } from '@/lib/services/luckyDraw/campaignService';
+import { createCampaign, setCampaignStatus, listCampaigns, getCampaignDetail } from '@/lib/services/luckyDraw/campaignService';
 import LuckyDrawWinner from '@/models/luckyDrawWinnerModel';
 import * as fixtures from '../../helpers/luckyDrawFixtures';
 import { ValidationError } from '@/lib/errors';
@@ -50,7 +50,7 @@ describe('createCampaign (v2)', () => {
 
     const campaign = await createCampaign(String(merchantId), input);
 
-    expect(campaign.distributionMode).toBe('online');
+    expect(campaign.revealMode).toBe('instant');
     expect(new Date(campaign.revealDate).toISOString()).toBe(input.revealDate);
     expect(campaign.prizeTiers.map((p) => [p.rank, p.prizeDescription, p.prizeValue, p.quantity])).toEqual([
       [1, 'Grand prize', 20000, 1],
@@ -84,42 +84,41 @@ describe('createCampaign (v2)', () => {
       createCampaign(String(merchantId), onlineInput(store._id, { prizes: [{ prizeDescription: 'TV', quantity: 1 }] })),
     ).rejects.toThrow(ValidationError);
     await expect(
-      createCampaign(String(merchantId), onlineInput(store._id, { distributionMode: 'fax' })),
-    ).rejects.toThrow(/how customers enter/i);
+      createCampaign(String(merchantId), onlineInput(store._id, { revealMode: 'fax' })),
+    ).rejects.toThrow(/how winners are shown/i);
   });
 
-  it.each(['manual_online_reveal', 'manual_offline_reveal'])(
-    '%s: needs no bill ranges or store location, and the owner runs one draw on the reveal date',
-    async (distributionMode) => {
-      const merchantId = newId();
-      const store = await seedStore(merchantId, { latitude: null, longitude: null });
-
-      const campaign = await createCampaign(String(merchantId), {
-        ...onlineInput(store._id),
-        distributionMode,
-        entryTiers: undefined,
-        scheduleType: 'recurring',
-        triggerMode: 'automatic',
-        recurrence: { frequency: 'daily' },
-        maxEntriesPerCustomerPerPeriod: 3,
-        slipCount: 640,
-      });
-
-      expect(campaign.distributionMode).toBe(distributionMode);
-      expect(campaign.entryTiers).toEqual([]);
-      expect(campaign.prizeMode).toBe('shared');
-      expect(campaign.maxEntriesPerCustomerPerPeriod).toBeNull();
-      expect(campaign.drawConfig).toMatchObject({ scheduleType: 'end_of_campaign', triggerMode: 'manual' });
-      expect(campaign.slipCount).toBe(640);
-    },
-  );
-
-  it('refuses a negative or fractional slip count', async () => {
+  it('live reveal: keeps the bill ranges, and the owner starts one draw on the reveal date', async () => {
     const merchantId = newId();
     const store = await seedStore(merchantId);
-    await expect(
-      createCampaign(String(merchantId), { ...onlineInput(store._id), distributionMode: 'manual_offline_reveal', slipCount: -1 }),
-    ).rejects.toThrow(/slips/i);
+
+    const campaign = await createCampaign(String(merchantId), {
+      ...onlineInput(store._id),
+      revealMode: 'live',
+      scheduleType: 'recurring',
+      triggerMode: 'automatic',
+      recurrence: { frequency: 'daily' },
+      maxEntriesPerCustomerPerPeriod: 3,
+    });
+
+    expect(campaign.revealMode).toBe('live');
+    expect(campaign.entryTiers).toHaveLength(1);
+    expect(campaign.maxEntriesPerCustomerPerPeriod).toBe(3);
+    expect(campaign.drawConfig).toMatchObject({ scheduleType: 'end_of_campaign', triggerMode: 'manual' });
+  });
+
+  it('needs bill ranges and a store location whichever way winners are shown', async () => {
+    const merchantId = newId();
+    const store = await seedStore(merchantId);
+    const noLocation = await seedStore(merchantId, { latitude: null, longitude: null });
+    for (const revealMode of ['instant', 'live']) {
+      await expect(
+        createCampaign(String(merchantId), { ...onlineInput(store._id), revealMode, entryTiers: undefined }),
+      ).rejects.toThrow(/entry tier/i);
+      await expect(
+        createCampaign(String(merchantId), { ...onlineInput(noLocation._id), revealMode }),
+      ).rejects.toThrow(/no location/i);
+    }
   });
 
   it('schedules the first draw on the reveal date when activated', async () => {
@@ -150,13 +149,43 @@ describe('listCampaigns (v2)', () => {
       prizeDescription: 'TV',
       expiresAt: new Date(Date.now() + DAY),
     };
-    await LuckyDrawWinner.create({ ...base, slipNumber: 1, claimCode: 'CLAIMV2A' });
-    await LuckyDrawWinner.create({ ...base, slipNumber: 2, claimCode: 'CLAIMV2B', status: 'redeemed' });
+    const winner = (n) => ({ ...base, entryId: newId(), customerName: `Winner ${n}`, customerPhone: `900000000${n}` });
+    await LuckyDrawWinner.create({ ...winner(1), claimCode: 'CLAIMV2A' });
+    await LuckyDrawWinner.create({ ...winner(2), claimCode: 'CLAIMV2B', status: 'redeemed' });
 
     const list = await listCampaigns(String(campaign.merchantId));
     const open = list.find((c) => String(c._id) === String(campaign._id));
     const done = list.find((c) => String(c._id) === String(ended._id));
     expect(open.entryCount).toBe(2);
     expect(done.unclaimedCount).toBe(1);
+  });
+});
+
+describe('list and detail payloads (v2)', () => {
+  const picture = `data:image/png;base64,${'A'.repeat(400)}`;
+
+  it('leaves prize pictures out of the list but keeps them on the draw page', async () => {
+    const campaign = await fixtures.createCampaign({
+      prizeTiers: [{ rank: 1, prizeDescription: 'Smart TV', prizeValue: 30000, quantity: 1, imageUrl: picture }],
+    });
+
+    const [row] = await listCampaigns(String(campaign.merchantId));
+    expect(row.prizeTiers[0].prizeValue).toBe(30000);
+    expect(row.prizeTiers[0].imageUrl).toBeUndefined();
+
+    const detail = await getCampaignDetail(String(campaign.merchantId), String(campaign._id));
+    expect(detail.campaign.prizeTiers[0].imageUrl).toBe(picture);
+  });
+
+  it('counts the customers of the latest finished draw', async () => {
+    const campaign = await fixtures.createCampaign({ status: 'ended' });
+    const draw = await fixtures.createOpenDraw(campaign, { status: 'completed', executedAt: new Date() });
+    await fixtures.createEntry(campaign, draw, { customerPhone: '9000000001' });
+    await fixtures.createEntry(campaign, draw, { customerPhone: '9000000001' });
+    await fixtures.createEntry(campaign, draw, { customerPhone: '9000000002' });
+
+    const detail = await getCampaignDetail(String(campaign.merchantId), String(campaign._id));
+    expect(detail.openDraw).toBeNull();
+    expect(detail.pastDraws[0].customerCount).toBe(2);
   });
 });

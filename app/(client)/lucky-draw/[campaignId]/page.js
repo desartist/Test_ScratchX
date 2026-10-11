@@ -24,11 +24,11 @@ function getPosition() {
   });
 }
 
-function DrawDate({ drawDate, previousDrawDate }) {
+function DrawDate({ drawDate, previousDrawDate, live = false }) {
   if (!drawDate) return null;
   return (
     <div>
-      <div className={styles.drawDate}>Draw planned for {formatDateTime(drawDate)}</div>
+      <div className={styles.drawDate}>{live ? "Winners revealed live on" : "Draw planned for"} {formatDateTime(drawDate)}</div>
       {previousDrawDate && <div className={styles.wasDate}>Was {formatDateTime(previousDrawDate)}</div>}
     </div>
   );
@@ -114,7 +114,7 @@ function EntryPage() {
     );
   }
 
-  const manual = campaign.distributionMode && campaign.distributionMode !== "online";
+  const live = campaign.revealMode === "live";
 
   return (
     <div className={styles.page}>
@@ -122,8 +122,9 @@ function EntryPage() {
         <div className={styles.panel}>
           <h1 className={styles.title}>{campaign.name}</h1>
           {campaign.description && <p className={styles.muted}>{campaign.description}</p>}
-          {!entered && !manual && <DrawDate drawDate={campaign.drawDate} previousDrawDate={campaign.previousDrawDate} />}
+          {!entered && <DrawDate drawDate={campaign.drawDate} previousDrawDate={campaign.previousDrawDate} live={live} />}
           {!entered && <p className={styles.notice} role="note">{campaign.notice}</p>}
+          {!entered && campaign.isOpen && <a className={styles.button} href="#enter">Enter the draw</a>}
         </div>
 
         <div className={styles.panel}>
@@ -156,37 +157,31 @@ function EntryPage() {
             <li><span>Entries close</span><b>{formatDayTime(campaign.endDate)}</b></li>
             <li><span>Winners revealed</span><b>{formatDayTime(campaign.revealDate || campaign.drawDate)}</b></li>
           </ul>
-          {manual ? (
-            <p className={styles.muted}>Ask at the store counter for a numbered entry slip when you shop. Keep your slip safe: you need it to collect a prize.</p>
-          ) : (
-            <>
-              <h2 className={styles.heading}>How to earn entries</h2>
-              <ul className={styles.list}>
-                {campaign.entryTiers.map((tier, i) => <li key={i}>{describeTier(tier)}</li>)}
-              </ul>
-              {campaign.maxEntriesPerCustomerPerPeriod && (
-                <p className={styles.muted}>You can hold up to {campaign.maxEntriesPerCustomerPerPeriod} entries per draw.</p>
-              )}
-            </>
+          <h2 className={styles.heading}>How to earn entries</h2>
+          <ul className={styles.list}>
+            {campaign.entryTiers.map((tier, i) => <li key={i}>{describeTier(tier)}</li>)}
+          </ul>
+          {campaign.maxEntriesPerCustomerPerPeriod && (
+            <p className={styles.muted}>You can hold up to {campaign.maxEntriesPerCustomerPerPeriod} entries per draw.</p>
           )}
           <Link className={styles.linkButton} href={`/lucky-draw/${campaignId}/reveal`}>
-            {manual ? "Watch the reveal and check your slip" : "See the winners"}
+            {live ? "Watch the live reveal" : "See the winners"}
           </Link>
         </div>
 
-        {manual ? null : entered ? (
+        {entered ? (
           <div className={styles.panel} role="status">
             <p className={styles.success}>
               <span className={styles.big}>You&rsquo;re in!</span><br />
               {entered.entriesGranted} {entered.entriesGranted === 1 ? "entry" : "entries"} added
               {entered.capped ? " (you reached the limit for this draw)" : ""}. You now hold {entered.totalEntries}.
             </p>
-            <DrawDate drawDate={entered.drawDate} />
+            <DrawDate drawDate={entered.drawDate} live={live} />
             <p className={styles.notice}>{entered.notice}</p>
             {entered.confirmationSent && <p className={styles.muted}>We sent you an SMS with these details.</p>}
           </div>
         ) : campaign.isOpen ? (
-          <form className={`${styles.panel} ${styles.form}`} onSubmit={submit}>
+          <form id="enter" className={`${styles.panel} ${styles.form} ${styles.anchor}`} onSubmit={submit}>
             <h2 className={styles.heading}>Enter the draw</h2>
             {error && <p className={styles.error} role="alert">{error}</p>}
             <div className={styles.field}>
@@ -212,7 +207,6 @@ function EntryPage() {
           <div className={styles.panel}><p className={styles.muted}>This Lucky Draw is not open for entries right now.</p></div>
         )}
 
-        {!manual && (
         <div className={styles.panel}>
           <h2 className={styles.heading}>Check my entries</h2>
           <form className={styles.form} onSubmit={checkStatus}>
@@ -226,7 +220,7 @@ function EntryPage() {
           {status && (
             <div role="status" className={styles.result}>
               <p><strong>{status.totalEntries}</strong> {status.totalEntries === 1 ? "entry" : "entries"} in the next draw.</p>
-              <DrawDate drawDate={status.drawDate} previousDrawDate={status.previousDrawDate} />
+              <DrawDate drawDate={status.drawDate} previousDrawDate={status.previousDrawDate} live={live} />
               {status.wins.map((win, i) => (
                 <p key={i} className={styles.win}>
                   You won #{win.rank}: {win.prizeDescription}. {win.status === "redeemed" ? "Already collected." : win.status === "expired" ? "The claim period has ended." : `Show the code we texted you at the store before ${formatDateTime(win.expiresAt)}.`}
@@ -236,7 +230,6 @@ function EntryPage() {
             </div>
           )}
         </div>
-        )}
       </div>
     </div>
   );

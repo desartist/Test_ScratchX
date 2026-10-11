@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import {
   CAMPAIGN_STATUSES,
-  DISTRIBUTION_MODES,
   PRIZE_MODES,
   RECURRENCE_FREQUENCIES,
+  REVEAL_MODES,
   SCHEDULE_TYPES,
   TRIGGER_MODES,
 } from '../lib/luckyDraw/constants.js';
@@ -42,9 +42,9 @@ const storeSnapshotSchema = new mongoose.Schema(
     city: { type: String, trim: true },
     state: { type: String, trim: true },
     pincode: { type: String, trim: true },
-    // Needed for the online geofence; slip-based (manual) draws can use stores without a location.
-    latitude: { type: Number, default: null },
-    longitude: { type: Number, default: null },
+    // Needed for the geofence: customers enter only when they are at one of the stores.
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   },
   { _id: false },
@@ -55,32 +55,20 @@ const nonEmpty = (label) => ({
   message: `At least one ${label} is required`,
 });
 
-// Bill ranges only matter when customers enter online; slip-based draws have none.
-const entryTiersRequiredOnline = {
-  validator(value) {
-    const mode = typeof this.get === 'function' ? this.get('distributionMode') : this.distributionMode;
-    if (mode && mode !== 'online') return true;
-    return Array.isArray(value) && value.length > 0;
-  },
-  message: 'At least one entry tier is required',
-};
-
 const luckyDrawCampaignSchema = new mongoose.Schema(
   {
     merchantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true, index: true },
     name: { type: String, required: true, trim: true, maxlength: 120 },
     description: { type: String, trim: true, maxlength: 1000, default: '' },
     assignedStores: { type: [storeSnapshotSchema], default: [] },
-    distributionMode: { type: String, enum: DISTRIBUTION_MODES, default: 'online' },
+    revealMode: { type: String, enum: REVEAL_MODES, default: 'instant' },
     startDate: { type: Date, required: true },
     // Entries close (registration end).
     endDate: { type: Date, required: true },
     // When winners are revealed; null on campaigns made before v2 (the draw date then follows endDate).
     revealDate: { type: Date, default: null },
-    // Manual modes: slips numbered 1..slipCount have been handed out.
-    slipCount: { type: Number, default: 0, min: 0 },
     status: { type: String, enum: CAMPAIGN_STATUSES, default: 'draft', index: true },
-    entryTiers: { type: [entryTierSchema], validate: entryTiersRequiredOnline },
+    entryTiers: { type: [entryTierSchema], validate: nonEmpty('entry tier') },
     prizeTiers: { type: [prizeTierSchema], validate: nonEmpty('prize') },
     // shared: one prize list for everyone | pool_per_tier: each range has its own prizes | restricted: some prizes only for some ranges
     prizeMode: { type: String, enum: PRIZE_MODES, default: 'shared' },
@@ -108,6 +96,10 @@ luckyDrawCampaignSchema.pre('validate', function () {
   }
 
   const config = this.drawConfig || {};
+  // The owner starts a live reveal, so it is one draw that never runs by itself.
+  if (this.revealMode === 'live' && (config.scheduleType !== 'end_of_campaign' || config.triggerMode !== 'manual')) {
+    this.invalidate('drawConfig', 'A live reveal is one draw that you start yourself');
+  }
   if (config.scheduleType === 'recurring') {
     const recurrence = config.recurrence || {};
     if (!recurrence.frequency) {

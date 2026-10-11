@@ -215,6 +215,33 @@ describe('getEntryStatus', () => {
     expect(status.wins).toEqual([]);
   });
 
+  it('does not report a moved entries-close date as the previous draw date', async () => {
+    const campaign = await createCampaign();
+    const draw = await createOpenDraw(campaign);
+    const stamp = { changedByAccountId: campaign.merchantId, changedAt: new Date() };
+    const earlierDraw = new Date(Date.now() + 2 * DAY);
+    await LuckyDraw.updateOne(
+      { _id: draw._id },
+      {
+        $push: {
+          dateHistory: {
+            $each: [
+              { kind: 'reveal', previousDate: earlierDraw, newDate: draw.drawDate, ...stamp },
+              { kind: 'entries_close', previousDate: new Date(Date.now() + DAY), newDate: campaign.endDate, ...stamp },
+            ],
+          },
+        },
+      },
+    );
+
+    const status = await getEntryStatus({ campaignId: String(campaign._id), customerMobile: '9876543210' });
+    expect(new Date(status.previousDrawDate)).toEqual(earlierDraw);
+
+    await LuckyDraw.updateOne({ _id: draw._id }, { $pop: { dateHistory: -1 } });
+    const onlyClose = await getEntryStatus({ campaignId: String(campaign._id), customerMobile: '9876543210' });
+    expect(onlyClose.previousDrawDate).toBeNull();
+  });
+
   it('reports wins without ever exposing the claim code', async () => {
     const campaign = await createCampaign();
     const draw = await createOpenDraw(campaign, { status: 'completed' });

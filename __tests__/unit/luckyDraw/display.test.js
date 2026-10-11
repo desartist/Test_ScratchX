@@ -4,7 +4,6 @@ import {
   nextStep,
   daysUntil,
   timelinePosition,
-  formatSlipNumber,
   formatDay,
 } from '@/lib/luckyDraw/display';
 
@@ -12,7 +11,7 @@ const DAY = 24 * 60 * 60 * 1000;
 const now = new Date('2026-10-20T06:30:00.000Z');
 const campaign = (overrides = {}) => ({
   status: 'active',
-  distributionMode: 'online',
+  revealMode: 'instant',
   startDate: '2026-10-05T00:00:00.000Z',
   endDate: '2026-10-31T18:29:00.000Z',
   revealDate: '2026-11-02T13:30:00.000Z',
@@ -28,6 +27,7 @@ describe('drawStage', () => {
     expect(drawStage(campaign(), { now: new Date('2026-11-02T14:00:00.000Z') }).key).toBe('due');
     expect(drawStage(campaign({ status: 'paused' }), { now }).key).toBe('paused');
     expect(drawStage(campaign({ status: 'ended' }), { now }).label).toBe('Completed');
+    expect(drawStage(campaign({ status: 'ended', revealInProgress: true }), { now })).toMatchObject({ key: 'live', label: 'Revealing live' });
   });
 
   it('uses the open draw date when it differs from the campaign', () => {
@@ -46,7 +46,10 @@ describe('listGroup and nextStep', () => {
 
   it('says what happens next', () => {
     expect(nextStep(campaign(), { key: 'open' })).toMatch(/^Entries close 31 Oct/);
-    expect(nextStep(campaign({ distributionMode: 'manual_offline_reveal' }), { key: 'due' })).toBe('Record winners today');
+    expect(nextStep(campaign(), { key: 'due' })).toBe('Draw winners today');
+    expect(nextStep(campaign({ revealMode: 'live' }), { key: 'due' })).toBe('Reveal winners live today');
+    expect(nextStep(campaign({ revealMode: 'live' }), { key: 'live' })).toBe('Continue the live reveal');
+    expect(listGroup({ key: 'live' })).toBe('active');
     expect(nextStep(campaign({ unclaimedCount: 5 }), { key: 'completed' })).toBe('5 prizes not claimed');
   });
 });
@@ -68,8 +71,7 @@ describe('dates', () => {
     expect(Math.round(pos.close)).toBe(93);
   });
 
-  it('formats slips and days', () => {
-    expect(formatSlipNumber(7)).toBe('0007');
+  it('formats days', () => {
     expect(formatDay('2026-10-31T18:29:00.000Z')).toBe('31 Oct');
   });
 });

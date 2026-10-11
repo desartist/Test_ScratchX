@@ -3,15 +3,15 @@
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Calculator, ChevronRight, ClipboardList, Gift, Globe, Plus, Radio, Ticket } from "lucide-react";
+import { Calculator, ChevronRight, Gift, Plus, Radio, Ticket, Trophy } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api } from "@/lib/luckyDraw/clientApi";
 import { formatINR, formatNumber } from "@/lib/luckyDraw/calculator";
 import { prizeTotals } from "@/lib/luckyDraw/prizeCategories";
-import { MODE_LABEL, drawStage, listGroup, nextStep } from "@/lib/luckyDraw/display";
+import { REVEAL_LABEL, drawStage, listGroup, nextStep } from "@/lib/luckyDraw/display";
 import styles from "./luckyDraws.module.css";
 
-const MODE_ICON = { online: Globe, manual_online_reveal: Radio, manual_offline_reveal: ClipboardList };
+const REVEAL_ICON = { instant: Trophy, live: Radio };
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "active", label: "Active" },
@@ -20,19 +20,16 @@ const FILTERS = [
 ];
 
 function ModeTag({ mode }) {
-  const Icon = MODE_ICON[mode] || Globe;
+  const Icon = REVEAL_ICON[mode] || Trophy;
   return (
     <span className={styles.modeTag}>
       <Icon size={15} aria-hidden="true" />
-      {MODE_LABEL[mode] || MODE_LABEL.online}
+      {REVEAL_LABEL[mode] || REVEAL_LABEL.instant}
     </span>
   );
 }
 
-const entriesLabel = (c) =>
-  c.distributionMode && c.distributionMode !== "online"
-    ? `${formatNumber(c.slipCount || 0)} slips`
-    : `${formatNumber(c.entryCount || 0)} entries`;
+const entriesLabel = (c) => `${formatNumber(c.entryCount || 0)} ${c.entryCount === 1 ? "entry" : "entries"}`;
 
 function FirstTime() {
   return (
@@ -149,7 +146,7 @@ function LuckyDrawList() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Lucky draw</th><th>Mode</th><th>Status</th><th className={styles.num}>Entries</th><th className={styles.num}>Prize pool</th><th>Next</th><th aria-label="Open" />
+                    <th>Lucky draw</th><th>Winners shown</th><th>Status</th><th className={styles.num}>Entries</th><th className={styles.num}>Prize pool</th><th>Next</th><th aria-label="Open" />
                   </tr>
                 </thead>
                 <tbody>
@@ -161,7 +158,7 @@ function LuckyDrawList() {
                           <Link href={href} className={styles.cellTitle} onClick={(e) => e.stopPropagation()}>{campaign.name}</Link>
                           <span className={styles.cellSub}>{(campaign.assignedStores || []).map((s) => s.storeName).join(", ")}</span>
                         </td>
-                        <td><ModeTag mode={campaign.distributionMode} /></td>
+                        <td><ModeTag mode={campaign.revealMode} /></td>
                         <td><span className={`${styles.pill} ${styles[`pill_${stage.tone}`]}`}>{stage.label}</span></td>
                         <td className={styles.num}>{entriesLabel(campaign)}</td>
                         <td className={styles.num}>{pool ? formatINR(pool) : "—"}</td>
@@ -178,13 +175,19 @@ function LuckyDrawList() {
           <div className={styles.listCards}>
             {shown.map(({ campaign, stage, pool }) => (
               <Link key={campaign._id} href={`/lucky-draws/${campaign._id}`} className={styles.listCard}>
-                <span className={styles.cellTitle}>{campaign.name}</span>
+                <span className={styles.listCardMain}>
+                  <span className={styles.cellTitle}>{campaign.name}</span>
+                  <span className={styles.listCardMeta}>
+                    <span className={`${styles.pill} ${styles[`pill_${stage.tone}`]}`}>{stage.label}</span>
+                    <ModeTag mode={campaign.revealMode} />
+                  </span>
+                  <span className={styles.listCardNext}>{nextStep(campaign, stage, now || undefined)}</span>
+                </span>
+                <span className={styles.listCardSide}>
+                  <span className={styles.amount}>{pool ? formatINR(pool) : "—"}</span>
+                  <span className={styles.cellSub}>{entriesLabel(campaign)}</span>
+                </span>
                 <ChevronRight size={18} aria-hidden="true" color="#637080" />
-                <span><span className={`${styles.pill} ${styles[`pill_${stage.tone}`]}`}>{stage.label}</span></span>
-                <span className={styles.amount}>{pool ? formatINR(pool) : "—"}</span>
-                <ModeTag mode={campaign.distributionMode} />
-                <span className={styles.muted}>{entriesLabel(campaign)}</span>
-                <strong style={{ gridColumn: "1 / -1" }}>{nextStep(campaign, stage, now || undefined)}</strong>
               </Link>
             ))}
           </div>

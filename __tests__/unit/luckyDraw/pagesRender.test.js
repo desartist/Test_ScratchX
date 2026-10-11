@@ -28,7 +28,6 @@ const pages = [
   ['merchant list', '@/app/(dashboard)/lucky-draws/page', 'Loading'],
   ['new campaign form', '@/app/(dashboard)/lucky-draws/new/page', 'New lucky draw'],
   ['prize calculator', '@/app/(dashboard)/lucky-draws/calculator/page', 'Prize calculator'],
-  ['record winners', '@/app/(dashboard)/lucky-draws/[id]/record/page', 'Loading'],
   ['live reveal (owner)', '@/app/(dashboard)/lucky-draws/[id]/live/page', 'Loading'],
   ['public reveal', '@/app/(client)/lucky-draw/[campaignId]/reveal/page', 'Loading'],
   ['campaign detail', '@/app/(dashboard)/lucky-draws/[id]/page', 'Loading'],

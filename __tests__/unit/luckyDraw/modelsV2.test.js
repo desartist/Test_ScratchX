@@ -4,12 +4,11 @@ import LuckyDrawWinner from '@/models/luckyDrawWinnerModel';
 import { campaignData, createCampaign, createOpenDraw, newId, DAY } from '../../helpers/luckyDrawFixtures';
 
 describe('LuckyDrawCampaign v2 fields', () => {
-  it('defaults to online mode, one winner per prize and no image', async () => {
+  it('defaults to showing winners at once, one winner per prize and no image', async () => {
     const campaign = await LuckyDrawCampaign.create(campaignData());
-    expect(campaign.distributionMode).toBe('online');
+    expect(campaign.revealMode).toBe('instant');
     expect(campaign.prizeTiers[0].quantity).toBe(1);
     expect(campaign.prizeTiers[0].imageUrl).toBeNull();
-    expect(campaign.slipCount).toBe(0);
   });
 
   it('stores prize quantity and image', async () => {
@@ -20,21 +19,25 @@ describe('LuckyDrawCampaign v2 fields', () => {
     expect(campaign.prizeTiers[0].imageUrl).toBe('data:image/jpeg;base64,AAAA');
   });
 
-  it('rejects an unknown distribution mode and a prize quantity below 1', async () => {
-    await expect(createCampaign({ distributionMode: 'carrier_pigeon' })).rejects.toThrow();
+  it('rejects an unknown reveal mode and a prize quantity below 1', async () => {
+    await expect(createCampaign({ revealMode: 'carrier_pigeon' })).rejects.toThrow();
     await expect(
       createCampaign({ prizeTiers: [{ rank: 1, prizeDescription: 'TV', quantity: 0 }] }),
     ).rejects.toThrow();
   });
 
-  it('lets manual modes skip entry ranges, but not online mode', async () => {
+  it('always needs bill ranges and store locations, because every entry comes in by QR', async () => {
+    await expect(createCampaign({ entryTiers: [] })).rejects.toThrow(/entry tier/i);
+    await expect(createCampaign({ revealMode: 'live', entryTiers: [] })).rejects.toThrow(/entry tier/i);
+    const [store] = campaignData().assignedStores;
+    await expect(createCampaign({ assignedStores: [{ ...store, latitude: null }] })).rejects.toThrow(/latitude/i);
+  });
+
+  it('only allows a live reveal as one draw the owner starts', async () => {
+    await expect(createCampaign({ revealMode: 'live' })).rejects.toThrow(/live reveal/i);
     await expect(
-      createCampaign({ distributionMode: 'manual_offline_reveal', entryTiers: [] }),
+      createCampaign({ revealMode: 'live', drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'manual' } }),
     ).resolves.toBeDefined();
-    await expect(
-      createCampaign({ distributionMode: 'manual_online_reveal', entryTiers: [] }),
-    ).resolves.toBeDefined();
-    await expect(createCampaign({ distributionMode: 'online', entryTiers: [] })).rejects.toThrow(/entry tier/i);
   });
 
   it('requires the reveal date to be on or after entries close', async () => {
@@ -47,12 +50,11 @@ describe('LuckyDrawCampaign v2 fields', () => {
 });
 
 describe('LuckyDraw v2 fields', () => {
-  it('starts with nothing revealed and no manual picks', async () => {
+  it('starts with nothing revealed', async () => {
     const campaign = await createCampaign();
     const draw = await createOpenDraw(campaign);
     expect(draw.reveal.revealedCount).toBe(0);
     expect(draw.reveal.startedAt).toBeUndefined();
-    expect(draw.manualPicks).toHaveLength(0);
   });
 });
 
@@ -67,16 +69,10 @@ describe('LuckyDrawWinner v2 fields', () => {
     expiresAt: new Date(Date.now() + 30 * DAY),
   });
 
-  it('saves a slip winner without an entry or phone', async () => {
-    const winner = await LuckyDrawWinner.create({ ...base(), slipNumber: 457, prizeValue: 5000 });
-    expect(winner.slipNumber).toBe(457);
+  it('always points at the QR entry and the customer who won', async () => {
+    await expect(LuckyDrawWinner.create(base())).rejects.toThrow(/entryId|customerName|customerPhone/);
+    const winner = await LuckyDrawWinner.create({ ...base(), entryId: newId(), customerName: 'Asha', customerPhone: '9000000001', prizeValue: 5000 });
     expect(winner.prizeValue).toBe(5000);
-  });
-
-  it('needs either an online entry or a slip number', async () => {
-    await expect(LuckyDrawWinner.create(base())).rejects.toThrow(/entry|slip/i);
-    await expect(
-      LuckyDrawWinner.create({ ...base(), entryId: newId(), customerName: 'Asha', customerPhone: '9000000001' }),
-    ).resolves.toBeDefined();
+    expect(winner.hiddenUntilReveal).toBe(false);
   });
 });

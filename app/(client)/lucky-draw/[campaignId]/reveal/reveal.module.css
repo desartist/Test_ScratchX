@@ -1,8 +1,8 @@
 /* Public reveal page: the live "stage" customers watch on their phones. ScratchX navy with the amber
    brand colour; winning codes are scratched open like a ScratchX card. */
-.page { min-height: 100vh; background: #050d33; color: #e9ecfb; font-family: var(--font-afacad), system-ui, sans-serif; display: flex; justify-content: center; }
+.page { min-height: 100vh; min-height: 100dvh; background: #050d33; color: #e9ecfb; font-family: var(--font-afacad), system-ui, sans-serif; display: flex; justify-content: center; }
 .stage {
-  width: 100%; max-width: 520px; min-height: 100vh; display: flex; flex-direction: column;
+  width: 100%; max-width: 520px; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
   background: radial-gradient(120% 50% at 50% -10%, rgba(239, 158, 27, 0.22), transparent 60%), #050d33;
 }
 .top { display: flex; justify-content: space-between; align-items: center; padding: 18px 18px 4px; font-size: 0.85rem; color: #a9b2d6; gap: 12px; }
@@ -30,7 +30,6 @@
 .win { position: relative; overflow: hidden; padding: 12px 12px 10px; border-radius: 14px; background: #0d1a52; border: 1px solid #24336f; display: flex; flex-direction: column; gap: 2px; }
 .win b { font-size: 1.15rem; letter-spacing: 0.06em; color: #fff; }
 .win small { color: #a9b2d6; font-size: 0.8rem; }
-.mine { border-color: #ef9e1b; box-shadow: 0 0 0 1px #ef9e1b inset; }
 /* The scratch: a foil layer wipes off each newly revealed code, one after another. */
 .fresh::after {
   content: ""; position: absolute; inset: 0;
@@ -47,14 +46,5 @@
 .locked svg { color: #ef9e1b; }
 .locked b { color: #fff; font-size: 1.1rem; }
 .locked span { color: #a9b2d6; font-size: 0.92rem; }
-.checker { margin: 0 14px 16px; padding: 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.06); display: flex; flex-direction: column; gap: 10px; }
-.checker label { font-weight: 600; font-size: 0.9rem; }
-.checkRow { display: flex; gap: 8px; }
-.input { font: inherit; flex: 1; min-width: 0; padding: 11px 12px; border-radius: 10px; border: 1px solid #24336f; background: #0d1a52; color: #fff; letter-spacing: 0.06em; }
-.input::placeholder { color: #7f8ab8; letter-spacing: 0; }
-.input:focus-visible, .button:focus-visible { outline: 2px solid #ef9e1b; outline-offset: 2px; }
-.button { font: inherit; font-weight: 700; padding: 11px 16px; border-radius: 10px; border: 0; background: #ef9e1b; color: #010f44; cursor: pointer; white-space: nowrap; }
-.result { margin: 0; font-size: 0.95rem; }
-.resultWin { color: #ef9e1b; font-weight: 700; }
 .foot { padding: 0 18px 22px; color: #7f8ab8; font-size: 0.82rem; text-align: center; }
 .error { margin: 18px; padding: 12px 14px; border-radius: 12px; background: rgba(253, 232, 232, 0.12); color: #ffd7d7; }

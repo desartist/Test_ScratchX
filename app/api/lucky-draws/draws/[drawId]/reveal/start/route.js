@@ -1,7 +1,7 @@
 import { ok, errorResponse, requireMerchant } from '@/lib/luckyDraw/http';
-import { startLiveReveal } from '@/lib/services/luckyDraw/slipDrawService';
+import { startLiveReveal } from '@/lib/services/luckyDraw/liveRevealService';
 
-// Online reveal of a slip draw: ScratchX picks the winning slips; nothing is public yet.
+// Live reveal: ScratchX picks the winners from the QR entries; nothing is public yet.
 export async function POST(_request, { params }) {
   try {
     const { error, merchantId } = await requireMerchant();

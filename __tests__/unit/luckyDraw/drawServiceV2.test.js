@@ -4,10 +4,11 @@ jest.mock('@/lib/services/luckyDraw/notifier', () => {
 });
 
 import LuckyDraw from '@/models/luckyDrawModel';
+import LuckyDrawCampaign from '@/models/luckyDrawCampaignModel';
+import LuckyDrawWinner from '@/models/luckyDrawWinnerModel';
 import { sendSms } from '@/lib/services/luckyDraw/notifier';
 import { runDraw } from '@/lib/services/luckyDraw/drawService';
 import { expandInDrawOrder } from '@/lib/services/luckyDraw/winnerSelection';
-import { ConflictError } from '@/lib/errors';
 import { createCampaign, createOpenDraw, createEntry, newId, nextPhone } from '../../helpers/luckyDrawFixtures';
 
 beforeAll(() => LuckyDraw.init());
@@ -56,11 +57,35 @@ describe('runDraw with prize categories', () => {
     expect(result.winners[0].rank).toBe(1);
   });
 
-  it.each(['manual_online_reveal', 'manual_offline_reveal'])('refuses %s draws, which use slips', async (distributionMode) => {
-    const campaign = await createCampaign({ distributionMode, entryTiers: [], prizeTiers: categories });
+  it('texts every winner of an instant draw straight away', async () => {
+    const campaign = await createCampaign({ prizeTiers: categories });
     const draw = await createOpenDraw(campaign);
-    await expect(runDraw(draw._id, { source: 'manual' })).rejects.toThrow(ConflictError);
-    const after = await LuckyDraw.findById(draw._id).lean();
-    expect(after.status).toBe('scheduled');
+    for (let i = 0; i < 6; i++) await createEntry(campaign, draw, { customerPhone: nextPhone() });
+
+    const result = await runDraw(draw._id, { source: 'manual' });
+
+    expect(result.notified.sent).toBe(6);
+    expect(result.winners.every((w) => w.hiddenUntilReveal === false)).toBe(true);
+  });
+
+  it('live reveal: picks winners from the QR entries but keeps them hidden and untexted', async () => {
+    const campaign = await createCampaign({
+      revealMode: 'live',
+      prizeTiers: categories,
+      drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'manual' },
+    });
+    const draw = await createOpenDraw(campaign);
+    for (let i = 0; i < 8; i++) await createEntry(campaign, draw, { customerPhone: nextPhone() });
+
+    const result = await runDraw(draw._id, { source: 'manual' });
+
+    expect(result.winners).toHaveLength(6);
+    expect(result.winners.every((w) => w.hiddenUntilReveal && w.status === 'pending')).toBe(true);
+    expect(result.draw.reveal.revealedCount).toBe(0);
+    expect(result.draw.reveal.startedAt).toBeTruthy();
+    expect(result.draw.reveal.completedAt).toBeUndefined();
+    expect(sendSms).not.toHaveBeenCalled();
+    expect((await LuckyDrawCampaign.findById(campaign._id).lean()).status).toBe('ended');
+    expect(await LuckyDrawWinner.countDocuments({ drawId: draw._id, hiddenUntilReveal: true })).toBe(6);
   });
 });

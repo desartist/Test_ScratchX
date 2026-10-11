@@ -7,8 +7,8 @@ export async function PATCH(request, { params }) {
     const { error, merchantId, account } = await requireMerchant();
     if (error) return error;
     const { winnerId } = await params;
-    const { customerName, customerPhone, storeId } = await readJson(request);
-    return ok(await markWinnerClaimed(merchantId, winnerId, { account, customerName, customerPhone, storeId }));
+    const { storeId } = await readJson(request);
+    return ok(await markWinnerClaimed(merchantId, winnerId, { account, storeId }));
   } catch (err) {
     return errorResponse(err);
   }

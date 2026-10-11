@@ -3,37 +3,36 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Calculator, Check, ClipboardList, Globe, ImagePlus, Info, ListOrdered, Pencil, Plus, Radio, Send, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Calculator, Check, ImagePlus, Info, ListOrdered, Pencil, Plus, QrCode, Radio, Send, Trophy, X } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api, describeRange, istInputToIso, toISTInputValue } from "@/lib/luckyDraw/clientApi";
 import { dropTierRow, effectiveMode, formHints, prizeTierIndexes } from "@/lib/luckyDraw/prizeForm";
 import { validatePrizeCategories, revealOrder } from "@/lib/luckyDraw/prizeCategories";
 import { formatINR, formatNumber, parseAmount } from "@/lib/luckyDraw/calculator";
-import { CALCULATOR_STORAGE_KEY, MODE_DESCRIPTION, MODE_LABEL, formatDayTime, pluralDays } from "@/lib/luckyDraw/display";
+import { CALCULATOR_STORAGE_KEY, REVEAL_DESCRIPTION, REVEAL_LABEL, formatDayTime, pluralDays } from "@/lib/luckyDraw/display";
 import { compressPrizeImage } from "@/lib/luckyDraw/imageCompress";
 import styles from "../luckyDraws.module.css";
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const STEPS = ["Mode", "Details & dates", "Prizes", "Review"];
+const STEPS = ["Winners", "Details & dates", "Prizes", "Review"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const MODES = [
-  { key: "online", icon: Globe, points: ["Customers enter with their bill on their phone", "Bigger bills can earn more entries", "Winners get an SMS with a claim code"] },
-  { key: "manual_online_reveal", icon: Radio, points: ["Numbered slips handed out at the counter", "ScratchX picks the winning slips", "You reveal them live, one prize at a time"] },
-  { key: "manual_offline_reveal", icon: ClipboardList, points: ["Numbered slips handed out at the counter", "You draw slips in front of customers", "You type in the winning slip numbers"] },
+// Customers always enter by scanning the QR code with their bill; the owner only chooses how winners are shown.
+const REVEAL_OPTIONS = [
+  { key: "instant", icon: Trophy, points: ["Runs by itself, or when you press Run draw", "Every winner gets an SMS with a claim code", "Can repeat every day or week while entries are open"] },
+  { key: "live", icon: Radio, points: ["You start the reveal in front of your customers", "Smallest prize first, building up to the grand prize", "Each winner gets an SMS as their prize is revealed"] },
 ];
 
 const blankPrize = () => ({ prizeDescription: "", prizeValue: "", quantity: "1", imageUrl: "", rows: [] });
 
 const initialForm = {
-  distributionMode: "online",
+  revealMode: "instant",
   name: "",
   description: "",
   startDate: "",
   endDate: "",
   revealDate: "",
   storeIds: [],
-  slipCount: "",
   tiers: [{ minAmount: "0", maxAmount: "", entriesGranted: "1" }],
   prizeMode: "shared",
   prizes: [blankPrize()],
@@ -129,7 +128,7 @@ function NewLuckyDrawForm() {
     };
   }, []);
 
-  const online = form.distributionMode === "online";
+  const live = form.revealMode === "live";
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
   const setRow = (key, index, patch) => setForm((f) => ({ ...f, [key]: f[key].map((row, i) => (i === index ? { ...row, ...patch } : row)) }));
   const addRow = (key, row) => setForm((f) => ({ ...f, [key]: [...f[key], row] }));
@@ -162,7 +161,7 @@ function NewLuckyDrawForm() {
       prizeValue: parseAmount(p.prizeValue),
       quantity: parseAmount(p.quantity),
       imageUrl: p.imageUrl || null,
-      tierIndexes: online && tierMode !== "shared" ? prizeTierIndexes(p.rows, form.tiers) : [],
+      tierIndexes: tierMode !== "shared" ? prizeTierIndexes(p.rows, form.tiers) : [],
     }));
   const totalValue = form.prizes.reduce((sum, p) => sum + parseAmount(p.prizeValue) * parseAmount(p.quantity), 0);
   const totalWinners = form.prizes.reduce((sum, p) => sum + parseAmount(p.quantity), 0);
@@ -173,7 +172,6 @@ function NewLuckyDrawForm() {
     if (form.name.trim().length < 3) return "Give the lucky draw a name of at least 3 characters.";
     if (form.storeIds.length === 0) return "Choose at least one store.";
     if (Object.keys(dates).length) return "Fix the dates below.";
-    if (!online && form.slipCount !== "" && !(Number.isInteger(Number(form.slipCount)) && Number(form.slipCount) >= 0)) return "Enter the slips handed out as a whole number.";
     return "";
   };
   const step3Problem = () => {
@@ -213,7 +211,7 @@ function NewLuckyDrawForm() {
 
   function buildBody() {
     const body = {
-      distributionMode: form.distributionMode,
+      revealMode: form.revealMode,
       name: form.name,
       description: form.description,
       startDate: istInputToIso(form.startDate),
@@ -222,17 +220,14 @@ function NewLuckyDrawForm() {
       storeIds: form.storeIds,
       prizes: prizesForApi(),
     };
-    if (!online) {
-      body.slipCount = form.slipCount === "" ? 0 : Number(form.slipCount);
-      return body;
-    }
     Object.assign(body, {
       entryTiers: form.tiers.map((t) => ({ minAmount: Number(t.minAmount), maxAmount: t.maxAmount === "" ? null : Number(t.maxAmount), entriesGranted: Number(t.entriesGranted) })),
       prizeMode: tierMode,
       maxEntriesPerCustomerPerPeriod: form.maxEntries === "" ? null : Number(form.maxEntries),
-      scheduleType: form.scheduleType,
-      triggerMode: form.triggerMode,
     });
+    // A live reveal is one draw that the owner starts; the server sets its schedule.
+    if (live) return body;
+    Object.assign(body, { scheduleType: form.scheduleType, triggerMode: form.triggerMode });
     if (form.scheduleType === "recurring") {
       body.recurrence = { frequency: form.frequency, time: form.time, dayOfWeek: form.frequency === "weekly" ? Number(form.dayOfWeek) : null };
     }
@@ -279,7 +274,7 @@ function NewLuckyDrawForm() {
           <h1 className={styles.title}>{["New lucky draw", "Details and dates", "Prizes", "Review and publish"][step - 1]}</h1>
           <p className={styles.subtitle}>
             {[
-              "Start by choosing how customers enter and how winners are picked.",
+              "Customers enter by scanning your QR code with their bill. Choose how the winners are shown.",
               "Name the draw, choose your stores, and set the three dates.",
               "Add each prize with a picture, its value and how many winners get it. List the biggest prize first.",
               "Check everything once more. After publishing, dates can only be extended.",
@@ -293,14 +288,14 @@ function NewLuckyDrawForm() {
         {step === 1 && (
           <>
             <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-              <legend className="visually-hidden" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>How the draw works</legend>
-              <div className={styles.modeGrid}>
-                {MODES.map(({ key, icon: Icon, points }) => (
+              <legend className="visually-hidden" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>How the winners are shown</legend>
+              <div className={`${styles.modeGrid} ${styles.modeGridTwo}`}>
+                {REVEAL_OPTIONS.map(({ key, icon: Icon, points }) => (
                   <label key={key} className={styles.modeCard}>
-                    <input type="radio" name="distributionMode" checked={form.distributionMode === key} onChange={() => set("distributionMode", key)} />
+                    <input type="radio" name="revealMode" checked={form.revealMode === key} onChange={() => set("revealMode", key)} />
                     <span className={styles.modeIcon}><Icon size={20} aria-hidden="true" /></span>
-                    <span className={styles.modeTitle}>{MODE_LABEL[key]}</span>
-                    <span className={styles.muted}>{MODE_DESCRIPTION[key]}</span>
+                    <span className={styles.modeTitle}>{REVEAL_LABEL[key]}</span>
+                    <span className={styles.muted}>{REVEAL_DESCRIPTION[key]}</span>
                     <ul className={styles.modeList}>
                       {points.map((p) => <li key={p}><Check size={15} aria-hidden="true" />{p}</li>)}
                     </ul>
@@ -308,7 +303,8 @@ function NewLuckyDrawForm() {
                 ))}
               </div>
             </fieldset>
-            <p className={styles.info}><Info size={16} aria-hidden="true" /><span>You can&rsquo;t change the mode after the draw is published.</span></p>
+            <p className={styles.info}><QrCode size={16} aria-hidden="true" /><span>Customers always enter by scanning your QR code at the store with their bill, so every customer and what they spent is recorded on ScratchX.</span></p>
+            <p className={styles.info}><Info size={16} aria-hidden="true" /><span>You can&rsquo;t change how winners are shown after the draw is published.</span></p>
           </>
         )}
 
@@ -325,7 +321,7 @@ function NewLuckyDrawForm() {
                 <textarea id="ld-desc" className={styles.input} rows={2} value={form.description} onChange={(e) => set("description", e.target.value)} maxLength={1000} />
               </div>
               <fieldset className={styles.field} style={{ border: 0, padding: 0, margin: 0 }}>
-                <legend className={styles.label} style={{ marginBottom: 6 }}>{online ? "Stores taking entries" : "Stores handing out slips"}</legend>
+                <legend className={styles.label} style={{ marginBottom: 6 }}>Stores taking entries</legend>
                 {stores.length === 0 && <p className={styles.muted}>No active stores found. Add a store first.</p>}
                 <div className={styles.chips}>
                   {stores.map((store) => (
@@ -334,15 +330,8 @@ function NewLuckyDrawForm() {
                     </button>
                   ))}
                 </div>
-                {online && <p className={styles.hint}>Online entry checks the customer is at the store, so each store needs a location.</p>}
+                <p className={styles.hint}>Customers can only enter while they are at one of these stores, so each store needs a location.</p>
               </fieldset>
-              {!online && (
-                <div className={styles.field} style={{ maxWidth: 280 }}>
-                  <label className={styles.label} htmlFor="ld-slips">Slips handed out so far (optional)</label>
-                  <input id="ld-slips" className={styles.input} inputMode="numeric" value={form.slipCount} onChange={(e) => set("slipCount", e.target.value.replace(/[^\d]/g, ""))} placeholder="0" />
-                  <p className={styles.hint}>Slips are numbered from 0001. You can update this any time before the reveal.</p>
-                </div>
-              )}
             </section>
 
             <section className={styles.section}>
@@ -380,8 +369,7 @@ function NewLuckyDrawForm() {
               )}
             </section>
 
-            {online && (
-              <>
+            <>
                 <section className={styles.section}>
                   <h2 className={styles.sectionTitle}>Entries per bill</h2>
                   <p className={styles.hint}>Bigger bills can earn more entries. A range includes its minimum and stops just below its maximum. Leave the maximum empty for &ldquo;and above&rdquo;.</p>
@@ -410,6 +398,12 @@ function NewLuckyDrawForm() {
                   {hints.map((hint) => <p key={hint} className={styles.notice} role="note">{hint}</p>)}
                 </section>
 
+                {live ? (
+                  <section className={styles.section}>
+                    <h2 className={styles.sectionTitle}>Draw day</h2>
+                    <p className={styles.info}><Radio size={16} aria-hidden="true" /><span>On the reveal date, open the draw&rsquo;s page and start the live reveal once entries close. Nothing happens by itself, so you choose the moment.</span></p>
+                  </section>
+                ) : (
                 <section className={styles.section}>
                   <h2 className={styles.sectionTitle}>When are winners drawn?</h2>
                   <div className={styles.radioGroup}>
@@ -457,8 +451,8 @@ function NewLuckyDrawForm() {
                     </label>
                   </div>
                 </section>
-              </>
-            )}
+                )}
+            </>
           </>
         )}
 
@@ -521,7 +515,7 @@ function NewLuckyDrawForm() {
                         </div>
                       </div>
 
-                      {online && tierMode === "pool_per_tier" && (
+                      {tierMode === "pool_per_tier" && (
                         <div className={styles.field} style={{ marginBottom: 10 }}>
                           <label className={styles.label} htmlFor={`ld-ps-${index}`}>Won by customers in</label>
                           <select id={`ld-ps-${index}`} className={styles.input} value={prize.rows[0] ?? 0} onChange={(e) => setRow("prizes", index, { rows: [Number(e.target.value)] })}>
@@ -529,7 +523,7 @@ function NewLuckyDrawForm() {
                           </select>
                         </div>
                       )}
-                      {online && tierMode === "restricted" && (
+                      {tierMode === "restricted" && (
                         <fieldset className={styles.scope} style={{ marginBottom: 10 }}>
                           <legend className={styles.label}>Open to (tick none for everyone)</legend>
                           {form.tiers.map((tier, i) => (
@@ -544,7 +538,7 @@ function NewLuckyDrawForm() {
                   );
                 })}
               </div>
-              <div><button type="button" className={`${styles.secondaryButton} ${styles.smallButton}`} onClick={() => addRow("prizes", { ...blankPrize(), rows: online && tierMode === "pool_per_tier" ? [0] : [] })}><Plus size={15} aria-hidden="true" />Add prize</button></div>
+              <div><button type="button" className={`${styles.secondaryButton} ${styles.smallButton}`} onClick={() => addRow("prizes", { ...blankPrize(), rows: tierMode === "pool_per_tier" ? [0] : [] })}><Plus size={15} aria-hidden="true" />Add prize</button></div>
 
               {totalWinners > 0 && (
                 <div className={`${styles.alloc} ${poolTarget && totalValue !== poolTarget ? styles.allocOver : ""}`}>
@@ -569,7 +563,7 @@ function NewLuckyDrawForm() {
               )}
             </section>
 
-            {online && form.tiers.length >= 2 && (
+            {form.tiers.length >= 2 && (
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Prizes and bill ranges</h2>
                 <div className={styles.radioGroup}>
@@ -605,8 +599,8 @@ function NewLuckyDrawForm() {
           <>
             <div className={`${styles.panel} ${styles.review}`}>
               <section>
-                <h3>Mode</h3>
-                <dl><div><dd>{MODE_LABEL[form.distributionMode]}</dd></div></dl>
+                <h3>Winners shown</h3>
+                <dl><div><dd>{REVEAL_LABEL[form.revealMode]}</dd></div></dl>
                 <button type="button" className={styles.ghostButton} onClick={() => setStep(1)}><Pencil size={14} aria-hidden="true" />Edit</button>
               </section>
               <section>
@@ -614,11 +608,7 @@ function NewLuckyDrawForm() {
                 <dl>
                   <div><dt>Name</dt><dd>{form.name}</dd></div>
                   <div><dt>Stores</dt><dd>{stores.filter((s) => form.storeIds.includes(s._id)).map((s) => s.store_name).join(", ") || "—"}</dd></div>
-                  {online ? (
-                    <div><dt>Who can enter</dt><dd>{form.tiers.map((t) => describeRange({ minAmount: Number(t.minAmount), maxAmount: t.maxAmount === "" ? null : Number(t.maxAmount) })).join("; ")}</dd></div>
-                  ) : (
-                    <div><dt>Slips handed out</dt><dd>{form.slipCount ? formatNumber(Number(form.slipCount)) : "None yet"}</dd></div>
-                  )}
+                  <div><dt>Who can enter</dt><dd>{form.tiers.map((t) => describeRange({ minAmount: Number(t.minAmount), maxAmount: t.maxAmount === "" ? null : Number(t.maxAmount) })).join("; ")}</dd></div>
                 </dl>
                 <button type="button" className={styles.ghostButton} onClick={() => setStep(2)}><Pencil size={14} aria-hidden="true" />Edit</button>
               </section>
