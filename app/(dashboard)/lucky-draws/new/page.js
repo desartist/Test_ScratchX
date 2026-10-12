@@ -289,7 +289,7 @@ function NewLuckyDrawForm() {
   const gapDays = end && reveal ? Math.round((new Date(reveal) - new Date(end)) / DAY_MS) : null;
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${styles.containerCentered}`}>
       <div className={styles.wizard}>
         <div className={styles.wizardHead}>
           <div>
