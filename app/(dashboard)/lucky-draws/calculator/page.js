@@ -1,54 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import React, { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Info, IndianRupee, Plus, Trophy, X } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowLeft, Info } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
-import { formatINR, formatNumber, parseAmount, suggestSplit, summarize } from "@/lib/luckyDraw/calculator";
-import { CALCULATOR_STORAGE_KEY } from "@/lib/luckyDraw/display";
+import { CALCULATOR_DEFAULTS, billIncrease, formatINR, formatNumber, parseAmount, planBudget, planEntries, prizePoolSummary } from "@/lib/luckyDraw/calculator";
+import { PRIZE_LEVEL_LABEL } from "@/lib/luckyDraw/display";
 import styles from "../luckyDraws.module.css";
-
-const blankRow = () => ({ prizeDescription: "", prizeValue: "", quantity: "1" });
-const toRows = (prizes) =>
-  prizes.map((p) => ({ prizeDescription: p.prizeDescription, prizeValue: formatNumber(p.prizeValue), quantity: String(p.quantity) }));
 
 /** Keeps what the owner typed but shows digits grouped the Indian way once they leave the field. */
 const tidy = (value) => (parseAmount(value) ? formatNumber(parseAmount(value)) : "");
 
+function NumberField({ id, label, value, onChange, prefix, suffix, hint }) {
+  return (
+    <div className={styles.field}>
+      <label className={styles.label} htmlFor={id}>{label}</label>
+      <div className={prefix ? styles.moneyInput : undefined} style={{ maxWidth: 220 }}>
+        {prefix && <span>{prefix}</span>}
+        <input id={id} className={styles.input} inputMode="numeric" value={value} onChange={(e) => onChange(e.target.value)} onBlur={() => onChange(tidy(value))} />
+      </div>
+      {suffix && <p className={styles.hint}>{suffix}</p>}
+      {hint && <p className={styles.hint}>{hint}</p>}
+    </div>
+  );
+}
+
+function Working({ children }) {
+  return <p className={styles.info} style={{ fontVariantNumeric: "tabular-nums" }}><Info size={16} aria-hidden="true" /><span>{children}</span></p>;
+}
+
 function Calculator() {
-  const router = useRouter();
-  const [mode, setMode] = useState("budget");
-  const [pool, setPool] = useState("75,000");
-  const [rows, setRows] = useState(() => toRows(suggestSplit(75000)));
-  const [entries, setEntries] = useState("1,000");
-  const [limit, setLimit] = useState("");
+  const [plan, setPlan] = useState(CALCULATOR_DEFAULTS);
+  const set = (key, value) => setPlan((p) => ({ ...p, [key]: value }));
+  const setLevel = (level, key, value) => setPlan((p) => ({ ...p, [level]: { ...p[level], [key]: value } }));
 
-  const budgetRows = useMemo(() => toRows(suggestSplit(parseAmount(pool))), [pool]);
-  const activeRows = mode === "budget" ? budgetRows : rows;
-  const result = summarize({
-    categories: activeRows,
-    expectedEntries: entries,
-    budgetLimit: mode === "prizes" ? limit : 0,
-  });
-
-  const setRow = (index, patch) => setRows((list) => list.map((r, i) => (i === index ? { ...r, ...patch } : r)));
-  const adjust = () => {
-    setRows(budgetRows.length ? budgetRows : [blankRow()]);
-    setMode("prizes");
-  };
-
-  const useInDraw = () => {
-    const prizes = result.shares.map((s) => ({ prizeDescription: s.prizeDescription || "Prize", prizeValue: s.prizeValue, quantity: s.quantity }));
-    try {
-      window.sessionStorage.setItem(CALCULATOR_STORAGE_KEY, JSON.stringify(prizes));
-    } catch {
-      // Private browsing can block storage; the form then simply starts empty.
-    }
-    router.push("/lucky-draws/new?from=calculator");
-  };
-
-  const poolMissing = mode === "budget" && parseAmount(pool) === 0;
+  const entries = planEntries(plan);
+  const bills = billIncrease({ ...plan, entries: entries.entries });
+  const budget = planBudget({ entries: entries.entries, spendPerEntry: plan.spendPerEntry });
+  const pool = prizePoolSummary({ ...plan, entries: entries.entries, budget: budget.budget, extraSales: bills.extraSales });
+  const campaignBillLow = bills.campaign > 0 && bills.perBill <= 0;
 
   return (
     <div className={styles.container}>
@@ -56,123 +46,112 @@ function Calculator() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Prize calculator</h1>
-          <p className={styles.subtitle}>See what a lucky draw will cost before you start one. Nothing here is saved or published.</p>
+          <p className={styles.subtitle}>Plan a lucky draw before you create one: expected entries, extra sales, budget and prizes. Nothing here is saved.</p>
         </div>
       </div>
 
       <div className={styles.calcGrid}>
-        <div className={`${styles.panel} ${styles.panelBody}`}>
-          <div className={styles.field}>
-            <span className={styles.label} id="calc-start">Start from</span>
-            <div className={styles.seg} role="radiogroup" aria-labelledby="calc-start">
-              <button type="button" role="radio" aria-checked={mode === "budget"} className={`${styles.segButton} ${mode === "budget" ? styles.segOn : ""}`} onClick={() => setMode("budget")}>
-                <IndianRupee size={16} aria-hidden="true" />A budget
-              </button>
-              <button type="button" role="radio" aria-checked={mode === "prizes"} className={`${styles.segButton} ${mode === "prizes" ? styles.segOn : ""}`} onClick={() => setMode("prizes")}>
-                <Trophy size={16} aria-hidden="true" />A list of prizes
-              </button>
+        <div className={styles.stack}>
+          <section className={styles.section} aria-labelledby="calc-entries-title">
+            <h2 className={styles.sectionTitle} id="calc-entries-title">1. Expected entries</h2>
+            <div className={styles.row}>
+              <NumberField id="calc-walkins" label="Daily walk-ins" value={plan.dailyWalkIns} onChange={(v) => set("dailyWalkIns", v)} suffix="People per day" />
+              <NumberField id="calc-extra" label="Extra footfall (%)" value={plan.extraPercent} onChange={(v) => set("extraPercent", v)} suffix="From the draw" />
+              <NumberField id="calc-days" label="Duration (days)" value={plan.days} onChange={(v) => set("days", v)} />
             </div>
-          </div>
+            <Working>
+              {formatNumber(entries.walkIns)} people/day + {entries.extra}% = {formatNumber(entries.perDay)} people × {formatNumber(entries.days)} days = <strong>{formatNumber(entries.entries)} entries</strong>
+            </Working>
+          </section>
 
-          {mode === "budget" ? (
-            <>
+          <section className={styles.section} aria-labelledby="calc-bill-title">
+            <h2 className={styles.sectionTitle} id="calc-bill-title">2. Bill size</h2>
+            <div className={styles.row}>
+              <NumberField id="calc-normal" label="Normal average bill" prefix="₹" value={plan.normalBill} onChange={(v) => set("normalBill", v)} />
               <div className={styles.field}>
-                <label className={styles.label} htmlFor="calc-pool">Prize pool</label>
-                <div className={styles.moneyInput} style={{ maxWidth: 260 }}>
+                <label className={styles.label} htmlFor="calc-campaign">Campaign average bill</label>
+                <div className={styles.moneyInput} style={{ maxWidth: 220 }}>
                   <span>₹</span>
-                  <input id="calc-pool" className={`${styles.input} ${poolMissing ? styles.inputError : ""}`} inputMode="numeric" value={pool} onChange={(e) => setPool(e.target.value)} onBlur={() => setPool(tidy(pool))} placeholder="75,000" />
+                  <input id="calc-campaign" className={`${styles.input} ${campaignBillLow ? styles.inputError : ""}`} inputMode="numeric" value={plan.campaignBill} onChange={(e) => set("campaignBill", e.target.value)} onBlur={() => set("campaignBill", tidy(plan.campaignBill))} aria-invalid={campaignBillLow} />
                 </div>
-                {poolMissing ? (
-                  <p className={styles.fieldError} role="alert">Enter how much you want to spend, like 75,000.</p>
-                ) : (
-                  <p className={styles.hint}>We suggest 1 grand prize, 5 second prizes and 10 third prizes. You can change any of them.</p>
-                )}
-              </div>
-              <div><button type="button" className={styles.secondaryButton} onClick={adjust} disabled={poolMissing}>Adjust these prizes</button></div>
-            </>
-          ) : (
-            <div className={styles.field}>
-              <span className={styles.label}>Prizes</span>
-              <p className={styles.hint}>List the biggest prize first. Each row is a prize and how many winners get it.</p>
-              {rows.map((row, index) => {
-                const lineTotal = parseAmount(row.prizeValue) * parseAmount(row.quantity);
-                return (
-                  <div key={index} className={styles.prizeLine} style={{ gridTemplateColumns: "minmax(0, 2fr) 90px minmax(0, 1.2fr) 110px auto" }}>
-                    <div className={styles.field}>
-                      <label className={styles.label} htmlFor={`calc-name-${index}`}>Prize</label>
-                      <input id={`calc-name-${index}`} className={styles.input} value={row.prizeDescription} onChange={(e) => setRow(index, { prizeDescription: e.target.value })} placeholder="e.g. Grand prize" />
-                    </div>
-                    <div className={styles.field}>
-                      <label className={styles.label} htmlFor={`calc-qty-${index}`}>Winners</label>
-                      <input id={`calc-qty-${index}`} className={styles.input} inputMode="numeric" value={row.quantity} onChange={(e) => setRow(index, { quantity: e.target.value })} />
-                    </div>
-                    <div className={styles.field}>
-                      <label className={styles.label} htmlFor={`calc-val-${index}`}>Value each</label>
-                      <div className={styles.moneyInput}>
-                        <span>₹</span>
-                        <input id={`calc-val-${index}`} className={styles.input} inputMode="numeric" value={row.prizeValue} onChange={(e) => setRow(index, { prizeValue: e.target.value })} onBlur={() => setRow(index, { prizeValue: tidy(row.prizeValue) })} />
-                      </div>
-                    </div>
-                    <div className={styles.lineTotal}>{lineTotal ? formatINR(lineTotal) : "—"}</div>
-                    <button type="button" className={styles.ghostButton} aria-label={`Remove ${row.prizeDescription || "this prize"}`} onClick={() => setRows((list) => (list.length > 1 ? list.filter((_, i) => i !== index) : [blankRow()]))}>
-                      <X size={16} aria-hidden="true" />
-                    </button>
-                  </div>
-                );
-              })}
-              <div><button type="button" className={`${styles.secondaryButton} ${styles.smallButton}`} onClick={() => setRows((list) => [...list, blankRow()])}><Plus size={15} aria-hidden="true" />Add prize</button></div>
-              {result.incompleteRows > 0 && <p className={styles.hint}>Rows without winners or a value are left out of the total.</p>}
-              <div className={styles.field} style={{ maxWidth: 260 }}>
-                <label className={styles.label} htmlFor="calc-limit">Your budget (optional)</label>
-                <div className={styles.moneyInput}>
-                  <span>₹</span>
-                  <input id="calc-limit" className={styles.input} inputMode="numeric" value={limit} onChange={(e) => setLimit(e.target.value)} onBlur={() => setLimit(tidy(limit))} placeholder="No limit" />
-                </div>
+                {campaignBillLow && <p className={styles.fieldError}>The campaign bill should be higher than the normal bill.</p>}
               </div>
             </div>
-          )}
+            <Working>
+              Increase: <strong>{formatINR(Math.max(0, bills.perBill))}</strong> per bill · {formatINR(Math.max(0, bills.perBill))} × {formatNumber(entries.entries)} entries = <strong>{formatINR(bills.extraSales)}</strong> extra sales
+            </Working>
+          </section>
 
-          <div className={styles.field} style={{ maxWidth: 260 }}>
-            <label className={styles.label} htmlFor="calc-entries">Expected entries</label>
-            <input id="calc-entries" className={styles.input} inputMode="numeric" value={entries} onChange={(e) => setEntries(e.target.value)} onBlur={() => setEntries(tidy(entries))} placeholder="1,000" />
-            <p className={styles.hint}>Roughly how many customers you think will enter.</p>
-          </div>
+          <section className={styles.section} aria-labelledby="calc-budget-title">
+            <h2 className={styles.sectionTitle} id="calc-budget-title">3. Budget</h2>
+            <NumberField id="calc-spend" label="Spend per entry" prefix="₹" value={plan.spendPerEntry} onChange={(v) => set("spendPerEntry", v)} hint="How much you want to spend on prizes for each person who enters." />
+            <Working>
+              {formatNumber(entries.entries)} entries × {formatINR(budget.spendPerEntry)} = <strong>{formatINR(budget.budget)} budget</strong>
+            </Working>
+          </section>
 
-          <p className={styles.info}><Info size={16} aria-hidden="true" />Prizes are revealed smallest first on draw day, so the grand prize is always the last one.</p>
+          <section className={styles.section} aria-labelledby="calc-pool-title">
+            <div>
+              <h2 className={styles.sectionTitle} id="calc-pool-title">4. Prize pool</h2>
+              <p className={styles.hint}>One hero prize, a few mid-tier prizes and many smaller prizes. The 3rd prize is optional.</p>
+            </div>
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead><tr><th>Prize</th><th className={styles.num}>Winners</th><th className={styles.num}>Value each</th><th className={styles.num}>Total</th></tr></thead>
+                <tbody>
+                  {["grand", "second", "third"].map((level, i) => {
+                    const row = pool.levels[i];
+                    return (
+                      <tr key={level}>
+                        <td><strong>{PRIZE_LEVEL_LABEL[row.rank]}</strong></td>
+                        <td className={styles.num}>
+                          {level === "grand" ? "1" : (
+                            <input aria-label={`${PRIZE_LEVEL_LABEL[row.rank]} winners`} className={styles.input} style={{ maxWidth: 90 }} inputMode="numeric" value={plan[level].quantity} onChange={(e) => setLevel(level, "quantity", e.target.value)} />
+                          )}
+                        </td>
+                        <td className={styles.num}>
+                          <div className={styles.moneyInput} style={{ maxWidth: 160, marginLeft: "auto" }}>
+                            <span>₹</span>
+                            <input aria-label={`${PRIZE_LEVEL_LABEL[row.rank]} value each`} className={styles.input} inputMode="numeric" value={plan[level].prizeValue} onChange={(e) => setLevel(level, "prizeValue", e.target.value)} onBlur={() => setLevel(level, "prizeValue", tidy(plan[level].prizeValue))} />
+                          </div>
+                        </td>
+                        <td className={styles.num}><span className={styles.amount}>{row.total ? formatINR(row.total) : "—"}</span></td>
+                      </tr>
+                    );
+                  })}
+                  <tr>
+                    <td><strong>Total</strong></td>
+                    <td className={styles.num}><strong>{formatNumber(pool.totalWinners)} winner{pool.totalWinners === 1 ? "" : "s"}</strong></td>
+                    <td />
+                    <td className={styles.num}><span className={styles.amount}>{formatINR(pool.totalCost)}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
 
         <aside className={`${styles.panel} ${styles.resultCard}`} aria-live="polite">
           <div className={styles.resultTop}>
-            <small>Total prize cost</small>
-            <strong>{formatINR(result.totalCost)}</strong>
-            <span>{result.totalWinners ? `For ${formatNumber(result.totalWinners)} winner${result.totalWinners === 1 ? "" : "s"}` : "Add a prize to see the cost"}</span>
+            <small>Prize pool</small>
+            <strong>{formatINR(pool.totalCost)}</strong>
+            <span>For {formatNumber(pool.totalWinners)} winner{pool.totalWinners === 1 ? "" : "s"}</span>
           </div>
-          {result.budget && (
-            <p className={result.budget.over ? styles.error : styles.success} style={{ borderRadius: 0 }}>
-              {result.budget.over
-                ? `${formatINR(result.budget.difference)} over your budget`
-                : `${formatINR(result.budget.difference)} under your budget`}
+          {pool.budgetLeft != null && (
+            <p className={pool.budgetLeft < 0 ? styles.error : styles.success} style={{ borderRadius: 0 }}>
+              {pool.budgetLeft < 0 ? `${formatINR(-pool.budgetLeft)} over your budget` : `${formatINR(pool.budgetLeft)} of your budget left`}
             </p>
           )}
           <dl className={styles.facts}>
-            <div><dt>Cost per entry</dt><dd>{result.costPerEntry != null ? formatINR(result.costPerEntry) : "—"}</dd></div>
-            <div><dt>Chance to win</dt><dd>{result.chanceOneIn != null ? `1 in ${formatNumber(result.chanceOneIn)}` : "—"}</dd></div>
+            <div><dt>Expected entries</dt><dd>{formatNumber(entries.entries)}</dd></div>
+            <div><dt>Budget</dt><dd>{formatINR(budget.budget)}</dd></div>
+            <div><dt>Extra sales</dt><dd>{formatINR(bills.extraSales)}</dd></div>
+            <div><dt>Prizes as % of extra sales</dt><dd>{pool.shareOfExtraSales != null ? `${pool.shareOfExtraSales}%` : "—"}</dd></div>
+            <div><dt>Chance to win</dt><dd>{pool.chanceOneIn != null ? `1 in ${formatNumber(pool.chanceOneIn)}` : "—"}</dd></div>
+            <div><dt>Prize cost per entry</dt><dd>{pool.costPerEntry != null ? formatINR(pool.costPerEntry) : "—"}</dd></div>
           </dl>
-          <div className={styles.tierBars}>
-            {result.shares.map((s, i) => (
-              <div key={i} className={styles.tierBar}>
-                <b>{s.prizeDescription || `Prize ${i + 1}`}</b>
-                <span className={styles.amount}>{formatINR(s.total)}</span>
-                <small>{formatNumber(s.quantity)} × {formatINR(s.prizeValue)} · {s.percent}% of pool</small>
-                <span className={styles.bar}><i style={{ width: `${s.percent}%` }} /></span>
-              </div>
-            ))}
-          </div>
           <div className={styles.panelFoot} style={{ flexDirection: "column", alignItems: "stretch" }}>
-            <button type="button" className={styles.primaryButton} onClick={useInDraw} disabled={result.totalWinners === 0}>
-              Create a draw with these prizes<ArrowRight size={16} aria-hidden="true" />
-            </button>
-            <Link href="/lucky-draws" className={styles.ghostButton} style={{ justifyContent: "center" }}>Close calculator</Link>
+            <Link href="/lucky-draws" className={styles.secondaryButton} style={{ justifyContent: "center" }}>Close calculator</Link>
           </div>
         </aside>
       </div>

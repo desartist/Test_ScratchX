@@ -1,4 +1,4 @@
-import { parseAmount, formatINR, suggestSplit, summarize } from '@/lib/luckyDraw/calculator';
+import { parseAmount, formatINR, planEntries, billIncrease, planBudget, prizePoolSummary, CALCULATOR_DEFAULTS } from '@/lib/luckyDraw/calculator';
 
 describe('parseAmount', () => {
   it('reads digits typed with commas, spaces or a rupee sign', () => {
@@ -18,69 +18,56 @@ describe('formatINR', () => {
   });
 });
 
-describe('suggestSplit', () => {
-  it('splits ₹75,000 into 1 x 20,000, 5 x 5,000 and 10 x 3,000', () => {
-    expect(suggestSplit(75000)).toEqual([
-      { prizeDescription: 'Grand prize', prizeValue: 20000, quantity: 1 },
-      { prizeDescription: 'Second prize', prizeValue: 5000, quantity: 5 },
-      { prizeDescription: 'Third prize', prizeValue: 3000, quantity: 10 },
-    ]);
+describe("the client's planning example", () => {
+  it('turns walk-ins into entries: 22/day + 10% = 25/day × 30 days = 750', () => {
+    expect(planEntries({ dailyWalkIns: '22', extraPercent: '10', days: '30' })).toEqual({ walkIns: 22, extra: 10, days: 30, perDay: 25, entries: 750 });
   });
 
-  it('always adds up to exactly the budget', () => {
-    for (const pool of [50000, 100000, 12345, 99999, 3000]) {
-      const total = suggestSplit(pool).reduce((sum, p) => sum + p.prizeValue * p.quantity, 0);
-      expect(total).toBe(pool);
-    }
+  it('rounds people per day up, with exact integer maths', () => {
+    expect(planEntries({ dailyWalkIns: 20, extraPercent: 10, days: 1 }).perDay).toBe(22);
+    expect(planEntries({ dailyWalkIns: 21, extraPercent: 10, days: 1 }).perDay).toBe(24);
+    expect(planEntries({ dailyWalkIns: 22, extraPercent: 0, days: 2 }).entries).toBe(44);
   });
 
-  it('gives one grand prize when the budget is too small to split', () => {
-    expect(suggestSplit(1500)).toEqual([{ prizeDescription: 'Grand prize', prizeValue: 1500, quantity: 1 }]);
+  it('works out the bill increase and the extra sales', () => {
+    expect(billIncrease({ normalBill: '1,200', campaignBill: '2,000', entries: 750 })).toEqual({ normal: 1200, campaign: 2000, perBill: 800, extraSales: 600000 });
   });
 
-  it('returns nothing for an empty budget', () => {
-    expect(suggestSplit(0)).toEqual([]);
-  });
-});
-
-describe('summarize', () => {
-  const categories = [
-    { prizeDescription: 'Grand prize', prizeValue: 20000, quantity: 1 },
-    { prizeDescription: 'Second prize', prizeValue: 5000, quantity: 5 },
-    { prizeDescription: 'Third prize', prizeValue: 3000, quantity: 10 },
-  ];
-
-  it('works out cost, winners, cost per entry and chance to win', () => {
-    const s = summarize({ categories, expectedEntries: 1000 });
-    expect(s.totalCost).toBe(75000);
-    expect(s.totalWinners).toBe(16);
-    expect(s.costPerEntry).toBe(75);
-    expect(s.chanceOneIn).toBe(63);
-    expect(s.shares.map((x) => x.percent)).toEqual([27, 33, 40]);
+  it('counts no extra sales when the campaign bill is not higher', () => {
+    expect(billIncrease({ normalBill: 2000, campaignBill: 1500, entries: 750 })).toMatchObject({ perBill: -500, extraSales: 0 });
   });
 
-  it('leaves per-entry figures empty without expected entries', () => {
-    const s = summarize({ categories, expectedEntries: 0 });
-    expect(s.costPerEntry).toBeNull();
-    expect(s.chanceOneIn).toBeNull();
+  it('sets the budget from the spend per entry: 750 × ₹100 = ₹75,000', () => {
+    expect(planBudget({ entries: 750, spendPerEntry: '100' })).toEqual({ entries: 750, spendPerEntry: 100, budget: 75000 });
   });
 
-  it('says everyone wins when there are fewer entries than prizes', () => {
-    expect(summarize({ categories, expectedEntries: 10 }).chanceOneIn).toBe(1);
-  });
-
-  it('skips rows with no winners or no value and counts them', () => {
-    const s = summarize({
-      categories: [...categories, { prizeDescription: 'Half done', prizeValue: 0, quantity: 3 }],
-      expectedEntries: 1000,
+  it('adds up the prize pool: ₹40,000 for 8 winners, ₹35,000 of the budget left', () => {
+    const result = prizePoolSummary({
+      grand: { prizeValue: '20,000' },
+      second: { quantity: '2', prizeValue: '5,000' },
+      third: { quantity: '5', prizeValue: '2,000' },
+      entries: 750,
+      budget: 75000,
+      extraSales: 600000,
     });
-    expect(s.totalCost).toBe(75000);
-    expect(s.incompleteRows).toBe(1);
+    expect(result.levels.map((l) => [l.rank, l.quantity, l.prizeValue, l.total])).toEqual([
+      [1, 1, 20000, 20000],
+      [2, 2, 5000, 10000],
+      [3, 5, 2000, 10000],
+    ]);
+    expect(result).toMatchObject({ totalCost: 40000, totalWinners: 8, budgetLeft: 35000, shareOfExtraSales: 7, chanceOneIn: 94, costPerEntry: 53 });
   });
 
-  it('compares the cost with an optional budget', () => {
-    expect(summarize({ categories, budgetLimit: 80000 }).budget).toEqual({ limit: 80000, difference: 5000, over: false });
-    expect(summarize({ categories, budgetLimit: 70000 }).budget).toEqual({ limit: 70000, difference: 5000, over: true });
-    expect(summarize({ categories }).budget).toBeNull();
+  it('reports going over budget as a negative amount left, and skips an empty 3rd prize', () => {
+    const result = prizePoolSummary({ grand: { prizeValue: 80000 }, second: { quantity: 1, prizeValue: 5000 }, third: { quantity: '', prizeValue: '' }, entries: 0, budget: 75000, extraSales: 0 });
+    expect(result).toMatchObject({ totalCost: 85000, totalWinners: 2, budgetLeft: -10000, shareOfExtraSales: null, chanceOneIn: null, costPerEntry: null });
+  });
+
+  it('opens on the client example', () => {
+    expect(CALCULATOR_DEFAULTS).toEqual({
+      dailyWalkIns: '22', extraPercent: '10', days: '30',
+      normalBill: '1,200', campaignBill: '2,000', spendPerEntry: '100',
+      grand: { prizeValue: '20,000' }, second: { quantity: '2', prizeValue: '5,000' }, third: { quantity: '5', prizeValue: '2,000' },
+    });
   });
 });
