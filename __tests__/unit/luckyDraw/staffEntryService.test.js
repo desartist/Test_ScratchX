@@ -1,3 +1,4 @@
+jest.mock('@/lib/subscriptionAccessGuard', () => ({ checkPlanAccess: jest.fn().mockResolvedValue({ allowed: true, plan: { limits: { maxCampaigns: 10 } } }) }));
 jest.mock('@/lib/services/luckyDraw/notifier', () => {
   const actual = jest.requireActual('@/lib/services/luckyDraw/notifier');
   return { ...actual, sendSms: jest.fn().mockResolvedValue({ success: true }) };
