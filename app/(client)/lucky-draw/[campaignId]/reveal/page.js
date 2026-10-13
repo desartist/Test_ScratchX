@@ -231,7 +231,7 @@ function RevealStage() {
         </div>
 
         <div className={styles.stage}>
-          <nav ref={ladderRef} className={styles.ladder} aria-label="Prizes, smallest first">
+          <nav ref={ladderRef} className={styles.ladder} aria-label="Prizes, 3rd prize first">
             {ladder.map((c) => {
               const isNext = view.status === "live" && nextUp?.rank === c.rank;
               const grand = c.rank === grandRank;
@@ -245,8 +245,8 @@ function RevealStage() {
                 >
                   <PrizeArt category={c} isGrand={grand} size="small" />
                   <span className={styles.rungText}>
-                    <b>{formatINR(c.value)}</b>
-                    <span>{c.name}</span>
+                    <b>{c.level}</b>
+                    <span>{c.name} · {formatINR(c.value)}</span>
                   </span>
                   <span className={styles.rungState} aria-hidden="true">
                     {c.revealed ? <Check size={15} /> : isNext ? <span className={styles.nextDot} /> : <Lock size={13} />}
@@ -287,7 +287,7 @@ function RevealStage() {
                 <div className={`${styles.locked} ${view.status === "live" && nextUp?.rank === category.rank ? styles.lockedNext : ""}`}>
                   <span className={styles.lockRing}><Lock size={26} aria-hidden="true" /></span>
                   <b>{view.status === "not_started" ? "Not revealed yet" : nextUp?.rank === category.rank ? "Up next" : "Revealed later"}</b>
-                  <span>Prizes are revealed smallest first, so the biggest prize comes last. Stay on this page.</span>
+                  <span>The 3rd prize is revealed first, then the 2nd, and the grand prize last. Stay on this page.</span>
                 </div>
               )}
             </section>
@@ -295,7 +295,7 @@ function RevealStage() {
         </div>
 
         <p className={styles.srOnly} aria-live="polite">{announcement}</p>
-        <p className={styles.foot}>Winners are picked at random by ScratchX from every QR entry. Each customer can win only once.</p>
+        <p className={styles.foot}>{view.drawType === "physical" ? "Winners were drawn in the store. Each customer can win only once." : "Winners are picked at random by ScratchX from every entry. Each customer can win only once."}</p>
       </div>
     </div>
   );

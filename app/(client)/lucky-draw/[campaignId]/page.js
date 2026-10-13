@@ -5,9 +5,9 @@ import { useParams } from "next/navigation";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import Link from "next/link";
 import { Gift } from "lucide-react";
-import { api, describePrizeScope, describeTier, formatDateTime } from "@/lib/luckyDraw/clientApi";
+import { api, formatDateTime } from "@/lib/luckyDraw/clientApi";
 import { formatINR } from "@/lib/luckyDraw/calculator";
-import { formatDayTime } from "@/lib/luckyDraw/display";
+import { PRIZE_LEVEL_LABEL, describeMinBill, formatDayTime } from "@/lib/luckyDraw/display";
 import styles from "./page.module.css";
 
 function getPosition() {
@@ -114,7 +114,8 @@ function EntryPage() {
     );
   }
 
-  const live = campaign.revealMode === "live";
+  const live = campaign.drawType === "live_online";
+  const takesQr = campaign.takesQrEntries;
 
   return (
     <div className={styles.page}>
@@ -124,46 +125,47 @@ function EntryPage() {
           {campaign.description && <p className={styles.muted}>{campaign.description}</p>}
           {!entered && <DrawDate drawDate={campaign.drawDate} previousDrawDate={campaign.previousDrawDate} live={live} />}
           {!entered && <p className={styles.notice} role="note">{campaign.notice}</p>}
-          {!entered && campaign.isOpen && <a className={styles.button} href="#enter">Enter the draw</a>}
+          {!entered && campaign.isOpen && takesQr && <a className={styles.button} href="#enter">Enter the draw</a>}
         </div>
 
         <div className={styles.panel}>
           <h2 className={styles.heading}>Prizes</h2>
           <div className={styles.prizeGrid}>
-            {campaign.prizes.map((prize) => {
-              const scope = describePrizeScope(prize.tierIndexes, campaign.entryTiers);
-              return (
-                <div key={prize.rank} className={styles.prizeCard}>
-                  {prize.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img className={styles.prizeImg} src={prize.imageUrl} alt={prize.prizeDescription} />
-                  ) : (
-                    <span className={styles.prizeImg} aria-hidden="true"><Gift size={26} color="#8a5300" /></span>
-                  )}
-                  <div>
-                    <strong>{prize.prizeDescription}</strong>
-                    <div className={styles.muted}>
-                      {prize.quantity > 1 ? `${prize.quantity} winners · ` : ""}
-                      {prize.prizeValue ? `worth ${formatINR(prize.prizeValue)}${prize.quantity > 1 ? " each" : ""}` : ""}
-                    </div>
-                    {scope && <div className={styles.muted}>{scope}</div>}
+            {campaign.prizes.map((prize) => (
+              <div key={prize.rank} className={styles.prizeCard}>
+                {prize.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className={styles.prizeImg} src={prize.imageUrl} alt={prize.prizeDescription} />
+                ) : (
+                  <span className={styles.prizeImg} aria-hidden="true"><Gift size={26} color="#8a5300" /></span>
+                )}
+                <div>
+                  <div className={styles.muted}>{prize.level}</div>
+                  <strong>{prize.prizeDescription}</strong>
+                  <div className={styles.muted}>
+                    {prize.quantity > 1 ? `${prize.quantity} winners · ` : ""}
+                    {prize.prizeValue ? `worth ${formatINR(prize.prizeValue)}${prize.quantity > 1 ? " each" : ""}` : ""}
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
           <ul className={styles.dates}>
             <li><span>Entries open</span><b>{formatDayTime(campaign.startDate)}</b></li>
             <li><span>Entries close</span><b>{formatDayTime(campaign.endDate)}</b></li>
-            <li><span>Winners revealed</span><b>{formatDayTime(campaign.revealDate || campaign.drawDate)}</b></li>
+            <li><span>{live ? "Winners revealed live" : "Draw date"}</span><b>{formatDayTime(campaign.revealDate || campaign.drawDate)}</b></li>
           </ul>
-          <h2 className={styles.heading}>How to earn entries</h2>
+          <h2 className={styles.heading}>How to enter</h2>
           <ul className={styles.list}>
-            {campaign.entryTiers.map((tier, i) => <li key={i}>{describeTier(tier)}</li>)}
+            <li>{describeMinBill(campaign.minBillAmount)}.</li>
+            <li>
+              {!takesQr
+                ? "Ask the staff at the counter to add your entry when you pay, and keep the slip with your entry number."
+                : live
+                  ? "Scan the QR code at the store with your bill, or ask the staff to add your entry."
+                  : "Scan the QR code at the store with your bill."}
+            </li>
           </ul>
-          {campaign.maxEntriesPerCustomerPerPeriod && (
-            <p className={styles.muted}>You can hold up to {campaign.maxEntriesPerCustomerPerPeriod} entries per draw.</p>
-          )}
           <Link className={styles.linkButton} href={`/lucky-draw/${campaignId}/reveal`}>
             {live ? "Watch the live reveal" : "See the winners"}
           </Link>
@@ -173,13 +175,14 @@ function EntryPage() {
           <div className={styles.panel} role="status">
             <p className={styles.success}>
               <span className={styles.big}>You&rsquo;re in!</span><br />
-              {entered.entriesGranted} {entered.entriesGranted === 1 ? "entry" : "entries"} added
-              {entered.capped ? " (you reached the limit for this draw)" : ""}. You now hold {entered.totalEntries}.
+              Your entry number is <strong>#{entered.entryNumber}</strong>. You now hold {entered.totalEntries} {entered.totalEntries === 1 ? "entry" : "entries"} in this draw.
             </p>
             <DrawDate drawDate={entered.drawDate} live={live} />
             <p className={styles.notice}>{entered.notice}</p>
             {entered.confirmationSent && <p className={styles.muted}>We sent you an SMS with these details.</p>}
           </div>
+        ) : !takesQr ? (
+          <div className={styles.panel}><p className={styles.notice}>Entries are taken at the store counter. Ask the staff to add your entry when you pay.</p></div>
         ) : campaign.isOpen ? (
           <form id="enter" className={`${styles.panel} ${styles.form} ${styles.anchor}`} onSubmit={submit}>
             <h2 className={styles.heading}>Enter the draw</h2>
@@ -194,7 +197,8 @@ function EntryPage() {
             </div>
             <div className={styles.field}>
               <label className={styles.label} htmlFor="ld-bill">Bill amount (₹)</label>
-              <input id="ld-bill" className={styles.input} type="number" inputMode="decimal" min="0" step="any" value={form.billAmount} onChange={(e) => setForm({ ...form, billAmount: e.target.value })} required />
+              <input id="ld-bill" className={styles.input} type="number" inputMode="decimal" min={campaign.minBillAmount || 0} step="any" value={form.billAmount} onChange={(e) => setForm({ ...form, billAmount: e.target.value })} required />
+              <p className={styles.muted}>{describeMinBill(campaign.minBillAmount)}.</p>
             </div>
             <label className={styles.check}>
               <input type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} required />
@@ -219,11 +223,11 @@ function EntryPage() {
           {statusError && <p className={styles.error} role="alert">{statusError}</p>}
           {status && (
             <div role="status" className={styles.result}>
-              <p><strong>{status.totalEntries}</strong> {status.totalEntries === 1 ? "entry" : "entries"} in the next draw.</p>
+              {status.drawStatus && <p><strong>{status.totalEntries}</strong> {status.totalEntries === 1 ? "entry" : "entries"} in this draw.</p>}
               <DrawDate drawDate={status.drawDate} previousDrawDate={status.previousDrawDate} live={live} />
               {status.wins.map((win, i) => (
                 <p key={i} className={styles.win}>
-                  You won #{win.rank}: {win.prizeDescription}. {win.status === "redeemed" ? "Already collected." : win.status === "expired" ? "The claim period has ended." : `Show the code we texted you at the store before ${formatDateTime(win.expiresAt)}.`}
+                  You won the {PRIZE_LEVEL_LABEL[win.rank].toLowerCase()}: {win.prizeDescription}. {win.status === "redeemed" ? "Already collected." : win.status === "expired" ? "The claim period has ended." : `Show the code we texted you at the store before ${formatDateTime(win.expiresAt)}.`}
                 </p>
               ))}
               <p className={styles.notice}>{status.notice}</p>

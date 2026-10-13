@@ -4,9 +4,6 @@ import {
   toISTInputValue,
   istInputToIso,
   formatRupees,
-  describeTier,
-  describeRange,
-  describePrizeScope,
   pluralEntries,
 } from '@/lib/luckyDraw/clientApi';
 
@@ -42,11 +39,6 @@ describe('formatting', () => {
     expect(formatRupees(1000)).toBe('₹1,000');
     expect(formatRupees(100000)).toBe('₹1,00,000');
   });
-
-  it('describes tiers', () => {
-    expect(describeTier({ minAmount: 500, maxAmount: 1000, entriesGranted: 1 })).toBe('₹500 to under ₹1,000: 1 entry');
-    expect(describeTier({ minAmount: 5000, maxAmount: null, entriesGranted: 10 })).toBe('₹5,000 and above: 10 entries');
-  });
 });
 
 describe('api', () => {
@@ -81,28 +73,7 @@ describe('api', () => {
   });
 });
 
-describe('range and prize scope wording', () => {
-  const tiers = [{ minAmount: 0, maxAmount: 1000, entriesGranted: 1 }, { minAmount: 1000, maxAmount: null, entriesGranted: 3 }];
-
-  it('describes a bill range', () => {
-    expect(describeRange(tiers[0])).toBe('₹0 to under ₹1,000');
-    expect(describeRange(tiers[1])).toBe('₹1,000 and above');
-  });
-
-  it('says which bills a prize is open to', () => {
-    expect(describePrizeScope([1], tiers)).toBe('For bills of ₹1,000 and above');
-    expect(describePrizeScope([0, 1], tiers)).toBe('For bills of ₹0 to under ₹1,000 or ₹1,000 and above');
-  });
-
-  it('says nothing for a prize open to everyone', () => {
-    expect(describePrizeScope([], tiers)).toBe('');
-    expect(describePrizeScope(undefined, tiers)).toBe('');
-  });
-
-  it('ignores a range that no longer exists instead of crashing', () => {
-    expect(describePrizeScope([5], tiers)).toBe('');
-  });
-
+describe('entry wording', () => {
   it('uses singular and plural for entries', () => {
     expect(pluralEntries(1)).toBe('1 entry');
     expect(pluralEntries(5)).toBe('5 entries');
