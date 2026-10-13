@@ -11,7 +11,8 @@ import { requireAuth } from '@/lib/auth';
 import { sendSms } from '@/lib/services/luckyDraw/notifier';
 import { GET as listEntriesRoute, POST as addEntryRoute } from '@/app/api/lucky-draws/campaigns/[id]/entries/route';
 import { GET as staffDrawsRoute } from '@/app/api/lucky-draws/staff/draws/route';
-import { createCampaign, newId } from '../../helpers/luckyDrawFixtures';
+import { POST as picksRoute } from '@/app/api/lucky-draws/draws/[drawId]/picks/route';
+import { createCampaign, createOpenDraw, createEntry, nextPhone, newId, DAY } from '../../helpers/luckyDrawFixtures';
 
 beforeAll(() => LuckyDraw.init());
 beforeEach(() => sendSms.mockClear());
@@ -61,5 +62,24 @@ describe('staff entries', () => {
     const res = await staffDrawsRoute(req('GET', '/x'));
     expect(res.status).toBe(200);
     expect((await res.json()).data.map((d) => d.name)).toEqual(['Navratri']);
+  });
+});
+
+describe('picking physical winners', () => {
+  it('saves the picks for the owner and refuses store staff', async () => {
+    const campaign = await createCampaign({ drawType: 'physical', startDate: new Date(Date.now() - 5 * DAY), endDate: new Date(Date.now() - 1000) });
+    const draw = await createOpenDraw(campaign);
+    const a = await createEntry(campaign, draw, { customerPhone: nextPhone() });
+    const b = await createEntry(campaign, draw, { customerPhone: nextPhone() });
+    const picks = [{ rank: 1, entryId: String(a._id) }, { rank: 2, entryId: String(b._id) }];
+
+    as({ _id: newId(), role: 'Store_Staff' });
+    expect((await picksRoute(req('POST', '/x', { picks }), params({ drawId: String(draw._id) }))).status).toBe(403);
+
+    as({ _id: campaign.merchantId, role: 'Merchant' });
+    const res = await picksRoute(req('POST', '/x', { picks }), params({ drawId: String(draw._id) }));
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.winners).toHaveLength(2);
+    expect((await picksRoute(req('POST', '/x', { picks }), params({ drawId: String(draw._id) }))).status).toBe(409);
   });
 });
