@@ -1,3 +1,4 @@
+import LuckyDrawCampaign from '@/models/luckyDrawCampaignModel';
 import LuckyDraw from '@/models/luckyDrawModel';
 import LuckyDrawEntry from '@/models/luckyDrawEntryModel';
 import LuckyDrawWinner from '@/models/luckyDrawWinnerModel';
@@ -45,27 +46,18 @@ describe('findNearestStore', () => {
 });
 
 describe('createEntry', () => {
-  it('grants entries from the tier and attaches the entry to the open draw', async () => {
+  it('grants one numbered entry and attaches it to the open draw', async () => {
     const campaign = await createCampaign();
 
     const result = await createEntry(submit(campaign));
 
-    expect(result.entriesGranted).toBe(3);
-    expect(result.totalEntries).toBe(3);
-    expect(result.capped).toBe(false);
-    expect(result.campaignName).toBe(campaign.name);
+    expect(result).toMatchObject({ entriesGranted: 1, totalEntries: 1, entryNumber: 1, campaignName: campaign.name, storeName: 'Main Store' });
+    expect(result.entry).toMatchObject({ source: 'qr', entryNumber: 1, entriesGranted: 1 });
     const draw = await LuckyDraw.findOne({ campaignId: campaign._id, status: 'scheduled' });
     expect(String(result.entry.drawId)).toBe(String(draw._id));
     expect(new Date(result.drawDate)).toEqual(draw.drawDate);
     expect(result.entry.distanceMeters).toBeLessThan(2000);
-  });
-
-  it('records which bill range the entry fell in', async () => {
-    const campaign = await createCampaign();
-    const small = await createEntry(submit(campaign, { billAmount: 300 }));
-    const big = await createEntry(submit(campaign, { billAmount: 1300, customerMobile: '9876543211' }));
-    expect(small.entry.tierIndex).toBe(0);
-    expect(big.entry.tierIndex).toBe(1);
+    expect((await LuckyDrawCampaign.findById(campaign._id)).entryCounter).toBe(1);
   });
 
   it('accumulates entries across bills from the same customer', async () => {
@@ -73,7 +65,7 @@ describe('createEntry', () => {
     await createEntry(submit(campaign, { billAmount: 1200 }));
     const second = await createEntry(submit(campaign, { billAmount: 300 }));
     expect(second.entriesGranted).toBe(1);
-    expect(second.totalEntries).toBe(4);
+    expect(second.totalEntries).toBe(2);
     expect(await LuckyDrawEntry.countDocuments({ campaignId: campaign._id })).toBe(2);
   });
 
@@ -91,25 +83,6 @@ describe('createEntry', () => {
     expect(String(result.entry.storeId)).toBe(String(campaign.assignedStores[0].storeId));
   });
 
-  it('rejects a bill below the first tier without creating an entry', async () => {
-    const campaign = await createCampaign({
-      entryTiers: [{ minAmount: 500, maxAmount: null, entriesGranted: 1 }],
-    });
-    await expect(createEntry(submit(campaign, { billAmount: 100 }))).rejects.toThrow(/minimum bill amount.*500/);
-    expect(await LuckyDrawEntry.countDocuments()).toBe(0);
-  });
-
-  it('rejects a bill that falls in a gap between tiers without creating an entry', async () => {
-    const campaign = await createCampaign({
-      entryTiers: [
-        { minAmount: 0, maxAmount: 500, entriesGranted: 1 },
-        { minAmount: 1000, maxAmount: null, entriesGranted: 2 },
-      ],
-    });
-    await expect(createEntry(submit(campaign, { billAmount: 750 }))).rejects.toThrow(/does not qualify/);
-    expect(await LuckyDrawEntry.countDocuments()).toBe(0);
-  });
-
   it('rejects an immediate duplicate of the same bill, but allows it after a minute', async () => {
     const campaign = await createCampaign();
     await createEntry(submit(campaign));
@@ -117,23 +90,6 @@ describe('createEntry', () => {
     await expect(createEntry(submit(campaign))).rejects.toThrow(/just submitted/);
     const later = new Date(Date.now() + 61 * 1000);
     await expect(createEntry(submit(campaign), later)).resolves.toBeDefined();
-  });
-
-  it('caps a customer at the campaign limit, granting only what is left', async () => {
-    const campaign = await createCampaign({ maxEntriesPerCustomerPerPeriod: 5 });
-    const first = await createEntry(submit(campaign, { billAmount: 1200 })); // 3
-    expect(first.capped).toBe(false);
-    const second = await createEntry(submit(campaign, { billAmount: 1500 })); // would be 3, only 2 left
-    expect(second.entriesGranted).toBe(2);
-    expect(second.capped).toBe(true);
-    expect(second.totalEntries).toBe(5);
-    await expect(createEntry(submit(campaign, { billAmount: 1800 }))).rejects.toThrow(/limit of 5 entries/);
-  });
-
-  it('applies the cap per customer, not across customers', async () => {
-    const campaign = await createCampaign({ maxEntriesPerCustomerPerPeriod: 3 });
-    await createEntry(submit(campaign, { customerMobile: '9000000001' }));
-    await expect(createEntry(submit(campaign, { customerMobile: '9000000002' }))).resolves.toBeDefined();
   });
 
   it.each([
@@ -162,6 +118,74 @@ describe('createEntry', () => {
   it('treats unknown and malformed campaign ids as not found', async () => {
     await expect(createEntry({ ...submit({ _id: newId() }) })).rejects.toThrow(NotFoundError);
     await expect(createEntry({ ...submit({ _id: 'nope' }) })).rejects.toThrow(NotFoundError);
+  });
+
+  it('accepts a bill equal to the minimum and refuses one rupee less', async () => {
+    const campaign = await createCampaign({ minBillAmount: 1500 });
+    await expect(createEntry(submit(campaign, { billAmount: 1499 }))).rejects.toThrow('Bills of ₹1,500 or more can enter this draw');
+    expect(await LuckyDrawEntry.countDocuments()).toBe(0);
+    await expect(createEntry(submit(campaign, { billAmount: 1500 }))).resolves.toMatchObject({ entriesGranted: 1 });
+  });
+
+  it('accepts a ₹0 bill when the minimum is 0', async () => {
+    const campaign = await createCampaign({ minBillAmount: 0 });
+    await expect(createEntry(submit(campaign, { billAmount: 0 }))).resolves.toMatchObject({ entryNumber: 1 });
+  });
+
+  it('hands out different numbers to entries saved at the same moment', async () => {
+    const campaign = await createCampaign();
+    const results = await Promise.all(
+      ['9000000001', '9000000002', '9000000003', '9000000004', '9000000005'].map((customerMobile) => createEntry(submit(campaign, { customerMobile }))),
+    );
+    expect(results.map((r) => r.entryNumber).sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it('refuses QR entries for a physical draw', async () => {
+    const campaign = await createCampaign({ drawType: 'physical' });
+    await expect(createEntry(submit(campaign))).rejects.toThrow(/store counter/);
+  });
+
+  it('takes staff entries at the chosen store without a location check', async () => {
+    const campaign = await createCampaign({ drawType: 'physical' });
+    const staffId = newId();
+    const result = await createEntry({
+      ...submit(campaign, FAR),
+      source: 'staff',
+      storeId: String(campaign.assignedStores[0].storeId),
+      addedByAccountId: staffId,
+    });
+    expect(result.entry).toMatchObject({ source: 'staff', distanceMeters: null });
+    expect(String(result.entry.addedByAccountId)).toBe(String(staffId));
+  });
+
+  it('refuses staff entries for a digital draw, and a store outside the draw', async () => {
+    const digital = await createCampaign({ drawType: 'digital' });
+    await expect(createEntry({ ...submit(digital), source: 'staff', storeId: String(digital.assignedStores[0].storeId) })).rejects.toThrow(/only takes entries by QR/);
+    const live = await createCampaign({ drawType: 'live_online' });
+    await expect(createEntry({ ...submit(live), source: 'staff', storeId: String(newId()) })).rejects.toThrow(/Choose one of the stores/);
+  });
+
+  it('ignores a store without a location when checking where a QR customer is', async () => {
+    const data = await createCampaign({ drawType: 'live_online' });
+    const located = data.assignedStores[0].toObject();
+    await LuckyDrawCampaign.updateOne(
+      { _id: data._id },
+      { $set: { assignedStores: [{ ...located, storeId: newId(), storeName: 'No map', latitude: null, longitude: null }, located] } },
+    );
+    const result = await createEntry(submit(data));
+    expect(result.storeName).toBe('Main Store');
+  });
+});
+
+describe('sendEntryConfirmation', () => {
+  it('texts the first entry only and never throws', async () => {
+    const { sendEntryConfirmation } = require('@/lib/services/luckyDraw/entryService');
+    const campaign = await createCampaign();
+    const first = await createEntry(submit(campaign));
+    const args = { drawId: first.drawId, customerPhone: '9876543210', campaignName: campaign.name, drawDate: first.drawDate };
+    expect(await sendEntryConfirmation(args)).toBe(true);
+    await createEntry(submit(campaign, { billAmount: 1300 }));
+    expect(await sendEntryConfirmation(args)).toBe(false);
   });
 });
 
@@ -210,7 +234,7 @@ describe('getEntryStatus', () => {
     expect(status.drawStatus).toBe('scheduled');
     expect(new Date(status.drawDate)).toEqual(draw.drawDate);
     expect(new Date(status.previousDrawDate)).toEqual(previous);
-    expect(status.totalEntries).toBe(3);
+    expect(status.totalEntries).toBe(1);
     expect(status.notice).toBe(DATE_CHANGE_NOTICE);
     expect(status.wins).toEqual([]);
   });

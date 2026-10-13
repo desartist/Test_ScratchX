@@ -58,18 +58,22 @@ describe('GET /api/customer/lucky-draw/campaigns/:id', () => {
     expect(text).not.toContain(String(campaign.assignedStores[0].storeId));
   });
 
-  it('says how prizes are split and which ranges each prize is open to', async () => {
-    const campaign = await createCampaign({
-      prizeMode: 'restricted',
-      prizeTiers: [{ rank: 1, prizeDescription: 'Smart TV', prizeValue: 0, tierIndexes: [1] }, { rank: 2, prizeDescription: 'Mixer', prizeValue: 0 }],
-    });
+  it('says how the draw runs, the minimum bill and the prize levels', async () => {
+    const campaign = await createCampaign({ drawType: 'live_online', minBillAmount: 1000 });
     const res = await getCampaignInfo(new Request('http://localhost/x'), { params: Promise.resolve({ id: String(campaign._id) }) });
     const { data } = await res.json();
-    expect(data.prizeMode).toBe('restricted');
+    expect(data).toMatchObject({ drawType: 'live_online', takesQrEntries: true, minBillAmount: 1000 });
     expect(data.prizes).toEqual([
-      { rank: 1, prizeDescription: 'Smart TV', prizeValue: 0, quantity: 1, imageUrl: null, tierIndexes: [1] },
-      { rank: 2, prizeDescription: 'Mixer', prizeValue: 0, quantity: 1, imageUrl: null, tierIndexes: [] },
+      { rank: 1, level: 'Grand prize', prizeDescription: 'Smart TV', prizeValue: 30000, quantity: 1, imageUrl: null },
+      { rank: 2, level: '2nd prize', prizeDescription: 'Mixer Grinder', prizeValue: 3000, quantity: 1, imageUrl: null },
     ]);
+    for (const key of ['entryTiers', 'prizeMode', 'revealMode', 'maxEntriesPerCustomerPerPeriod']) expect(data).not.toHaveProperty(key);
+  });
+
+  it('says a physical draw takes no QR entries', async () => {
+    const campaign = await createCampaign({ drawType: 'physical' });
+    const res = await getCampaignInfo(new Request('http://localhost/x'), { params: Promise.resolve({ id: String(campaign._id) }) });
+    expect((await res.json()).data.takesQrEntries).toBe(false);
   });
 
   it('marks paused or ended campaigns as not open', async () => {
@@ -101,7 +105,7 @@ describe('POST /api/customer/lucky-draw/participate', () => {
     const { data } = await res.json();
 
     expect(res.status).toBe(201);
-    expect(data).toMatchObject({ entriesGranted: 3, totalEntries: 3, capped: false, campaignName: campaign.name, confirmationSent: true });
+    expect(data).toMatchObject({ entryNumber: 1, entriesGranted: 1, totalEntries: 1, campaignName: campaign.name, confirmationSent: true });
     expect(data.notice).toBe(DATE_CHANGE_NOTICE);
     expect(data.entry).toBeUndefined();
     expect(sendSms).toHaveBeenCalledTimes(1);
@@ -113,7 +117,7 @@ describe('POST /api/customer/lucky-draw/participate', () => {
     const campaign = await createCampaign();
     await participate(post('/x', entryBody(campaign, { billAmount: 1200 })));
     const second = await participate(post('/x', entryBody(campaign, { billAmount: 1300 })));
-    expect((await second.json()).data).toMatchObject({ totalEntries: 6, confirmationSent: false });
+    expect((await second.json()).data).toMatchObject({ totalEntries: 2, confirmationSent: false });
     expect(sendSms).toHaveBeenCalledTimes(1);
   });
 
@@ -139,8 +143,9 @@ describe('POST /api/customer/lucky-draw/participate', () => {
     ['a negative bill', { billAmount: -1 }, 400],
     ['no consent', { consent: false }, 400],
     ['a bad mobile', { customerMobile: '123' }, 400],
+    ['a bill below the minimum', { billAmount: 10 }, 400],
   ])('rejects %s with %i', async (_label, patch, status) => {
-    const campaign = await createCampaign();
+    const campaign = await createCampaign({ minBillAmount: 100 });
     const res = await participate(post('/x', entryBody(campaign, patch)));
     expect(res.status).toBe(status);
     expect(sendSms).not.toHaveBeenCalled();
@@ -155,6 +160,11 @@ describe('POST /api/customer/lucky-draw/participate', () => {
     expect((await participate(post('/x', entryBody(paused)))).status).toBe(409);
 
     expect((await participate(post('/x', entryBody({ _id: newId() })))).status).toBe(404);
+  });
+
+  it('answers 409 for a QR entry into a physical draw', async () => {
+    const campaign = await createCampaign({ drawType: 'physical' });
+    expect((await participate(post('/x', entryBody(campaign)))).status).toBe(409);
   });
 
   it('rejects a body that is not JSON', async () => {
@@ -172,7 +182,7 @@ describe('POST /api/customer/lucky-draw/status', () => {
     const { data } = await res.json();
 
     expect(res.status).toBe(200);
-    expect(data).toMatchObject({ campaignName: campaign.name, totalEntries: 3, drawStatus: 'scheduled', notice: DATE_CHANGE_NOTICE });
+    expect(data).toMatchObject({ campaignName: campaign.name, totalEntries: 1, drawStatus: 'scheduled', notice: DATE_CHANGE_NOTICE });
     expect(data.drawDate).toBeTruthy();
   });
 

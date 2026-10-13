@@ -84,6 +84,7 @@ describe('getPublicReveal', () => {
     let view = await getPublicReveal(String(campaign._id));
     expect(view.status).toBe('live');
     expect(view.categories.map((c) => c.name)).toEqual(['Third prize', 'Second prize', 'Grand prize']);
+    expect(view.categories.map((c) => c.level)).toEqual(['3rd prize', '2nd prize', 'Grand prize']);
     expect(view.categories[2]).toMatchObject({ value: 20000, quantity: 1, imageUrl: image, revealed: false, winners: [] });
     expect(JSON.stringify(view)).not.toMatch(/claimCode|customerPhone/);
 

@@ -83,7 +83,7 @@ describe('live reveal from QR entries', () => {
 
     let view = await json(await publicReveal(req('GET', '/x'), params({ id: String(campaign._id) })));
     expect(view.status).toBe('live');
-    expect(view.revealMode).toBe('live');
+    expect(view.drawType).toBe('live_online');
     expect(view.categories.every((c) => c.winners.length === 0)).toBe(true);
 
     await nextReveal(req('POST', '/x'), params({ drawId: String(draw._id) }));
@@ -133,7 +133,7 @@ describe('public pages', () => {
     const { campaign } = await qrDraw('live_online', { closed: false });
 
     const info = await json(await publicCampaign(req('GET', '/x'), params({ id: String(campaign._id) })));
-    expect(info.revealMode).toBe('live');
+    expect(info.drawType).toBe('live_online');
     expect(info.prizes[0]).toMatchObject({ prizeDescription: 'Grand prize', prizeValue: 8000, quantity: 1 });
     expect(info.prizes[0].imageUrl).toMatch(/^data:image/);
 
