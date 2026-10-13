@@ -51,7 +51,8 @@ describe('dashboard navigation', () => {
   it('shows the Lucky Draw items only behind the feature flag', () => {
     expect(source).toMatch(/import \{[^}]*LUCKY_DRAW_ENABLED[^}]*\} from "@\/lib\/featureFlags"/);
     expect(source).toContain('label: "Lucky Draw", href: "/lucky-draws"');
+    expect(source).toContain('label: "Lucky Draw Entries", href: "/lucky-draws/entries"');
     expect(source).toContain('label: "Lucky Draw Prizes", href: "/lucky-draws/redeem"');
-    expect(source.match(/LUCKY_DRAW_ENABLED\s*\?/g)).toHaveLength(2);
+    expect(source.match(/LUCKY_DRAW_ENABLED\s*\?/g)).toHaveLength(3);
   });
 });

@@ -34,6 +34,7 @@ const pages = [
   ['campaign detail', '@/app/(dashboard)/lucky-draws/[id]/page', 'Loading'],
   ['pick winners', '@/app/(dashboard)/lucky-draws/[id]/pick/page', 'Loading'],
   ['redeem', '@/app/(dashboard)/lucky-draws/redeem/page', 'Redeem a Lucky Draw prize'],
+  ['staff entries', '@/app/(dashboard)/lucky-draws/entries/page', 'Lucky Draw entries'],
   ['customer entry', '@/app/(client)/lucky-draw/[campaignId]/page', 'Loading'],
 ];
 

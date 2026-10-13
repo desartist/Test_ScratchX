@@ -317,6 +317,12 @@ export default function DashboardLayout({ children, role }) {
           primary: [
             ...baseItems,
             { label: "Campaigns", href: "/campaign", iconKey: "campaigns" },
+            ...(LUCKY_DRAW_ENABLED
+              ? [
+                  { label: "Lucky Draw Entries", href: "/lucky-draws/entries", iconKey: "campaigns" },
+                  { label: "Lucky Draw Prizes", href: "/lucky-draws/redeem", iconKey: "operations" },
+                ]
+              : []),
             { label: "Customers", href: "/customers", iconKey: "customers" },
             {
               label: "Stores Analytics",
@@ -364,7 +370,10 @@ export default function DashboardLayout({ children, role }) {
             ...baseItems,
             { label: "Campaigns", href: "/store-campaigns", iconKey: "campaigns" },
             ...(LUCKY_DRAW_ENABLED
-              ? [{ label: "Lucky Draw Prizes", href: "/lucky-draws/redeem", iconKey: "operations" }]
+              ? [
+                  { label: "Lucky Draw Entries", href: "/lucky-draws/entries", iconKey: "campaigns" },
+                  { label: "Lucky Draw Prizes", href: "/lucky-draws/redeem", iconKey: "operations" },
+                ]
               : []),
             // { label: "Redemptions", href: "/redemptions", iconKey: "operations" },
             // { label: "Inventory", href: "/store-inventory", iconKey: "commission" },
