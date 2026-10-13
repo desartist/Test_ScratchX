@@ -3,15 +3,15 @@
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Calculator, ChevronRight, Gift, Plus, Radio, Ticket, Trophy } from "lucide-react";
+import { Calculator, ChevronRight, Gift, Plus, QrCode, Radio, Store, Ticket, Trophy } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api } from "@/lib/luckyDraw/clientApi";
 import { formatINR, formatNumber } from "@/lib/luckyDraw/calculator";
 import { prizeTotals } from "@/lib/luckyDraw/prizeCategories";
-import { REVEAL_LABEL, drawStage, listGroup, nextStep } from "@/lib/luckyDraw/display";
+import { DRAW_TYPE_LABEL, drawStage, listGroup, nextStep } from "@/lib/luckyDraw/display";
 import styles from "./luckyDraws.module.css";
 
-const REVEAL_ICON = { instant: Trophy, live: Radio };
+const DRAW_ICON = { physical: Store, live_online: Radio, digital: QrCode };
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "active", label: "Active" },
@@ -19,12 +19,12 @@ const FILTERS = [
   { key: "done", label: "Completed" },
 ];
 
-function ModeTag({ mode }) {
-  const Icon = REVEAL_ICON[mode] || Trophy;
+function DrawTypeTag({ type }) {
+  const Icon = DRAW_ICON[type] || Trophy;
   return (
     <span className={styles.modeTag}>
       <Icon size={15} aria-hidden="true" />
-      {REVEAL_LABEL[mode] || REVEAL_LABEL.instant}
+      {DRAW_TYPE_LABEL[type] || "Lucky draw"}
     </span>
   );
 }
@@ -37,15 +37,15 @@ function FirstTime() {
       <span className={styles.emptyArt}><Gift size={38} aria-hidden="true" /></span>
       <h2 className={styles.sectionTitle}>Run your first lucky draw</h2>
       <p className={styles.muted}>
-        Customers enter when they shop with you. On the reveal date, winners are picked at random and you hand over the prizes at your store.
+        Customers enter when they shop with you: by QR code, at the counter, or both. On the draw date the winners are picked and you hand over the prizes at your store.
       </p>
       <ol className={styles.howSteps}>
-        <li><b><span className={styles.howNum}>1</span>Check the cost</b><span className={styles.muted}>Use the prize calculator to see what the prizes add up to before you commit.</span></li>
-        <li><b><span className={styles.howNum}>2</span>Pick dates</b><span className={styles.muted}>Set when entries open, when they close, and when you reveal the winners.</span></li>
-        <li><b><span className={styles.howNum}>3</span>Set prizes</b><span className={styles.muted}>Add each prize with a picture, its value and how many winners get it.</span></li>
+        <li><b><span className={styles.howNum}>1</span>Choose how it runs</b><span className={styles.muted}>Physical, live online or digital.</span></li>
+        <li><b><span className={styles.howNum}>2</span>Set dates and the minimum bill</b><span className={styles.muted}>Every bill of at least that amount gets 1 entry.</span></li>
+        <li><b><span className={styles.howNum}>3</span>Set the prizes</b><span className={styles.muted}>A grand prize, 2nd prizes and, if you like, 3rd prizes.</span></li>
       </ol>
       <div className={styles.actions}>
-        <Link href="/lucky-draws/calculator" className={styles.secondaryButton}><Calculator size={16} aria-hidden="true" />Check the cost first</Link>
+        <Link href="/lucky-draws/calculator" className={styles.secondaryButton}><Calculator size={16} aria-hidden="true" />Prize calculator</Link>
         <Link href="/lucky-draws/new" className={styles.primaryButton}><Plus size={16} aria-hidden="true" />New lucky draw</Link>
       </div>
     </div>
@@ -97,8 +97,11 @@ function LuckyDrawList() {
           <p className={styles.subtitle}>Only the store owner can create and manage lucky draws.</p>
         </div>
         <div className={styles.empty}>
-          <p>If you hand out prizes at a store, you can redeem a winner&rsquo;s claim code here.</p>
-          <Link href="/lucky-draws/redeem" className={styles.primaryButton}>Redeem a prize</Link>
+          <p>If you work at the counter, you can add customers&rsquo; entries or redeem a winner&rsquo;s claim code.</p>
+          <div className={styles.actions}>
+            <Link href="/lucky-draws/entries" className={styles.primaryButton}><Plus size={16} aria-hidden="true" />Add entries</Link>
+            <Link href="/lucky-draws/redeem" className={styles.secondaryButton}><Ticket size={16} aria-hidden="true" />Redeem a prize</Link>
+          </div>
         </div>
       </div>
     );
@@ -112,7 +115,6 @@ function LuckyDrawList() {
           <p className={styles.subtitle}>Run prize draws for customers who shop at your stores. Plan the cost first, then set the dates and prizes.</p>
         </div>
         <div className={styles.actions}>
-          <Link href="/lucky-draws/redeem" className={styles.ghostButton}><Ticket size={16} aria-hidden="true" />Redeem a prize</Link>
           <Link href="/lucky-draws/calculator" className={styles.secondaryButton}><Calculator size={16} aria-hidden="true" />Prize calculator</Link>
           <Link href="/lucky-draws/new" className={styles.primaryButton}><Plus size={16} aria-hidden="true" />New lucky draw</Link>
         </div>
@@ -146,7 +148,7 @@ function LuckyDrawList() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Lucky draw</th><th>Winners shown</th><th>Status</th><th className={styles.num}>Entries</th><th className={styles.num}>Prize pool</th><th>Next</th><th aria-label="Open" />
+                    <th>Lucky draw</th><th>Draw type</th><th>Status</th><th className={styles.num}>Entries</th><th className={styles.num}>Prize pool</th><th>Next</th><th aria-label="Open" />
                   </tr>
                 </thead>
                 <tbody>
@@ -158,7 +160,7 @@ function LuckyDrawList() {
                           <Link href={href} className={styles.cellTitle} onClick={(e) => e.stopPropagation()}>{campaign.name}</Link>
                           <span className={styles.cellSub}>{(campaign.assignedStores || []).map((s) => s.storeName).join(", ")}</span>
                         </td>
-                        <td><ModeTag mode={campaign.revealMode} /></td>
+                        <td><DrawTypeTag type={campaign.drawType} /></td>
                         <td><span className={`${styles.pill} ${styles[`pill_${stage.tone}`]}`}>{stage.label}</span></td>
                         <td className={styles.num}>{entriesLabel(campaign)}</td>
                         <td className={styles.num}>{pool ? formatINR(pool) : "—"}</td>
@@ -179,7 +181,7 @@ function LuckyDrawList() {
                   <span className={styles.cellTitle}>{campaign.name}</span>
                   <span className={styles.listCardMeta}>
                     <span className={`${styles.pill} ${styles[`pill_${stage.tone}`]}`}>{stage.label}</span>
-                    <ModeTag mode={campaign.revealMode} />
+                    <DrawTypeTag type={campaign.drawType} />
                   </span>
                   <span className={styles.listCardNext}>{nextStep(campaign, stage, now || undefined)}</span>
                 </span>

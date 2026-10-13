@@ -70,7 +70,7 @@ function LiveReveal() {
 
   const { campaign, openDraw, pastDraws } = detail;
   const draw = pastDraws[0];
-  const isLive = campaign.revealMode === "live";
+  const isLive = campaign.drawType === "live_online";
   const entryCount = openDraw?.entryCount ?? 0;
   const started = view.status !== "not_started";
   const done = view.status === "done";
@@ -116,7 +116,7 @@ function LiveReveal() {
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Ready when you are</h2>
               <p className={styles.muted}>
-                Share the watch link with your customers, then start. ScratchX picks the winners at random from all {formatNumber(entryCount)} QR {entryCount === 1 ? "entry" : "entries"}. Nothing is shown until you reveal each prize, and each winner gets an SMS when their prize is revealed.
+                Share the watch link with your customers, then start. ScratchX picks the winners at random from all {formatNumber(entryCount)} {entryCount === 1 ? "entry" : "entries"}. Nothing is shown until you reveal each prize, and each winner gets an SMS when their prize is revealed.
               </p>
               {entriesOpen && <p className={styles.notice}>Entries are open until {formatDayTime(campaign.endDate)}. You can start the reveal after that.</p>}
               {!entriesOpen && entryCount === 0 && <p className={styles.notice}>Nobody entered this draw, so there are no winners to reveal.</p>}
@@ -129,11 +129,11 @@ function LiveReveal() {
           )}
 
           {!isLive && !started && (
-            <p className={styles.notice}>This draw shows every winner at once. Results appear here once the draw has run.</p>
+            <p className={styles.notice}>This draw is not revealed live. Its winners are shown on the draw page.</p>
           )}
 
           <div className={styles.panel}>
-            <div className={styles.panelHead}><h2 className={styles.sectionTitle}>Prizes</h2><span className={styles.cellSub}>Smallest prize first</span></div>
+            <div className={styles.panelHead}><h2 className={styles.sectionTitle}>Prizes</h2><span className={styles.cellSub}>3rd prize first</span></div>
             <ol className={styles.catSteps}>
               {view.categories.map((cat, i) => {
                 const isNext = started && !done && i === view.revealedCount;
@@ -144,7 +144,7 @@ function LiveReveal() {
                       {cat.revealed ? <Check size={18} aria-hidden="true" /> : isLast ? <Crown size={18} aria-hidden="true" /> : isNext ? <Radio size={18} aria-hidden="true" /> : <Lock size={16} aria-hidden="true" />}
                     </span>
                     <div>
-                      <b>{cat.name} · {cat.quantity} × {formatINR(cat.value)}</b>
+                      <b>{cat.level} · {cat.name} · {cat.quantity} × {formatINR(cat.value)}</b>
                       <div className={styles.cellSub}>{cat.revealed ? `${cat.winners.length} winner${cat.winners.length === 1 ? "" : "s"} revealed` : isNext ? "Up next" : "Not revealed yet"}</div>
                       {cat.revealed && cat.winners.length > 0 && (
                         <div className={styles.winnerChips}>{cat.winners.map((w, j) => <span key={j} className={styles.winnerChip}>{w.label}</span>)}</div>
@@ -153,7 +153,7 @@ function LiveReveal() {
                     <span>
                       {isNext && isLive && (
                         <button type="button" className={`${styles.primaryButton} ${styles.smallButton}`} disabled={busy !== ""} onClick={() => act("next", `/api/lucky-draws/draws/${draw._id}/reveal/next`)}>
-                          {busy === "next" ? "Revealing…" : `Reveal ${cat.name.toLowerCase()}`}
+                          {busy === "next" ? "Revealing…" : `Reveal ${cat.level.toLowerCase()}`}
                         </button>
                       )}
                     </span>
@@ -167,7 +167,7 @@ function LiveReveal() {
           {next && started && !done && (
             <p className={styles.info}><Info size={16} aria-hidden="true" />Customers on the reveal page see each prize as you reveal it. Take your time and build up to the grand prize.</p>
           )}
-          <p className={styles.info}><Lock size={16} aria-hidden="true" /><span><strong>How winners are picked.</strong> Winners are picked at random by ScratchX once, when the reveal starts, from every QR entry. Bigger bills earn more entries, and each customer can win only once.</span></p>
+          <p className={styles.info}><Lock size={16} aria-hidden="true" /><span><strong>How winners are picked.</strong> Winners are picked at random by ScratchX once, when the reveal starts, from every entry (QR scans and entries added by staff). Every bill over the minimum is one entry, and each customer can win only once.</span></p>
         </div>
 
         {showPreview && (
