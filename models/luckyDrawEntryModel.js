@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { ENTRY_SOURCES } from '../lib/luckyDraw/constants.js';
 
 const luckyDrawEntrySchema = new mongoose.Schema(
   {
@@ -15,8 +16,11 @@ const luckyDrawEntrySchema = new mongoose.Schema(
     },
     billAmount: { type: Number, required: true, min: 0 },
     entriesGranted: { type: Number, required: true, min: 1 },
-    // Position of the bill range this entry fell in (campaign ranges are stored sorted); null for older entries.
-    tierIndex: { type: Number, default: null, min: 0 },
+    // Shown to the customer and written on the paper slip; unique within the campaign.
+    entryNumber: { type: Number, required: true, min: 1 },
+    // qr: the customer scanned the store's QR code. staff: a staff member typed it in at the counter.
+    source: { type: String, enum: ENTRY_SOURCES, default: 'qr' },
+    addedByAccountId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', default: null },
     distanceMeters: { type: Number, default: null },
     customerLatitude: { type: Number, default: null },
     customerLongitude: { type: Number, default: null },
@@ -25,5 +29,6 @@ const luckyDrawEntrySchema = new mongoose.Schema(
 );
 
 luckyDrawEntrySchema.index({ drawId: 1, customerPhone: 1, createdAt: -1 });
+luckyDrawEntrySchema.index({ campaignId: 1, entryNumber: 1 }, { unique: true });
 
 export default mongoose.models.LuckyDrawEntry || mongoose.model('LuckyDrawEntry', luckyDrawEntrySchema);

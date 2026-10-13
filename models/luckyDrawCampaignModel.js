@@ -1,33 +1,16 @@
 import mongoose from 'mongoose';
-import {
-  CAMPAIGN_STATUSES,
-  PRIZE_MODES,
-  RECURRENCE_FREQUENCIES,
-  REVEAL_MODES,
-  SCHEDULE_TYPES,
-  TRIGGER_MODES,
-} from '../lib/luckyDraw/constants.js';
-
-const entryTierSchema = new mongoose.Schema(
-  {
-    minAmount: { type: Number, required: true, min: 0 },
-    maxAmount: { type: Number, default: null },
-    entriesGranted: { type: Number, required: true, min: 1 },
-  },
-  { _id: false },
-);
+import { CAMPAIGN_STATUSES, DRAW_TYPES } from '../lib/luckyDraw/constants.js';
 
 const prizeTierSchema = new mongoose.Schema(
   {
-    rank: { type: Number, required: true, min: 1 },
+    // 1 = grand prize (always one winner), 2 = 2nd prize, 3 = 3rd prize (optional).
+    rank: { type: Number, required: true, min: 1, max: 3 },
     prizeDescription: { type: String, required: true, trim: true, maxlength: 200 },
     prizeValue: { type: Number, default: 0, min: 0 },
-    // How many winners get this prize (a prize category, e.g. 10 x ₹3,000).
+    // How many winners get this prize (e.g. 2 x ₹5,000).
     quantity: { type: Number, default: 1, min: 1 },
     // Compressed data URL (same pattern as scratch-card gift images); null = no picture.
     imageUrl: { type: String, default: null },
-    // Ranges (positions in entryTiers, sorted by minAmount) whose entries may win this prize; none = everyone.
-    tierIndexes: { type: [Number], default: [] },
   },
   { _id: false },
 );
@@ -42,9 +25,9 @@ const storeSnapshotSchema = new mongoose.Schema(
     city: { type: String, trim: true },
     state: { type: String, trim: true },
     pincode: { type: String, trim: true },
-    // Needed for the geofence: customers enter only when they are at one of the stores.
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
+    // Used by the QR geofence; null when the store has no location (staff entries do not need one).
+    latitude: { type: Number, default: null },
+    longitude: { type: Number, default: null },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   },
   { _id: false },
@@ -60,29 +43,21 @@ const luckyDrawCampaignSchema = new mongoose.Schema(
     merchantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true, index: true },
     name: { type: String, required: true, trim: true, maxlength: 120 },
     description: { type: String, trim: true, maxlength: 1000, default: '' },
+    // Every active store of the merchant, taken when the draft is created and again when it is published.
     assignedStores: { type: [storeSnapshotSchema], default: [] },
-    revealMode: { type: String, enum: REVEAL_MODES, default: 'instant' },
+    // physical | live_online | digital (see lib/luckyDraw/constants.js). Locked after publishing.
+    drawType: { type: String, enum: DRAW_TYPES, required: true },
     startDate: { type: Date, required: true },
     // Entries close (registration end).
     endDate: { type: Date, required: true },
-    // When winners are revealed; null on campaigns made before v2 (the draw date then follows endDate).
+    // When the draw happens / winners are revealed; null on very old campaigns (the draw then follows endDate).
     revealDate: { type: Date, default: null },
     status: { type: String, enum: CAMPAIGN_STATUSES, default: 'draft', index: true },
-    entryTiers: { type: [entryTierSchema], validate: nonEmpty('entry tier') },
+    // Every bill of at least this many rupees earns exactly one entry.
+    minBillAmount: { type: Number, required: true, min: 0 },
+    // Last entry number handed out. Incremented atomically, so two counters never hand out the same number.
+    entryCounter: { type: Number, default: 0, min: 0 },
     prizeTiers: { type: [prizeTierSchema], validate: nonEmpty('prize') },
-    // shared: one prize list for everyone | pool_per_tier: each range has its own prizes | restricted: some prizes only for some ranges
-    prizeMode: { type: String, enum: PRIZE_MODES, default: 'shared' },
-    // Cap on total entries one phone number can hold in a single draw; null = uncapped.
-    maxEntriesPerCustomerPerPeriod: { type: Number, default: null, min: 1 },
-    drawConfig: {
-      scheduleType: { type: String, enum: SCHEDULE_TYPES, required: true },
-      recurrence: {
-        frequency: { type: String, enum: RECURRENCE_FREQUENCIES },
-        time: { type: String, match: /^([01]\d|2[0-3]):[0-5]\d$/, default: '18:00' },
-        dayOfWeek: { type: Number, min: 0, max: 6, default: null },
-      },
-      triggerMode: { type: String, enum: TRIGGER_MODES, default: 'automatic' },
-    },
   },
   { timestamps: true },
 );
@@ -95,18 +70,14 @@ luckyDrawCampaignSchema.pre('validate', function () {
     this.invalidate('revealDate', 'The reveal date must be on or after the date entries close');
   }
 
-  const config = this.drawConfig || {};
-  // The owner starts a live reveal, so it is one draw that never runs by itself.
-  if (this.revealMode === 'live' && (config.scheduleType !== 'end_of_campaign' || config.triggerMode !== 'manual')) {
-    this.invalidate('drawConfig', 'A live reveal is one draw that you start yourself');
-  }
-  if (config.scheduleType === 'recurring') {
-    const recurrence = config.recurrence || {};
-    if (!recurrence.frequency) {
-      this.invalidate('drawConfig.recurrence.frequency', 'Recurring draws need a frequency');
-    } else if (recurrence.frequency === 'weekly' && recurrence.dayOfWeek == null) {
-      this.invalidate('drawConfig.recurrence.dayOfWeek', 'Weekly draws need a weekday');
+  const prizes = this.prizeTiers || [];
+  if (prizes.length) {
+    const ranks = prizes.map((p) => p.rank).sort((a, b) => a - b).join(',');
+    if (ranks !== '1,2' && ranks !== '1,2,3') {
+      this.invalidate('prizeTiers', 'A draw has a grand prize and a 2nd prize, and optionally a 3rd prize');
     }
+    const grand = prizes.find((p) => p.rank === 1);
+    if (grand && grand.quantity !== 1) this.invalidate('prizeTiers', 'The grand prize has exactly 1 winner');
   }
 });
 

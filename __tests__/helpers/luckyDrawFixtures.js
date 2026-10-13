@@ -35,16 +35,12 @@ export function campaignData(overrides = {}) {
     startDate: new Date(now - DAY),
     endDate: new Date(now + 30 * DAY),
     status: 'active',
-    entryTiers: [
-      { minAmount: 0, maxAmount: 1000, entriesGranted: 1 },
-      { minAmount: 1000, maxAmount: null, entriesGranted: 3 },
-    ],
+    drawType: 'digital',
+    minBillAmount: 0,
     prizeTiers: [
-      { rank: 1, prizeDescription: 'Smart TV', prizeValue: 30000 },
-      { rank: 2, prizeDescription: 'Mixer Grinder', prizeValue: 3000 },
+      { rank: 1, prizeDescription: 'Smart TV', prizeValue: 30000, quantity: 1 },
+      { rank: 2, prizeDescription: 'Mixer Grinder', prizeValue: 3000, quantity: 1 },
     ],
-    maxEntriesPerCustomerPerPeriod: null,
-    drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'automatic' },
     ...overrides,
   };
 }
@@ -63,7 +59,9 @@ export function createOpenDraw(campaign, overrides = {}) {
   });
 }
 
+let entrySeq = 100000; // far above any number entryService hands out, so fixture and service entries never collide in one campaign
 export function createEntry(campaign, draw, overrides = {}) {
+  entrySeq += 1;
   return LuckyDrawEntry.create({
     campaignId: campaign._id,
     drawId: draw._id,
@@ -72,7 +70,9 @@ export function createEntry(campaign, draw, overrides = {}) {
     customerPhone: nextPhone(),
     consent: true,
     billAmount: 1200,
-    entriesGranted: 3,
+    entriesGranted: 1,
+    entryNumber: entrySeq,
+    source: 'qr',
     ...overrides,
   });
 }

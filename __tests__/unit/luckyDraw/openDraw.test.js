@@ -6,7 +6,7 @@ import { NotFoundError } from '@/lib/errors';
 beforeAll(() => LuckyDraw.init());
 
 describe('ensureOpenDraw', () => {
-  it('creates a scheduled draw dated at the campaign end for end_of_campaign', async () => {
+  it('creates a scheduled draw dated at entries close when there is no draw date', async () => {
     const campaign = await createCampaign();
     const now = new Date();
 
@@ -17,13 +17,11 @@ describe('ensureOpenDraw', () => {
     expect(new Date(draw.periodStart)).toEqual(now);
   });
 
-  it('creates the first occurrence for a recurring campaign', async () => {
-    const campaign = await createCampaign({
-      drawConfig: { scheduleType: 'recurring', triggerMode: 'automatic', recurrence: { frequency: 'daily', time: '18:00' } },
-    });
-    const draw = await ensureOpenDraw(campaign.toObject(), new Date('2026-09-23T10:00:00Z'));
-    // startDate is yesterday relative to real time, so only assert it is in the future of `now`.
-    expect(new Date(draw.drawDate).getTime()).toBeGreaterThan(new Date('2026-09-23T10:00:00Z').getTime());
+  it('dates the draw on the campaign draw date', async () => {
+    const revealDate = new Date(Date.now() + 40 * 24 * 60 * 60 * 1000);
+    const campaign = await createCampaign({ revealDate });
+    const draw = await ensureOpenDraw(campaign.toObject(), new Date());
+    expect(new Date(draw.drawDate)).toEqual(revealDate);
   });
 
   it('returns the existing scheduled draw instead of creating another', async () => {

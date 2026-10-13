@@ -13,7 +13,7 @@ describe('GET /api/cron/lucky-draw', () => {
   beforeEach(() => {
     process.env.CRON_SECRET = 'top-secret';
     runLuckyDrawJob.mockReset();
-    runLuckyDrawJob.mockResolvedValue({ ran: 2, failed: 0, notified: 1, expired: 0 });
+    runLuckyDrawJob.mockResolvedValue({ notified: 1, expired: 0 });
   });
   afterAll(() => {
     if (original === undefined) delete process.env.CRON_SECRET;
@@ -23,7 +23,7 @@ describe('GET /api/cron/lucky-draw', () => {
   it('runs the job with the right secret', async () => {
     const res = await call('top-secret');
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ success: true, result: { ran: 2, failed: 0, notified: 1, expired: 0 } });
+    expect(await res.json()).toEqual({ success: true, result: { notified: 1, expired: 0 } });
   });
 
   it('rejects a missing or wrong secret without running anything', async () => {

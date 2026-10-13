@@ -179,6 +179,18 @@ describe('running a draw', () => {
     expect((await runDrawRoute(req('POST', '/x'), params({ drawId: String(draw._id) }))).status).toBe(403);
     expect((await LuckyDraw.findById(draw._id)).status).toBe('scheduled');
   });
+
+  it('answers 409 for a physical or live online draw and creates no winners', async () => {
+    for (const drawType of ['physical', 'live_online']) {
+      const campaign = await makeCampaign({ drawType });
+      const draw = await createOpenDraw(campaign);
+      await createEntry(campaign, draw);
+      as('Merchant', campaign.merchantId);
+      const res = await runDrawRoute(req('POST', '/x'), params({ drawId: String(draw._id) }));
+      expect(res.status).toBe(409);
+      expect((await LuckyDraw.findById(draw._id)).status).toBe('scheduled');
+    }
+  });
 });
 
 describe('changing the draw date', () => {

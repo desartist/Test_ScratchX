@@ -70,9 +70,8 @@ describe('runDraw with prize categories', () => {
 
   it('live reveal: picks winners from the QR entries but keeps them hidden and untexted', async () => {
     const campaign = await createCampaign({
-      revealMode: 'live',
+      drawType: 'live_online',
       prizeTiers: categories,
-      drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'manual' },
     });
     const draw = await createOpenDraw(campaign);
     for (let i = 0; i < 8; i++) await createEntry(campaign, draw, { customerPhone: nextPhone() });

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { DRAW_STATUSES, PRIZE_MODES } from '../lib/luckyDraw/constants.js';
+import { DRAW_STATUSES } from '../lib/luckyDraw/constants.js';
 
 // Append-only record of every change the store owner makes to the draw date.
 const dateChangeSchema = new mongoose.Schema(
@@ -24,7 +24,6 @@ const prizeSnapshotSchema = new mongoose.Schema(
     prizeValue: Number,
     quantity: { type: Number, default: 1 },
     imageUrl: { type: String, default: null },
-    tierIndexes: { type: [Number], default: [] },
   },
   { _id: false },
 );
@@ -37,18 +36,17 @@ const luckyDrawSchema = new mongoose.Schema(
     dateHistory: { type: [dateChangeSchema], default: [] },
     status: { type: String, enum: DRAW_STATUSES, default: 'scheduled', index: true },
     triggeredBy: {
-      source: { type: String, enum: ['cron', 'manual'] },
+      // manual: Run draw or live reveal; picked: the owner chose Physical draw winners by hand; cron: older draws.
+      source: { type: String, enum: ['cron', 'manual', 'picked'] },
       accountId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', default: null },
     },
     executedAt: { type: Date },
     // Stored so the draw can be replayed: same entries (sorted by _id) + seed = same winners.
     randomSeed: { type: String },
     prizeTiersSnapshot: { type: [prizeSnapshotSchema], default: [] },
-    prizeMode: { type: String, enum: PRIZE_MODES, default: 'shared' },
     entryCount: { type: Number, default: 0 },
     winnerCount: { type: Number, default: 0 },
-    // Reveal progress: categories are revealed smallest prize first; revealedCount of them are public.
-    // Instant draws are fully revealed when they run; live draws are revealed by the owner one at a time.
+    // Reveal progress: prizes are revealed 3rd, then 2nd, then grand; revealedCount of them are public.
     reveal: {
       revealedCount: { type: Number, default: 0, min: 0 },
       startedAt: { type: Date },

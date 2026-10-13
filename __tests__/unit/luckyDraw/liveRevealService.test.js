@@ -32,14 +32,13 @@ const categories = [
   { rank: 3, prizeDescription: 'Gift voucher', prizeValue: 500, quantity: 6 },
 ];
 
-async function seed({ revealMode = 'live', entries = 14 } = {}) {
+async function seed({ drawType = 'live_online', entries = 14 } = {}) {
   const campaign = await createCampaign({
-    revealMode,
+    drawType,
     prizeTiers: categories,
     startDate: new Date(CLOSE.getTime() - 10 * DAY),
     endDate: CLOSE,
     revealDate: CLOSE,
-    drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'manual' },
   });
   const draw = await createOpenDraw(campaign, { drawDate: CLOSE });
   for (let i = 0; i < entries; i += 1) await createEntry(campaign, draw, { customerPhone: nextPhone() });
@@ -76,7 +75,7 @@ describe('startLiveReveal', () => {
     await startLiveReveal(merchantId, drawId, { now: AFTER_CLOSE });
     await expect(startLiveReveal(merchantId, drawId, { now: AFTER_CLOSE })).rejects.toThrow(ConflictError);
 
-    const instant = await seed({ revealMode: 'instant' });
+    const instant = await seed({ drawType: 'digital' });
     await expect(startLiveReveal(instant.merchantId, instant.drawId, { now: AFTER_CLOSE })).rejects.toThrow(/at once/i);
   });
 });

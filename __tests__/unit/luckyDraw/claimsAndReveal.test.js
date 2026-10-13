@@ -30,12 +30,11 @@ const categories = [
 
 async function liveDraw() {
   const campaign = await createCampaign({
-    revealMode: 'live',
+    drawType: 'live_online',
     prizeTiers: categories,
     startDate: new Date(CLOSE.getTime() - 10 * DAY),
     endDate: CLOSE,
     revealDate: CLOSE,
-    drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'manual' },
   });
   const draw = await createOpenDraw(campaign, { drawDate: CLOSE });
   for (let i = 0; i < 8; i += 1) await createEntry(campaign, draw, { customerName: 'Priya Shah', customerPhone: nextPhone() });

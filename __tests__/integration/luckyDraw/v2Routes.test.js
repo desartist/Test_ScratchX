@@ -41,15 +41,14 @@ const categories = [
   { rank: 2, prizeDescription: 'Third prize', prizeValue: 1000, quantity: 2 },
 ];
 
-async function qrDraw(revealMode, { closed = true } = {}) {
+async function qrDraw(drawType, { closed = true } = {}) {
   const endDate = closed ? new Date(Date.now() - DAY) : new Date(Date.now() + 5 * DAY);
   const campaign = await createCampaign({
-    revealMode,
+    drawType,
     prizeTiers: categories,
     startDate: new Date(endDate.getTime() - 10 * DAY),
     endDate,
     revealDate: endDate,
-    drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'manual' },
   });
   const draw = await createOpenDraw(campaign, { drawDate: endDate });
   for (let i = 0; i < 5; i += 1) await createEntry(campaign, draw, { customerName: 'Kunal Desai', customerPhone: nextPhone() });
@@ -73,7 +72,7 @@ describe('merchant-only routes', () => {
 
 describe('live reveal from QR entries', () => {
   it('starts without exposing winners, reveals one prize at a time, and the owner can mark a claim', async () => {
-    const { campaign, draw, merchantId } = await qrDraw('live');
+    const { campaign, draw, merchantId } = await qrDraw('live_online');
     as('Merchant', merchantId);
 
     const started = await startReveal(req('POST', '/x'), params({ drawId: String(draw._id) }));
@@ -104,7 +103,7 @@ describe('live reveal from QR entries', () => {
   });
 
   it('refuses to start a reveal for a draw that shows winners at once', async () => {
-    const { draw, merchantId } = await qrDraw('instant');
+    const { draw, merchantId } = await qrDraw('digital');
     as('Merchant', merchantId);
     const res = await startReveal(req('POST', '/x'), params({ drawId: String(draw._id) }));
     expect(res.status).toBe(409);
@@ -113,7 +112,7 @@ describe('live reveal from QR entries', () => {
 
 describe('extending dates', () => {
   it('extends entries close for the owner and 404s for anyone else', async () => {
-    const { campaign, merchantId } = await qrDraw('live', { closed: false });
+    const { campaign, merchantId } = await qrDraw('live_online', { closed: false });
     as('Merchant', merchantId);
     const newDate = new Date(new Date(campaign.endDate).getTime() + 7 * DAY).toISOString();
 
@@ -131,7 +130,7 @@ describe('extending dates', () => {
 
 describe('public pages', () => {
   it('shows prize images, values and how winners are shown, and takes QR entries for a live reveal', async () => {
-    const { campaign } = await qrDraw('live', { closed: false });
+    const { campaign } = await qrDraw('live_online', { closed: false });
 
     const info = await json(await publicCampaign(req('GET', '/x'), params({ id: String(campaign._id) })));
     expect(info.revealMode).toBe('live');
