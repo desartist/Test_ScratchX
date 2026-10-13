@@ -5,13 +5,16 @@ import {
   daysUntil,
   timelinePosition,
   formatDay,
+  DRAW_TYPE_LABEL,
+  PRIZE_LEVEL_LABEL,
+  describeMinBill,
 } from '@/lib/luckyDraw/display';
 
 const DAY = 24 * 60 * 60 * 1000;
 const now = new Date('2026-10-20T06:30:00.000Z');
 const campaign = (overrides = {}) => ({
   status: 'active',
-  revealMode: 'instant',
+  drawType: 'digital',
   startDate: '2026-10-05T00:00:00.000Z',
   endDate: '2026-10-31T18:29:00.000Z',
   revealDate: '2026-11-02T13:30:00.000Z',
@@ -46,9 +49,10 @@ describe('listGroup and nextStep', () => {
 
   it('says what happens next', () => {
     expect(nextStep(campaign(), { key: 'open' })).toMatch(/^Entries close 31 Oct/);
-    expect(nextStep(campaign(), { key: 'due' })).toBe('Draw winners today');
-    expect(nextStep(campaign({ revealMode: 'live' }), { key: 'due' })).toBe('Reveal winners live today');
-    expect(nextStep(campaign({ revealMode: 'live' }), { key: 'live' })).toBe('Continue the live reveal');
+    expect(nextStep(campaign({ drawType: 'live_online' }), { key: 'due' })).toBe('Reveal winners live today');
+    expect(nextStep(campaign({ drawType: 'physical' }), { key: 'due' })).toBe('Pick the winners today');
+    expect(nextStep(campaign({ drawType: 'digital' }), { key: 'due' })).toBe('Draw winners today');
+    expect(nextStep(campaign({ drawType: 'live_online' }), { key: 'live' })).toBe('Continue the live reveal');
     expect(listGroup({ key: 'live' })).toBe('active');
     expect(nextStep(campaign({ unclaimedCount: 5 }), { key: 'completed' })).toBe('5 prizes not claimed');
   });
@@ -73,5 +77,17 @@ describe('dates', () => {
 
   it('formats days', () => {
     expect(formatDay('2026-10-31T18:29:00.000Z')).toBe('31 Oct');
+  });
+});
+
+describe('draw type and prize level wording', () => {
+  it('names the three draw types and prize levels', () => {
+    expect(DRAW_TYPE_LABEL).toEqual({ physical: 'Physical draw', live_online: 'Live online draw', digital: 'Digital draw' });
+    expect(PRIZE_LEVEL_LABEL).toEqual({ 1: 'Grand prize', 2: '2nd prize', 3: '3rd prize' });
+  });
+
+  it('describes the minimum bill', () => {
+    expect(describeMinBill(1000)).toBe('Bills of ₹1,000 or more get 1 entry');
+    expect(describeMinBill(0)).toBe('Every bill gets 1 entry');
   });
 });
