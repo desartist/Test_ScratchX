@@ -167,7 +167,7 @@ function LiveReveal() {
           {next && started && !done && (
             <p className={styles.info}><Info size={16} aria-hidden="true" />Customers on the reveal page see each prize as you reveal it. Take your time and build up to the grand prize.</p>
           )}
-          <p className={styles.info}><Lock size={16} aria-hidden="true" /><span><strong>How winners are picked.</strong> Winners are picked at random by ScratchX once, when the reveal starts, from every entry (QR scans and entries added by staff). Every bill over the minimum is one entry, and each customer can win only once.</span></p>
+          <p className={styles.info}><Lock size={16} aria-hidden="true" /><span><strong>How winners are picked.</strong> Winners are picked at random by ScratchX once, when the reveal starts, from every entry (QR scans and entries added by staff). Every bill at or above the minimum is one entry, and each customer can win only once.</span></p>
         </div>
 
         {showPreview && (

@@ -9,8 +9,10 @@ export async function GET(request, { params }) {
     const { error, merchantId } = await requireMerchant();
     if (error) return error;
     const { id } = await params;
-    const q = new URL(request.url).searchParams.get('q') || '';
-    return ok(await listEntries(merchantId, id, { q }));
+    const searchParams = new URL(request.url).searchParams;
+    const q = searchParams.get('q') || '';
+    const limit = searchParams.get('limit');
+    return ok(await listEntries(merchantId, id, { q, ...(limit ? { limit } : {}) }));
   } catch (err) {
     return errorResponse(err);
   }

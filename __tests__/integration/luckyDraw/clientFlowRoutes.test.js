@@ -50,6 +50,17 @@ describe('staff entries', () => {
     expect((await addEntryRoute(req('POST', '/x', body), params({ id: String(physical._id) }))).status).toBe(403);
   });
 
+  it('limits the entry list to the requested size', async () => {
+    const campaign = await createCampaign({ drawType: 'physical' });
+    const draw = await createOpenDraw(campaign);
+    await createEntry(campaign, draw, { customerPhone: nextPhone() });
+    await createEntry(campaign, draw, { customerPhone: nextPhone() });
+    as({ _id: campaign.merchantId, role: 'Merchant' });
+
+    const res = await listEntriesRoute(req('GET', '/x?limit=1'), params({ id: String(campaign._id) }));
+    expect((await res.json()).data.entries).toHaveLength(1);
+  });
+
   it('keeps the entry list to the owner', async () => {
     const campaign = await createCampaign({ drawType: 'physical' });
     as({ _id: newId(), role: 'Store_Staff', storeId: campaign.assignedStores[0].storeId });

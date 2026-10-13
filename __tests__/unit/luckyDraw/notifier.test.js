@@ -103,6 +103,17 @@ describe('messages', () => {
     });
     expect(text).toContain('Smart TV');
     expect(text).toContain('ABCD2345');
-    expect(text).toContain('#1');
+    expect(text).toContain('the grand prize');
+  });
+
+  it('uses the lower-cased prize level label for ranks below the grand prize', () => {
+    const text = messages.winner({
+      campaignName: 'Diwali Draw',
+      rank: 2,
+      prizeDescription: 'Mixer Grinder',
+      claimCode: 'EFGH6789',
+      expiresAt: '2026-10-23T12:30:00Z',
+    });
+    expect(text).toContain('the 2nd prize');
   });
 });

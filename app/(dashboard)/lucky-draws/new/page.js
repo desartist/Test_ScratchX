@@ -77,7 +77,17 @@ function LevelCard({ levelKey, level, errors, onChange, onTidy, onPickImage, ima
           ) : (
             <span style={{ display: "grid", justifyItems: "center", gap: 2 }}><ImagePlus size={20} aria-hidden="true" />Add</span>
           )}
-          <input id={id("imageUrl")} type="file" accept="image/jpeg,image/png,image/webp" aria-label={`Picture for the ${PRIZE_LEVEL_LABEL[rank].toLowerCase()}`} onChange={(e) => onPickImage(e.target.files?.[0])} />
+          <input
+            id={id("imageUrl")}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            aria-label={`Picture for the ${PRIZE_LEVEL_LABEL[rank].toLowerCase()}`}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              onPickImage(file);
+            }}
+          />
         </label>
         {level.imageUrl && <button type="button" className={`${styles.ghostButton} ${styles.smallButton}`} onClick={() => onChange("imageUrl", "")}>Remove</button>}
         <FieldError message={errors[key("imageUrl")]} />
@@ -167,12 +177,13 @@ function NewLuckyDrawForm() {
     clearError(key);
   };
   const setLevel = (levelKey, key, value) => {
-    setForm((f) => ({ ...f, [levelKey]: { ...f[levelKey], [key]: value } }));
+    setForm((f) => (f[levelKey] ? { ...f, [levelKey]: { ...f[levelKey], [key]: value } } : f));
     clearError(`${levelKey}.${key}`);
   };
   // Groups the digits once the owner leaves a value field, without hiding an error that is still true.
   const tidyLevel = (levelKey, key) =>
     setForm((f) => {
+      if (!f[levelKey]) return f;
       const amount = parseAmount(f[levelKey][key]);
       return amount ? { ...f, [levelKey]: { ...f[levelKey], [key]: formatNumber(amount) } } : f;
     });

@@ -193,4 +193,11 @@ describe('runOwnerDraw', () => {
     const { draw } = await seed();
     await expect(runOwnerDraw(String(newId()), String(draw._id))).rejects.toThrow(NotFoundError);
   });
+
+  it('refuses a digital draw before entries open, picking no winners', async () => {
+    const { campaign, draw } = await seed({ campaign: { startDate: new Date(Date.now() + DAY) } });
+    await expect(runOwnerDraw(String(campaign.merchantId), String(draw._id))).rejects.toThrow(ConflictError);
+    expect(await LuckyDrawWinner.countDocuments({ drawId: draw._id })).toBe(0);
+    expect((await LuckyDraw.findById(draw._id)).status).toBe('scheduled');
+  });
 });

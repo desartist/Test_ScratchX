@@ -265,7 +265,8 @@ function LuckyDrawDetail() {
   const prizes = [...campaign.prizeTiers].sort((a, b) => a.rank - b.rank);
   const canExtend = campaign.status !== "ended" && !openDraw?.reveal?.startedAt && (openDraw || campaign.status === "draft");
   const entriesClosed = new Date(campaign.endDate) <= today;
-  const entriesOpen = campaign.status === "active" && new Date(campaign.startDate) <= today && !entriesClosed;
+  const entriesStarted = campaign.status === "active" && new Date(campaign.startDate) <= today;
+  const entriesOpen = entriesStarted && !entriesClosed;
   const canAddEntries = STAFF_ENTRY_DRAW_TYPES.includes(drawType) && entriesOpen;
   const latestDraw = pastDraws[0];
   const history = [...(openDraw?.dateHistory || [])].reverse();
@@ -423,7 +424,11 @@ function LuckyDrawDetail() {
               {drawType === "digital" && openDraw && (
                 <>
                   <p className={styles.muted}>Nothing happens by itself. Press Run draw when you are ready{openDraw.isDue ? ". The draw is due." : "."}</p>
-                  <div><button type="button" className={styles.primaryButton} onClick={() => { setRunError(""); setShowRun(true); }} disabled={busy !== ""}><Trophy size={16} aria-hidden="true" />Run draw</button></div>
+                  {entriesStarted ? (
+                    <div><button type="button" className={styles.primaryButton} onClick={() => { setRunError(""); setShowRun(true); }} disabled={busy !== ""}><Trophy size={16} aria-hidden="true" />Run draw</button></div>
+                  ) : (
+                    <p className={styles.notice}>You can run the draw once entries open on {formatDayTime(campaign.startDate)}.</p>
+                  )}
                 </>
               )}
               {openDraw && <p className={styles.notice}><strong>What customers are told:</strong> {DATE_CHANGE_NOTICE}</p>}
@@ -548,6 +553,7 @@ function LuckyDrawDetail() {
       >
         <p className={styles.muted} style={{ margin: 0 }}>
           ScratchX picks {formatNumber(totals.totalWinners)} winner{totals.totalWinners === 1 ? "" : "s"} at random from {pluralEntries(openDraw?.entryCount ?? 0)} and texts each one a claim code. This closes the lucky draw.
+          {!entriesClosed ? " Entries close now, so nobody else can enter." : ""}
         </p>
       </ConfirmModal>
 

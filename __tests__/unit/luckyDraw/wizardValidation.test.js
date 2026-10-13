@@ -104,6 +104,11 @@ describe('step 3', () => {
     const errors = stepErrors(3, { ...filled(), second: { ...filled().second, quantity: '1000' } }, ctx);
     expect(errors).toEqual({ 'second.quantity': 'A draw can have at most 1,000 winners.' });
   });
+
+  it('rejects a decimal prize value', () => {
+    const errors = stepErrors(3, { ...filled(), second: { ...filled().second, prizeValue: '5000.50' } }, ctx);
+    expect(errors).toEqual({ 'second.prizeValue': 'Enter a whole number of rupees, like 5000.' });
+  });
 });
 
 describe('step 4', () => {

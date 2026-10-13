@@ -33,6 +33,13 @@ describe('drawStage', () => {
     expect(drawStage(campaign({ status: 'ended', revealInProgress: true }), { now })).toMatchObject({ key: 'live', label: 'Revealing live' });
   });
 
+  it('labels the due stage "Draw day" except for live online draws, which keep "Reveal day"', () => {
+    const due = { now: new Date('2026-11-02T14:00:00.000Z') };
+    expect(drawStage(campaign({ drawType: 'digital' }), due).label).toBe('Draw day');
+    expect(drawStage(campaign({ drawType: 'physical' }), due).label).toBe('Draw day');
+    expect(drawStage(campaign({ drawType: 'live_online' }), due).label).toBe('Reveal day');
+  });
+
   it('uses the open draw date when it differs from the campaign', () => {
     const later = { drawDate: '2026-11-09T13:30:00.000Z' };
     expect(drawStage(campaign(), { now: new Date('2026-11-03T00:00:00.000Z'), openDraw: later }).key).toBe('closed');
@@ -55,6 +62,12 @@ describe('listGroup and nextStep', () => {
     expect(nextStep(campaign({ drawType: 'live_online' }), { key: 'live' })).toBe('Continue the live reveal');
     expect(listGroup({ key: 'live' })).toBe('active');
     expect(nextStep(campaign({ unclaimedCount: 5 }), { key: 'completed' })).toBe('5 prizes not claimed');
+  });
+
+  it('says "Draw" for the closed stage except for live online draws, which say "Reveal"', () => {
+    expect(nextStep(campaign({ drawType: 'digital' }), { key: 'closed' })).toMatch(/^Draw 2 Nov/);
+    expect(nextStep(campaign({ drawType: 'physical' }), { key: 'closed' })).toMatch(/^Draw 2 Nov/);
+    expect(nextStep(campaign({ drawType: 'live_online' }), { key: 'closed' })).toMatch(/^Reveal 2 Nov/);
   });
 });
 

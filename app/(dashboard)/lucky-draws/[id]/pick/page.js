@@ -31,7 +31,7 @@ function EntrySearch({ campaignId, takenPhones, onPick, onCancel }) {
   useEffect(() => {
     let cancelled = false;
     const timer = setTimeout(() => {
-      api(`/api/lucky-draws/campaigns/${campaignId}/entries?q=${encodeURIComponent(q.trim())}`)
+      api(`/api/lucky-draws/campaigns/${campaignId}/entries?limit=10&q=${encodeURIComponent(q.trim())}`)
         .then((data) => {
           if (cancelled) return;
           setResults(data.entries);
