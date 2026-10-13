@@ -53,14 +53,16 @@ async function seedStore(merchantId) {
   return store;
 }
 
-const newCampaignBody = (storeId) => ({
+const newCampaignBody = () => ({
+  drawType: 'digital',
   name: 'Diwali Lucky Draw',
   startDate: new Date(Date.now() - DAY).toISOString(),
   endDate: new Date(Date.now() + 30 * DAY).toISOString(),
-  storeIds: [String(storeId)],
-  entryTiers: [{ minAmount: 0, maxAmount: null, entriesGranted: 1 }],
-  prizes: [{ prizeDescription: 'Smart TV', prizeValue: 30000 }],
-  scheduleType: 'end_of_campaign',
+  minBillAmount: 0,
+  prizes: [
+    { rank: 1, prizeDescription: 'Smart TV', prizeValue: 30000, quantity: 1 },
+    { rank: 2, prizeDescription: 'Mixer', prizeValue: 2000, quantity: 1 },
+  ],
 });
 
 describe('authentication and roles', () => {
@@ -80,7 +82,7 @@ describe('campaigns', () => {
     as('Merchant', merchantId);
     const store = await seedStore(merchantId);
 
-    const created = await createCampaign(req('POST', '/api/lucky-draws/campaigns', newCampaignBody(store._id)));
+    const created = await createCampaign(req('POST', '/api/lucky-draws/campaigns', newCampaignBody()));
     expect(created.status).toBe(201);
     const { data } = await created.json();
     expect(data.status).toBe('draft');
@@ -98,12 +100,12 @@ describe('campaigns', () => {
     as('Merchant', merchantId);
     const store = await seedStore(merchantId);
 
-    const bad = await createCampaign(req('POST', '/api/lucky-draws/campaigns', { ...newCampaignBody(store._id), prizes: [] }));
+    const bad = await createCampaign(req('POST', '/api/lucky-draws/campaigns', { ...newCampaignBody(), prizes: [] }));
     expect(bad.status).toBe(400);
     expect((await bad.json()).error).toMatch(/prize/i);
 
     checkPlanAccess.mockResolvedValue({ allowed: false, reason: 'This feature is not available in the Core plan' });
-    const denied = await createCampaign(req('POST', '/api/lucky-draws/campaigns', newCampaignBody(store._id)));
+    const denied = await createCampaign(req('POST', '/api/lucky-draws/campaigns', newCampaignBody()));
     expect(denied.status).toBe(403);
   });
 
@@ -124,6 +126,7 @@ describe('campaigns', () => {
 
   it('activates and pauses through the status route, rejecting unknown statuses', async () => {
     const campaign = await makeCampaign({ status: 'draft' });
+    await seedStore(campaign.merchantId);
     as('Merchant', campaign.merchantId);
     const id = String(campaign._id);
 

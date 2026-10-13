@@ -1,6 +1,5 @@
 import {
   validatePrizeCategories,
-  normalizePrizeCategories,
   expandPrizeSlots,
   revealOrder,
   prizeTotals,
@@ -56,21 +55,11 @@ describe('validatePrizeCategories', () => {
   });
 });
 
-describe('normalizePrizeCategories', () => {
-  it('numbers prizes in the order given and cleans the fields', () => {
-    const [grand, second] = normalizePrizeCategories([
-      { prizeDescription: '  Grand prize ', prizeValue: '20000', quantity: '1', imageUrl: tiny },
-      { prizeDescription: 'Second prize', prizeValue: 5000, quantity: 5, imageUrl: '' },
-    ]);
-    expect(grand).toEqual({ rank: 1, prizeDescription: 'Grand prize', prizeValue: 20000, quantity: 1, imageUrl: tiny, tierIndexes: [] });
-    expect(second.rank).toBe(2);
-    expect(second.imageUrl).toBeNull();
-  });
-});
-
 describe('expandPrizeSlots', () => {
+  const ranked = example.map((p, i) => ({ ...p, rank: i + 1 }));
+
   it('repeats each category once per winner, in rank order', () => {
-    const slots = expandPrizeSlots(normalizePrizeCategories(example));
+    const slots = expandPrizeSlots(ranked);
     expect(slots).toHaveLength(16);
     expect(slots[0]).toMatchObject({ rank: 1, prizeDescription: 'Grand prize', prizeValue: 20000 });
     expect(slots.filter((s) => s.rank === 3)).toHaveLength(10);
@@ -90,7 +79,8 @@ describe('revealOrder', () => {
 
 describe('prizeTotals', () => {
   it('adds up the cost and the winners', () => {
-    expect(prizeTotals(normalizePrizeCategories(example))).toEqual({ totalValue: 75000, totalWinners: 16 });
+    const ranked = example.map((p, i) => ({ ...p, rank: i + 1 }));
+    expect(prizeTotals(ranked)).toEqual({ totalValue: 75000, totalWinners: 16 });
   });
 });
 

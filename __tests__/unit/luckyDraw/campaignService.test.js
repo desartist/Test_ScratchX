@@ -28,18 +28,19 @@ async function seedStore(merchantId, overrides = {}) {
   return store;
 }
 
-const baseInput = (storeId) => ({
+const baseInput = (overrides = {}) => ({
+  drawType: 'digital',
   name: 'Diwali Lucky Draw',
   description: 'Win big',
   startDate: new Date(Date.now() - DAY).toISOString(),
   endDate: new Date(Date.now() + 30 * DAY).toISOString(),
-  storeIds: [String(storeId)],
-  entryTiers: [
-    { minAmount: 500, maxAmount: 1000, entriesGranted: 1 },
-    { minAmount: 1000, maxAmount: null, entriesGranted: 3 },
+  revealDate: new Date(Date.now() + 32 * DAY).toISOString(),
+  minBillAmount: 1000,
+  prizes: [
+    { rank: 1, prizeDescription: 'Smart TV', prizeValue: 30000, quantity: 1 },
+    { rank: 2, prizeDescription: 'Mixer', prizeValue: 2000, quantity: 3 },
   ],
-  prizes: [{ prizeDescription: 'Smart TV', prizeValue: 30000 }, { prizeDescription: 'Mixer', prizeValue: 2000 }],
-  scheduleType: 'end_of_campaign',
+  ...overrides,
 });
 
 beforeEach(() => {
@@ -48,11 +49,11 @@ beforeEach(() => {
 });
 
 describe('createCampaign', () => {
-  it('creates a draft with store snapshots, ranked prizes and the default trigger mode', async () => {
+  it('creates a draft with every active store, the draw type, minimum bill and prize levels', async () => {
     const merchantId = newId();
     const store = await seedStore(merchantId);
 
-    const campaign = await createCampaign(String(merchantId), baseInput(store._id));
+    const campaign = await createCampaign(String(merchantId), baseInput());
 
     expect(campaign.status).toBe('draft');
     expect(campaign.assignedStores).toHaveLength(1);
@@ -66,124 +67,35 @@ describe('createCampaign', () => {
       [1, 'Smart TV'],
       [2, 'Mixer'],
     ]);
-    expect(campaign.drawConfig.triggerMode).toBe('automatic');
-  });
-
-  it('stores a manual trigger mode and a weekly recurrence', async () => {
-    const merchantId = newId();
-    const store = await seedStore(merchantId);
-    const campaign = await createCampaign(String(merchantId), {
-      ...baseInput(store._id),
-      scheduleType: 'recurring',
-      triggerMode: 'manual',
-      recurrence: { frequency: 'weekly', time: '19:30', dayOfWeek: 6 },
-    });
-    expect(campaign.drawConfig).toMatchObject({
-      scheduleType: 'recurring',
-      triggerMode: 'manual',
-      recurrence: { frequency: 'weekly', time: '19:30', dayOfWeek: 6 },
-    });
+    expect(campaign).toMatchObject({ drawType: 'digital', minBillAmount: 1000, entryCounter: 0 });
+    expect(campaign.prizeTiers.map((p) => [p.rank, p.quantity])).toEqual([[1, 1], [2, 3]]);
   });
 
   it('refuses when the plan does not include Lucky Draw', async () => {
     checkPlanAccess.mockResolvedValue({ allowed: false, reason: 'This feature is not available in the Core plan' });
     const merchantId = newId();
-    const store = await seedStore(merchantId);
-    await expect(createCampaign(String(merchantId), baseInput(store._id))).rejects.toThrow(AuthorizationError);
-    await expect(createCampaign(String(merchantId), baseInput(store._id))).rejects.toThrow('not available in the Core plan');
+    await seedStore(merchantId);
+    await expect(createCampaign(String(merchantId), baseInput())).rejects.toThrow(AuthorizationError);
+    await expect(createCampaign(String(merchantId), baseInput())).rejects.toThrow('not available in the Core plan');
   });
 
   it.each([
-    ['overlapping tiers', { entryTiers: [{ minAmount: 0, maxAmount: 1000, entriesGranted: 1 }, { minAmount: 500, maxAmount: null, entriesGranted: 2 }] }, /overlap/],
     ['no prizes', { prizes: [] }, /prize/i],
     ['a blank prize', { prizes: [{ prizeDescription: '  ' }] }, /prize/i],
-    ['no stores', { storeIds: [] }, /store/i],
     ['a short name', { name: 'ab' }, /name/i],
     ['end before start', { endDate: new Date(Date.now() - 2 * DAY).toISOString() }, /end date/i],
     ['a bad date', { startDate: 'not-a-date' }, /valid start and end/i],
-    ['an unknown schedule type', { scheduleType: 'monthly' }, /schedule/i],
-    ['an unknown trigger mode', { triggerMode: 'auto' }, /trigger/i],
-    ['a zero entry cap', { maxEntriesPerCustomerPerPeriod: 0 }, /limit/i],
-    ['a weekly draw with no weekday', { scheduleType: 'recurring', recurrence: { frequency: 'weekly' } }, /weekday/i],
-    ['a recurring draw with no frequency', { scheduleType: 'recurring' }, /frequency/i],
   ])('rejects %s', async (_label, patch, message) => {
     const merchantId = newId();
-    const store = await seedStore(merchantId);
-    await expect(createCampaign(String(merchantId), { ...baseInput(store._id), ...patch })).rejects.toThrow(ValidationError);
-    await expect(createCampaign(String(merchantId), { ...baseInput(store._id), ...patch })).rejects.toThrow(message);
-  });
-
-  it('rejects stores that belong to another merchant or are inactive', async () => {
-    const merchantId = newId();
-    const foreign = await seedStore(newId());
-    const inactive = await seedStore(merchantId, { status: 'inactive' });
-    await expect(createCampaign(String(merchantId), baseInput(foreign._id))).rejects.toThrow(/not available/);
-    await expect(createCampaign(String(merchantId), baseInput(inactive._id))).rejects.toThrow(/not available/);
-  });
-});
-
-describe('createCampaign: prizes tied to bill ranges', () => {
-  const TV = { prizeDescription: 'Smart TV', prizeValue: 30000 };
-  const PHONE = { prizeDescription: 'Smart Phone', prizeValue: 9000 };
-
-  async function setup() {
-    const merchantId = newId();
-    const store = await seedStore(merchantId);
-    return { merchantId: String(merchantId), store };
-  }
-
-  it('defaults to shared prizes and ignores range choices in that mode', async () => {
-    const { merchantId, store } = await setup();
-    const campaign = await createCampaign(merchantId, { ...baseInput(store._id), prizes: [{ ...TV, tierIndexes: [1] }, PHONE] });
-    expect(campaign.prizeMode).toBe('shared');
-    expect(campaign.prizeTiers.map((p) => p.tierIndexes)).toEqual([[], []]);
-  });
-
-  it('pool per range: each prize belongs to one range', async () => {
-    const { merchantId, store } = await setup();
-    const campaign = await createCampaign(merchantId, {
-      ...baseInput(store._id), prizeMode: 'pool_per_tier', prizes: [{ ...TV, tierIndexes: [1] }, { ...PHONE, tierIndexes: [0] }],
-    });
-    expect(campaign.prizeMode).toBe('pool_per_tier');
-    expect(campaign.prizeTiers.map((p) => [p.rank, p.prizeDescription, p.tierIndexes])).toEqual([[1, 'Smart TV', [1]], [2, 'Smart Phone', [0]]]);
-  });
-
-  it('restricted: a prize can be limited to some ranges, or open to all', async () => {
-    const { merchantId, store } = await setup();
-    const campaign = await createCampaign(merchantId, {
-      ...baseInput(store._id), prizeMode: 'restricted', prizes: [{ ...TV, tierIndexes: [1] }, PHONE],
-    });
-    expect(campaign.prizeTiers.map((p) => p.tierIndexes)).toEqual([[1], []]);
-  });
-
-  it('stores ranges sorted by minimum, and range numbers refer to that sorted order', async () => {
-    const { merchantId, store } = await setup();
-    const campaign = await createCampaign(merchantId, {
-      ...baseInput(store._id),
-      entryTiers: [{ minAmount: 1000, maxAmount: null, entriesGranted: 3 }, { minAmount: 500, maxAmount: 1000, entriesGranted: 1 }],
-      prizeMode: 'pool_per_tier',
-      prizes: [{ ...TV, tierIndexes: [1] }, { ...PHONE, tierIndexes: [0] }],
-    });
-    expect(campaign.entryTiers.map((t) => t.minAmount)).toEqual([500, 1000]);
-    expect(campaign.prizeTiers[0].tierIndexes).toEqual([1]);
-  });
-
-  it.each([
-    ['an unknown mode', { prizeMode: 'weird', prizes: [TV, PHONE] }, /how prizes are split/i],
-    ['a pool prize with no range', { prizeMode: 'pool_per_tier', prizes: [TV, { ...PHONE, tierIndexes: [0] }] }, /exactly one/i],
-    ['a range with no prize', { prizeMode: 'pool_per_tier', prizes: [{ ...TV, tierIndexes: [1] }, { ...PHONE, tierIndexes: [1] }] }, /every entry range needs/i],
-    ['a restricted set that leaves a range unable to win', { prizeMode: 'restricted', prizes: [{ ...TV, tierIndexes: [1] }, { ...PHONE, tierIndexes: [1] }] }, /must be able to win/i],
-    ['a prize pointing at a missing range', { prizeMode: 'restricted', prizes: [{ ...TV, tierIndexes: [7] }, PHONE] }, /does not exist/i],
-    ['tying prizes to ranges with only one range', { prizeMode: 'restricted', entryTiers: [{ minAmount: 0, maxAmount: null, entriesGranted: 1 }], prizes: [{ ...TV, tierIndexes: [0] }, PHONE] }, /at least two/i],
-  ])('rejects %s', async (_label, patch, message) => {
-    const { merchantId, store } = await setup();
-    await expect(createCampaign(merchantId, { ...baseInput(store._id), ...patch })).rejects.toThrow(ValidationError);
-    await expect(createCampaign(merchantId, { ...baseInput(store._id), ...patch })).rejects.toThrow(message);
+    await seedStore(merchantId);
+    await expect(createCampaign(String(merchantId), baseInput(patch))).rejects.toThrow(ValidationError);
+    await expect(createCampaign(String(merchantId), baseInput(patch))).rejects.toThrow(message);
   });
 });
 
 describe('setCampaignStatus', () => {
   async function draftCampaign(merchantId, overrides = {}) {
+    await seedStore(merchantId);
     return LuckyDrawCampaign.create(campaignData({ merchantId, status: 'draft', ...overrides }));
   }
 
@@ -300,5 +212,64 @@ describe('getOwnedCampaign', () => {
     expect(String((await getOwnedCampaign(String(merchantId), String(mine._id)))._id)).toBe(String(mine._id));
     await expect(getOwnedCampaign(String(newId()), String(mine._id))).rejects.toThrow(NotFoundError);
     await expect(getOwnedCampaign(String(merchantId), 'nope')).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe('createCampaign: client flow rules', () => {
+  it('takes every active store of the merchant and nothing else', async () => {
+    const merchantId = newId();
+    const a = await seedStore(merchantId, { store_name: 'Andheri' });
+    const b = await seedStore(merchantId, { store_name: 'Bandra' });
+    await seedStore(merchantId, { store_name: 'Closed', status: 'inactive' });
+    await seedStore(newId(), { store_name: 'Someone else' });
+
+    const campaign = await createCampaign(String(merchantId), baseInput({ storeIds: [String(newId())] }));
+
+    expect(campaign.assignedStores.map((s) => String(s.storeId)).sort()).toEqual([String(a._id), String(b._id)].sort());
+  });
+
+  it('refuses a merchant with no active store', async () => {
+    await expect(createCampaign(String(newId()), baseInput())).rejects.toThrow('You have no active stores. Add a store first.');
+  });
+
+  it('runs a physical draw at a store without a location, but not a digital one', async () => {
+    const merchantId = newId();
+    await seedStore(merchantId, { latitude: null, longitude: null });
+    await expect(createCampaign(String(merchantId), baseInput({ drawType: 'physical' }))).resolves.toMatchObject({ drawType: 'physical' });
+    await expect(createCampaign(String(merchantId), baseInput({ drawType: 'digital' }))).rejects.toThrow(/scan in at a store with a location/);
+  });
+
+  it('needs a known draw type and a whole-rupee minimum bill', async () => {
+    const merchantId = newId();
+    await seedStore(merchantId);
+    await expect(createCampaign(String(merchantId), baseInput({ drawType: 'weekly' }))).rejects.toThrow('Choose how the draw runs: physical, live online or digital');
+    await expect(createCampaign(String(merchantId), baseInput({ minBillAmount: 99.5 }))).rejects.toThrow('Enter the minimum bill amount in whole rupees');
+    await expect(createCampaign(String(merchantId), baseInput({ minBillAmount: -1 }))).rejects.toThrow('Enter the minimum bill amount in whole rupees');
+    await expect(createCampaign(String(merchantId), baseInput({ minBillAmount: undefined }))).rejects.toThrow('Enter the minimum bill amount in whole rupees');
+  });
+
+  it('needs the grand prize and the 2nd prize', async () => {
+    const merchantId = newId();
+    await seedStore(merchantId);
+    await expect(createCampaign(String(merchantId), baseInput({ prizes: [{ rank: 1, prizeDescription: 'TV', prizeValue: 1000 }] }))).rejects.toThrow(/grand prize and the 2nd prize/);
+  });
+
+  it('ignores the old settings if a client still sends them', async () => {
+    const merchantId = newId();
+    await seedStore(merchantId);
+    const campaign = await createCampaign(String(merchantId), baseInput({ scheduleType: 'recurring', entryTiers: [{ minAmount: 5 }], prizeMode: 'restricted', revealMode: 'live' }));
+    for (const key of ['drawConfig', 'entryTiers', 'prizeMode', 'revealMode']) expect(campaign).not.toHaveProperty(key);
+  });
+
+  it('refreshes the stores when the draft is published', async () => {
+    const merchantId = newId();
+    await seedStore(merchantId, { store_name: 'Andheri' });
+    const campaign = await createCampaign(String(merchantId), baseInput());
+    const later = await seedStore(merchantId, { store_name: 'Powai' });
+
+    const published = await setCampaignStatus(String(merchantId), String(campaign._id), 'active');
+
+    expect(published.assignedStores.map((s) => s.storeName).sort()).toEqual(['Andheri', 'Powai']);
+    expect(published.assignedStores.some((s) => String(s.storeId) === String(later._id))).toBe(true);
   });
 });
