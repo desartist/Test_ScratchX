@@ -81,6 +81,13 @@ describe('saveWinnerPicks', () => {
     expect(result.winners).toHaveLength(2);
   });
 
+  it('pluralises the short-of-customers message correctly for exactly one customer', async () => {
+    const { merchantId, drawId } = await closedPhysical({ people: 1 });
+    await expect(saveWinnerPicks(merchantId, drawId, [])).rejects.toThrow(
+      'Only 1 customer entered, so pick 1 winner, starting with the grand prize',
+    );
+  });
+
   it('refuses before entries close, twice, for other draw types, other merchants and an empty draw', async () => {
     const open = await createCampaign({ drawType: 'physical', prizeTiers: prizes });
     const openDraw = await createOpenDraw(open);
