@@ -10,7 +10,13 @@
  * What it sets up for test-merchant@scratchx.local:
  *  - subscription on the Smart plan (features.canUseLuckyDraw = true)
  *  - three active stores with locations: Andheri West, Bandra, Thane
- *  - six Lucky Draws covering every mode and stage (see DEMO_NAMES)
+ *  - six Lucky Draws, one per draw type and stage:
+ *      Diwali     digital,     entries open
+ *      Navratri   live online, entries closed 1h ago, ready to reveal (QR + staff entries)
+ *      Ganesh     physical,    entries closed 1h ago, ready to pick winners (staff entries)
+ *      Monsoon    digital,     completed, claim codes printed
+ *      Weekend    physical,    scheduled
+ *      New Year   live online, draft
  *
  * Refuses to run against a non-local MongoDB.
  */
@@ -316,15 +322,11 @@ function nearby(lat, lng, meters) {
     lng: lng + (meters * Math.sin(bearing)) / (111320 * Math.cos((lat * Math.PI) / 180)),
   };
 }
-function billFor(tiers, weights) {
-  // weights: probability of landing in each tier (sorted like tiers)
-  let roll = rng();
-  let index = 0;
-  while (index < weights.length - 1 && roll > weights[index]) roll -= weights[index++];
-  const tier = tiers[index];
-  const max = tier.maxAmount ?? tier.minAmount * 3;
-  const amount = Math.round(between(tier.minAmount, max - 1) / 10) * 10;
-  return { billAmount: amount, tierIndex: index, entriesGranted: tier.entriesGranted };
+/** A believable bill at or above the minimum: most just over it, some much bigger. */
+function billAbove(min) {
+  const base = Math.max(min, 500);
+  const amount = rng() < 0.7 ? between(base, base * 1.8) : between(base * 1.8, base * 4);
+  return Math.max(min, Math.round(amount / 10) * 10);
 }
 
 // ── db helpers ───────────────────────────────────────────────────────────────
@@ -357,24 +359,32 @@ async function uniqueClaimCodes(count) {
   return [...codes];
 }
 
-/** `count` QR entries spread over store hours between two dates, each from a different customer. */
-function qrEntries({ count, from, to, stores: storeList, tiers, weights, campaignId, drawId }) {
-  return Array.from({ length: count }, () => shopTimeBetween(from, to))
-    .sort((a, b) => a - b)
-    .map((at) => {
-      const who = customer();
-      const store = pick(storeList);
-      const meters = Math.round(between(15, 1500));
-      const spot = nearby(store.latitude, store.longitude, meters);
-      return {
-        _id: idAt(at),
-        campaignId, drawId, storeId: store._id,
-        customerName: who.name, customerPhone: who.phone, consent: true,
-        ...billFor(tiers, weights),
-        distanceMeters: meters, customerLatitude: spot.lat, customerLongitude: spot.lng,
-        createdAt: at,
-      };
-    });
+/** `count` entries spread over store hours between two dates, each from a different customer. */
+function makeEntries({ count, from, to, stores: storeList, minBill, campaignId, drawId, source, addedBy = null }) {
+  return Array.from({ length: count }, () => shopTimeBetween(from, to)).map((at) => {
+    const who = customer();
+    const store = pick(storeList);
+    const base = {
+      _id: idAt(at),
+      campaignId, drawId, storeId: store._id,
+      customerName: who.name, customerPhone: who.phone, consent: true,
+      billAmount: billAbove(minBill), entriesGranted: 1, source,
+      addedByAccountId: source === 'staff' ? addedBy : null,
+      createdAt: at,
+    };
+    if (source === 'staff') return base;
+    const meters = Math.round(between(15, 1500));
+    const spot = nearby(store.latitude, store.longitude, meters);
+    return { ...base, distanceMeters: meters, customerLatitude: spot.lat, customerLongitude: spot.lng };
+  });
+}
+
+/** Numbers entries 1..N in the order they were made, inserts them and moves the campaign's counter on. */
+async function insertEntries(campaignId, entries) {
+  const numbered = [...entries].sort((a, b) => a.createdAt - b.createdAt).map((e, i) => ({ ...e, entryNumber: i + 1 }));
+  await insertValidated(LuckyDrawEntry, numbered);
+  await LuckyDrawCampaign.updateOne({ _id: campaignId }, { $set: { entryCounter: numbered.length } });
+  return numbered;
 }
 
 function snapshot(store) {
@@ -397,7 +407,6 @@ const prize = (rank, prizeDescription, prizeValue, quantity, imageKey) => ({
   prizeValue,
   quantity,
   imageUrl: imageKey ? picture(imageKey) : null,
-  tierIndexes: [],
 });
 
 // ── main ─────────────────────────────────────────────────────────────────────
@@ -491,12 +500,10 @@ async function main() {
   }
   console.log(`✓ Stores: Andheri West (${andheriLat}, ${andheriLng}), Bandra, Thane`);
 
-  // Remove older demo draws.
+  // Every Lucky Draw of the demo merchant goes (demo ones and any made by hand before the client flow),
+  // so no old-style draw is left to break the screens.
   const old = await LuckyDrawCampaign.find({
-    $or: [
-      { merchantId: merchant._id, name: { $in: Object.values(DEMO_NAMES) } },
-      { _id: { $in: Object.values(DEMO_NAMES).map(demoId) } },
-    ],
+    $or: [{ merchantId: merchant._id }, { _id: { $in: Object.values(DEMO_NAMES).map(demoId) } }],
   })
     .select('_id')
     .lean();
@@ -510,55 +517,36 @@ async function main() {
   }
 
   const created = {};
-  const base = (data) => ({ merchantId: merchant._id, description: '', maxEntriesPerCustomerPerPeriod: null, ...data });
+  const base = (data) => ({ merchantId: merchant._id, description: '', entryCounter: 0, ...data });
 
-  // a) Diwali: online, entries open, one entries-close extension.
+  // a) Diwali: digital, entries open, one entries-close extension.
   {
     const startDate = istDayAt(-10, '10:00', now);
     const endDate = istDayAt(20, '21:00', now);
     const revealDate = istDayAt(22, '19:00', now);
     const originalClose = istDayAt(15, '21:00', now);
     const createdAt = istDayAt(-11, '16:20', now);
-    const entryTiers = [
-      { minAmount: 2000, maxAmount: 5000, entriesGranted: 1 },
-      { minAmount: 5000, maxAmount: null, entriesGranted: 3 },
-    ];
     const [campaign] = await insertValidated(LuckyDrawCampaign, [
       base({
         _id: demoId(DEMO_NAMES.diwali),
         name: DEMO_NAMES.diwali,
         description: 'Shop for ₹2,000 or more this Diwali and win a 43-inch Smart TV, gold coins or gift vouchers.',
-        revealMode: 'instant',
-        assignedStores: [snapshot(stores.andheri), snapshot(stores.bandra)],
+        drawType: 'digital', minBillAmount: 2000,
+        assignedStores: [snapshot(stores.andheri), snapshot(stores.bandra), snapshot(stores.thane)],
         startDate, endDate, revealDate, status: 'active',
-        entryTiers, prizeMode: 'shared',
         prizeTiers: [
           prize(1, '43-inch Smart TV', 20000, 1, 'tv'),
           prize(2, 'Gold coin', 5000, 5, 'goldCoin'),
           prize(3, 'Gift voucher', 3000, 10, 'voucherPink'),
         ],
-        drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'automatic' },
         createdAt, updatedAt: istDayAt(-5, '11:05', now),
       }),
     ]);
     const drawId = new mongoose.Types.ObjectId();
-    const entries = [];
-    const entryTimes = Array.from({ length: 40 }, () => shopTimeBetween(startDate, new Date(now.getTime() - 20 * MINUTE)))
-      .sort((a, b) => a - b);
-    for (const at of entryTimes) {
-      const who = customer();
-      const store = rng() < 0.6 ? stores.andheri : stores.bandra;
-      const meters = Math.round(between(15, 1400));
-      const spot = nearby(store.latitude, store.longitude, meters);
-      entries.push({
-        _id: idAt(at),
-        campaignId: campaign._id, drawId, storeId: store._id,
-        customerName: who.name, customerPhone: who.phone, consent: true,
-        ...billFor(entryTiers, [0.62, 0.38]),
-        distanceMeters: meters, customerLatitude: spot.lat, customerLongitude: spot.lng,
-        createdAt: at,
-      });
-    }
+    const entries = makeEntries({
+      count: 40, from: startDate, to: new Date(now.getTime() - 20 * MINUTE),
+      stores: [stores.andheri, stores.bandra], minBill: 2000, campaignId: campaign._id, drawId, source: 'qr',
+    });
     const extendedAt = istDayAt(-5, '11:05', now);
     const phonesBefore = new Set(entries.filter((e) => e.createdAt < extendedAt).map((e) => e.customerPhone));
     await insertValidated(LuckyDraw, [
@@ -575,33 +563,27 @@ async function main() {
         createdAt: startDate, updatedAt: extendedAt,
       },
     ]);
-    await insertValidated(LuckyDrawEntry, entries);
+    await insertEntries(campaign._id, entries);
     created.diwali = { id: campaign._id, entries: entries.length };
   }
 
-  // b) Navratri: QR entries, live reveal; entries closed 1 hour ago, ready to start the reveal.
+  // b) Navratri: live online, QR + staff entries; entries closed 1 hour ago, ready to start the reveal.
   {
     const endDate = new Date(now.getTime() - HOUR);
     const startDate = istDayAt(-14, '10:00', now);
-    const entryTiers = [
-      { minAmount: 1000, maxAmount: 3000, entriesGranted: 1 },
-      { minAmount: 3000, maxAmount: null, entriesGranted: 2 },
-    ];
     const [campaign] = await insertValidated(LuckyDrawCampaign, [
       base({
         _id: demoId(DEMO_NAMES.navratri),
         name: DEMO_NAMES.navratri,
-        description: 'Scan the QR code with your Navratri bill. Winners are revealed live, one prize at a time.',
-        revealMode: 'live',
+        description: 'Scan the QR code with your Navratri bill, or ask at the counter. Winners are revealed live.',
+        drawType: 'live_online', minBillAmount: 1000,
         assignedStores: [snapshot(stores.andheri), snapshot(stores.bandra), snapshot(stores.thane)],
         startDate, endDate, revealDate: endDate, status: 'active',
-        entryTiers, prizeMode: 'shared',
         prizeTiers: [
           prize(1, 'Gold coin', 10000, 1, 'goldCoin'),
           prize(2, 'Silver coin', 2000, 3, 'silverCoin'),
           prize(3, 'Gift voucher', 500, 6, 'voucherPink'),
         ],
-        drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'manual' },
         createdAt: istDayAt(-15, '12:40', now), updatedAt: istDayAt(-1, '20:15', now),
       }),
     ]);
@@ -609,36 +591,31 @@ async function main() {
     await insertValidated(LuckyDraw, [
       { _id: drawId, campaignId: campaign._id, periodStart: startDate, drawDate: endDate, status: 'scheduled', createdAt: startDate },
     ]);
-    const entries = qrEntries({
-      count: 52, from: startDate, to: new Date(endDate.getTime() - 10 * MINUTE),
-      stores: [stores.andheri, stores.bandra, stores.thane], tiers: entryTiers, weights: [0.6, 0.4],
-      campaignId: campaign._id, drawId,
-    });
-    await insertValidated(LuckyDrawEntry, entries);
+    const period = { from: startDate, to: new Date(endDate.getTime() - 10 * MINUTE), stores: [stores.andheri, stores.bandra, stores.thane], minBill: 1000, campaignId: campaign._id, drawId };
+    const entries = await insertEntries(campaign._id, [
+      ...makeEntries({ ...period, count: 30, source: 'qr' }),
+      ...makeEntries({ ...period, count: 22, source: 'staff', addedBy: merchant._id }),
+    ]);
     created.navratri = { id: campaign._id, entries: entries.length };
   }
 
-  // c) Ganesh: QR entries, all winners at once, run by the owner; entries closed 1 hour ago, ready to run.
+  // c) Ganesh: physical, staff entries only; entries closed 1 hour ago, ready to pick the winners.
   {
     const endDate = new Date(now.getTime() - HOUR);
     const startDate = istDayAt(-21, '10:00', now);
-    const entryTiers = [{ minAmount: 1500, maxAmount: null, entriesGranted: 1 }];
     const [campaign] = await insertValidated(LuckyDrawCampaign, [
       base({
         _id: demoId(DEMO_NAMES.ganesh),
         name: DEMO_NAMES.ganesh,
-        description: 'Scan the QR code with any bill of ₹1,500 or more during Ganesh Utsav.',
-        revealMode: 'instant',
+        description: 'Any bill of ₹1,500 or more during Ganesh Utsav gets an entry slip at the counter.',
+        drawType: 'physical', minBillAmount: 1500,
         assignedStores: [snapshot(stores.thane), snapshot(stores.andheri)],
         startDate, endDate, revealDate: endDate, status: 'active',
-        entryTiers, prizeMode: 'shared',
         prizeTiers: [
           prize(1, 'Grand prize', 8000, 1, 'trophyGold'),
           prize(2, 'Second prize', 2000, 3, 'trophySilver'),
           prize(3, 'Third prize', 1000, 6, 'trophyBronze'),
         ],
-        // "I'll run it": nothing happens by itself, so the draw can be run live in the demo.
-        drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'manual' },
         createdAt: istDayAt(-22, '15:10', now), updatedAt: istDayAt(-2, '19:30', now),
       }),
     ]);
@@ -646,24 +623,18 @@ async function main() {
     await insertValidated(LuckyDraw, [
       { _id: drawId, campaignId: campaign._id, periodStart: startDate, drawDate: endDate, status: 'scheduled', createdAt: startDate },
     ]);
-    const entries = qrEntries({
+    const entries = await insertEntries(campaign._id, makeEntries({
       count: 45, from: startDate, to: new Date(endDate.getTime() - 10 * MINUTE),
-      stores: [stores.thane, stores.andheri], tiers: entryTiers, weights: [1],
-      campaignId: campaign._id, drawId,
-    });
-    await insertValidated(LuckyDrawEntry, entries);
+      stores: [stores.thane, stores.andheri], minBill: 1500, campaignId: campaign._id, drawId, source: 'staff', addedBy: merchant._id,
+    }));
     created.ganesh = { id: campaign._id, entries: entries.length };
   }
 
-  // d) Monsoon: online, finished ~3 weeks ago, fully revealed, 16 winners (11 redeemed, 5 notified).
+  // d) Monsoon: digital, finished ~3 weeks ago, 16 winners (11 redeemed, 5 notified).
   {
     const startDate = istDayAt(-52, '10:00', now);
     const endDate = istDayAt(-23, '21:00', now);
     const revealDate = istDayAt(-21, '19:00', now);
-    const entryTiers = [
-      { minAmount: 1500, maxAmount: 4000, entriesGranted: 1 },
-      { minAmount: 4000, maxAmount: null, entriesGranted: 2 },
-    ];
     const prizeTiers = [
       prize(1, 'Front-load washing machine', 15000, 1, 'washingMachine'),
       prize(2, 'Mixer grinder', 3000, 5, 'mixer'),
@@ -674,54 +645,35 @@ async function main() {
         _id: demoId(DEMO_NAMES.monsoon),
         name: DEMO_NAMES.monsoon,
         description: 'Monsoon sale lucky draw: every bill of ₹1,500 or more is an entry.',
-        revealMode: 'instant',
+        drawType: 'digital', minBillAmount: 1500,
         assignedStores: [snapshot(stores.andheri), snapshot(stores.bandra), snapshot(stores.thane)],
-        startDate, endDate, revealDate, status: 'ended',
-        entryTiers, prizeMode: 'shared', prizeTiers,
-        drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'automatic' },
+        startDate, endDate, revealDate, status: 'ended', prizeTiers,
         createdAt: istDayAt(-54, '11:30', now), updatedAt: revealDate,
       }),
     ]);
     const drawId = new mongoose.Types.ObjectId();
-    const storeList = [stores.andheri, stores.bandra, stores.thane];
-    const entryTimes = Array.from({ length: 60 }, () => shopTimeBetween(startDate, endDate)).sort((a, b) => a - b);
-    const entries = entryTimes.map((at) => {
-      const who = customer();
-      const store = pick(storeList);
-      const meters = Math.round(between(15, 1500));
-      const spot = nearby(store.latitude, store.longitude, meters);
-      return {
-        _id: idAt(at),
-        campaignId: campaign._id, drawId, storeId: store._id,
-        customerName: who.name, customerPhone: who.phone, consent: true,
-        ...billFor(entryTiers, [0.55, 0.45]),
-        distanceMeters: meters, customerLatitude: spot.lat, customerLongitude: spot.lng,
-        createdAt: at,
-      };
-    });
     const executedAt = new Date(revealDate.getTime() + 2 * MINUTE);
+    const entries = await insertEntries(campaign._id, makeEntries({
+      count: 60, from: startDate, to: endDate, stores: [stores.andheri, stores.bandra, stores.thane],
+      minBill: 1500, campaignId: campaign._id, drawId, source: 'qr',
+    }));
     await insertValidated(LuckyDraw, [
       {
         _id: drawId, campaignId: campaign._id, periodStart: startDate, drawDate: revealDate, status: 'completed',
-        triggeredBy: { source: 'cron', accountId: null }, executedAt,
+        triggeredBy: { source: 'manual', accountId: merchant._id }, executedAt,
         randomSeed: crypto.randomBytes(8).toString('hex'),
-        prizeTiersSnapshot: prizeTiers, prizeMode: 'shared', entryCount: entries.length, winnerCount: 16,
+        prizeTiersSnapshot: prizeTiers, entryCount: entries.length, winnerCount: 16,
         reveal: { revealedCount: prizeTiers.length, startedAt: executedAt, completedAt: executedAt },
         createdAt: startDate, updatedAt: executedAt,
       },
     ]);
-    await insertValidated(LuckyDrawEntry, entries);
 
     // 16 distinct winning entries; grand prize, 4 of 5 mixers and 6 of 10 vouchers claimed.
     const pool = [...entries];
     const chosen = [];
     while (chosen.length < 16) chosen.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
-    const slots = [
-      ...Array(1).fill(prizeTiers[0]),
-      ...Array(5).fill(prizeTiers[1]),
-      ...Array(10).fill(prizeTiers[2]),
-    ];
-    const redeemedSlots = new Set([0, 1, 2, 3, 4, 6, 7, 9, 10, 12, 14]); // 11 redeemed
+    const slots = [...Array(1).fill(prizeTiers[0]), ...Array(5).fill(prizeTiers[1]), ...Array(10).fill(prizeTiers[2])];
+    const redeemedSlots = new Set([0, 1, 2, 3, 4, 6, 7, 9, 10, 12, 14]);
     const codes = await uniqueClaimCodes(16);
     const expiresAt = new Date(executedAt.getTime() + CLAIM_EXPIRY_DAYS * DAY);
     const notifiedAt = new Date(executedAt.getTime() + 1 * MINUTE);
@@ -742,7 +694,7 @@ async function main() {
     created.monsoon = { id: campaign._id, entries: entries.length, winners };
   }
 
-  // e) Weekend Bonanza: online, active, starts in 3 days.
+  // e) Weekend Bonanza: physical, published, entries open in 3 days.
   {
     const startDate = istDayAt(3, '10:00', now);
     const endDate = istDayAt(5, '21:00', now);
@@ -753,12 +705,10 @@ async function main() {
         _id: demoId(DEMO_NAMES.weekend),
         name: DEMO_NAMES.weekend,
         description: 'Shop this weekend for a chance to win movie tickets for two.',
-        revealMode: 'instant',
+        drawType: 'physical', minBillAmount: 1000,
         assignedStores: [snapshot(stores.andheri)],
         startDate, endDate, revealDate, status: 'active',
-        entryTiers: [{ minAmount: 1000, maxAmount: null, entriesGranted: 1 }], prizeMode: 'shared',
-        prizeTiers: [prize(1, 'Movie tickets for two', 1000, 1, 'movieTicket')],
-        drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'automatic' },
+        prizeTiers: [prize(1, 'Movie tickets for two', 1000, 1, 'movieTicket'), prize(2, 'Popcorn combo voucher', 300, 4, 'voucherPink')],
         createdAt, updatedAt: createdAt,
       }),
     ]);
@@ -768,7 +718,7 @@ async function main() {
     created.weekend = { id: campaign._id };
   }
 
-  // f) New Year: online draft, no draw.
+  // f) New Year: live online draft, no draw.
   {
     const year = new Date(now.getTime() + IST_MS).getUTCFullYear();
     const ist = (y, mo, d, h, mi) => new Date(Date.UTC(y, mo - 1, d, h, mi) - IST_MS);
@@ -778,17 +728,11 @@ async function main() {
         _id: demoId(DEMO_NAMES.newYear),
         name: DEMO_NAMES.newYear,
         description: 'Ring in the new year: every bill of ₹1,500 or more is an entry.',
-        revealMode: 'instant',
+        drawType: 'live_online', minBillAmount: 1500,
         assignedStores: [snapshot(stores.andheri), snapshot(stores.bandra), snapshot(stores.thane)],
         startDate: ist(year, 12, 24, 10, 0), endDate: ist(year + 1, 1, 2, 21, 0), revealDate: ist(year + 1, 1, 4, 19, 0),
         status: 'draft',
-        entryTiers: [
-          { minAmount: 1500, maxAmount: 5000, entriesGranted: 1 },
-          { minAmount: 5000, maxAmount: null, entriesGranted: 2 },
-        ],
-        prizeMode: 'shared',
         prizeTiers: [prize(1, 'Smartwatch', 6000, 1, 'giftBox'), prize(2, 'Gift voucher', 1500, 5, 'voucherBlue')],
-        drawConfig: { scheduleType: 'end_of_campaign', triggerMode: 'automatic' },
         createdAt, updatedAt: createdAt,
       }),
     ]);
@@ -797,12 +741,12 @@ async function main() {
 
   // ── summary ────────────────────────────────────────────────────────────────
   const rows = [
-    ['diwali', 'Entries open', null],
-    ['navratri', 'Reveal day · live reveal', 'live'],
-    ['ganesh', 'Reveal day · press Run draw', null],
-    ['monsoon', 'Completed', null],
-    ['weekend', 'Scheduled', null],
-    ['newYear', 'Draft', null],
+    ['diwali', 'Digital · entries open', null],
+    ['navratri', 'Live online · ready to reveal', 'live'],
+    ['ganesh', 'Physical · ready to pick winners', 'pick'],
+    ['monsoon', 'Digital · completed', null],
+    ['weekend', 'Physical · scheduled', null],
+    ['newYear', 'Live online · draft', null],
   ];
   console.log('\nDemo draws:');
   for (const [key, stage, action] of rows) {
@@ -810,8 +754,8 @@ async function main() {
     console.log(`\n  ${DEMO_NAMES[key]}  [${stage}]  id ${id}`);
     console.log(`    owner page   ${BASE_URL}/lucky-draws/${id}`);
     if (action) console.log(`    ${action.padEnd(12)} ${BASE_URL}/lucky-draws/${id}/${action}`);
-    console.log(`    public QR    ${BASE_URL}/lucky-draw/${id}`);
-    console.log(`    reveal page  ${BASE_URL}/lucky-draw/${id}/reveal`);
+    console.log(`    public page  ${BASE_URL}/lucky-draw/${id}`);
+    console.log(`    results page ${BASE_URL}/lucky-draw/${id}/reveal`);
   }
   const notClaimed = created.monsoon.winners.filter((w) => w.status === 'notified');
   console.log('\nMonsoon claim codes not yet redeemed (use on /lucky-draws/redeem):');
