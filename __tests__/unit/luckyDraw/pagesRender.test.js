@@ -20,6 +20,7 @@ jest.mock('next/link', () => {
 jest.mock('@/app/(dashboard)/lucky-draws/luckyDraws.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
 jest.mock('@/app/(client)/lucky-draw/[campaignId]/page.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
 jest.mock('@/app/(client)/lucky-draw/[campaignId]/reveal/reveal.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
+jest.mock('@/components/common/Modal.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
 
 const React = require('react');
 const { renderToString } = require('react-dom/server');
