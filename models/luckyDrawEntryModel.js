@@ -29,6 +29,7 @@ const luckyDrawEntrySchema = new mongoose.Schema(
 );
 
 luckyDrawEntrySchema.index({ drawId: 1, customerPhone: 1, createdAt: -1 });
-luckyDrawEntrySchema.index({ campaignId: 1, entryNumber: 1 }, { unique: true });
+// Partial so older entries with no entryNumber (all null) don't collide on the unique index.
+luckyDrawEntrySchema.index({ campaignId: 1, entryNumber: 1 }, { unique: true, partialFilterExpression: { entryNumber: { $type: 'number' } } });
 
 export default mongoose.models.LuckyDrawEntry || mongoose.model('LuckyDrawEntry', luckyDrawEntrySchema);
