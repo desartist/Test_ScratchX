@@ -185,6 +185,21 @@ function EntriesPanel({ campaignId, refreshKey, canAdd, onAdd }) {
           </table>
         </div>
       )}
+      {data && data.entries.length > 0 && (
+        <ul className={styles.entryCards}>
+          {data.entries.map((e) => (
+            <li key={e._id} className={styles.entryCard}>
+              <span className={styles.mono}>#{e.entryNumber}</span>
+              <span className={styles.entryCardMain}>
+                <strong>{e.customerName}</strong>
+                <span className={styles.cellSub}>{maskPhone(e.customerPhone)} · {e.source === "staff" ? "Staff" : "QR scan"}{e.storeName ? ` · ${e.storeName}` : ""}</span>
+                <span className={styles.cellSub}>{formatDayTime(e.createdAt)}</span>
+              </span>
+              <strong className={styles.num}>{formatINR(e.billAmount)}</strong>
+            </li>
+          ))}
+        </ul>
+      )}
       {data && data.total > data.entries.length && <p className={styles.hint} style={{ padding: "10px 22px" }}>Showing the latest {data.entries.length} entries.</p>}
     </div>
   );

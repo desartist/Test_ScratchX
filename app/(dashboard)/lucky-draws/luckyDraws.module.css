@@ -190,6 +190,14 @@
 .stepNow .stepName { color: #010f44; }
 .wizardFoot { display: flex; justify-content: space-between; gap: 12px; padding-top: 18px; border-top: 1px solid #eef1f6; flex-wrap: wrap; }
 .wizardFoot > :last-child { margin-left: auto; }
+/* Phones: buttons share the width; on Review, Publish sits full width above Back and Save as draft. */
+@media (max-width: 560px) {
+  .wizardFoot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .wizardFoot > :last-child { margin-left: 0; }
+  .wizardFoot .actions { display: contents; }
+  .wizardFoot button { justify-content: center; width: 100%; padding-left: 10px; padding-right: 10px; }
+  .wizardFoot .actions .primaryButton { order: -1; grid-column: 1 / -1; }
+}
 .wizardHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .wizardClose { flex: none; margin-top: 2px; }
 .mobileOnly { display: none; }
@@ -407,7 +415,14 @@
 .reviewStats div { background: #fafbff; border: 1.5px solid #e0e4ff; border-radius: 12px; padding: 10px 14px; }
 .reviewStats dt { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #637080; }
 .reviewStats dd { margin: 2px 0 0; font-size: 1.15rem; font-weight: 800; color: #010f44; font-variant-numeric: tabular-nums; }
-@media (max-width: 560px) { .reviewStats { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .reviewHero { padding: 16px; }
+  .reviewName { font-size: 1.25rem; }
+  .reviewStats { gap: 6px; }
+  .reviewStats div { padding: 8px 10px; border-radius: 10px; }
+  .reviewStats dt { font-size: 0.64rem; letter-spacing: 0.3px; }
+  .reviewStats dd { font-size: 0.98rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
 .reviewGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 720px) { .reviewGrid { grid-template-columns: 1fr; } }
 .reviewCard { background: #fff; border: 1.5px solid #e0e4ff; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
@@ -439,3 +454,36 @@
 /* Draws list: an unfinished new draw kept on this device */
 .draftBanner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-radius: 12px; background: #fff5e6; border: 1.5px solid #f3c47a; }
 .draftBanner > span { display: flex; flex-direction: column; gap: 2px; color: #010f44; }
+
+/* Wizard step 1 on phones: compact draw-type cards (icon, name, one line), no bullet list */
+@media (max-width: 720px) {
+  .modeCard { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 12px; row-gap: 2px; padding: 14px; align-items: start; }
+  .modeCard .modeIcon { grid-row: span 2; width: 40px; height: 40px; }
+  .modeCard .modeTitle { grid-column: 2; font-size: 1rem; }
+  .modeCard .muted { grid-column: 2; font-size: 0.86rem; line-height: 1.4; }
+  .modeCard .modeList { display: none; }
+}
+
+/* Phones: entries as a compact list instead of the wide table. */
+.entryCards { display: none; list-style: none; margin: 0; padding: 0; }
+.entryCard { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 12px 16px; border-bottom: 1px solid #eef1f6; }
+.entryCard:last-child { border-bottom: 0; }
+.entryCardMain { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.entryCardMain strong { color: #010f44; }
+.calcPool { overflow-x: auto; }
+@media (max-width: 640px) {
+  .entryCards { display: block; }
+  /* Calculator prize pool: each level becomes a small card with labelled fields. */
+  .calcPool table, .calcPool tbody { display: block; }
+  .calcPool thead { display: none; }
+  .calcPool tr { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr); gap: 6px 12px; padding: 12px 0; border-bottom: 1px solid #eef1f6; }
+  .calcPool td { display: block; border: 0; padding: 0; text-align: left; }
+  .calcPool td[data-label]::before { content: attr(data-label); display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #637080; margin-bottom: 4px; }
+  .calcPool .calcPrize { grid-column: 1 / -1; }
+  .calcPool td[data-label="Total"] { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; }
+  .calcPool td[data-label="Total"]::before { margin: 0; }
+  .calcPool input { max-width: none !important; }
+  .calcPool .moneyInput { max-width: none !important; margin-left: 0 !important; }
+  .calcPool .calcTotalRow { display: flex; justify-content: space-between; border-bottom: 0; }
+  .calcPool .calcTotalRow td:empty { display: none; }
+}

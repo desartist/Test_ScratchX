@@ -502,7 +502,7 @@ function NewLuckyDrawForm() {
               <dl className={styles.reviewStats}>
                 <div><dt>Prize pool</dt><dd>{formatINR(totalValue)}</dd></div>
                 <div><dt>Winners</dt><dd>{formatNumber(totalWinners)}</dd></div>
-                <div><dt>Entry</dt><dd>₹{formatNumber(parseAmount(form.minBillAmount))}+ bill</dd></div>
+                <div><dt>Min. bill</dt><dd>₹{formatNumber(parseAmount(form.minBillAmount))}</dd></div>
               </dl>
             </section>
 

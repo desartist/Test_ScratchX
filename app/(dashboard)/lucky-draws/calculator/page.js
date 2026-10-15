@@ -95,7 +95,7 @@ function Calculator() {
               <h2 className={styles.sectionTitle} id="calc-pool-title">4. Prize pool</h2>
               <p className={styles.hint}>One hero prize, a few mid-tier prizes and many smaller prizes. The Third Prize is optional.</p>
             </div>
-            <div className={styles.tableWrap}>
+            <div className={styles.calcPool}>
               <table className={styles.table}>
                 <thead><tr><th>Prize</th><th className={styles.num}>Winners</th><th className={styles.num}>Value each</th><th className={styles.num}>Total</th></tr></thead>
                 <tbody>
@@ -103,23 +103,23 @@ function Calculator() {
                     const row = pool.levels[i];
                     return (
                       <tr key={level}>
-                        <td><strong>{PRIZE_LEVEL_LABEL[row.rank]}</strong></td>
-                        <td className={styles.num}>
+                        <td className={styles.calcPrize}><strong>{PRIZE_LEVEL_LABEL[row.rank]}</strong></td>
+                        <td className={styles.num} data-label="Winners">
                           {level === "grand" ? "1" : (
                             <input aria-label={`${PRIZE_LEVEL_LABEL[row.rank]} winners`} className={styles.input} style={{ maxWidth: 90 }} inputMode="numeric" value={plan[level].quantity} onChange={(e) => setLevel(level, "quantity", e.target.value)} />
                           )}
                         </td>
-                        <td className={styles.num}>
+                        <td className={styles.num} data-label="Value each">
                           <div className={styles.moneyInput} style={{ maxWidth: 160, marginLeft: "auto" }}>
                             <span>₹</span>
                             <input aria-label={`${PRIZE_LEVEL_LABEL[row.rank]} value each`} className={styles.input} inputMode="numeric" value={plan[level].prizeValue} onChange={(e) => setLevel(level, "prizeValue", e.target.value)} onBlur={() => setLevel(level, "prizeValue", tidy(plan[level].prizeValue))} />
                           </div>
                         </td>
-                        <td className={styles.num}><span className={styles.amount}>{row.total ? formatINR(row.total) : "—"}</span></td>
+                        <td className={styles.num} data-label="Total"><span className={styles.amount}>{row.total ? formatINR(row.total) : "—"}</span></td>
                       </tr>
                     );
                   })}
-                  <tr>
+                  <tr className={styles.calcTotalRow}>
                     <td><strong>Total</strong></td>
                     <td className={styles.num}><strong>{formatNumber(pool.totalWinners)} winner{pool.totalWinners === 1 ? "" : "s"}</strong></td>
                     <td />
