@@ -3,7 +3,7 @@
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Calculator, ChevronRight, Gift, Plus, QrCode, Radio, Store, Ticket, Trophy } from "lucide-react";
+import { ChevronRight, Gift, Plus, QrCode, Radio, Store, Ticket, Trophy } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api } from "@/lib/luckyDraw/clientApi";
 import { formatINR, formatNumber } from "@/lib/luckyDraw/calculator";
@@ -46,7 +46,7 @@ function FirstTime() {
         <li><b><span className={styles.howNum}>3</span>Set the prizes</b><span className={styles.muted}>A Grand Prize, Second Prizes and, if you like, Third Prizes.</span></li>
       </ol>
       <div className={styles.actions}>
-        <Link href="/lucky-draws/calculator" className={styles.secondaryButton}><Calculator size={16} aria-hidden="true" />Prize calculator</Link>
+        <Link href="/lucky-draws/calculator" className={styles.secondaryButton}>Prize calculator</Link>
         <Link href="/lucky-draws/new" className={styles.primaryButton}><Plus size={16} aria-hidden="true" />New lucky draw</Link>
       </div>
     </div>
@@ -129,7 +129,7 @@ function LuckyDrawList() {
         {/* With no draws yet the empty state below carries these buttons, so they aren't shown twice. */}
         {campaigns?.length > 0 && (
           <div className={styles.actions}>
-            <Link href="/lucky-draws/calculator" className={styles.secondaryButton}><Calculator size={16} aria-hidden="true" />Prize calculator</Link>
+            <Link href="/lucky-draws/calculator" className={styles.secondaryButton}>Prize calculator</Link>
             <Link href="/lucky-draws/new" className={styles.primaryButton}><Plus size={16} aria-hidden="true" />New lucky draw</Link>
           </div>
         )}
