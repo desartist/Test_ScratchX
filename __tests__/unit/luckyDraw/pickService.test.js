@@ -75,7 +75,7 @@ describe('saveWinnerPicks', () => {
   it('lets the owner finish when fewer customers entered than there are prizes, grand prize first', async () => {
     const { entries, merchantId, drawId } = await closedPhysical({ people: 2 });
     await expect(saveWinnerPicks(merchantId, drawId, [pick(2, entries[0]), pick(2, entries[1])])).rejects.toThrow(
-      'Fill the bigger prizes first: the grand prize, then the 2nd prizes, then the 3rd prizes',
+      'Fill the bigger prizes first: the Grand Prize, then the Second Prizes, then the Third Prizes',
     );
     const result = await saveWinnerPicks(merchantId, drawId, [pick(1, entries[0]), pick(2, entries[1])]);
     expect(result.winners).toHaveLength(2);
@@ -84,7 +84,7 @@ describe('saveWinnerPicks', () => {
   it('pluralises the short-of-customers message correctly for exactly one customer', async () => {
     const { merchantId, drawId } = await closedPhysical({ people: 1 });
     await expect(saveWinnerPicks(merchantId, drawId, [])).rejects.toThrow(
-      'Only 1 customer entered, so pick 1 winner, starting with the grand prize',
+      'Only 1 customer entered, so pick 1 winner, starting with the Grand Prize',
     );
   });
 

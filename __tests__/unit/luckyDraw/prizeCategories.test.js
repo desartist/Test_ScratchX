@@ -95,7 +95,7 @@ describe('validatePrizeLevels', () => {
   });
 
   it('needs the grand prize and the 2nd prize, and nothing beyond the 3rd', () => {
-    const message = 'Add the grand prize and the 2nd prize (the 3rd prize is optional)';
+    const message = 'Add the Grand Prize and the Second Prize (the Third Prize is optional)';
     expect(validatePrizeLevels([grand])).toBe(message);
     expect(validatePrizeLevels([second, third])).toBe(message);
     expect(validatePrizeLevels([grand, second, { ...third, rank: 4 }])).toBe(message);
@@ -104,7 +104,7 @@ describe('validatePrizeLevels', () => {
   });
 
   it('keeps the grand prize to exactly one winner', () => {
-    expect(validatePrizeLevels([{ ...grand, quantity: 2 }, second])).toBe('The grand prize has exactly 1 winner');
+    expect(validatePrizeLevels([{ ...grand, quantity: 2 }, second])).toBe('The Grand Prize has exactly 1 winner');
   });
 
   it('still checks names, values and winners of every level', () => {

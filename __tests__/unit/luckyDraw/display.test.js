@@ -96,7 +96,7 @@ describe('dates', () => {
 describe('draw type and prize level wording', () => {
   it('names the three draw types and prize levels', () => {
     expect(DRAW_TYPE_LABEL).toEqual({ physical: 'Physical draw', live_online: 'Live online draw', digital: 'Digital draw' });
-    expect(PRIZE_LEVEL_LABEL).toEqual({ 1: 'Grand prize', 2: '2nd prize', 3: '3rd prize' });
+    expect(PRIZE_LEVEL_LABEL).toEqual({ 1: 'Grand Prize', 2: 'Second Prize', 3: 'Third Prize' });
   });
 
   it('describes the minimum bill', () => {

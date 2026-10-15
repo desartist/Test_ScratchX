@@ -231,7 +231,7 @@ function RevealStage() {
         </div>
 
         <div className={styles.stage}>
-          <nav ref={ladderRef} className={styles.ladder} aria-label="Prizes, 3rd prize first">
+          <nav ref={ladderRef} className={styles.ladder} aria-label="Prizes, Third Prize first">
             {ladder.map((c) => {
               const isNext = view.status === "live" && nextUp?.rank === c.rank;
               const grand = c.rank === grandRank;
@@ -264,7 +264,7 @@ function RevealStage() {
                 <div className={styles.heroText}>
                   <h2 id="prize-name" className={styles.prizeName}>
                     {category.name}
-                    {isGrand && <span className={styles.grandTag}><Crown size={14} aria-hidden="true" />Grand prize</span>}
+                    {isGrand && <span className={styles.grandTag}><Crown size={14} aria-hidden="true" />Grand Prize</span>}
                   </h2>
                   <p className={styles.prizeValue}>{formatINR(category.value)}<small>{category.quantity > 1 ? `each · ${category.quantity} winners` : "1 winner"}</small></p>
                 </div>
@@ -287,7 +287,7 @@ function RevealStage() {
                 <div className={`${styles.locked} ${view.status === "live" && nextUp?.rank === category.rank ? styles.lockedNext : ""}`}>
                   <span className={styles.lockRing}><Lock size={26} aria-hidden="true" /></span>
                   <b>{view.status === "not_started" ? "Not revealed yet" : nextUp?.rank === category.rank ? "Up next" : "Revealed later"}</b>
-                  <span>The 3rd prize is revealed first, then the 2nd, and the grand prize last. Stay on this page.</span>
+                  <span>The Third Prize is revealed first, then the Second Prize, and the Grand Prize last. Stay on this page.</span>
                 </div>
               )}
             </section>

@@ -82,11 +82,11 @@ describe('step 3', () => {
   it('needs the grand prize and the 2nd prize filled in', () => {
     const form = { ...filled(), grand: blankLevel(false), second: { ...blankLevel(true), quantity: '' } };
     expect(stepErrors(3, form, ctx)).toEqual({
-      'grand.prizeDescription': 'Name the grand prize.',
-      'grand.prizeValue': 'Enter what the grand prize is worth.',
-      'second.prizeDescription': 'Name the 2nd prize.',
-      'second.quantity': 'Enter how many people win the 2nd prize (1 or more).',
-      'second.prizeValue': 'Enter what each 2nd prize is worth.',
+      'grand.prizeDescription': 'Name the Grand Prize.',
+      'grand.prizeValue': 'Enter what the Grand Prize is worth.',
+      'second.prizeDescription': 'Name the Second Prize.',
+      'second.quantity': 'Enter how many people win the Second Prize (1 or more).',
+      'second.prizeValue': 'Enter what each Second Prize is worth.',
     });
   });
 
@@ -94,9 +94,9 @@ describe('step 3', () => {
     expect(stepErrors(3, filled(), ctx)).toEqual({});
     const errors = stepErrors(3, { ...filled(), third: { ...blankLevel(true), quantity: '0' } }, ctx);
     expect(errors).toEqual({
-      'third.prizeDescription': 'Name the 3rd prize.',
-      'third.quantity': 'Enter how many people win the 3rd prize (1 or more).',
-      'third.prizeValue': 'Enter what each 3rd prize is worth.',
+      'third.prizeDescription': 'Name the Third Prize.',
+      'third.quantity': 'Enter how many people win the Third Prize (1 or more).',
+      'third.prizeValue': 'Enter what each Third Prize is worth.',
     });
   });
 

@@ -8,7 +8,8 @@ import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api } from "@/lib/luckyDraw/clientApi";
 import { formatINR, formatNumber } from "@/lib/luckyDraw/calculator";
 import { prizeTotals } from "@/lib/luckyDraw/prizeCategories";
-import { DRAW_TYPE_LABEL, drawStage, listGroup, nextStep } from "@/lib/luckyDraw/display";
+import { DRAW_TYPE_LABEL, drawStage, formatDayTime, listGroup, nextStep } from "@/lib/luckyDraw/display";
+import { readWizardDraft } from "@/lib/luckyDraw/wizardDraft";
 import styles from "./luckyDraws.module.css";
 
 const DRAW_ICON = { physical: Store, live_online: Radio, digital: QrCode };
@@ -42,7 +43,7 @@ function FirstTime() {
       <ol className={styles.howSteps}>
         <li><b><span className={styles.howNum}>1</span>Choose how it runs</b><span className={styles.muted}>Physical, live online or digital.</span></li>
         <li><b><span className={styles.howNum}>2</span>Set dates and the minimum bill</b><span className={styles.muted}>Every bill of at least that amount gets 1 entry.</span></li>
-        <li><b><span className={styles.howNum}>3</span>Set the prizes</b><span className={styles.muted}>A grand prize, 2nd prizes and, if you like, 3rd prizes.</span></li>
+        <li><b><span className={styles.howNum}>3</span>Set the prizes</b><span className={styles.muted}>A Grand Prize, Second Prizes and, if you like, Third Prizes.</span></li>
       </ol>
       <div className={styles.actions}>
         <Link href="/lucky-draws/calculator" className={styles.secondaryButton}><Calculator size={16} aria-hidden="true" />Prize calculator</Link>
@@ -52,6 +53,14 @@ function FirstTime() {
   );
 }
 
+function savedDraft() {
+  try {
+    return readWizardDraft(window.localStorage);
+  } catch {
+    return null;
+  }
+}
+
 function LuckyDrawList() {
   const router = useRouter();
   const [campaigns, setCampaigns] = useState(null);
@@ -59,6 +68,8 @@ function LuckyDrawList() {
   const [notOwner, setNotOwner] = useState(false);
   const [filter, setFilter] = useState("all");
   const [now, setNow] = useState(null);
+  // An unfinished "New lucky draw" kept on this device (see lib/luckyDraw/wizardDraft.js).
+  const [draft, setDraft] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,6 +78,7 @@ function LuckyDrawList() {
         if (cancelled) return;
         setNow(new Date());
         setCampaigns(data);
+        setDraft(savedDraft());
       })
       .catch((err) => {
         if (cancelled) return;
@@ -120,6 +132,15 @@ function LuckyDrawList() {
         </div>
       </div>
 
+      {draft && (
+        <div className={styles.draftBanner} role="status">
+          <span>
+            <strong>Unfinished lucky draw{draft.form.name.trim() ? `: ${draft.form.name.trim()}` : ""}</strong>
+            <span className={styles.cellSub}>Saved {formatDayTime(draft.savedAt)} · step {draft.step} of 4</span>
+          </span>
+          <Link href="/lucky-draws/new" className={styles.primaryButton}>Continue</Link>
+        </div>
+      )}
       {error && <p className={styles.error} role="alert">{error}</p>}
       {!campaigns && !error && <p className={styles.muted}>Loading…</p>}
       {campaigns && campaigns.length === 0 && <FirstTime />}

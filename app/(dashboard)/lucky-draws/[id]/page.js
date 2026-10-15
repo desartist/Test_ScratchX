@@ -415,7 +415,7 @@ function LuckyDrawDetail() {
               )}
               {drawType === "live_online" && (
                 <>
-                  <p className={styles.muted}>On the draw date you start the reveal. ScratchX picks the winners at random from every entry, and you reveal the 3rd prize, then the 2nd, then the grand prize while customers watch the results page.</p>
+                  <p className={styles.muted}>On the draw date you start the reveal. ScratchX picks the winners at random from every entry, and you reveal the Third Prize, then the Second Prize, then the Grand Prize while customers watch the results page.</p>
                   <div className={styles.actions}>
                     <Link href={`/lucky-draws/${id}/live`} className={styles.primaryButton}><Radio size={16} aria-hidden="true" />{latestDraw?.reveal?.completedAt ? "See the reveal" : "Go to live reveal"}</Link>
                   </div>

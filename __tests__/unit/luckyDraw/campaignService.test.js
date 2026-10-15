@@ -251,7 +251,7 @@ describe('createCampaign: client flow rules', () => {
   it('needs the grand prize and the 2nd prize', async () => {
     const merchantId = newId();
     await seedStore(merchantId);
-    await expect(createCampaign(String(merchantId), baseInput({ prizes: [{ rank: 1, prizeDescription: 'TV', prizeValue: 1000 }] }))).rejects.toThrow(/grand prize and the 2nd prize/);
+    await expect(createCampaign(String(merchantId), baseInput({ prizes: [{ rank: 1, prizeDescription: 'TV', prizeValue: 1000 }] }))).rejects.toThrow(/Grand Prize and the Second Prize/);
   });
 
   it('ignores the old settings if a client still sends them', async () => {

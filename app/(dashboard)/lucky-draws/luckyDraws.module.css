@@ -217,10 +217,16 @@
 .modeList svg { color: #0b7a34; flex: none; margin-top: 3px; }
 
 .dateGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-@media (max-width: 720px) { .dateGrid { grid-template-columns: 1fr; } }
-.dateCard { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid #e3e7ef; border-radius: 12px; background: #fcfdff; }
-.dateCardHead { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #010f44; }
-.dateNum { width: 22px; height: 22px; border-radius: 50%; background: #010f44; color: #fff; font-size: 0.75rem; display: grid; place-items: center; }
+/* Phones: entries open and close side by side, the draw date on its own row below. */
+@media (max-width: 720px) {
+  .dateGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .dateGrid > :last-child { grid-column: 1 / -1; }
+  .dateGrid .input { padding: 11px 10px; font-size: 0.88rem; }
+  .wizardTimeline .tlLegend { display: none; }
+}
+.dateCard { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.dateCardHead { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; color: #010f44; text-transform: uppercase; letter-spacing: 0.5px; }
+.dateNum { width: 20px; height: 20px; flex: none; letter-spacing: 0; border-radius: 50%; background: #010f44; color: #fff; font-size: 0.75rem; display: grid; place-items: center; }
 .fieldError { display: flex; align-items: center; gap: 5px; margin: 5px 0 0; font-size: 0.78rem; font-weight: 600; color: #e03e3e; line-height: 1.3; }
 .inputError { border-color: #e03e3e !important; background: #fff8f8 !important; box-shadow: 0 0 0 3px rgba(224, 62, 62, 0.08) !important; }
 .submitError { display: flex; align-items: center; gap: 10px; padding: 13px 16px; background: #fff0f0; border: 1.5px solid #ffc5c5; border-radius: 12px; color: #c0392b; font-size: 0.9rem; font-weight: 600; margin: 0; }
@@ -287,25 +293,7 @@
 .okBox svg { color: #0b7a34; flex: none; margin-top: 2px; }
 .panelFoot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid #eef1f6; background: #fcfdff; border-radius: 0 0 14px 14px; flex-wrap: wrap; }
 
-/* Prize editor */
-.prizeEditor { display: flex; flex-direction: column; }
-.prizeLine { display: grid; grid-template-columns: 72px minmax(0, 2fr) 110px minmax(0, 1.2fr) 120px auto; gap: 10px; align-items: end; padding: 14px 0; border-bottom: 1px solid #eef1f6; }
-.prizeLine:last-child { border-bottom: 0; }
-@media (max-width: 760px) {
-  .prizeLine { grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "pic name name" "pic qty value" "total total acts"; row-gap: 12px; }
-  .prizeLine > :nth-child(1) { grid-area: pic; align-self: start; }
-  .prizeLine > :nth-child(2) { grid-area: name; }
-  .prizeLine > :nth-child(3) { grid-area: qty; }
-  .prizeLine > :nth-child(4) { grid-area: value; }
-  .prizeLine > :nth-child(5) { grid-area: total; padding-bottom: 0; align-self: center; }
-  .prizeLine > :nth-child(5)::before { content: "Prize total  "; white-space: pre; color: #637080; font-weight: 600; }
-  .prizeLine > :nth-child(6) { grid-area: acts; justify-self: end; padding-bottom: 0 !important; }
-}
-.imagePick { width: 72px; height: 72px; border-radius: 12px; border: 1.5px dashed #cfd5ef; background: #fcfdff; display: grid; place-items: center; color: #637080; cursor: pointer; position: relative; overflow: hidden; font-size: 0.72rem; text-align: center; }
-.imagePick:hover { border-color: #01188e; color: #010f44; }
-.imagePick img { width: 100%; height: 100%; object-fit: cover; }
-.imagePick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.imageRemove { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: rgba(1, 15, 68, 0.75); color: #fff; display: grid; place-items: center; cursor: pointer; z-index: 2; }
+/* Prize amounts */
 .lineTotal { font-weight: 700; color: #010f44; padding-bottom: 11px; font-variant-numeric: tabular-nums; }
 .moneyInput { position: relative; }
 .moneyInput span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #637080; font-weight: 600; pointer-events: none; }
@@ -319,14 +307,6 @@
 .allocBar i:nth-child(3n) { background: #7cc196; }
 
 /* Review */
-.review section { display: grid; grid-template-columns: 170px minmax(0, 1fr) auto; gap: 14px; padding: 16px 22px; border-bottom: 1px solid #eef1f6; align-items: start; }
-.review section:last-child { border-bottom: 0; }
-.review h3 { margin: 0; font-size: 0.95rem; color: #637080; font-weight: 600; }
-.review dl { margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.review dl div { display: flex; gap: 8px; flex-wrap: wrap; }
-.review dt { color: #637080; min-width: 130px; }
-.review dd { margin: 0; color: #010f44; font-weight: 600; }
-@media (max-width: 720px) { .review section { grid-template-columns: 1fr auto; } .review h3 { grid-column: 1 / -1; } }
 
 /* Calculator */
 .calcGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 20px; align-items: start; }
@@ -371,17 +351,8 @@
 .storeBox { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #e0e4ff; background: #fafbff; font-size: 0.9rem; color: #1c2340; }
 .storeBox svg { color: #3446c9; flex: none; margin-top: 2px; }
 .checkBox { padding: 12px 14px; border: 1.5px solid #e0e4ff; border-radius: 12px; background: #fff; }
-.levelCard { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px 18px; padding: 18px 20px; background: #fff; border: 1.5px solid #e0e4ff; border-radius: 14px; }
-.levelHead { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.levelHead .ghostButton { margin-left: auto; }
-.levelFields { display: grid; grid-template-columns: minmax(0, 2fr) 110px minmax(0, 1.3fr); gap: 12px; align-items: start; }
-.levelTotal { grid-column: 1 / -1; margin: 0; color: #637080; font-size: 0.85rem; text-align: right; min-height: 1.2em; }
-@media (max-width: 640px) { .levelCard { grid-template-columns: 1fr; } .levelFields { grid-template-columns: 1fr 1fr; } .levelFields > :first-child { grid-column: 1 / -1; } }
 .addLevel { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border: 1.5px dashed #c5cbfa; border-radius: 14px; background: #fafbff; color: #010f44; font: inherit; font-weight: 700; cursor: pointer; }
 .addLevel:hover { border-color: #ef9e1b; background: #fff8ec; }
-.reviewPrizes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.reviewPrizes li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
-.reviewThumb { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; background: #f3f5ff; color: #8a95a8; display: grid; place-items: center; }
 .bigNumber { font-size: 1.4rem; font-weight: 800; color: #010f44; }
 .slotList { list-style: none; margin: 0; padding: 0; }
 .slot { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eef1f6; }
@@ -401,3 +372,70 @@
 .results button:disabled { color: #9aa3b5; cursor: not-allowed; background: #fafbfd; }
 .staffGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 
+/* Prize step: one form card per prize level (Scratch reward-card style) */
+.prizeCard { background: #fafbff; border: 1.5px solid #e0e4ff; border-radius: 14px; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
+.prizeCard:hover { border-color: #c5cbfa; box-shadow: 0 2px 10px rgba(1, 15, 68, 0.06); }
+.prizeCardHead { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: #fff; border-bottom: 1.5px solid #e0e4ff; }
+.prizeCardIcon { width: 34px; height: 34px; border-radius: 10px; background: #fff5e6; color: #ef9e1b; display: grid; place-items: center; flex: none; }
+.prizeCardTitle { margin: 0; font-size: 1.05rem; font-weight: 800; color: #010f44; }
+.prizeCardTag { font-size: 0.75rem; font-weight: 700; color: #637080; background: #eef1fa; border-radius: 999px; padding: 3px 10px; }
+.prizeCardRemove { margin-left: auto; }
+.prizeCardHead .prizeCardTag:last-child { margin-left: auto; }
+.prizeCardBody { display: flex; flex-direction: column; gap: 14px; padding: 16px 18px 18px; }
+.prizeRowSingle { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+/* Winners and value stay side by side even on phones: two short inputs don't need a row each. */
+.prizeRowPair { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 12px; }
+.labelHint { font-weight: 600; text-transform: none; letter-spacing: 0; color: #8a95a8; }
+.hiddenFile { display: none; }
+.uploadButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px 14px; border: 1.5px dashed #f3c47a; border-radius: 12px; background: rgba(239, 158, 27, 0.06); color: #d98e14; font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
+.uploadButton:hover:not(:disabled) { background: rgba(239, 158, 27, 0.12); border-color: #ef9e1b; }
+.uploadButton:disabled { opacity: 0.6; cursor: wait; }
+.prizePicture { position: relative; width: 140px; height: 140px; border-radius: 12px; overflow: hidden; border: 1.5px solid #e0e4ff; background: #fff; }
+.prizePicture img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.prizePictureRemove { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(1, 15, 68, 0.75); color: #fff; display: grid; place-items: center; cursor: pointer; }
+.prizeCardTotal { margin: 0; padding-top: 12px; border-top: 1px dashed #e0e4ff; text-align: right; font-weight: 700; color: #010f44; font-variant-numeric: tabular-nums; }
+
+/* Review step */
+.reviewHero { background: #fff; border: 1.5px solid #e0e4ff; border-radius: 16px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; }
+.reviewHeroTop { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.reviewName { margin: 0; font-size: 1.45rem; font-weight: 800; color: #010f44; overflow-wrap: anywhere; }
+.reviewDesc { margin: 0; color: #4a5568; font-size: 0.95rem; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+.reviewDescClamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.linkButton { border: 0; background: none; padding: 0; margin-top: 4px; font: inherit; font-size: 0.85rem; font-weight: 700; color: #01188e; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.reviewHeroNote { margin: 0; font-size: 0.88rem; color: #637080; background: #f6f7fb; border-radius: 10px; padding: 10px 12px; }
+.reviewStats { margin: 4px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.reviewStats div { background: #fafbff; border: 1.5px solid #e0e4ff; border-radius: 12px; padding: 10px 14px; }
+.reviewStats dt { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #637080; }
+.reviewStats dd { margin: 2px 0 0; font-size: 1.15rem; font-weight: 800; color: #010f44; font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) { .reviewStats { grid-template-columns: 1fr; } }
+.reviewGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .reviewGrid { grid-template-columns: 1fr; } }
+.reviewCard { background: #fff; border: 1.5px solid #e0e4ff; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.reviewCardHead { display: flex; align-items: center; gap: 10px; }
+.reviewCardHead h3 { margin: 0; font-size: 1rem; font-weight: 800; color: #010f44; }
+.reviewCardIcon { width: 30px; height: 30px; border-radius: 9px; background: #fff5e6; color: #ef9e1b; display: grid; place-items: center; flex: none; }
+.reviewEdit { margin-left: auto; font-size: 0.85rem; padding: 6px 10px; }
+.reviewItem { display: flex; flex-direction: column; gap: 6px; }
+.reviewItem > span { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #637080; }
+.reviewItem > strong { color: #010f44; font-size: 0.98rem; }
+.reviewChips { display: flex; flex-wrap: wrap; gap: 6px; }
+.reviewChip { background: #f0f2ff; color: #010f44; border-radius: 999px; padding: 4px 12px; font-size: 0.85rem; font-weight: 600; }
+.reviewDates { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.reviewDates li { position: relative; display: flex; justify-content: space-between; gap: 12px; padding: 8px 0 8px 22px; flex-wrap: wrap; }
+.reviewDates li::before { content: ""; position: absolute; left: 4px; top: 14px; width: 9px; height: 9px; border-radius: 50%; background: #ef9e1b; }
+.reviewDates li:not(:last-child)::after { content: ""; position: absolute; left: 8px; top: 24px; bottom: -8px; width: 1.5px; background: #f3c47a; }
+.reviewDates li:last-child::before { background: #010f44; }
+.reviewDates span { color: #637080; font-size: 0.9rem; }
+.reviewDates strong { color: #010f44; font-size: 0.95rem; }
+.reviewPrizeList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.reviewPrizeList li { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eef1f6; }
+.reviewPrizeThumb { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; background: #f3f5ff; color: #8a95a8; display: grid; place-items: center; }
+.reviewPrizeText { display: flex; flex-direction: column; min-width: 0; }
+.reviewPrizeText strong { color: #010f44; overflow-wrap: anywhere; }
+.reviewPrizeLevel { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #d98e14; }
+.reviewPrizeTotal { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #fff5e6; border-radius: 10px; padding: 10px 14px; color: #010f44; }
+.reviewPrizeTotal strong { font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+
+/* Draws list: an unfinished new draw kept on this device */
+.draftBanner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-radius: 12px; background: #fff5e6; border: 1.5px solid #f3c47a; }
+.draftBanner > span { display: flex; flex-direction: column; gap: 2px; color: #010f44; }

@@ -180,7 +180,7 @@ function PickWinners() {
       {required === 0 && <p className={styles.notice}>Nobody entered this draw, so there is no one to pick.</p>}
       {required > 0 && required < slots.length && (
         <p className={styles.notice}>
-          Only {people} customer{people === 1 ? "" : "s"} entered, so pick {required} winner{required === 1 ? "" : "s"}, starting with the grand prize. The other prizes are not given out.
+          Only {people} customer{people === 1 ? "" : "s"} entered, so pick {required} winner{required === 1 ? "" : "s"}, starting with the Grand Prize. The other prizes are not given out.
         </p>
       )}
 

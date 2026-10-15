@@ -93,7 +93,7 @@ function Calculator() {
           <section className={styles.section} aria-labelledby="calc-pool-title">
             <div>
               <h2 className={styles.sectionTitle} id="calc-pool-title">4. Prize pool</h2>
-              <p className={styles.hint}>One hero prize, a few mid-tier prizes and many smaller prizes. The 3rd prize is optional.</p>
+              <p className={styles.hint}>One hero prize, a few mid-tier prizes and many smaller prizes. The Third Prize is optional.</p>
             </div>
             <div className={styles.tableWrap}>
               <table className={styles.table}>

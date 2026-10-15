@@ -133,7 +133,7 @@ function LiveReveal() {
           )}
 
           <div className={styles.panel}>
-            <div className={styles.panelHead}><h2 className={styles.sectionTitle}>Prizes</h2><span className={styles.cellSub}>3rd prize first</span></div>
+            <div className={styles.panelHead}><h2 className={styles.sectionTitle}>Prizes</h2><span className={styles.cellSub}>Third Prize first</span></div>
             <ol className={styles.catSteps}>
               {view.categories.map((cat, i) => {
                 const isNext = started && !done && i === view.revealedCount;
@@ -165,7 +165,7 @@ function LiveReveal() {
 
           {done && <p className={styles.okBox}><Check size={16} aria-hidden="true" />Every prize has been revealed and every winner has an SMS with their claim code. Redeem the code at the store when they collect their prize.</p>}
           {next && started && !done && (
-            <p className={styles.info}><Info size={16} aria-hidden="true" />Customers on the reveal page see each prize as you reveal it. Take your time and build up to the grand prize.</p>
+            <p className={styles.info}><Info size={16} aria-hidden="true" />Customers on the reveal page see each prize as you reveal it. Take your time and build up to the Grand Prize.</p>
           )}
           <p className={styles.info}><Lock size={16} aria-hidden="true" /><span><strong>How winners are picked.</strong> Winners are picked at random by ScratchX once, when the reveal starts, from every entry (QR scans and entries added by staff). Every bill at or above the minimum is one entry, and each customer can win only once.</span></p>
         </div>

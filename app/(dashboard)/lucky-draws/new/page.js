@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowLeft, ArrowRight, Check, Gift, ImagePlus, Info, Pencil, Plus, QrCode, Radio, Send, Store, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Award, CalendarDays, Check, Gift, ImagePlus, Info, Medal, Pencil, Plus, QrCode, Radio, Receipt, Send, Store, Trophy, X } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import Modal from "@/components/common/Modal";
 import FieldError from "@/components/luckyDraw/FieldError";
@@ -13,23 +13,35 @@ import { storeHasLocation } from "@/lib/luckyDraw/storeRules";
 import { formatINR, formatNumber, parseAmount } from "@/lib/luckyDraw/calculator";
 import { DRAW_TYPE_DESCRIPTION, DRAW_TYPE_LABEL, PRIZE_LEVEL_LABEL, describeMinBill, formatDayTime, pluralDays } from "@/lib/luckyDraw/display";
 import { compressPrizeImage } from "@/lib/luckyDraw/imageCompress";
+import { clearWizardDraft, hasProgress, readWizardDraft, writeWizardDraft } from "@/lib/luckyDraw/wizardDraft";
 import styles from "../luckyDraws.module.css";
 
 const STEPS = ["Draw type", "Details & entry", "Prizes", "Review"];
 const HEADINGS = [
   ["New lucky draw", "How will this draw run? Choose the way that fits your shop."],
   ["Details and entry", "Name the draw, set its dates and the smallest bill that gets an entry."],
-  ["Prizes", "One grand prize, your 2nd prizes and, if you like, 3rd prizes."],
+  ["Prizes", "One Grand Prize, your Second Prizes and, if you like, Third Prizes."],
   ["Review and publish", "Check everything once more. The draw type cannot change after publishing."],
 ];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DRAW_OPTIONS = [
   { key: "physical", icon: Store, points: ["Staff type in each customer's entry at the counter", "You hold the draw in your shop", "You pick each winner from the entry list here"] },
-  { key: "live_online", icon: Radio, points: ["Customers scan your QR, or staff add them", "ScratchX picks the winners at random", "You reveal them live: 3rd, then 2nd, then Grand"] },
+  { key: "live_online", icon: Radio, points: ["Customers scan your QR, or staff add them", "ScratchX picks the winners at random", "You reveal them live: Third, then Second, then the Grand Prize"] },
   { key: "digital", icon: QrCode, points: ["Customers scan your QR code with their bill", "You press Run draw when you are ready", "ScratchX picks and texts every winner at once"] },
 ];
 const PLACEHOLDER = { grand: "e.g. 43-inch Smart TV", second: "e.g. Gold coin", third: "e.g. Gift voucher" };
 const RANK = { grand: 1, second: 2, third: 3 };
+const DRAW_ICON = { physical: Store, live_online: Radio, digital: QrCode };
+const VALUE_PLACEHOLDER = { grand: "20,000", second: "5,000", third: "2,000" };
+
+/** localStorage, or null where the browser blocks it (private mode, disabled storage). */
+function browserStorage() {
+  try {
+    return typeof window === "undefined" ? null : window.localStorage;
+  } catch {
+    return null;
+  }
+}
 
 const Req = () => <span className={styles.required} aria-hidden="true">*</span>;
 
@@ -50,74 +62,95 @@ function Steps({ step }) {
   );
 }
 
+const LEVEL_ICON = { grand: Trophy, second: Medal, third: Award };
+
+/** One prize level as a form card, in the style of the Scratch reward cards. */
 function LevelCard({ levelKey, level, errors, onChange, onTidy, onPickImage, imageBusy, onRemove }) {
   const rank = RANK[levelKey];
+  const Icon = LEVEL_ICON[levelKey];
+  const fileInput = useRef(null);
   const key = (field) => `${levelKey}.${field}`;
   const id = (field) => errorFieldId(key(field));
   const cls = (field) => `${styles.input} ${errors[key(field)] ? styles.inputError : ""}`;
   const quantity = rank === 1 ? 1 : parseAmount(level.quantity);
-  const total = parseAmount(level.prizeValue) * quantity;
+  const value = parseAmount(level.prizeValue);
+  const label = PRIZE_LEVEL_LABEL[rank];
 
   return (
-    <section className={styles.levelCard} aria-labelledby={id("title")}>
-      <div className={styles.levelHead}>
-        <h2 className={styles.sectionTitle} id={id("title")}>{PRIZE_LEVEL_LABEL[rank]}</h2>
-        <span className={styles.cellSub}>{rank === 1 ? "Required · always 1 winner" : rank === 2 ? "Required" : "Optional"}</span>
-        {onRemove && <button type="button" className={styles.ghostButton} onClick={onRemove}><X size={16} aria-hidden="true" />Remove</button>}
-      </div>
+    <section className={styles.prizeCard} aria-labelledby={id("title")}>
+      <header className={styles.prizeCardHead}>
+        <span className={styles.prizeCardIcon}><Icon size={18} aria-hidden="true" /></span>
+        <h2 className={styles.prizeCardTitle} id={id("title")}>{label}</h2>
+        {rank === 1 && <span className={styles.prizeCardTag}>1 winner</span>}
+        {rank === 3 && <span className={styles.prizeCardTag}>Optional</span>}
+        {onRemove && (
+          <button type="button" className={`${styles.ghostButton} ${styles.prizeCardRemove}`} onClick={onRemove}>
+            <X size={16} aria-hidden="true" />Remove
+          </button>
+        )}
+      </header>
 
-      <div className={styles.field}>
-        <span className={styles.label} id={id("pictureLabel")}>Picture</span>
-        <label className={`${styles.imagePick} ${errors[key("imageUrl")] ? styles.inputError : ""}`} aria-labelledby={id("pictureLabel")}>
-          {level.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={level.imageUrl} alt={`${level.prizeDescription || PRIZE_LEVEL_LABEL[rank]} picture`} />
-          ) : imageBusy ? (
-            "Adding…"
-          ) : (
-            <span style={{ display: "grid", justifyItems: "center", gap: 2 }}><ImagePlus size={20} aria-hidden="true" />Add</span>
+      <div className={styles.prizeCardBody}>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor={id("prizeDescription")}>Prize name<Req /></label>
+          <input id={id("prizeDescription")} className={cls("prizeDescription")} value={level.prizeDescription} onChange={(e) => onChange("prizeDescription", e.target.value)} placeholder={PLACEHOLDER[levelKey]} maxLength={200} aria-invalid={!!errors[key("prizeDescription")]} />
+          <FieldError message={errors[key("prizeDescription")]} />
+        </div>
+
+        <div className={rank === 1 ? styles.prizeRowSingle : styles.prizeRowPair}>
+          {rank !== 1 && (
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor={id("quantity")}>Winners<Req /></label>
+              <input id={id("quantity")} className={cls("quantity")} inputMode="numeric" value={level.quantity} onChange={(e) => onChange("quantity", e.target.value.replace(/[^\d]/g, ""))} aria-invalid={!!errors[key("quantity")]} />
+              <FieldError message={errors[key("quantity")]} />
+            </div>
           )}
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor={id("prizeValue")}>{rank === 1 ? "Prize value (₹)" : "Value per winner (₹)"}<Req /></label>
+            <div className={styles.moneyInput}>
+              <span>₹</span>
+              <input id={id("prizeValue")} className={cls("prizeValue")} inputMode="numeric" placeholder={VALUE_PLACEHOLDER[levelKey]} value={level.prizeValue} onChange={(e) => onChange("prizeValue", e.target.value)} onBlur={() => onTidy("prizeValue")} aria-invalid={!!errors[key("prizeValue")]} />
+            </div>
+            <FieldError message={errors[key("prizeValue")]} />
+          </div>
+        </div>
+
+        <div className={styles.field}>
+          <span className={styles.label}>Prize picture <span className={styles.labelHint}>(optional)</span></span>
           <input
+            ref={fileInput}
             id={id("imageUrl")}
             type="file"
             accept="image/jpeg,image/png,image/webp"
-            aria-label={`Picture for the ${PRIZE_LEVEL_LABEL[rank].toLowerCase()}`}
+            className={styles.hiddenFile}
+            tabIndex={-1}
+            aria-hidden="true"
             onChange={(e) => {
               const file = e.target.files?.[0];
               e.target.value = "";
               onPickImage(file);
             }}
           />
-        </label>
-        {level.imageUrl && <button type="button" className={`${styles.ghostButton} ${styles.smallButton}`} onClick={() => onChange("imageUrl", "")}>Remove</button>}
-        <FieldError message={errors[key("imageUrl")]} />
-      </div>
-
-      <div className={styles.levelFields}>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor={id("prizeDescription")}>Prize name<Req /></label>
-          <input id={id("prizeDescription")} className={cls("prizeDescription")} value={level.prizeDescription} onChange={(e) => onChange("prizeDescription", e.target.value)} placeholder={PLACEHOLDER[levelKey]} maxLength={200} aria-invalid={!!errors[key("prizeDescription")]} />
-          <FieldError message={errors[key("prizeDescription")]} />
-        </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor={id("quantity")}>Winners{rank !== 1 && <Req />}</label>
-          {rank === 1 ? (
-            <input id={id("quantity")} className={styles.input} value="1" disabled />
+          {level.imageUrl ? (
+            <div className={styles.prizePicture}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={level.imageUrl} alt={`${level.prizeDescription || label} picture`} />
+              <button type="button" className={styles.prizePictureRemove} onClick={() => onChange("imageUrl", "")} aria-label="Remove picture"><X size={14} aria-hidden="true" /></button>
+            </div>
           ) : (
-            <input id={id("quantity")} className={cls("quantity")} inputMode="numeric" value={level.quantity} onChange={(e) => onChange("quantity", e.target.value.replace(/[^\d]/g, ""))} aria-invalid={!!errors[key("quantity")]} />
+            <button type="button" className={`${styles.uploadButton} ${errors[key("imageUrl")] ? styles.inputError : ""}`} onClick={() => fileInput.current?.click()} disabled={imageBusy}>
+              <ImagePlus size={16} aria-hidden="true" />{imageBusy ? "Adding picture…" : "Upload image"}
+            </button>
           )}
-          <FieldError message={errors[key("quantity")]} />
+          <FieldError message={errors[key("imageUrl")]} />
         </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor={id("prizeValue")}>{rank === 1 ? "Value" : "Value each"}<Req /></label>
-          <div className={styles.moneyInput}>
-            <span>₹</span>
-            <input id={id("prizeValue")} className={cls("prizeValue")} inputMode="numeric" value={level.prizeValue} onChange={(e) => onChange("prizeValue", e.target.value)} onBlur={() => onTidy("prizeValue")} aria-invalid={!!errors[key("prizeValue")]} />
-          </div>
-          <FieldError message={errors[key("prizeValue")]} />
-        </div>
+
+        {value > 0 && quantity > 0 && (
+          <p className={styles.prizeCardTotal}>
+            {rank === 1 ? `1 winner · ${formatINR(value)}` : `${formatNumber(quantity)} × ${formatINR(value)} = ${formatINR(value * quantity)}`}
+          </p>
+        )}
       </div>
-      <p className={styles.levelTotal}>{total ? `${formatNumber(quantity)} × ${formatINR(parseAmount(level.prizeValue))} = ${formatINR(total)}` : ""}</p>
     </section>
   );
 }
@@ -132,23 +165,27 @@ function NewLuckyDrawForm() {
   const [saving, setSaving] = useState("");
   const [imageBusy, setImageBusy] = useState(null);
   const [leaving, setLeaving] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  // A draft found on this device, while the owner decides whether to continue it.
+  const [resume, setResume] = useState(null);
   // The form once defaults were filled in; anything different is unsaved work.
   const baseline = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
     // Default dates are filled in after the first render, so server and client markup match.
-    setForm((f) => {
-      const now = Date.now();
-      const next = {
-        ...f,
-        startDate: f.startDate || toISTInputValue(new Date(now)),
-        endDate: f.endDate || toISTInputValue(new Date(now + 30 * DAY_MS)),
-        revealDate: f.revealDate || toISTInputValue(new Date(now + 32 * DAY_MS)),
-      };
-      baseline.current = next;
-      return next;
-    });
+    const now = Date.now();
+    const defaults = {
+      ...blankWizardForm(),
+      startDate: toISTInputValue(new Date(now)),
+      endDate: toISTInputValue(new Date(now + 30 * DAY_MS)),
+      revealDate: toISTInputValue(new Date(now + 32 * DAY_MS)),
+    };
+    baseline.current = defaults;
+    setForm(defaults);
+    // An unfinished draw saved on this device: offer to continue it.
+    const saved = readWizardDraft(browserStorage());
+    if (saved) setResume(saved);
     api("/api/stores?limit=100&status=active")
       .then((data) => {
         if (cancelled) return;
@@ -164,6 +201,25 @@ function NewLuckyDrawForm() {
       cancelled = true;
     };
   }, []);
+
+  // Keep the work on this device as the owner goes, so a refresh or a closed browser loses nothing.
+  // Nothing is written while the "continue where you left off?" question is open, so it can't overwrite the draft.
+  useEffect(() => {
+    if (baseline.current === null || resume || !hasProgress(form)) return undefined;
+    const timer = setTimeout(() => writeWizardDraft(browserStorage(), { form, step }), 400);
+    return () => clearTimeout(timer);
+  }, [form, step, resume]);
+
+  const continueDraft = () => {
+    setForm(resume.form);
+    setStep(resume.step);
+    setErrors({});
+    setResume(null);
+  };
+  const startOver = () => {
+    clearWizardDraft(browserStorage());
+    setResume(null);
+  };
 
   const clearError = (key) =>
     setErrors((e) => {
@@ -237,6 +293,7 @@ function NewLuckyDrawForm() {
     let created;
     try {
       created = await api("/api/lucky-draws/campaigns", { method: "POST", body: buildCampaignBody(form) });
+      clearWizardDraft(browserStorage());
     } catch (err) {
       setSubmitError(err.message);
       setSaving("");
@@ -256,7 +313,7 @@ function NewLuckyDrawForm() {
     }
   }
 
-  const dirty = baseline.current !== null && JSON.stringify(form) !== JSON.stringify(baseline.current);
+  const dirty = hasProgress(form);
   const requestLeave = () => (dirty ? setLeaving(true) : router.push("/lucky-draws"));
   const cls = (key) => `${styles.input} ${errors[key] ? styles.inputError : ""}`;
 
@@ -279,9 +336,11 @@ function NewLuckyDrawForm() {
   ];
   const totalValue = levels.reduce((sum, l) => sum + parseAmount(l.level.prizeValue) * l.quantity, 0);
   const totalWinners = levels.reduce((sum, l) => sum + l.quantity, 0);
-  const editButton = (n) => (
-    <button type="button" className={styles.ghostButton} onClick={() => goTo(n)}><Pencil size={14} aria-hidden="true" />Edit</button>
+  const editButton = (n, label = "Edit") => (
+    <button type="button" className={`${styles.ghostButton} ${styles.reviewEdit}`} onClick={() => goTo(n)}><Pencil size={14} aria-hidden="true" />{label}</button>
   );
+  const description = form.description.trim();
+  const DrawIcon = DRAW_ICON[form.drawType] || Store;
 
   return (
     <div className={`${styles.container} ${styles.containerCentered}`}>
@@ -336,10 +395,7 @@ function NewLuckyDrawForm() {
             </section>
 
             <section className={styles.section}>
-              <div>
-                <h2 className={styles.sectionTitle}>Dates<Req /></h2>
-                <p className={styles.hint}>Times are IST. After publishing you can extend dates, but never move them earlier.</p>
-              </div>
+              <h2 className={styles.sectionTitle}>Dates <span className={styles.labelHint}>(IST)</span><Req /></h2>
               <div className={styles.dateGrid}>
                 {[
                   ["startDate", 1, "Entries open"],
@@ -354,7 +410,7 @@ function NewLuckyDrawForm() {
                 ))}
               </div>
               {datesOk && (
-                <div className={styles.timeline} aria-label="Date preview" style={{ paddingTop: 6 }}>
+                <div className={`${styles.timeline} ${styles.wizardTimeline}`} aria-label="Date preview" style={{ paddingTop: 6 }}>
                   <div className={styles.tlTrack}>
                     <span className={styles.tlFill} style={{ width: `${(entryDays / (entryDays + Math.max(gapDays, 0.5))) * 100}%` }} />
                     <span className={styles.tlNode} style={{ left: 0 }} />
@@ -408,7 +464,7 @@ function NewLuckyDrawForm() {
             {form.third ? (
               <LevelCard levelKey="third" level={form.third} errors={errors} onChange={(k, v) => setLevel("third", k, v)} onTidy={(k) => tidyLevel("third", k)} onPickImage={(file) => pickImage("third", file)} imageBusy={imageBusy === "third"} onRemove={removeThird} />
             ) : (
-              <button type="button" className={styles.addLevel} onClick={() => setForm((f) => ({ ...f, third: blankLevel(true) }))}><Plus size={16} aria-hidden="true" />Add 3rd prize</button>
+              <button type="button" className={styles.addLevel} onClick={() => setForm((f) => ({ ...f, third: blankLevel(true) }))}><Plus size={16} aria-hidden="true" />Add Third Prize</button>
             )}
             {totalValue > 0 && (
               <div className={styles.alloc}>
@@ -419,65 +475,103 @@ function NewLuckyDrawForm() {
               </div>
             )}
             {form.drawType === "live_online" && (
-              <p className={styles.info}><Radio size={16} aria-hidden="true" /><span>On draw day you reveal the 3rd prize first, then the 2nd, and the grand prize last. A customer can win only once.</span></p>
+              <p className={styles.info}><Radio size={16} aria-hidden="true" /><span>On draw day you reveal the Third Prize first, then the Second Prize, and the Grand Prize last. A customer can win only once.</span></p>
             )}
           </div>
         )}
 
         {step === 4 && (
           <>
-            <div className={`${styles.panel} ${styles.review}`}>
-              <section>
-                <h3>Draw type</h3>
-                <dl>
-                  <div><dd>{DRAW_TYPE_LABEL[form.drawType]}</dd></div>
-                  <div><span className={styles.muted}>{DRAW_TYPE_DESCRIPTION[form.drawType]}</span></div>
-                </dl>
-                {editButton(1)}
+            <section className={styles.reviewHero} aria-labelledby="ld-review-name">
+              <div className={styles.reviewHeroTop}>
+                <span className={styles.modeTag}><DrawIcon size={15} aria-hidden="true" />{DRAW_TYPE_LABEL[form.drawType]}</span>
+                {editButton(1, "Change type")}
+              </div>
+              <h2 className={styles.reviewName} id="ld-review-name">{form.name.trim()}</h2>
+              {description && (
+                <div>
+                  <p className={`${styles.reviewDesc} ${showFullDescription ? "" : styles.reviewDescClamped}`}>{description}</p>
+                  {description.length > 180 && (
+                    <button type="button" className={styles.linkButton} onClick={() => setShowFullDescription((v) => !v)}>
+                      {showFullDescription ? "Show less" : "Show full description"}
+                    </button>
+                  )}
+                </div>
+              )}
+              <p className={styles.reviewHeroNote}>{DRAW_TYPE_DESCRIPTION[form.drawType]}</p>
+              <dl className={styles.reviewStats}>
+                <div><dt>Prize pool</dt><dd>{formatINR(totalValue)}</dd></div>
+                <div><dt>Winners</dt><dd>{formatNumber(totalWinners)}</dd></div>
+                <div><dt>Entry</dt><dd>₹{formatNumber(parseAmount(form.minBillAmount))}+ bill</dd></div>
+              </dl>
+            </section>
+
+            <div className={styles.reviewGrid}>
+              <section className={styles.reviewCard}>
+                <header className={styles.reviewCardHead}>
+                  <span className={styles.reviewCardIcon}><Receipt size={16} aria-hidden="true" /></span>
+                  <h3>Entry and stores</h3>
+                  {editButton(2)}
+                </header>
+                <div className={styles.reviewItem}>
+                  <span>Who gets an entry</span>
+                  <strong>{describeMinBill(parseAmount(form.minBillAmount))}</strong>
+                </div>
+                <div className={styles.reviewItem}>
+                  <span>Stores ({storeNames.length})</span>
+                  <div className={styles.reviewChips}>
+                    {storeNames.length ? storeNames.map((name) => <span key={name} className={styles.reviewChip}>{name}</span>) : "—"}
+                  </div>
+                </div>
               </section>
-              <section>
-                <h3>Details</h3>
-                <dl>
-                  <div><dt>Name</dt><dd>{form.name.trim()}</dd></div>
-                  {form.description.trim() && <div><dt>Description</dt><dd>{form.description.trim()}</dd></div>}
-                  <div><dt>Stores</dt><dd>{storeNames.join(", ") || "—"}</dd></div>
-                  <div><dt>Entries</dt><dd>{describeMinBill(parseAmount(form.minBillAmount))}</dd></div>
-                </dl>
-                {editButton(2)}
+
+              <section className={styles.reviewCard}>
+                <header className={styles.reviewCardHead}>
+                  <span className={styles.reviewCardIcon}><CalendarDays size={16} aria-hidden="true" /></span>
+                  <h3>Dates</h3>
+                  {editButton(2)}
+                </header>
+                <ol className={styles.reviewDates}>
+                  <li><span>Entries open</span><strong>{formatDayTime(start)}</strong></li>
+                  <li><span>Entries close</span><strong>{formatDayTime(end)}</strong></li>
+                  <li><span>Draw date</span><strong>{formatDayTime(reveal)}</strong></li>
+                </ol>
               </section>
-              <section>
-                <h3>Dates</h3>
-                <dl>
-                  <div><dt>Entries open</dt><dd>{formatDayTime(start)}</dd></div>
-                  <div><dt>Entries close</dt><dd>{formatDayTime(end)}</dd></div>
-                  <div><dt>Draw date</dt><dd>{formatDayTime(reveal)}</dd></div>
-                </dl>
-                {editButton(2)}
-              </section>
-              <section>
+            </div>
+
+            <section className={styles.reviewCard}>
+              <header className={styles.reviewCardHead}>
+                <span className={styles.reviewCardIcon}><Trophy size={16} aria-hidden="true" /></span>
                 <h3>Prizes</h3>
-                <ul className={styles.reviewPrizes}>
-                  {levels.map((l) => (
+                {editButton(3)}
+              </header>
+              <ul className={styles.reviewPrizeList}>
+                {levels.map((l) => {
+                  const value = parseAmount(l.level.prizeValue);
+                  return (
                     <li key={l.key}>
                       {l.level.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img className={styles.reviewThumb} src={l.level.imageUrl} alt="" />
+                        <img className={styles.reviewPrizeThumb} src={l.level.imageUrl} alt="" />
                       ) : (
-                        <span className={styles.reviewThumb}><Gift size={18} aria-hidden="true" /></span>
+                        <span className={styles.reviewPrizeThumb}><Gift size={18} aria-hidden="true" /></span>
                       )}
-                      <span><strong>{PRIZE_LEVEL_LABEL[l.rank]}</strong> · {l.level.prizeDescription.trim()}</span>
-                      <span className={styles.amount}>{formatNumber(l.quantity)} × {formatINR(parseAmount(l.level.prizeValue))}</span>
+                      <div className={styles.reviewPrizeText}>
+                        <span className={styles.reviewPrizeLevel}>{PRIZE_LEVEL_LABEL[l.rank]}</span>
+                        <strong>{l.level.prizeDescription.trim()}</strong>
+                        <span className={styles.cellSub}>{formatNumber(l.quantity)} winner{l.quantity === 1 ? "" : "s"} × {formatINR(value)}</span>
+                      </div>
+                      <span className={styles.amount}>{formatINR(value * l.quantity)}</span>
                     </li>
-                  ))}
-                  <li>
-                    <span />
-                    <strong>Total</strong>
-                    <span className={styles.amount}>{formatINR(totalValue)} for {formatNumber(totalWinners)} winner{totalWinners === 1 ? "" : "s"}</span>
-                  </li>
-                </ul>
-                {editButton(3)}
-              </section>
-            </div>
+                  );
+                })}
+              </ul>
+              <div className={styles.reviewPrizeTotal}>
+                <span>Total for {formatNumber(totalWinners)} winner{totalWinners === 1 ? "" : "s"}</span>
+                <strong>{formatINR(totalValue)}</strong>
+              </div>
+            </section>
+
             <div id={errorFieldId("confirmed")} tabIndex={-1} className={`${styles.checkBox} ${errors.confirmed ? styles.inputError : ""}`}>
               <label className={styles.checkRow}>
                 <input type="checkbox" checked={form.confirmed} onChange={(e) => set("confirmed", e.target.checked)} />
@@ -509,16 +603,45 @@ function NewLuckyDrawForm() {
 
       <Modal
         isOpen={leaving}
-        title="Leave without saving?"
+        title="Leave for now?"
         onClose={() => setLeaving(false)}
         footer={
           <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.dangerButton}
+              onClick={() => {
+                clearWizardDraft(browserStorage());
+                router.push("/lucky-draws");
+              }}
+            >
+              Discard draft
+            </button>
             <button type="button" className={styles.secondaryButton} onClick={() => setLeaving(false)}>Keep editing</button>
-            <button type="button" className={styles.dangerButton} onClick={() => router.push("/lucky-draws")}>Leave</button>
+            <button type="button" className={styles.primaryButton} onClick={() => router.push("/lucky-draws")}>Leave</button>
           </div>
         }
       >
-        <p className={styles.muted} style={{ margin: 0 }}>This lucky draw has not been saved yet, so what you entered will be lost.</p>
+        <p className={styles.muted} style={{ margin: 0 }}>Your progress is kept on this device. Next time you start a new lucky draw you can continue where you left off.</p>
+      </Modal>
+
+      <Modal
+        isOpen={!!resume}
+        title="Continue where you left off?"
+        onClose={continueDraft}
+        footer={
+          <div className={styles.actions}>
+            <button type="button" className={styles.secondaryButton} onClick={startOver}>Start over</button>
+            <button type="button" className={styles.primaryButton} onClick={continueDraft}>Continue</button>
+          </div>
+        }
+      >
+        {resume && (
+          <p className={styles.muted} style={{ margin: 0 }}>
+            You have an unfinished lucky draw{resume.form.name.trim() ? <> <strong>&ldquo;{resume.form.name.trim()}&rdquo;</strong></> : ""}
+            {resume.savedAt ? `, saved ${formatDayTime(resume.savedAt)}` : ""}. Continue at step {resume.step}: {STEPS[resume.step - 1]}.
+          </p>
+        )}
       </Modal>
     </div>
   );

@@ -64,8 +64,8 @@ describe('GET /api/customer/lucky-draw/campaigns/:id', () => {
     const { data } = await res.json();
     expect(data).toMatchObject({ drawType: 'live_online', takesQrEntries: true, minBillAmount: 1000 });
     expect(data.prizes).toEqual([
-      { rank: 1, level: 'Grand prize', prizeDescription: 'Smart TV', prizeValue: 30000, quantity: 1, imageUrl: null },
-      { rank: 2, level: '2nd prize', prizeDescription: 'Mixer Grinder', prizeValue: 3000, quantity: 1, imageUrl: null },
+      { rank: 1, level: 'Grand Prize', prizeDescription: 'Smart TV', prizeValue: 30000, quantity: 1, imageUrl: null },
+      { rank: 2, level: 'Second Prize', prizeDescription: 'Mixer Grinder', prizeValue: 3000, quantity: 1, imageUrl: null },
     ]);
     for (const key of ['entryTiers', 'prizeMode', 'revealMode', 'maxEntriesPerCustomerPerPeriod']) expect(data).not.toHaveProperty(key);
   });
