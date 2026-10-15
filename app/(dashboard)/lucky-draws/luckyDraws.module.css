@@ -14,7 +14,7 @@
 @media (max-width: 640px) {
   .header { display: grid; grid-template-columns: minmax(0, 1fr); }
   .header .actions > * { flex: 1 1 140px; padding-left: 12px; padding-right: 12px; }
-  .header .actions > .primaryButton, .header .actions > .navyButton { order: -1; flex-basis: 100%; }
+  .header .actions > .primaryButton, .header .actions > .navyButton { order: -1; }
   .blockOnMobile { width: 100%; }
 }
 
