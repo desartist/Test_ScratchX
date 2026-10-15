@@ -15,7 +15,7 @@
  *      Navratri   live online, entries closed 1h ago, ready to reveal (QR + staff entries)
  *      Ganesh     physical,    entries closed 1h ago, ready to pick winners (staff entries)
  *      Monsoon    digital,     completed, claim codes printed
- *      Weekend    physical,    scheduled
+ *      Weekend    physical,    entries open (staff add entries at the counter)
  *      New Year   live online, draft
  *
  * Refuses to run against a non-local MongoDB.
@@ -612,9 +612,9 @@ async function main() {
         assignedStores: [snapshot(stores.thane), snapshot(stores.andheri)],
         startDate, endDate, revealDate: endDate, status: 'active',
         prizeTiers: [
-          prize(1, 'Grand prize', 8000, 1, 'trophyGold'),
-          prize(2, 'Second prize', 2000, 3, 'trophySilver'),
-          prize(3, 'Third prize', 1000, 6, 'trophyBronze'),
+          prize(1, 'Gold hamper', 8000, 1, 'trophyGold'),
+          prize(2, 'Silver hamper', 2000, 3, 'trophySilver'),
+          prize(3, 'Bronze hamper', 1000, 6, 'trophyBronze'),
         ],
         createdAt: istDayAt(-22, '15:10', now), updatedAt: istDayAt(-2, '19:30', now),
       }),
@@ -694,28 +694,33 @@ async function main() {
     created.monsoon = { id: campaign._id, entries: entries.length, winners };
   }
 
-  // e) Weekend Bonanza: physical, published, entries open in 3 days.
+  // e) Weekend Bonanza: physical, entries open now (staff add entries at the counter during the demo).
   {
-    const startDate = istDayAt(3, '10:00', now);
-    const endDate = istDayAt(5, '21:00', now);
-    const revealDate = istDayAt(6, '18:00', now);
-    const createdAt = istDayAt(-1, '17:45', now);
+    const startDate = istDayAt(-2, '10:00', now);
+    const endDate = istDayAt(3, '21:00', now);
+    const revealDate = istDayAt(4, '18:00', now);
+    const createdAt = istDayAt(-3, '17:45', now);
     const [campaign] = await insertValidated(LuckyDrawCampaign, [
       base({
         _id: demoId(DEMO_NAMES.weekend),
         name: DEMO_NAMES.weekend,
         description: 'Shop this weekend for a chance to win movie tickets for two.',
         drawType: 'physical', minBillAmount: 1000,
-        assignedStores: [snapshot(stores.andheri)],
+        assignedStores: [snapshot(stores.andheri), snapshot(stores.bandra)],
         startDate, endDate, revealDate, status: 'active',
         prizeTiers: [prize(1, 'Movie tickets for two', 1000, 1, 'movieTicket'), prize(2, 'Popcorn combo voucher', 300, 4, 'voucherPink')],
         createdAt, updatedAt: createdAt,
       }),
     ]);
+    const drawId = new mongoose.Types.ObjectId();
     await insertValidated(LuckyDraw, [
-      { campaignId: campaign._id, periodStart: createdAt, drawDate: revealDate, status: 'scheduled', createdAt },
+      { _id: drawId, campaignId: campaign._id, periodStart: startDate, drawDate: revealDate, status: 'scheduled', createdAt },
     ]);
-    created.weekend = { id: campaign._id };
+    const entries = await insertEntries(campaign._id, makeEntries({
+      count: 12, from: startDate, to: new Date(now.getTime() - 30 * MINUTE),
+      stores: [stores.andheri, stores.bandra], minBill: 1000, campaignId: campaign._id, drawId, source: 'staff', addedBy: merchant._id,
+    }));
+    created.weekend = { id: campaign._id, entries: entries.length };
   }
 
   // f) New Year: live online draft, no draw.
@@ -745,7 +750,7 @@ async function main() {
     ['navratri', 'Live online · ready to reveal', 'live'],
     ['ganesh', 'Physical · ready to pick winners', 'pick'],
     ['monsoon', 'Digital · completed', null],
-    ['weekend', 'Physical · scheduled', null],
+    ['weekend', 'Physical · entries open (Add entry)', null],
     ['newYear', 'Live online · draft', null],
   ];
   console.log('\nDemo draws:');

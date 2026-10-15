@@ -173,7 +173,7 @@ function EntriesPanel({ campaignId, refreshKey, canAdd, onAdd }) {
             <tbody>
               {data.entries.map((e) => (
                 <tr key={e._id}>
-                  <td className={styles.mono}>#{e.entryNumber}</td>
+                  <td className={styles.mono} style={{ whiteSpace: "nowrap" }}>#{e.entryNumber}</td>
                   <td><strong>{e.customerName}</strong><span className={styles.cellSub}>{maskPhone(e.customerPhone)}</span></td>
                   <td className={styles.num}>{formatINR(e.billAmount)}</td>
                   <td>{e.source === "staff" ? "Staff" : "QR scan"}</td>
