@@ -126,10 +126,13 @@ function LuckyDrawList() {
           <h1 className={styles.title}>Lucky draws</h1>
           <p className={styles.subtitle}>Run prize draws for customers who shop at your stores. Plan the cost first, then set the dates and prizes.</p>
         </div>
-        <div className={styles.actions}>
-          <Link href="/lucky-draws/calculator" className={styles.secondaryButton}><Calculator size={16} aria-hidden="true" />Prize calculator</Link>
-          <Link href="/lucky-draws/new" className={styles.primaryButton}><Plus size={16} aria-hidden="true" />New lucky draw</Link>
-        </div>
+        {/* With no draws yet the empty state below carries these buttons, so they aren't shown twice. */}
+        {campaigns?.length > 0 && (
+          <div className={styles.actions}>
+            <Link href="/lucky-draws/calculator" className={styles.secondaryButton}><Calculator size={16} aria-hidden="true" />Prize calculator</Link>
+            <Link href="/lucky-draws/new" className={styles.primaryButton}><Plus size={16} aria-hidden="true" />New lucky draw</Link>
+          </div>
+        )}
       </div>
 
       {draft && (

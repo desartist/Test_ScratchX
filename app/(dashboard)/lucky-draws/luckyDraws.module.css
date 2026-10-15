@@ -487,3 +487,10 @@
   .calcPool .calcTotalRow { display: flex; justify-content: space-between; border-bottom: 0; }
   .calcPool .calcTotalRow td:empty { display: none; }
 }
+
+/* Phones: the empty state's two buttons share one row, New lucky draw first. */
+@media (max-width: 640px) {
+  .empty .actions { width: 100%; flex-wrap: nowrap; }
+  .empty .actions > * { flex: 1 1 0; min-width: 0; justify-content: center; padding-left: 10px; padding-right: 10px; }
+  .empty .actions > .primaryButton { order: -1; }
+}
