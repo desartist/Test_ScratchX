@@ -149,6 +149,207 @@
 
 .couponIcon { color: #ef9e1b; }
 
+/* ── Coupon header: title + Active/Inactive switch ───────────────────── */
+.couponHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.toggleWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.toggleOn { background: #ef9e1b; }
+
+.toggle:focus-visible {
+  outline: 2px solid #010f44;
+  outline-offset: 2px;
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(1, 15, 68, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.toggleOn .toggleKnob { transform: translateX(18px); }
+
+.toggleLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #637080;
+}
+
+/* Inactive: the coupon is kept and stays editable, but reads as switched
+   off. The switch itself stays at full strength so it's obvious how to
+   turn it back on. */
+.couponInactive .couponTitle,
+.couponInactive .couponGrid {
+  opacity: 0.45;
+  transition: opacity 0.2s ease;
+}
+
+.couponInactive .couponGrid:focus-within { opacity: 0.85; }
+
+/* ── Set Reward Quantity ─────────────────────────────────────────────── */
+.qtyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.qtyCheck {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #010f44;
+  cursor: pointer;
+  user-select: none;
+}
+
+.qtyCheck input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.qtyCheckBox {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid #d1d5e5;
+  background: #eef0f6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.qtyCheck input:checked + .qtyCheckBox {
+  background: #ef9e1b;
+  border-color: #d98a12;
+}
+
+.qtyCheck input:checked + .qtyCheckBox::after {
+  content: "";
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.qtyCheck input:focus-visible + .qtyCheckBox {
+  outline: 2px solid #010f44;
+  outline-offset: 2px;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid #e0e4ff;
+  border-radius: 10px;
+  background: #fafbff;
+  overflow: hidden;
+}
+
+.stepBtn {
+  width: 36px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  color: #010f44;
+  font-size: 1.1rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.stepBtn:disabled {
+  color: #c4c9d6;
+  cursor: not-allowed;
+}
+
+.stepInput {
+  width: 64px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #010f44;
+  outline: none;
+  font-family: var(--font-afacad), system-ui, sans-serif;
+}
+
+/* ── Stock status (editing a saved coupon) ───────────────────────────── */
+.stockStats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  font-size: 0.75rem;
+  color: #637080;
+}
+
+.stockStats strong { color: #010f44; }
+
+.stockBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.stockOut {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.couponNotice {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff8ee;
+  border: 1px solid rgba(239, 158, 27, 0.35);
+  font-size: 0.75rem;
+  color: #7a5200;
+}
+
 .couponGrid {
   display: flex;
   flex-direction: column;

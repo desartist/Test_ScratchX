@@ -5,8 +5,17 @@ import { Gift, ImageIcon, X } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import { useCampaignQuery, useCampaignRangesQuery } from "@/hooks/queries/useCampaignQuery";
 import styles from "./RangeWizard.module.css";
-
-const DEFAULT_COUPONS = 6;
+import {
+  autoActivated,
+  couponsFromRange,
+  DEFAULT_COUPONS,
+  emptyCoupon,
+  makeCoupons,
+  MAX_QUANTITY,
+  minAvailable,
+  parseQty,
+  withAvailable,
+} from "./couponSlots";
 
 const REWARD_TYPES = [
   { label: "Fixed Amount", value: "flat" },
@@ -14,28 +23,7 @@ const REWARD_TYPES = [
   { label: "Gift", value: "gift" },
 ];
 
-const VALID_TYPES = new Set(REWARD_TYPES.map((t) => t.value));
-
-function makeCoupons(count) {
-  const safe = Number(count) > 0 ? Number(count) : DEFAULT_COUPONS;
-  return Array.from({ length: safe }, () => ({ type: "flat", amount: "", description: "" }));
-}
-
-function couponsFromRange(rewards, min) {
-  const list = Array.isArray(rewards) ? rewards : [];
-  const mapped = list.map((r) => {
-    const type = VALID_TYPES.has(r?.type) ? r.type : "flat";
-    const raw  = r?.value ?? r?.amount ?? "";
-    return {
-      type,
-      amount: raw === "" || raw == null ? "" : String(raw),
-      description: r?.description || "",
-    };
-  });
-  const target = Math.max(Number(min) > 0 ? Number(min) : DEFAULT_COUPONS, mapped.length);
-  while (mapped.length < target) mapped.push({ type: "flat", amount: "", description: "" });
-  return mapped;
-}
+const REPLENISH_FIRST = "Please increase the available quantity before activating this coupon.";
 
 // Format number to Indian numbering system (10,000 instead of 10000)
 function formatIndian(num) {
@@ -147,7 +135,7 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
       setCoupons((prev) => {
         if (prev.length >= coupCount) return prev;
         const next = prev.slice();
-        while (next.length < coupCount) next.push({ type: "flat", amount: "" });
+        while (next.length < coupCount) next.push(emptyCoupon({ padded: true }));
         return next;
       });
     } else {
@@ -170,17 +158,83 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
           field === "amount" && val && c.type === "flat" && /^\d/.test(val)
             ? formatIndian(val)
             : val;
-        return { ...c, [field]: processed };
+        const next = { ...c, [field]: processed };
+        return field === "amount" ? autoActivated(next, processed) : next;
       }),
     );
   }, []);
 
-  // When user switches type, clear the amount to avoid stale values
+  // When user switches type, clear the amount to avoid stale values — but
+  // keep the reward's identity, status and stock: it's the same coupon slot,
+  // so its redemption history and quantity carry over.
   const handleTypeChange = useCallback((index, newType) => {
     setCoupons((prev) =>
-      prev.map((c, i) => (i === index ? { type: newType, amount: "", description: "" } : c)),
+      prev.map((c, i) => (i === index ? { ...c, type: newType, amount: "", description: "" } : c)),
     );
   }, []);
+
+  // Per-coupon inline messages (e.g. "increase the quantity first").
+  const [couponNotice, setCouponNotice] = useState({});
+  const noticeFor = useCallback((index, msg) => {
+    setCouponNotice((prev) => ({ ...prev, [index]: msg }));
+  }, []);
+
+  const handleToggleActive = useCallback((index) => {
+    const c = coupons[index];
+    if (!c) return;
+    const turningOn = !c.isActive;
+    // A limited coupon with nothing left can't be switched on — stock has to
+    // be raised first (the server enforces this too).
+    if (turningOn && c.quantityEnabled) {
+      const left = parseQty(c.availableQuantity);
+      if (left == null || left <= 0) {
+        noticeFor(index, REPLENISH_FIRST);
+        return;
+      }
+    }
+    noticeFor(index, null);
+    setCoupons((prev) =>
+      prev.map((x, i) => (i === index ? { ...x, isActive: turningOn, autoActivate: false } : x)),
+    );
+  }, [coupons, noticeFor]);
+
+  const handleToggleQuantity = useCallback((index) => {
+    noticeFor(index, null);
+    setCoupons((prev) =>
+      prev.map((c, i) => {
+        if (i !== index) return c;
+        const enabling = !c.quantityEnabled;
+        // A fresh limit starts at 1 available, so turning it on never starts
+        // out invalid (or switches the coupon off).
+        const current = parseQty(c.availableQuantity);
+        return {
+          ...c,
+          quantityEnabled: enabling,
+          availableQuantity: enabling && (current == null || current < 1) ? "1" : c.availableQuantity,
+        };
+      }),
+    );
+  }, [noticeFor]);
+
+  const handleQuantityInput = useCallback((index, raw) => {
+    noticeFor(index, null);
+    // Digits only — rules out negatives, decimals and letters as you type.
+    const digits = String(raw).replace(/\D/g, "").slice(0, 7);
+    setCoupons((prev) => prev.map((c, i) => (i === index ? withAvailable(c, digits) : c)));
+  }, [noticeFor]);
+
+  const handleQuantityStep = useCallback((index, delta) => {
+    noticeFor(index, null);
+    setCoupons((prev) =>
+      prev.map((c, i) => {
+        if (i !== index) return c;
+        const floor = minAvailable(c);
+        const current = parseQty(c.availableQuantity) ?? floor;
+        const next = Math.min(MAX_QUANTITY, Math.max(floor, current + delta));
+        return withAvailable(c, String(next));
+      }),
+    );
+  }, [noticeFor]);
 
   const handleGiftFileChange = useCallback(async (index, file) => {
     if (!file) return;
@@ -193,7 +247,7 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
     try {
       const dataUrl = await compressImage(file, 400, 0.82);
       setCoupons((prev) =>
-        prev.map((c, i) => (i === index ? { ...c, amount: dataUrl } : c)),
+        prev.map((c, i) => (i === index ? autoActivated({ ...c, amount: dataUrl }, dataUrl) : c)),
       );
     } catch {
       setFormError("Failed to process image. Please try another file.");
@@ -222,21 +276,43 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
       return;
     }
 
+    // Activation + optional stock travel with every reward. Only the
+    // available quantity is sent; the server adds its own live redeemed count
+    // to get the total (counters are never taken from the client).
+    const statusFields = (c, index) => {
+      if (!c.quantityEnabled) {
+        return { rewardId: c.rewardId, isActive: c.isActive, quantityEnabled: false, totalQuantity: null };
+      }
+      const available = parseQty(c.availableQuantity);
+      if (available == null || available < minAvailable(c)) {
+        throw new Error(`Coupon ${index + 1}: enter a whole number between ${minAvailable(c)} and ${MAX_QUANTITY.toLocaleString("en-IN")}.`);
+      }
+      if (c.isActive && available <= 0) {
+        throw new Error(`Coupon ${index + 1}: ${REPLENISH_FIRST}`);
+      }
+      return { rewardId: c.rewardId, isActive: c.isActive, quantityEnabled: true, availableQuantity: available };
+    };
+
     const rewards = [];
-    for (const c of coupons) {
-      if (c.type === "gift") {
-        if (c.amount && c.amount.startsWith("data:image/")) {
-          rewards.push({ type: "gift", value: c.amount, description: (c.description || "").trim() });
+    try {
+      coupons.forEach((c, index) => {
+        if (c.type === "gift") {
+          if (c.amount && c.amount.startsWith("data:image/")) {
+            rewards.push({ type: "gift", value: c.amount, description: (c.description || "").trim(), ...statusFields(c, index) });
+          }
+          return;
         }
-        continue;
-      }
-      const value = Number(parseIndian(c.amount));
-      if (c.amount === "" || !Number.isFinite(value) || value <= 0) continue;
-      if (c.type === "percentage") {
-        rewards.push({ type: c.type, value, description: (c.description || "").trim() });
-      } else {
-        rewards.push({ type: c.type, value });
-      }
+        const value = Number(parseIndian(c.amount));
+        if (c.amount === "" || !Number.isFinite(value) || value <= 0) return;
+        if (c.type === "percentage") {
+          rewards.push({ type: c.type, value, description: (c.description || "").trim(), ...statusFields(c, index) });
+        } else {
+          rewards.push({ type: c.type, value, ...statusFields(c, index) });
+        }
+      });
+    } catch (err) {
+      setFormError(err.message);
+      return;
     }
 
     if (rewards.length === 0) {
@@ -320,11 +396,34 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
       </div>
 
       <div className={styles.couponStack}>
-        {coupons.map((coupon, index) => (
-          <div key={index} className={styles.couponCard}>
-            <div className={styles.couponTitle}>
-              <Gift size={16} className={styles.couponIcon} />
-              Coupon {index + 1}
+        {coupons.map((coupon, index) => {
+          const left = coupon.quantityEnabled ? parseQty(coupon.availableQuantity) : null;
+          const redeemed = Number(coupon.redeemedQuantity) || 0;
+          const outOfStock = coupon.quantityEnabled && left != null && left <= 0;
+          const isStored = Boolean(coupon.rewardId);
+          return (
+          <div
+            key={index}
+            className={`${styles.couponCard} ${coupon.isActive ? "" : styles.couponInactive}`}
+          >
+            <div className={styles.couponHeader}>
+              <div className={styles.couponTitle}>
+                <Gift size={16} className={styles.couponIcon} />
+                Coupon {index + 1}
+              </div>
+              <div className={styles.toggleWrap}>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={coupon.isActive}
+                  aria-label={`Coupon ${index + 1} ${coupon.isActive ? "active" : "inactive"}`}
+                  className={`${styles.toggle} ${coupon.isActive ? styles.toggleOn : ""}`}
+                  onClick={() => handleToggleActive(index)}
+                >
+                  <span className={styles.toggleKnob} />
+                </button>
+                <span className={styles.toggleLabel}>{coupon.isActive ? "Active" : "Inactive"}</span>
+              </div>
             </div>
             <div className={styles.couponGrid}>
               {/* Reward type selector */}
@@ -454,9 +553,73 @@ export default function RangeWizard({ campaignId, range, onComplete, onDone }) {
                   </>
                 )}
               </div>
+
+              {/* Optional stock — unchecked means unlimited (the old behaviour). */}
+              <div className={styles.qtyRow}>
+                <label className={styles.qtyCheck}>
+                  <input
+                    type="checkbox"
+                    checked={coupon.quantityEnabled}
+                    onChange={() => handleToggleQuantity(index)}
+                  />
+                  <span className={styles.qtyCheckBox} aria-hidden="true" />
+                  <span>Set Reward Quantity</span>
+                </label>
+                {coupon.quantityEnabled && (
+                  <div className={styles.stepper}>
+                    <button
+                      type="button"
+                      className={styles.stepBtn}
+                      onClick={() => handleQuantityStep(index, -1)}
+                      disabled={(left ?? 0) <= minAvailable(coupon)}
+                      aria-label={`Decrease coupon ${index + 1} quantity`}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className={styles.stepInput}
+                      value={coupon.availableQuantity}
+                      onChange={(e) => handleQuantityInput(index, e.target.value)}
+                      aria-label={`Coupon ${index + 1} available quantity`}
+                    />
+                    <button
+                      type="button"
+                      className={styles.stepBtn}
+                      onClick={() => handleQuantityStep(index, 1)}
+                      disabled={(left ?? 0) + redeemed >= MAX_QUANTITY}
+                      aria-label={`Increase coupon ${index + 1} quantity`}
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Stock status — shown when editing a saved reward. */}
+              {isStored && (
+                <div className={styles.stockStats}>
+                  {!coupon.quantityEnabled ? (
+                    <span className={styles.stockBadge}>Unlimited</span>
+                  ) : (
+                    <>
+                      {outOfStock && <span className={`${styles.stockBadge} ${styles.stockOut}`}>Out of Stock</span>}
+                      <span>Total <strong>{left == null ? "—" : left + redeemed}</strong></span>
+                      <span>Remaining <strong>{left ?? "—"}</strong></span>
+                      <span>Redeemed <strong>{redeemed}</strong></span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {couponNotice[index] && (
+                <p className={styles.couponNotice} role="alert">{couponNotice[index]}</p>
+              )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {formError && <div className={styles.errorBox}>{formError}</div>}

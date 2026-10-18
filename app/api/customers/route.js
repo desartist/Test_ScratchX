@@ -6,6 +6,7 @@ import Account from "@/models/accountModel";
 import Range from "@/models/rangeModel";
 import "@/models/scratchCardRecordModel";
 import { requireAuth } from "@/lib/auth";
+import { REDEEMED_MATCH, statusFilter, withDisplayStatus } from "@/lib/redemptionStatus";
 
 export async function GET(request) {
   try {
@@ -64,7 +65,7 @@ export async function GET(request) {
 
     // Status filter
     if (status && status !== "all") {
-      query.status = status;
+      query.status = statusFilter(status);
     }
 
     // Date range filter
@@ -127,7 +128,7 @@ export async function GET(request) {
       }),
       CustomerParticipation.countDocuments({
         merchant_id: merchantId,
-        status: "redeemed",
+        status: REDEEMED_MATCH,
       }),
       CustomerParticipation.countDocuments({
         merchant_id: merchantId,
@@ -147,7 +148,8 @@ export async function GET(request) {
     return new Response(
       JSON.stringify({
         success: true,
-        data: participants,
+        // Scratched coupons read as redeemed while there's no cashier.
+        data: withDisplayStatus(participants),
         pagination: {
           page,
           limit,

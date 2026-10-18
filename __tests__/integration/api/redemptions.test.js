@@ -13,6 +13,31 @@ const CampaignStoreMapping = require('@/models/campaignStoreMappingModel').defau
 const ScratchCardTransaction = require('@/models/scratchCardTransactionModel').default;
 const { ValidationError, NotFoundError } = require('@/lib/errors');
 const { generateTestUser } = require('@/__tests__/fixtures/auth.fixture');
+const ScratchCardRecord = require('@/models/scratchCardRecordModel').default;
+const CustomerParticipation = require('@/models/customerParticipationModel').default;
+
+/**
+ * Issue a real, revealed scratch card. Redemption now validates against the
+ * issued card record — campaign, store and reward come from it — so these
+ * tests can no longer redeem made-up ids like `CARD123` (which the old
+ * counter-only implementation never checked existed).
+ */
+async function issueCard(campaignId, storeId, merchantId) {
+  const mongoose = require('mongoose');
+  const participationId = new mongoose.Types.ObjectId();
+  const cardId = new mongoose.Types.ObjectId();
+  await CustomerParticipation.collection.insertOne({
+    _id: participationId, campaign_id: new mongoose.Types.ObjectId(String(campaignId)),
+    store_id: new mongoose.Types.ObjectId(String(storeId)), customer_mobile: '9876543210', status: 'revealed',
+  });
+  await ScratchCardRecord.collection.insertOne({
+    _id: cardId, campaign_id: new mongoose.Types.ObjectId(String(campaignId)),
+    merchant_id: new mongoose.Types.ObjectId(String(merchantId)), store_id: new mongoose.Types.ObjectId(String(storeId)),
+    range_id: new mongoose.Types.ObjectId(), customer_participation_id: participationId, reward_id: null,
+    status: 'revealed', expires_at: new Date(Date.now() + 5 * 60 * 1000), redeemed_at: null,
+  });
+  return cardId.toString();
+}
 
 describe('Redemptions API Integration Tests', () => {
   let testMerchant;
@@ -85,7 +110,7 @@ describe('Redemptions API Integration Tests', () => {
      */
     test('Redeem single scratch card -> should return 200 with success, update campaign and store inventory', async () => {
       // Arrange
-      const scratchCardId = `CARD${Date.now()}001`;
+      const scratchCardId = await issueCard(testCampaignId, testStoreId, testMerchantId);
 
       // Act
       const result = await RedemptionService.redeemScratchCard(
@@ -107,10 +132,12 @@ describe('Redemptions API Integration Tests', () => {
       expect(result.redemption.redeemedAt).toBeDefined();
       expect(result.redemption.transactionId).toBeDefined();
 
-      // Assert - Campaign inventory updated
+      // Assert - Campaign-level counters are NOT changed by redemption: the
+      // reveal step already counts the card there, so counting it again here
+      // would double it (see RedemptionService.redeemScratchCard).
       const updatedCampaign = await Campaign.findById(testCampaignId);
-      expect(updatedCampaign.redeemed_scratch_cards).toBe(1);
-      expect(updatedCampaign.remaining_scratch_cards).toBe(499); // 500 - 0 - 1
+      expect(updatedCampaign.redeemed_scratch_cards).toBe(0);
+      expect(updatedCampaign.remaining_scratch_cards).toBe(500);
 
       // Assert - Store inventory updated
       const updatedStore = await Store.findById(testStoreId);
@@ -136,23 +163,14 @@ describe('Redemptions API Integration Tests', () => {
      */
     test('Bulk redeem multiple scratch cards -> should return 200 with success count and update inventory', async () => {
       // Arrange
-      const bulkRedemptions = [
-        {
+      const bulkRedemptions = [];
+      for (let i = 0; i < 3; i++) {
+        bulkRedemptions.push({
           campaignId: testCampaignId,
           storeId: testStoreId,
-          scratchCardId: `CARD${Date.now()}001`
-        },
-        {
-          campaignId: testCampaignId,
-          storeId: testStoreId,
-          scratchCardId: `CARD${Date.now()}002`
-        },
-        {
-          campaignId: testCampaignId,
-          storeId: testStoreId,
-          scratchCardId: `CARD${Date.now()}003`
-        }
-      ];
+          scratchCardId: await issueCard(testCampaignId, testStoreId, testMerchantId)
+        });
+      }
 
       // Act
       const result = await RedemptionService.bulkRedeemScratchCards(
@@ -170,10 +188,11 @@ describe('Redemptions API Integration Tests', () => {
       expect(result.successful.length).toBe(3);
       expect(result.failed.length).toBe(0);
 
-      // Assert - Campaign inventory updated for all redemptions
-      const updatedCampaign = await Campaign.findById(testCampaignId);
-      expect(updatedCampaign.redeemed_scratch_cards).toBe(3);
-      expect(updatedCampaign.remaining_scratch_cards).toBe(497); // 500 - 0 - 3
+      // Assert - Store mapping counted all three (campaign-level counters are
+      // the reveal step's job, not redemption's)
+      const updatedMapping = await CampaignStoreMapping.findById(testMapping._id);
+      expect(updatedMapping.redeemed_scratch_cards).toBe(3);
+      expect(updatedMapping.remaining_scratch_cards).toBe(97);
 
       // Assert - Store inventory updated
       const updatedStore = await Store.findById(testStoreId);
@@ -234,22 +253,24 @@ describe('Redemptions API Integration Tests', () => {
         {
           campaignId: testCampaignId,
           storeId: testStoreId,
-          scratchCardId: `CARD${Date.now()}001`
+          scratchCardId: await issueCard(testCampaignId, testStoreId, testMerchantId)
         },
         {
           campaignId: expiredCampaign._id.toString(),
           storeId: testStoreId,
-          scratchCardId: `CARD${Date.now()}002` // This will fail due to expired campaign
+          // This will fail due to expired campaign
+          scratchCardId: await issueCard(expiredCampaign._id, testStoreId, testMerchantId)
         },
         {
           campaignId: testCampaignId,
           storeId: unassignedStore._id.toString(),
-          scratchCardId: `CARD${Date.now()}003` // This will fail due to campaign not assigned
+          // This will fail due to campaign not assigned to that store
+          scratchCardId: await issueCard(testCampaignId, unassignedStore._id, testMerchantId)
         },
         {
           campaignId: testCampaignId,
           storeId: testStoreId,
-          scratchCardId: `CARD${Date.now()}004`
+          scratchCardId: await issueCard(testCampaignId, testStoreId, testMerchantId)
         }
       ];
 
@@ -268,9 +289,9 @@ describe('Redemptions API Integration Tests', () => {
       expect(result.failed.length).toBe(2);
 
       // Assert - Only successful redemptions updated the database
-      const updatedCampaign = await Campaign.findById(testCampaignId);
-      expect(updatedCampaign.redeemed_scratch_cards).toBe(2);
-      expect(updatedCampaign.remaining_scratch_cards).toBe(498); // 500 - 0 - 2
+      const updatedMapping = await CampaignStoreMapping.findById(testMapping._id);
+      expect(updatedMapping.redeemed_scratch_cards).toBe(2);
+      expect(await ScratchCardRecord.countDocuments({ status: 'redeemed' })).toBe(2);
 
       // Assert - Failed items include error messages
       expect(result.failed[0]).toHaveProperty('error');
@@ -316,7 +337,7 @@ describe('Redemptions API Integration Tests', () => {
           testMerchantId,
           expiredCampaign._id.toString(),
           testStoreId,
-          'CARD-EXPIRED-001',
+          await issueCard(expiredCampaign._id, testStoreId, testMerchantId),
           testUserId
         )
       ).rejects.toThrow('Campaign has ended');
@@ -341,7 +362,7 @@ describe('Redemptions API Integration Tests', () => {
           testMerchantId,
           testCampaignId,
           unassignedStore._id.toString(),
-          'CARD-UNALLOC-001',
+          await issueCard(testCampaignId, unassignedStore._id, testMerchantId),
           testUserId
         )
       ).rejects.toThrow('Campaign not allocated to this store');
@@ -353,7 +374,7 @@ describe('Redemptions API Integration Tests', () => {
      */
     test('Prevent duplicate redemption -> redeeming same scratch_card_id twice returns error', async () => {
       // Arrange
-      const scratchCardId = `CARD${Date.now()}DUP`;
+      const scratchCardId = await issueCard(testCampaignId, testStoreId, testMerchantId);
 
       // First redemption should succeed
       const firstRedemption = await RedemptionService.redeemScratchCard(
@@ -365,29 +386,28 @@ describe('Redemptions API Integration Tests', () => {
       );
       expect(firstRedemption.success).toBe(true);
 
-      // Act & Assert - Second redemption with same card should fail
-      // Note: The service doesn't have explicit duplicate check, but it will fail on inventory
-      // The second redemption will try but existing implementation doesn't prevent duplicates
-      // Let's verify the behavior - it will try to redeem again, decrement inventory
-      const secondRedemption = await RedemptionService.redeemScratchCard(
-        testMerchantId,
-        testCampaignId,
-        testStoreId,
-        scratchCardId,
-        testUserId
-      );
-      expect(secondRedemption.success).toBe(true);
+      // Act & Assert - the second redemption of the same card is refused.
+      // (This test previously asserted the opposite — that the duplicate
+      // succeeded and inventory was decremented twice — documenting a bug:
+      // the old implementation had no duplicate check at all.)
+      await expect(
+        RedemptionService.redeemScratchCard(
+          testMerchantId,
+          testCampaignId,
+          testStoreId,
+          scratchCardId,
+          testUserId
+        )
+      ).rejects.toMatchObject({ code: 'ALREADY_REDEEMED' });
 
-      // Verify both transactions exist with same card ID
+      // Only one transaction, inventory counted once
       const transactions = await ScratchCardTransaction.find({
         scratch_card_id: scratchCardId,
         action_type: 'redeemed'
       });
-      expect(transactions.length).toBe(2);
-
-      // Verify inventory was decremented twice
-      const campaign = await Campaign.findById(testCampaignId);
-      expect(campaign.redeemed_scratch_cards).toBe(2);
+      expect(transactions.length).toBe(1);
+      const mapping = await CampaignStoreMapping.findById(testMapping._id);
+      expect(mapping.redeemed_scratch_cards).toBe(1);
     });
   });
 
@@ -403,9 +423,9 @@ describe('Redemptions API Integration Tests', () => {
     test('Get redemption history for campaign -> should return list with transaction details', async () => {
       // Arrange - Create multiple redemptions
       const redemptionCards = [
-        `CARD${Date.now()}H001`,
-        `CARD${Date.now()}H002`,
-        `CARD${Date.now()}H003`
+        await issueCard(testCampaignId, testStoreId, testMerchantId),
+        await issueCard(testCampaignId, testStoreId, testMerchantId),
+        await issueCard(testCampaignId, testStoreId, testMerchantId)
       ];
 
       for (const cardId of redemptionCards) {
@@ -453,18 +473,17 @@ describe('Redemptions API Integration Tests', () => {
      */
     test('Get redemption history with pagination -> respects limit and skip parameters', async () => {
       // Arrange - Create 10 redemptions
-      const redemptionPromises = [];
-      for (let i = 0; i < 10; i++) {
-        redemptionPromises.push(
-          RedemptionService.redeemScratchCard(
-            testMerchantId,
-            testCampaignId,
-            testStoreId,
-            `CARD${Date.now()}-${i}`,
-            testUserId
-          )
-        );
-      }
+      const cards = [];
+      for (let i = 0; i < 10; i++) cards.push(await issueCard(testCampaignId, testStoreId, testMerchantId));
+      const redemptionPromises = cards.map((cardId) =>
+        RedemptionService.redeemScratchCard(
+          testMerchantId,
+          testCampaignId,
+          testStoreId,
+          cardId,
+          testUserId
+        )
+      );
       await Promise.all(redemptionPromises);
 
       // Act - Get first page (limit 5)
@@ -504,7 +523,11 @@ describe('Redemptions API Integration Tests', () => {
      */
     test('Get redemption statistics for campaign -> should return redemption metrics', async () => {
       // Arrange - Create redemptions
-      const cardIds = [`CARD${Date.now()}S1`, `CARD${Date.now()}S2`, `CARD${Date.now()}S3`];
+      const cardIds = [
+        await issueCard(testCampaignId, testStoreId, testMerchantId),
+        await issueCard(testCampaignId, testStoreId, testMerchantId),
+        await issueCard(testCampaignId, testStoreId, testMerchantId)
+      ];
       for (const cardId of cardIds) {
         await RedemptionService.redeemScratchCard(
           testMerchantId,
@@ -541,7 +564,7 @@ describe('Redemptions API Integration Tests', () => {
         testMerchantId,
         testCampaignId,
         testStoreId,
-        `CARD${Date.now()}ST1-1`,
+        await issueCard(testCampaignId, testStoreId, testMerchantId),
         testUserId
       );
 
@@ -580,7 +603,7 @@ describe('Redemptions API Integration Tests', () => {
      */
     test('Reverse completed redemption -> should update status and restore inventory', async () => {
       // Arrange - Create redemption
-      const scratchCardId = `CARD${Date.now()}REV`;
+      const scratchCardId = await issueCard(testCampaignId, testStoreId, testMerchantId);
       const redemption = await RedemptionService.redeemScratchCard(
         testMerchantId,
         testCampaignId,
@@ -590,9 +613,11 @@ describe('Redemptions API Integration Tests', () => {
       );
       const transactionId = redemption.redemption.transactionId;
 
-      // Verify initial state
+      // Verify initial state (campaign-level counters belong to the reveal
+      // step, so redemption leaves them alone)
       let campaign = await Campaign.findById(testCampaignId);
-      expect(campaign.redeemed_scratch_cards).toBe(1);
+      expect(campaign.redeemed_scratch_cards).toBe(0);
+      expect((await ScratchCardRecord.findById(scratchCardId).lean()).status).toBe('redeemed');
 
       let store = await Store.findById(testStoreId);
       expect(store.used_scratch_cards).toBe(1);
@@ -616,10 +641,12 @@ describe('Redemptions API Integration Tests', () => {
       expect(result.reversalTransaction.action_type).toBe('reversed');
       expect(result.reversalTransaction.status).toBe('completed');
 
-      // Assert - Campaign inventory restored
+      // Assert - Campaign counters untouched throughout; the card is back to
+      // 'revealed' (a reversal is a true undo)
       campaign = await Campaign.findById(testCampaignId);
       expect(campaign.redeemed_scratch_cards).toBe(0);
-      expect(campaign.remaining_scratch_cards).toBe(500); // Restored to original
+      expect(campaign.remaining_scratch_cards).toBe(500);
+      expect((await ScratchCardRecord.findById(scratchCardId).lean()).status).toBe('revealed');
 
       // Assert - Store inventory restored
       store = await Store.findById(testStoreId);

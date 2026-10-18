@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 import Campaign from "@/models/campaignModel";
 import Range from "@/models/rangeModel";
+import { configuredCardCount } from "@/lib/services/rewardInventoryService";
 
 /**
  * GET /api/customer/campaign/:id/coupons
@@ -43,21 +44,24 @@ export async function GET(request, { params }) {
     // Fetch all ranges for the campaign
     const ranges = await Range.find({ campaignId }).lean();
 
-    // Aggregate all coupons/rewards from all ranges
+    // One anonymous card per configured slot, per range.
+    //
+    // The count is the CONFIGURED number of cards (configuredCardCount) —
+    // never the number of active or in-stock rewards, so deactivating a
+    // reward or running it out of stock never shrinks the grid.
+    //
+    // Cards carry no reward details. They are mystery choices; which reward
+    // the customer gets is decided server-side when they participate (from
+    // eligible rewards only) and shown after the reveal. This endpoint used
+    // to return every reward's type, value and description — including
+    // inactive ones — to anyone, before scratching.
     const allCoupons = [];
     ranges.forEach((range) => {
-      if (range.rewards && Array.isArray(range.rewards)) {
-        range.rewards.forEach((reward, index) => {
-          allCoupons.push({
-            id: `${range._id}-${index}`,
-            rangeId: range._id,
-            rewardName: reward.type || `₹${reward.value || "0"} Off`,
-            couponCode: reward.coupon_code || "",
-            description: reward.description || "",
-            value: reward.value || 0,
-            type: reward.type || "coupon",
-            expiryDate: reward.expiry_date,
-          });
+      const count = configuredCardCount(campaign, range);
+      for (let index = 0; index < count; index++) {
+        allCoupons.push({
+          id: `${range._id}-${index}`,
+          rangeId: range._id,
         });
       }
     });

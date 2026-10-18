@@ -13,6 +13,7 @@ import StatCard from '@/components/dashboard/shared/StatCard';
 import LoadingState from '@/components/common/LoadingState';
 import styles from './admin-redemptions.module.css';
 import SkeletonTableRows from "@/components/ui/SkeletonTableRows";
+import { visibleStatuses } from '@/lib/redemptionStatus';
 
 function formatDate(date) {
   return date
@@ -20,7 +21,9 @@ function formatDate(date) {
     : '—';
 }
 
-const STATUS_TABS = ['all', 'initiated', 'verified', 'scratched', 'revealed', 'redeemed', 'expired'];
+// "revealed" is folded into "redeemed" while there's no cashier
+// (lib/redemptionStatus.js).
+const STATUS_TABS = visibleStatuses(['all', 'initiated', 'verified', 'scratched', 'revealed', 'redeemed', 'expired']);
 
 export default function AdminRedemptionsPage() {
   const [statusFilter, setStatusFilter] = useState('all');

@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import Campaign from "@/models/campaignModel";
 import Account from "@/models/accountModel";
 import CustomerParticipation from "@/models/customerParticipationModel";
+import { REDEEMED_MATCH } from "@/lib/redemptionStatus";
 
 function superAdminOnly(account) {
   if (account.role !== "Super_Admin") {
@@ -58,7 +59,7 @@ export async function GET(request) {
       : [],
     campaignIds.length
       ? CustomerParticipation.aggregate([
-          { $match: { campaign_id: { $in: campaignIds }, status: "redeemed" } },
+          { $match: { campaign_id: { $in: campaignIds }, status: REDEEMED_MATCH } },
           { $group: { _id: "$campaign_id", count: { $sum: 1 } } },
         ])
       : [],

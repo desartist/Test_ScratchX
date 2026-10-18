@@ -13,6 +13,10 @@ import {
   getCooldown,
   findResumableParticipation,
 } from "@/lib/participationCooldown";
+import {
+  pickEligibleReward,
+  MESSAGES as REWARD_MESSAGES,
+} from "@/lib/services/rewardInventoryService";
 
 /**
  * POST /api/customer/participate
@@ -466,9 +470,48 @@ export async function POST(request) {
       await resumable.save();
     }
 
-    // Select random reward from the range
-    const selectedRewardRaw =
-      range.rewards[Math.floor(Math.random() * range.rewards.length)];
+    // ===== PICK AN ELIGIBLE REWARD =====
+    // Same uniform random pick as before, but only over rewards that may be
+    // issued: active, and (if quantity-limited) with stock left. Inactive /
+    // exhausted rewards stay configured and the customer still sees the
+    // configured number of cards — they just can't be won. Stock itself is
+    // NOT touched here; it moves when the coupon is redeemed — which, while
+    // there's no cashier, is the moment the customer scratches it (reveal).
+    //
+    // This all happens before consumeInventory and before any participation
+    // is created, so a customer who can't be given a reward costs nothing.
+    let selectedRewardRaw = pickEligibleReward(range.rewards);
+
+    // Re-check the pick against the live document just before issuing, so a
+    // merchant who deactivates a reward (or a redemption that empties it) in
+    // the moment since `range` was read doesn't get it issued from stale data.
+    if (selectedRewardRaw?.rewardId) {
+      const stillEligible = await Range.exists({
+        _id: rangeId,
+        rewards: {
+          $elemMatch: {
+            rewardId: String(selectedRewardRaw.rewardId),
+            isActive: { $ne: false },
+            $or: [{ quantityEnabled: { $ne: true } }, { remainingQuantity: { $gt: 0 } }],
+          },
+        },
+      });
+      if (!stillEligible) {
+        const fresh = await Range.findById(rangeId).lean();
+        selectedRewardRaw = pickEligibleReward(fresh?.rewards);
+      }
+    }
+
+    if (!selectedRewardRaw) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: REWARD_MESSAGES.NO_REWARDS,
+          data: { code: "NO_REWARDS_AVAILABLE" },
+        },
+        { status: 409 },
+      );
+    }
 
     // Map reward type to valid enum: 'discount', 'freeItem', 'cashback', 'voucher'
     const mapRewardType = (type) => {
@@ -550,6 +593,9 @@ export async function POST(request) {
       merchant_id: campaign.merchantId,
       store_id: matchedStoreId,
       range_id: rangeId,
+      // Which reward's stock a redemption of this card draws from. Null for
+      // rewards saved before ids existed (treated as unlimited).
+      reward_id: selectedRewardRaw.rewardId ? String(selectedRewardRaw.rewardId) : null,
       customer_participation_id: savedParticipation._id,  // REQUIRED - set during creation
       reward_type: selectedReward.reward_type,
       reward_value: selectedReward.reward_value,

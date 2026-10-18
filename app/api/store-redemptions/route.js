@@ -1,10 +1,11 @@
 import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
 import CustomerParticipation from "@/models/customerParticipationModel";
-import ScratchCardRecord from "@/models/scratchCardRecordModel";
 import RedemptionService from "@/lib/redemptionService";
 import { isExpired } from "@/lib/services/expiryManagementService";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { NotFoundError, ValidationError, AuthorizationError, ConflictError } from "@/lib/errors";
+import { CASHIER_REDEMPTION_ENABLED } from "@/lib/featureFlags";
+import { displayStatus, redeemedAtOf } from "@/lib/redemptionStatus";
 
 const STORE_TEAM_ROLES = ["Store_Manager", "Store_Staff"];
 
@@ -49,23 +50,28 @@ export async function GET(request) {
       store_id: account.storeId,
       customer_mobile: phone,
     })
-      .populate("scratch_card_id", "status expires_at redeemed_at")
+      .populate("scratch_card_id", "status expires_at revealed_at redeemed_at")
       .populate({ path: "campaign_id", select: "campaignName", options: { includeDeleted: true } })
       .sort({ createdAt: -1 });
 
     const cards = participations
       .filter((p) => p.scratch_card_id)
-      .map((p) => ({
-        participationId: p._id,
-        customerName: p.customer_name,
-        campaignId: p.campaign_id?._id || null,
-        campaignName: p.campaign_id?.campaignName || null,
-        scratchCardId: p.scratch_card_id._id,
-        status: p.scratch_card_id.status,
-        expired: isExpired(p.scratch_card_id),
-        expiresAt: p.scratch_card_id.expires_at,
-        redeemedAt: p.scratch_card_id.redeemed_at,
-      }));
+      .map((p) => {
+        // A scratched coupon shows as redeemed while there's no cashier.
+        const status = displayStatus(p.scratch_card_id.status);
+        return {
+          participationId: p._id,
+          customerName: p.customer_name,
+          campaignId: p.campaign_id?._id || null,
+          campaignName: p.campaign_id?.campaignName || null,
+          scratchCardId: p.scratch_card_id._id,
+          status,
+          // A redeemed coupon is done — it can't also read as expired.
+          expired: status === "redeemed" ? false : isExpired(p.scratch_card_id),
+          expiresAt: p.scratch_card_id.expires_at,
+          redeemedAt: redeemedAtOf(p.scratch_card_id),
+        };
+      });
 
     return Response.json({ success: true, cards }, { status: 200 });
   } catch (err) {
@@ -80,18 +86,36 @@ export async function GET(request) {
 /**
  * POST /api/store-redemptions
  * Body: { scratchCardId }
- * Store_Staff only (scan:redeem). Validates the card belongs to this store,
- * isn't expired, and is in 'revealed' status (same checks the customer's own
- * self-redeem route uses — app/api/customer/scratch/redeem/route.js), then
- * decrements the campaign/store-mapping counters via RedemptionService
- * (already correct for that side) and flips the card + participation status
- * to 'redeemed' (which RedemptionService itself doesn't do — see plan notes).
+ * Store_Staff only (scan:redeem). All validation and every write lives in
+ * RedemptionService.redeemScratchCard, which is atomic: the card is claimed
+ * with a single conditional update (so a double-tap or retry can't redeem
+ * twice), a quantity-limited reward's stock is decremented only here — on a
+ * successful redemption — and any failure rolls everything back.
+ *
+ * Only the scratchCardId is taken from the request. The campaign, store
+ * and reward all come from the server-side card record, so a client can't
+ * point a redemption at another reward's stock.
  */
 export async function POST(request) {
   try {
     await connectDB();
     const { account, error } = await requireAuth();
     if (error) return error;
+
+    // Cashier redemption is switched off (lib/featureFlags.js): the coupon
+    // already counts as redeemed when the customer scratches it, and its
+    // stock was taken then. Everything below is kept intact for when the
+    // cashier system goes live.
+    if (!CASHIER_REDEMPTION_ENABLED) {
+      return Response.json(
+        {
+          success: false,
+          error: "Counter redemption is not in use. Coupons are redeemed automatically when the customer scratches them.",
+          code: "CASHIER_REDEMPTION_DISABLED",
+        },
+        { status: 403 }
+      );
+    }
 
     if (account.role !== "Store_Staff") {
       return Response.json(
@@ -100,14 +124,14 @@ export async function POST(request) {
       );
     }
 
-    if (!account.storeId || !account.parentId) {
+    if (!account.storeId) {
       return Response.json(
         { success: false, error: "No store is assigned to this account. Contact your business owner." },
         { status: 404 }
       );
     }
 
-    const { scratchCardId } = await request.json();
+    const { scratchCardId } = await request.json().catch(() => ({}));
     if (!scratchCardId) {
       return Response.json(
         { success: false, error: "scratchCardId is required" },
@@ -115,62 +139,14 @@ export async function POST(request) {
       );
     }
 
-    const scratchCard = await ScratchCardRecord.findById(scratchCardId);
-    if (!scratchCard) {
-      return Response.json(
-        { success: false, error: "Scratch card not found" },
-        { status: 404 }
-      );
-    }
-
-    if (String(scratchCard.store_id) !== String(account.storeId)) {
-      return Response.json(
-        { success: false, error: "This card does not belong to your store" },
-        { status: 403 }
-      );
-    }
-
-    if (isExpired(scratchCard)) {
-      return Response.json(
-        { success: false, error: "Scratch card has expired and cannot be redeemed" },
-        { status: 400 }
-      );
-    }
-
-    if (scratchCard.status !== "revealed") {
-      return Response.json(
-        {
-          success: false,
-          error: `Scratch card must be in 'revealed' status to redeem. Current status: ${scratchCard.status}`,
-        },
-        { status: 400 }
-      );
-    }
-
-    const participation = await CustomerParticipation.findById(scratchCard.customer_participation_id);
-    if (!participation) {
-      return Response.json(
-        { success: false, error: "Participation record not found" },
-        { status: 404 }
-      );
-    }
-
     const result = await RedemptionService.redeemScratchCard(
       account.parentId,
-      scratchCard.campaign_id,
+      null, // campaign comes from the card itself
       account.storeId,
-      String(scratchCard._id),
+      String(scratchCardId),
       account._id,
       "Redeemed by store staff"
     );
-
-    scratchCard.status = "redeemed";
-    scratchCard.redeemed_at = new Date();
-    await scratchCard.save();
-
-    participation.status = "redeemed";
-    participation.redeemed_at = new Date();
-    await participation.save();
 
     return Response.json(
       {
@@ -182,13 +158,23 @@ export async function POST(request) {
       { status: 200 }
     );
   } catch (err) {
-    console.error("Error redeeming scratch card:", err);
+    if (err instanceof ConflictError) {
+      // ALREADY_REDEEMED or OUT_OF_STOCK — nothing was changed.
+      if (err.code === "OUT_OF_STOCK") {
+        console.warn("[store-redemptions] Redemption refused — reward out of stock");
+      }
+      return Response.json({ success: false, error: err.message, code: err.code }, { status: 409 });
+    }
     if (err instanceof NotFoundError) {
       return Response.json({ success: false, error: err.message }, { status: 404 });
+    }
+    if (err instanceof AuthorizationError) {
+      return Response.json({ success: false, error: err.message }, { status: 403 });
     }
     if (err instanceof ValidationError) {
       return Response.json({ success: false, error: err.message }, { status: 400 });
     }
+    console.error("Error redeeming scratch card:", err);
     return Response.json(
       { success: false, error: "Failed to redeem scratch card" },
       { status: 500 }

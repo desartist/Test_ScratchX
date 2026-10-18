@@ -5,6 +5,7 @@ import Campaign from "@/models/campaignModel";
 import Store from "@/models/storeModel";
 import ScratchCardRecord from "@/models/scratchCardRecordModel";
 import { maskName, maskMobile } from "@/lib/maskPII";
+import { REDEEMED_MATCH, displayStatus, redeemedAtOf, statusFilter } from "@/lib/redemptionStatus";
 
 function superAdminOnly(account) {
   if (account.role !== "Super_Admin") {
@@ -30,17 +31,17 @@ export async function GET(request) {
   const skip = (page - 1) * limit;
 
   const query = {};
-  if (status && status !== "all") query.status = status;
+  if (status && status !== "all") query.status = statusFilter(status);
 
   const [rows, total, redeemedCount, revealedCount, totalCount, campaignAgg] = await Promise.all([
     CustomerParticipation.find(query)
-      .select("customer_name customer_mobile campaign_id store_id scratch_card_id status createdAt redeemed_at")
+      .select("customer_name customer_mobile campaign_id store_id scratch_card_id status createdAt revealed_at redeemed_at")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean(),
     CustomerParticipation.countDocuments(query),
-    CustomerParticipation.countDocuments({ status: "redeemed" }),
+    CustomerParticipation.countDocuments({ status: REDEEMED_MATCH }),
     CustomerParticipation.countDocuments({ status: { $in: ["revealed", "redeemed"] } }),
     CustomerParticipation.countDocuments({}),
     Campaign.aggregate([
@@ -76,10 +77,10 @@ export async function GET(request) {
     maskedMobile: maskMobile(r.customer_mobile),
     campaignName: campaignMap[String(r.campaign_id)] || "—",
     storeName: storeMap[String(r.store_id)] || "—",
-    status: r.status,
+    status: displayStatus(r.status),
     reward: rewardLabel(rewardMap[String(r.scratch_card_id)]),
     scannedAt: r.createdAt,
-    redeemedAt: r.redeemed_at,
+    redeemedAt: redeemedAtOf(r),
   }));
 
   return Response.json(

@@ -4,6 +4,7 @@ import RedemptionService from '@/lib/redemptionService';
 import { hasPermission } from '@/lib/permissions';
 import { ValidationError, NotFoundError } from '@/lib/errors';
 import { requireAuth } from '@/lib/auth';
+import { CASHIER_REDEMPTION_ENABLED } from '@/lib/featureFlags';
 
 export async function POST(request) {
   try {
@@ -13,6 +14,20 @@ export async function POST(request) {
     // client-supplied x-user-* headers (those are trivially forged).
     const { account, error: authError } = await requireAuth();
     if (authError) return authError;
+
+    // Cashier redemption is switched off (lib/featureFlags.js) — coupons are
+    // redeemed when the customer scratches them. Kept intact below.
+    if (!CASHIER_REDEMPTION_ENABLED) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Counter redemption is not in use. Coupons are redeemed automatically when the customer scratches them.',
+          data: { code: 'CASHIER_REDEMPTION_DISABLED' },
+        },
+        { status: 403 }
+      );
+    }
+
     const userRole = account.role;
     const userId = account._id.toString();
     const merchantId = request.headers.get('x-merchant-id') || userId;

@@ -7,44 +7,158 @@ import SessionExpiredIcon from "@/components/customer/SessionExpiredIcon";
 import styles from "./page.module.css";
 
 // ── Canvas scratch overlay ────────────────────────────────────────────────────
-function initScratchOverlay(canvas, onThreshold) {
+// The canvas is drawn at 2× its 280×360 design size so the artwork and text
+// stay crisp on phone screens; every measurement below is scaled by `S`.
+const SCRATCH_W = 280;
+const SCRATCH_H = 360;
+const SCRATCH_SCALE = 2;
+
+// Gift icon (24-unit grid) — same shape as the cards on the select screen.
+const GIFT_PATHS = [
+  "M3 7h18a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z",
+  "M4 12h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z",
+  "M12 7C12 7 9.5 2 7 3.5C5.5 4.5 7 7 12 7Z",
+  "M12 7C12 7 14.5 2 17 3.5C18.5 4.5 17 7 12 7Z",
+];
+
+function drawScratchCover(ctx, W, H) {
+  const S = W / SCRATCH_W;
+
+  // Base — the same warm gradient as the coupon tickets.
+  const base = ctx.createLinearGradient(0, 0, W * 0.6, H);
+  base.addColorStop(0, "#ffcf47");
+  base.addColorStop(0.52, "#ffab1f");
+  base.addColorStop(1, "#ff8a00");
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, W, H);
+
+  // Diagonal stripes.
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.lineWidth = 10 * S;
+  for (let x = -H; x < W; x += 20 * S) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + H, H);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Gloss in the top-left corner.
+  const gloss = ctx.createRadialGradient(W * 0.2, H * 0.1, 0, W * 0.2, H * 0.1, W * 0.7);
+  gloss.addColorStop(0, "rgba(255,255,255,0.35)");
+  gloss.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gloss;
+  ctx.fillRect(0, 0, W, H);
+
+  // Dashed inner frame.
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.45)";
+  ctx.lineWidth = 1.5 * S;
+  ctx.setLineDash([6 * S, 5 * S]);
+  ctx.beginPath();
+  ctx.roundRect(12 * S, 12 * S, W - 24 * S, H - 24 * S, 14 * S);
+  ctx.stroke();
+  ctx.restore();
+
+  // Sparkles (fixed positions, so the card looks the same every time).
+  const sparkles = [[0.2, 0.2, 5], [0.8, 0.16, 4], [0.86, 0.72, 5], [0.16, 0.8, 4], [0.7, 0.88, 3]];
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  for (const [fx, fy, r] of sparkles) {
+    const x = fx * W, y = fy * H, k = r * S;
+    ctx.beginPath();
+    ctx.moveTo(x, y - k);
+    ctx.quadraticCurveTo(x, y, x + k, y);
+    ctx.quadraticCurveTo(x, y, x, y + k);
+    ctx.quadraticCurveTo(x, y, x - k, y);
+    ctx.quadraticCurveTo(x, y, x, y - k);
+    ctx.fill();
+  }
+
+  // Gift badge.
+  const cx = W / 2, cy = H * 0.42, R = 40 * S;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.22)";
+  ctx.fill();
+  ctx.lineWidth = 1.5 * S;
+  ctx.strokeStyle = "rgba(255,255,255,0.5)";
+  ctx.stroke();
+  ctx.save();
+  const icon = 40 * S;
+  ctx.translate(cx - icon / 2, cy - icon / 2);
+  ctx.scale(icon / 24, icon / 24);
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  for (const d of GIFT_PATHS) ctx.fill(new Path2D(d));
+  ctx.fillStyle = "rgba(239,140,0,0.55)";
+  ctx.fillRect(11.1, 7, 1.8, 15);
+  ctx.restore();
+
+  // Labels.
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(150,70,0,0.35)";
+  ctx.shadowBlur = 4 * S;
+  ctx.shadowOffsetY = 1 * S;
+  ctx.fillStyle = "#fff";
+  ctx.font = `800 ${17 * S}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+  ctx.fillText("S C R A T C H   H E R E", cx, cy + R + 28 * S);
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.font = `600 ${11.5 * S}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+  ctx.fillText("to reveal your reward", cx, cy + R + 50 * S);
+}
+
+function initScratchOverlay(canvas, onThreshold, onStart) {
   if (!canvas) return null;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   const W = canvas.width;
   const H = canvas.height;
+  const brush = 30 * (W / SCRATCH_W);
 
-  const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, "#ffc107");
-  grad.addColorStop(1, "#ff9800");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.fillStyle = "rgba(255,255,255,0.10)";
-  for (let i = 0; i < 22; i++) {
-    ctx.beginPath();
-    ctx.arc(Math.random() * W, Math.random() * H, Math.random() * 18 + 5, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.font = "bold 14px sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.50)";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("✦  SCRATCH HERE  ✦", W / 2, H / 2);
+  drawScratchCover(ctx, W, H);
 
   let isDown = false;
+  let started = false;
   let triggered = false;
+  let last = null;
+  let strokes = 0;
 
-  const eraseAt = (x, y) => {
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    ctx.arc(x, y, 32, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalCompositeOperation = "source-over";
+  // Share of the cover already scratched away. Sampled (every 8th pixel) —
+  // reading every pixel of a 2× canvas on each move is needlessly slow.
+  const clearedShare = () => {
     const { data } = ctx.getImageData(0, 0, W, H);
-    let transparent = 0;
-    for (let i = 3; i < data.length; i += 4) if (data[i] < 50) transparent++;
-    if (!triggered && transparent / (W * H) >= 0.35) {
+    let clear = 0;
+    let total = 0;
+    for (let i = 3; i < data.length; i += 32) {
+      total++;
+      if (data[i] < 50) clear++;
+    }
+    return clear / total;
+  };
+
+  // Erase along the finger's path (not just dots at each event), so a fast
+  // swipe scratches a continuous line.
+  const eraseTo = (p) => {
+    ctx.globalCompositeOperation = "destination-out";
+    // Opaque, so a stroke clears the cover completely (the colour itself is
+    // irrelevant under destination-out — only its alpha counts).
+    ctx.strokeStyle = "#000";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = brush * 2;
+    ctx.beginPath();
+    ctx.moveTo((last || p).x, (last || p).y);
+    ctx.lineTo(p.x + 0.01, p.y);
+    ctx.stroke();
+    ctx.globalCompositeOperation = "source-over";
+    last = p;
+    if (++strokes % 4 === 0) checkThreshold();
+  };
+
+  const checkThreshold = () => {
+    if (!triggered && clearedShare() >= 0.35) {
       triggered = true;
       onThreshold();
     }
@@ -52,15 +166,29 @@ function initScratchOverlay(canvas, onThreshold) {
 
   const toPos = (e) => {
     const rect = canvas.getBoundingClientRect();
-    const sx = W / rect.width;
-    const sy = H / rect.height;
-    if (e.touches) return { x: (e.touches[0].clientX - rect.left) * sx, y: (e.touches[0].clientY - rect.top) * sy };
-    return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
+    const pt = e.touches ? e.touches[0] : e;
+    return {
+      x: (pt.clientX - rect.left) * (W / rect.width),
+      y: (pt.clientY - rect.top) * (H / rect.height),
+    };
   };
 
-  const onDown = (e) => { isDown = true; e.preventDefault(); };
-  const onUp   = ()  => { isDown = false; };
-  const onMove = (e) => { if (!isDown) return; e.preventDefault(); const p = toPos(e); eraseAt(p.x, p.y); };
+  const onDown = (e) => {
+    e.preventDefault();
+    isDown = true;
+    if (!started) {
+      started = true;
+      onStart?.();
+    }
+    last = null;
+    eraseTo(toPos(e));
+  };
+  const onUp   = ()  => {
+    if (isDown) checkThreshold(); // catch a lift between sampled checks
+    isDown = false;
+    last = null;
+  };
+  const onMove = (e) => { if (!isDown) return; e.preventDefault(); eraseTo(toPos(e)); };
 
   canvas.addEventListener("mousedown",  onDown);
   canvas.addEventListener("mousemove",  onMove);
@@ -118,6 +246,7 @@ export default function CouponPage() {
   const [expired,        setExpired]        = useState(false);
   const [timeLeft,       setTimeLeft]       = useState(REVEAL_DURATION);
   const [animReady,      setAnimReady]      = useState(false);
+  const [scratching,     setScratching]     = useState(false);
 
   const canvasRef        = useRef(null);
   const cleanupRef       = useRef(null);
@@ -261,7 +390,7 @@ export default function CouponPage() {
   useEffect(() => {
     if (phase !== "scratch" || !canvasRef.current) return;
     cleanupRef.current?.();
-    cleanupRef.current = initScratchOverlay(canvasRef.current, handleThreshold);
+    cleanupRef.current = initScratchOverlay(canvasRef.current, handleThreshold, () => setScratching(true));
     return () => cleanupRef.current?.();
   }, [phase, handleThreshold]);
 
@@ -350,7 +479,9 @@ export default function CouponPage() {
     return (
       <div className={styles.page}>
         {storeHeader}
-        <div className={styles.body}>
+        {/* Fits one screen: the grid takes whatever height is left and the
+            cards shrink with it, so every coupon is visible without scrolling. */}
+        <div className={`${styles.body} ${styles.bodyFit}`}>
           <div className={styles.titleBlock}>
             <h1 className={styles.pageTitle}>Pick your lucky coupon</h1>
             <p className={styles.pageSubtitle}>Tap one to scratch — <em>only one</em></p>
@@ -362,31 +493,38 @@ export default function CouponPage() {
             </p>
           ) : (
             <>
-              <div className={styles.grid}>
-                {coupons.map((coupon, index) => (
-                  <button
-                    key={coupon.id || index}
-                    type="button"
-                    className={styles.card}
-                    onClick={() => {
-                      setSelectedCoupon(coupon);
-                      setPhase("scratch");
-                    }}
-                    aria-label="Select coupon"
-                  >
-                    <span className={`${styles.dot} ${styles.dot1}`} />
-                    <span className={`${styles.dot} ${styles.dot2}`} />
-                    <span className={`${styles.dot} ${styles.dot3}`} />
-                    <span className={`${styles.dot} ${styles.dot4}`} />
-                    <span className={`${styles.dot} ${styles.dot5}`} />
-                    <div className={styles.cardContent}>
-                      <div className={styles.giftCircle}><GiftSvg /></div>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              <div className={styles.gridWrap}>
+                <div
+                  className={styles.grid}
+                  style={{ "--rows": Math.ceil(coupons.length / 2) }}
+                >
+                  {coupons.map((coupon, index) => (
+                    <button
+                      key={coupon.id || index}
+                      type="button"
+                      className={styles.card}
+                      style={{ "--i": index }}
+                      onClick={() => {
+                        setSelectedCoupon(coupon);
+                        setPhase("scratch");
+                      }}
+                      aria-label={`Select coupon ${index + 1} of ${coupons.length}`}
+                    >
+                      <span className={styles.cardShine} aria-hidden="true" />
+                      <span className={styles.cardMain}>
+                        <span className={styles.giftCircle}><GiftSvg /></span>
+                      </span>
+                      <span className={styles.cardStrip}>Tap to scratch</span>
+                      <span className={`${styles.notch} ${styles.notchLeft}`} aria-hidden="true" />
+                      <span className={`${styles.notch} ${styles.notchRight}`} aria-hidden="true" />
+                    </button>
+                  ))}
+                </div>
 
-              <p className={styles.countHint}>{coupons.length} coupons available</p>
+                {/* <p className={styles.countHint}>
+                  <span className={styles.countPill}>🎁 {coupons.length} mystery coupons · 1 is yours</span>
+                </p> */}
+              </div>
             </>
           )}
         </div>
@@ -401,32 +539,45 @@ export default function CouponPage() {
     return (
       <div className={`${styles.page} ${styles.pageDark}`}>
         {storeHeader}
-        <div className={styles.body}>
+        <div className={`${styles.body} ${styles.bodyFit}`}>
           <div className={styles.scratchBlock}>
-            <p className={styles.scratchTitle}>Scratch to reveal your reward!</p>
-            <div className={styles.scratchCardWrap}>
-              <div className={styles.scratchRevealBg}>
-                <div className={styles.scratchRevealGiftCircle}>
-                  <RevealGiftSvg />
-                </div>
-                {reward?.image ? (
-                  <img src={reward.image} alt="Gift reward" className={styles.scratchRevealGiftImg} />
-                ) : (
-                  <div className={styles.scratchRevealValue}>{rewardDisplay}</div>
-                )}
-                {reward?.description && (
-                  <div className={styles.scratchRevealDesc}>{reward.description}</div>
-                )}
-                <div className={styles.scratchRevealLabel}>You Won!</div>
-              </div>
-              <canvas
-                ref={canvasRef}
-                width={280}
-                height={370}
-                className={styles.scratchCanvas}
-              />
+            <div className={styles.titleBlock}>
+              <h1 className={`${styles.pageTitle} ${styles.pageTitleLight}`}>Scratch to reveal your reward!</h1>
+              <p className={styles.pageSubtitleLight}>Rub the card — something good is underneath</p>
             </div>
-            <p className={styles.scratchHint}>Use finger or mouse to scratch</p>
+
+            <div className={styles.scratchStage}>
+              <div className={styles.scratchCardWrap}>
+                <div className={styles.scratchRevealBg}>
+                  <span className={styles.wonPill}>You Won!</span>
+                  {reward?.image ? (
+                    <img src={reward.image} alt="Gift reward" className={styles.scratchRevealGiftImg} />
+                  ) : (
+                    <>
+                      <div className={styles.scratchRevealGiftCircle}>
+                        <RevealGiftSvg />
+                      </div>
+                      <div className={styles.scratchRevealValue}>{rewardDisplay}</div>
+                    </>
+                  )}
+                  {reward?.description && (
+                    <div className={styles.scratchRevealDesc}>{reward.description}</div>
+                  )}
+                </div>
+                <canvas
+                  ref={canvasRef}
+                  width={SCRATCH_W * SCRATCH_SCALE}
+                  height={SCRATCH_H * SCRATCH_SCALE}
+                  className={styles.scratchCanvas}
+                  aria-label="Scratch card — rub to reveal your reward"
+                />
+              </div>
+
+              <p className={`${styles.scratchHint} ${scratching ? styles.scratchHintDone : ""}`}>
+                <span className={styles.scratchHintIcon} aria-hidden="true">👆</span>
+                Use your finger to scratch
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -434,64 +585,69 @@ export default function CouponPage() {
   }
 
   // ════════════════════════════════════════════
-  // REVEALED phase — reward + 5-min countdown
+  // REVEALED phase — reward ticket + 5-min countdown
   // ════════════════════════════════════════════
   const isExpiring = timeLeft <= 60 && timeLeft > 0;
   const isExpired  = timeLeft === 0;
+  const minutesLeft = Math.ceil(timeLeft / 60);
 
   return (
     <div className={`${styles.page} ${styles.pageDark}`}>
       {storeHeader}
-      {!isExpired && <div className={styles.body}>
+      {!isExpired && <div className={`${styles.body} ${styles.revealBody}`}>
         <div className={styles.celebBlock}>
-          <div className={styles.celebEmoji}>🎉</div>
+          <div className={styles.celebEmoji} aria-hidden="true">🎉</div>
           <h1 className={styles.celebTitle}>You Won!</h1>
           <p className={styles.celebSub}>Here is your reward</p>
         </div>
 
-        {/* Reward card */}
-        <div className={`${styles.rewardCard} ${animReady ? styles.rewardCardIn : ""}`}>
-          <div className={styles.rewardTop}>
-            <div className={styles.rewardGiftCircle}>
-              <RewardGiftSvg />
-            </div>
+        {/* Reward ticket — prize on top, details on the tear-off stub. */}
+        <div className={`${styles.ticket} ${animReady ? styles.rewardCardIn : ""}`}>
+          <div className={styles.ticketTop}>
+            <span className={styles.ticketShine} aria-hidden="true" />
             {reward?.image ? (
               <img src={reward.image} alt="Gift reward" className={styles.rewardGiftImg} />
             ) : (
-              <div className={styles.rewardValue}>{rewardDisplay}</div>
+              <>
+                <div className={styles.rewardGiftCircle}>
+                  <RewardGiftSvg />
+                </div>
+                <div className={styles.rewardValue}>{rewardDisplay}</div>
+              </>
+            )}
+          </div>
+          <div className={styles.ticketStub}>
+            {reward?.description && (
+              <div className={styles.rewardDesc}>{reward.description}</div>
+            )}
+            {participation?.billingRange ? (
+              <span className={styles.rangeChip}>
+                Bill ₹{participation.billingRange.min?.toLocaleString("en-IN")} – ₹{participation.billingRange.max?.toLocaleString("en-IN")}
+              </span>
+            ) : (
+              !reward?.description && <span className={styles.rangeChip}>{storeName}</span>
             )}
           </div>
         </div>
 
-        {/* Selected Range/Billing Range */}
-        {participation?.billingRange && (
-          <div className={styles.rangeInfo}>
-            <span className={styles.rangeLabel}>
-              Billing Range: ₹{participation.billingRange.min?.toLocaleString("en-IN")} - ₹{participation.billingRange.max?.toLocaleString("en-IN")}
-            </span>
-          </div>
-        )}
-
-        {/* Reward description (gift details, offer terms, etc.) */}
-        {reward?.description && (
-          <div className={styles.rewardDesc}>{reward.description}</div>
-        )}
-
         {/* 5-minute countdown */}
-        <div className={`${styles.countdown} ${isExpiring ? styles.countdownWarn : ""} ${isExpired ? styles.countdownDead : ""}`}>
-          <div className={styles.countdownLabel}>
-            {isExpired ? "Session Expired" : "Show to cashier before"}
+        <div className={`${styles.countdown} ${isExpiring ? styles.countdownWarn : ""}`}>
+          <div className={styles.countdownRow}>
+            <div>
+              <div className={styles.countdownLabel}>Show at the counter within</div>
+              <div className={styles.countdownSub}>
+                {minutesLeft} minute{minutesLeft !== 1 ? "s" : ""} left to redeem
+              </div>
+            </div>
+            <div className={`${styles.countdownTime} ${isExpiring ? styles.countdownTimeWarn : ""}`}>
+              {formatTime(timeLeft)}
+            </div>
           </div>
-          <div className={`${styles.countdownTime} ${isExpiring ? styles.countdownTimeWarn : ""} ${isExpired ? styles.countdownTimeDead : ""}`}>
-            {isExpired ? "00:00" : formatTime(timeLeft)}
-          </div>
-          <div className={styles.countdownSub}>
-            {isExpired
-              ? "Ask the cashier for assistance"
-              : `${Math.ceil(timeLeft / 60)} minute${Math.ceil(timeLeft / 60) !== 1 ? "s" : ""} remaining to redeem`}
+          <div className={styles.countdownBar} aria-hidden="true">
+            <span style={{ width: `${(timeLeft / REVEAL_DURATION) * 100}%` }} />
           </div>
         </div>
-              
+
         <p className={styles.claimHint}>Present this screen at the store counter to claim</p>
       </div>}
       {isExpired && (

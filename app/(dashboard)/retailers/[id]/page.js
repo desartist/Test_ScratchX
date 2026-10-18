@@ -32,6 +32,8 @@ import LoadingState from '@/components/common/LoadingState';
 import StatCard from '@/components/dashboard/shared/StatCard';
 import CustomerDetailDrawer from '@/components/customers/CustomerDetailDrawer';
 import styles from './retailerDetail.module.css';
+// Revealed is folded into Claimed while there is no cashier (lib/redemptionStatus.js).
+import { CASHIER_REDEMPTION_ENABLED } from '@/lib/featureFlags';
 
 const STATUS_COLORS = {
   initiated: '#6b7280',
@@ -530,7 +532,7 @@ export default function RetailerDetailPage() {
             <option value="initiated">Initiated</option>
             <option value="verified">Verified</option>
             <option value="scratched">Scratched</option>
-            <option value="revealed">Revealed</option>
+            {CASHIER_REDEMPTION_ENABLED && <option value="revealed">Revealed</option>}
             <option value="redeemed">Claimed</option>
             <option value="expired">Expired</option>
           </select>

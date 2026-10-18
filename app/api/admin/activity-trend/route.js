@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
 import Campaign from "@/models/campaignModel";
 import CustomerParticipation from "@/models/customerParticipationModel";
+import { REDEEMED_AT_EXPR, REDEEMED_MATCH } from "@/lib/redemptionStatus";
 
 function superAdminOnly(account) {
   if (account.role !== "Super_Admin") {
@@ -51,9 +52,12 @@ export async function GET(request) {
       { $match: { revealed_at: { $gte: start } } },
       { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$revealed_at" } }, count: { $sum: 1 } } },
     ]),
+    // Redeemed = scratched while there's no cashier (lib/redemptionStatus.js).
     CustomerParticipation.aggregate([
-      { $match: { redeemed_at: { $gte: start } } },
-      { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$redeemed_at" } }, count: { $sum: 1 } } },
+      { $match: { status: REDEEMED_MATCH } },
+      { $addFields: { _redeemedAt: REDEEMED_AT_EXPR } },
+      { $match: { _redeemedAt: { $gte: start } } },
+      { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$_redeemedAt" } }, count: { $sum: 1 } } },
     ]),
     Campaign.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
   ]);

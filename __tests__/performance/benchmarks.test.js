@@ -86,10 +86,28 @@ describe('Performance Benchmarks', () => {
     });
 
     test('BENCHMARK: Bulk redeem 100 scratch cards in < 5 seconds', async () => {
-      // Generate 100 unique scratch card IDs
-      const scratchCardIds = Array.from({ length: 100 }, (_, i) =>
-        `CARD${Date.now()}${i.toString().padStart(4, '0')}`
-      );
+      // Issue 100 real, revealed scratch cards (outside the timed section).
+      // Redemption validates against the issued card record, so made-up ids
+      // like `CARD...0001` no longer redeem.
+      const mongoose = require('mongoose');
+      const ScratchCardRecord = require('@/models/scratchCardRecordModel').default;
+      const CustomerParticipation = require('@/models/customerParticipationModel').default;
+      const scratchCardIds = [];
+      const participations = [];
+      const cards = [];
+      for (let i = 0; i < 100; i++) {
+        const pid = new mongoose.Types.ObjectId();
+        const cid = new mongoose.Types.ObjectId();
+        participations.push({ _id: pid, campaign_id: new mongoose.Types.ObjectId(String(testCampaignId)), store_id: new mongoose.Types.ObjectId(String(testStoreId)), customer_mobile: '9876543210', status: 'revealed' });
+        cards.push({
+          _id: cid, campaign_id: new mongoose.Types.ObjectId(String(testCampaignId)), merchant_id: new mongoose.Types.ObjectId(String(testMerchantId)),
+          store_id: new mongoose.Types.ObjectId(String(testStoreId)), range_id: new mongoose.Types.ObjectId(), customer_participation_id: pid,
+          reward_id: null, status: 'revealed', expires_at: new Date(Date.now() + 5 * 60 * 1000), redeemed_at: null,
+        });
+        scratchCardIds.push(cid.toString());
+      }
+      await CustomerParticipation.collection.insertMany(participations);
+      await ScratchCardRecord.collection.insertMany(cards);
 
       // Create redemption objects
       const redemptions = scratchCardIds.map(id => ({

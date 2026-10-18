@@ -12,7 +12,9 @@
 }
 
 .pageDark {
-  background: linear-gradient(180deg, #0a0a0f 0%, #12101a 100%);
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 42%, rgba(255,152,0,0.14), transparent 70%),
+    linear-gradient(180deg, #0a0a0f 0%, #12101a 100%);
 }
 
 @media (min-width: 500px) {
@@ -79,194 +81,414 @@
 }
 
 /* ── SELECT PHASE ── */
+
+/* The select screen fits one viewport: no scrolling, the grid takes the
+   height left after the header/title, and the cards shrink with it. */
+.bodyFit {
+  overflow: hidden;
+  min-height: 0;
+}
+
 .titleBlock {
   width: 100%;
   text-align: center;
-  padding: 20px 20px 12px;
+  padding: clamp(10px, 2.4dvh, 22px) 20px clamp(8px, 1.6dvh, 14px);
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .pageTitle {
-  font-size: 21px; font-weight: 800; color: #010f44;
-  margin: 0 0 5px; line-height: 1.2;
+  font-size: clamp(18px, 2.9dvh, 22px); font-weight: 800; color: #010f44;
+  margin: 0 0 4px; line-height: 1.2; letter-spacing: -0.2px;
 }
 
 .pageSubtitle {
-  font-size: 13px; color: #999; margin: 0;
+  font-size: clamp(12px, 1.7dvh, 13px); color: #8a8fa3; margin: 0;
 }
 
 .pageSubtitle em {
   font-style: normal; color: #ef9e1b; font-weight: 700;
 }
 
-/* 3-column grid — compact on mobile */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  padding: 0 16px 16px;
+/* Grid + count pill, centred together in the space under the title. */
+.gridWrap {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
   box-sizing: border-box;
 }
 
-/* Mystery coupon card — square-ish, not tall */
+/* 2 columns; as many rows as needed, each sharing the free height. Capped
+   per row so a few coupons on a tall screen don't turn into towers. */
+.grid {
+  --gap: clamp(8px, 1.5dvh, 14px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows, 3), minmax(0, 1fr));
+  gap: var(--gap);
+  width: 100%;
+  max-width: 440px;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(var(--rows, 3) * 210px + (var(--rows, 3) - 1) * var(--gap));
+}
+
+/* Mystery coupon — a ticket: gift on top, perforated "tap" strip below. */
 .card {
   position: relative;
-  aspect-ratio: 3 / 3.8;
-  border-radius: 18px;
-  background: linear-gradient(150deg, #ffc107 0%, #ff9800 100%);
+  min-height: 0;
+  container-type: size;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255,255,255,0.35) 0, transparent 38%),
+    linear-gradient(155deg, #ffcf47 0%, #ffab1f 52%, #ff8a00 100%);
   border: none;
   cursor: pointer;
   overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 20px rgba(255,152,0,0.32);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  flex-direction: column;
   padding: 0;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.35),
+    0 10px 20px -10px rgba(255,138,0,0.55);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  /* `backwards`, not `both`: a held end state would override :active/:hover. */
+  animation: cardIn 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 60ms);
 }
 
+/* Faint diagonal pattern so the face isn't a flat block of orange. */
 .card::before {
   content: '';
   position: absolute;
   inset: 0;
-  height: 50%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.22) 0%, transparent 100%);
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255,255,255,0.07) 0 10px,
+    transparent 10px 20px
+  );
   pointer-events: none;
 }
 
-.card:active { transform: scale(0.94); }
+.card:active { transform: scale(0.95); }
 
-.cardContent {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  position: relative; z-index: 1;
+.card:focus-visible {
+  outline: 3px solid #010f44;
+  outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.45),
+      0 16px 26px -12px rgba(255,138,0,0.6);
+  }
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.94); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* A light sweep across each card, staggered so they glint one by one. */
+.cardShine {
+  position: absolute;
+  top: -20%;
+  left: -60%;
+  width: 45%;
+  height: 140%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+  transform: skewX(-20deg);
+  animation: shine 4.2s ease-in-out infinite;
+  animation-delay: calc(1s + var(--i, 0) * 0.45s);
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes shine {
+  0%, 70% { left: -60%; }
+  100%    { left: 130%; }
+}
+
+.cardMain {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .giftCircle {
-  width: 52px; height: 52px;
+  width: clamp(34px, 38cqh, 62px);
+  height: clamp(34px, 38cqh, 62px);
   border-radius: 50%;
-  background: rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.22);
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.45), 0 4px 10px rgba(180,90,0,0.22);
   display: flex; align-items: center; justify-content: center;
   animation: breathe 2.4s ease-in-out infinite;
 }
 
-@keyframes breathe {
-  0%, 100% { transform: scale(1); }
-  50%       { transform: scale(1.1); }
+.giftCircle svg {
+  width: 58%;
+  height: 58%;
 }
 
-.dot { position: absolute; border-radius: 50%; pointer-events: none; opacity: 0.7; }
-.dot1 { width: 6px;  height: 6px;  top: 12%;    left: 12%;   background: #ff4757; }
-.dot2 { width: 4px;  height: 4px;  top: 16%;    right: 14%;  background: #2ed573; }
-.dot3 { width: 5px;  height: 5px;  bottom: 20%; left: 10%;   background: #1e90ff; }
-.dot4 { width: 4px;  height: 4px;  bottom: 12%; right: 16%;  background: #ffa502; }
-.dot5 { width: 3px;  height: 3px;  top: 40%;    left: 7%;    background: #ff6b81; }
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.08); }
+}
+
+/* Perforated bottom strip of the ticket. */
+.cardStrip {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 26%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 2px dashed rgba(255,255,255,0.55);
+  background: rgba(150,70,0,0.1);
+  color: #fff;
+  font-size: clamp(9px, 9cqh, 12px);
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(150,70,0,0.35);
+}
+
+/* Ticket notches where the perforation meets the edges (page-white). */
+.notch {
+  position: absolute;
+  top: calc(74% - 8px);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  z-index: 3;
+}
+.notchLeft  { left: -8px; }
+.notchRight { right: -8px; }
+
+/* Very short cards (small screens with 8 coupons): drop the label. */
+@container (max-height: 105px) {
+  .cardStrip { font-size: 0; flex-basis: 18%; }
+  .notch { top: calc(82% - 6px); width: 12px; height: 12px; }
+  .notchLeft  { left: -6px; }
+  .notchRight { right: -6px; }
+}
 
 .countHint {
-  font-size: 11px; color: #bbb;
-  margin: 0 0 8px; text-align: center;
+  font-size: 11px; color: #9a9fb0;
+  margin: 0; padding: clamp(8px, 1.6dvh, 14px) 16px clamp(10px, 2dvh, 16px);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.countPill {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #fff7e8;
+  color: #b4690e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .cardShine, .giftCircle { animation: none; }
 }
 
 /* ── SCRATCH PHASE ── */
 .scratchBlock {
-  display: flex; flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 16px 20px 20px;
-  width: 100%; box-sizing: border-box;
-  flex: 1;
+  box-sizing: border-box;
 }
 
-.scratchTitle {
-  font-size: 17px; font-weight: 800;
-  color: #fff;
-  text-align: center; margin: 0 0 14px;
+.pageTitleLight { color: #fff; }
+
+.pageSubtitleLight {
+  font-size: clamp(12px, 1.7dvh, 13px);
+  color: rgba(255,255,255,0.5);
+  margin: 0;
+}
+
+/* Card + hint, centred together under the title. The card's height is the
+   viewport minus the header/title/hint (~250px), capped by the width so it
+   keeps its 280×360 shape — it fits on any phone without scrolling. */
+.scratchStage {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px clamp(8px, 2dvh, 18px);
+  box-sizing: border-box;
 }
 
 .scratchCardWrap {
   position: relative;
-  width: min(calc(100vw - 48px), 280px);
+  height: min(calc(100dvh - 250px), calc((100vw - 48px) * 360 / 280), 430px);
+  max-width: 100%;
   aspect-ratio: 280 / 360;
   border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 14px 44px rgba(255,152,0,0.42);
   flex-shrink: 0;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.08),
+    0 18px 50px -12px rgba(255,152,0,0.55),
+    0 0 80px rgba(255,152,0,0.18);
+  animation: stageIn 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
 }
 
+@keyframes stageIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.95); }
+}
+
+/* What's underneath the scratch layer. */
 .scratchRevealBg {
   position: absolute; inset: 0;
-  background: linear-gradient(160deg, #fffbf0 0%, #fff8e1 100%);
+  background:
+    radial-gradient(circle at 50% 30%, #ffffff 0%, transparent 60%),
+    linear-gradient(160deg, #fffbf0 0%, #ffefc7 100%);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 10px; padding: 20px;
+  text-align: center;
+}
+
+.scratchRevealBg::after {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 1.5px dashed rgba(239,158,27,0.45);
+  border-radius: 14px;
+  pointer-events: none;
+}
+
+.wonPill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #010f44;
+  color: #ffc107;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
 }
 
 .scratchRevealGiftCircle {
-  width: 66px; height: 66px; border-radius: 50%;
+  width: 64px; height: 64px; border-radius: 50%;
   background: linear-gradient(135deg, #ffc107, #ff9800);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 14px rgba(255,152,0,0.4);
+  box-shadow: 0 6px 16px rgba(255,152,0,0.4);
 }
 
 .scratchRevealValue {
-  font-size: 36px; font-weight: 900; color: #ef9e1b;
-  text-align: center; line-height: 1.1;
+  font-size: 36px; font-weight: 900; color: #e88a00;
+  line-height: 1.1;
 }
 
 .scratchRevealGiftImg {
-  width: 110px; height: 110px; object-fit: cover;
-  border-radius: 10px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.18);
-  border: 2px solid rgba(239,158,27,0.4);
+  width: 60%; aspect-ratio: 1; object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.16);
+  border: 3px solid #fff;
 }
 
 .scratchRevealDesc {
-  font-size: 11px; color: #888; text-align: center;
+  font-size: 12px; color: #7a6a4f;
   max-width: 200px; line-height: 1.4;
-}
-
-.scratchRevealLabel {
-  font-size: 12px; font-weight: 700; color: #333; letter-spacing: 0.5px;
 }
 
 .scratchCanvas {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  cursor: crosshair; touch-action: none;
+  cursor: grab; touch-action: none;
   border-radius: 22px;
 }
+.scratchCanvas:active { cursor: grabbing; }
 
 .scratchHint {
-  font-size: 12px; color: rgba(255,255,255,0.35);
-  margin: 12px 0 0; text-align: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin: clamp(12px, 2.2dvh, 20px) 0 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.75);
+  font-size: 12px;
+  font-weight: 600;
+  transition: opacity 0.3s ease;
+}
+.scratchHintDone { opacity: 0.35; }
+
+.scratchHintIcon {
+  display: inline-block;
+  animation: rub 1.4s ease-in-out infinite;
+}
+.scratchHintDone .scratchHintIcon { animation: none; }
+
+@keyframes rub {
+  0%, 100% { transform: translateX(-3px) rotate(-8deg); }
+  50%      { transform: translateX(3px) rotate(8deg); }
 }
 
 /* ── REVEALED PHASE ── */
+/* Centred when it fits; scrolls from the top (never clipped) when it doesn't.
+   Auto margins rather than justify-content:center, which would cut off the
+   top of overflowing content. */
+.revealBody {
+  gap: clamp(10px, 1.8dvh, 16px);
+  padding: clamp(8px, 2dvh, 20px) 0 clamp(12px, 2.4dvh, 24px);
+}
+.revealBody > :first-child { margin-top: 60px; }
+.revealBody > :last-child { margin-bottom: auto; }
+
 .celebBlock {
   width: 100%; text-align: center;
-  padding: 20px 20px 8px; box-sizing: border-box;
+  padding: 0 20px; box-sizing: border-box;
+  flex-shrink: 0;
 }
 
-.celebEmoji { font-size: 44px; line-height: 1; margin-bottom: 6px; }
+.celebEmoji { font-size: clamp(32px, 5dvh, 44px); line-height: 1; margin-bottom: 4px; }
 
 .celebTitle {
-  font-size: 32px; font-weight: 900; margin: 0 0 3px;
-  background: linear-gradient(135deg, #ffc107, #ff6f00);
+  font-size: clamp(26px, 4.2dvh, 34px); font-weight: 900; margin: 0 0 2px;
+  background: linear-gradient(135deg, #ffd54a, #ff7a00);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.celebSub { font-size: 12px; color: rgba(255,255,255,0.4); margin: 0; }
+.celebSub { font-size: 13px; color: rgba(255,255,255,0.5); margin: 0; }
 
-/* Reward card */
-.rewardCard {
-  width: calc(72% - 32px);
-  border-radius: 22px;
-  background: linear-gradient(150deg, #ffc107 0%, #ff9800 100%);
-  overflow: hidden;
-  box-shadow: 0 12px 40px rgba(255,152,0,0.36);
+/* Reward ticket. The edge notches are real cut-outs (masks), so they show
+   the page background whatever it is; the shadow sits on the wrapper via
+   drop-shadow because a mask would clip a box-shadow. */
+.ticket {
+  --notch: 11px;
+  width: min(calc(100% - 64px), 300px);
+  flex-shrink: 0;
+  filter: drop-shadow(0 16px 26px rgba(255,138,0,0.28));
   opacity: 0;
   transform: scale(0.82) translateY(20px);
 }
@@ -279,30 +501,90 @@
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.rewardTop {
+.ticketTop {
+  position: relative;
+  overflow: hidden;
   display: flex; flex-direction: column;
-  align-items: center; gap: 8px;
-  padding: 24px 20px 20px; text-align: center;
+  align-items: center; justify-content: center;
+  gap: 8px;
+  padding: clamp(18px, 3dvh, 26px) 20px clamp(16px, 2.6dvh, 22px);
+  text-align: center;
+  border-radius: 22px 22px 0 0;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.07) 0 10px, transparent 10px 20px),
+    radial-gradient(circle at 18% 10%, rgba(255,255,255,0.35) 0, transparent 40%),
+    linear-gradient(155deg, #ffcf47 0%, #ffab1f 52%, #ff8a00 100%);
+  -webkit-mask:
+    radial-gradient(circle var(--notch) at 0 100%, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% 100%, #0000 98%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle var(--notch) at 0 100%, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% 100%, #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+.ticketShine {
+  position: absolute;
+  top: -20%;
+  left: -60%;
+  width: 40%;
+  height: 140%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  transform: skewX(-20deg);
+  animation: shine 3.6s ease-in-out 0.8s infinite;
+  pointer-events: none;
 }
 
 .rewardGiftCircle {
-  width: 68px; height: 68px; border-radius: 50%;
-  background: rgba(0,0,0,0.12);
+  position: relative;
+  width: clamp(54px, 8dvh, 68px); height: clamp(54px, 8dvh, 68px); border-radius: 50%;
+  background: rgba(255,255,255,0.22);
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.45), 0 4px 10px rgba(180,90,0,0.22);
   display: flex; align-items: center; justify-content: center;
 }
 
 .rewardValue {
-  font-size: 40px; font-weight: 900; color: #fff;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.14); line-height: 1.1;
+  position: relative;
+  font-size: clamp(34px, 5.4dvh, 44px); font-weight: 900; color: #fff;
+  text-shadow: 0 2px 12px rgba(150,70,0,0.3); line-height: 1.05;
 }
 
 .rewardGiftImg {
-  width: 130px; height: 130px; object-fit: cover;
-  border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.22);
-  border: 3px solid rgba(255,255,255,0.35);
+  position: relative;
+  width: clamp(110px, 20dvh, 160px); aspect-ratio: 1; object-fit: cover;
+  border-radius: 16px; box-shadow: 0 6px 18px rgba(120,60,0,0.3);
+  border: 3px solid rgba(255,255,255,0.7);
 }
 
-.rewardDesc { font-size: 12px; color: rgba(255,255,255,0.7); max-width: 240px; }
+.ticketStub {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+  padding: 14px 20px 16px;
+  text-align: center;
+  background: #fffaf0;
+  border-top: 2px dashed rgba(239,158,27,0.5);
+  border-radius: 0 0 22px 22px;
+  -webkit-mask:
+    radial-gradient(circle var(--notch) at 0 0, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% 0, #0000 98%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle var(--notch) at 0 0, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% 0, #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+.rewardDesc {
+  font-size: 13px; font-weight: 600; color: #5b4a2e;
+  line-height: 1.4; max-width: 240px;
+}
+
+.rangeChip {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #010f44;
+  color: #ffd54a;
+  font-size: 12px;
+  font-weight: 700;
+}
 
 /* Coupon code zone */
 .couponZone { background: rgba(0,0,0,0.12); padding: 12px 20px; }
@@ -331,37 +613,65 @@
 
 /* Countdown */
 .countdown {
-  width: calc(100% - 32px);
+  width: min(calc(100% - 48px), 320px);
+  flex-shrink: 0;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 14px;
-  padding: 10px 16px;
-  text-align: center;
-  margin-top: 10px;
+  border-radius: 16px;
+  padding: 12px 16px;
   box-sizing: border-box;
 }
 
-.countdownWarn { background: rgba(255,100,0,0.1); border-color: rgba(255,100,0,0.3); }
+.countdownWarn { background: rgba(255,100,0,0.1); border-color: rgba(255,100,0,0.35); }
 .countdownDead { background: rgba(239,83,80,0.12); border-color: rgba(239,83,80,0.3); }
 
+.countdownRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+
 .countdownLabel {
-  font-size: 9px; font-weight: 700; letter-spacing: 1.2px;
-  text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 2px;
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,0.55);
 }
 
 .countdownTime {
-  font-size: 24px; font-weight: 900; color: #ef9e1b;
-  font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: 3px;
+  font-size: 28px; font-weight: 900; color: #ffb020;
+  font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: 2px;
 }
 
-.countdownTimeWarn { color: #ff6b00; }
+.countdownTimeWarn { color: #ff6b00; animation: pulse 1s ease-in-out infinite; }
 .countdownTimeDead { color: #ef5350; }
 
-.countdownSub { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 3px; }
+.countdownSub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+
+.countdownBar {
+  margin-top: 10px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  overflow: hidden;
+}
+.countdownBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd54a, #ff8a00);
+  transition: width 0.25s linear;
+}
+.countdownWarn .countdownBar span { background: linear-gradient(90deg, #ff8a00, #ff4d00); }
 
 .claimHint {
-  font-size: 12px; color: rgba(255,255,255,0.3);
-  margin: 10px 20px 0; text-align: center; line-height: 1.5; box-sizing: border-box;
+  font-size: 12px; color: rgba(255,255,255,0.45);
+  margin: 0 24px; text-align: center; line-height: 1.5; box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scratchCardWrap, .scratchHintIcon, .ticketShine, .countdownTimeWarn { animation: none; }
 }
 
 /* ── Loading / Error ── */
@@ -427,23 +737,6 @@
 }
 
 
-/* ── Range Info ── */
-.rangeInfo {
-  background: linear-gradient(135deg, #0d21a1 0%, #ff9907 100%);
-  padding: 12px 24px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(13, 33, 161, 0.3);
-  margin-top: 16px;
-  margin-bottom: 16px;
-}
-
-.rangeLabel {
-  font-size: 14px;
-  font-weight: 600;
-  color: white;
-  display: block;
-  text-align: center;
-}
 .expiredBlock{
   display: flex;
   flex-direction: column;

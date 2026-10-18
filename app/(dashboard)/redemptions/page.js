@@ -10,6 +10,7 @@ import {
 import LoadingState from "@/components/common/LoadingState";
 import styles from "./redemptions.module.css";
 import { SkeletonCardList } from "@/components/ui/SkeletonCard";
+import { CASHIER_REDEMPTION_ENABLED } from "@/lib/featureFlags";
 
 const STATUS_META = {
   generated: { label: "Not opened yet", icon: Clock, tone: "pending" },
@@ -20,7 +21,10 @@ const STATUS_META = {
 
 export default function RedemptionsPage() {
   const { account } = useAuthContext();
-  const canRedeem = account?.role === "Store_Staff";
+  // Cashier redemption is switched off (lib/featureFlags.js) — coupons count
+  // as redeemed once scratched, so this page is lookup-only for now. The
+  // Redeem button and its handler below are kept for when it's turned on.
+  const canRedeem = CASHIER_REDEMPTION_ENABLED && account?.role === "Store_Staff";
 
   const [phoneInput, setPhoneInput] = useState("");
   const [searchedPhone, setSearchedPhone] = useState(null);

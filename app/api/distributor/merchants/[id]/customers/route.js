@@ -6,6 +6,7 @@ import Campaign from "@/models/campaignModel";
 import Store from "@/models/storeModel";
 import Range from "@/models/rangeModel";
 import "@/models/scratchCardRecordModel";
+import { REDEEMED_MATCH, statusFilter, withDisplayStatus } from "@/lib/redemptionStatus";
 
 function distributorOrAdmin(account) {
   if (!["Super_Admin", "Distributor"].includes(account.role)) {
@@ -59,7 +60,7 @@ export async function GET(request, { params }) {
     }
     if (campaignId && campaignId !== "all") query.campaign_id = campaignId;
     if (storeId && storeId !== "all") query.store_id = storeId;
-    if (status && status !== "all") query.status = status;
+    if (status && status !== "all") query.status = statusFilter(status);
 
     const now = new Date();
     if (dateRange === "today") {
@@ -96,7 +97,7 @@ export async function GET(request, { params }) {
           merchant_id: merchantId,
           status: { $in: ["revealed", "redeemed"] },
         }),
-        CustomerParticipation.countDocuments({ merchant_id: merchantId, status: "redeemed" }),
+        CustomerParticipation.countDocuments({ merchant_id: merchantId, status: REDEEMED_MATCH }),
       ]),
       Campaign.find({ merchantId }).select("_id campaignName name").lean(),
       Store.find({ merchant_id: merchantId }).select("_id store_name city state").lean(),
@@ -105,7 +106,7 @@ export async function GET(request, { params }) {
     return Response.json(
       {
         success: true,
-        data: participants,
+        data: withDisplayStatus(participants),
         pagination: { page, limit, total, pages: Math.ceil(total / limit) },
         stats: {
           totalCustomers: statsCounts[0],

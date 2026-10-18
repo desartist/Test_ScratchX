@@ -5,6 +5,13 @@ import CustomerParticipation from "@/models/customerParticipationModel";
 import ScratchCardRecord from "@/models/scratchCardRecordModel";
 import { redeemInventory } from "@/lib/services/inventoryManagementService";
 import { isWithinRevealWindow, REVEAL_GRACE_MS } from "@/lib/participationCooldown";
+import {
+  MESSAGES as REWARD_MESSAGES,
+  returnRewardStock,
+  runAllOrNothing,
+  takeRewardStock,
+} from "@/lib/services/rewardInventoryService";
+import { STOCK_TAKEN_AT_REVEAL } from "@/lib/redemptionStatus";
 
 /**
  * POST /api/customer/participate/[participationId]/reveal
@@ -112,9 +119,90 @@ export async function POST(request, { params }) {
       participation.reward_id = new mongoose.Types.ObjectId(scratchCardId);
     }
 
+    const revealedAt = new Date();
+
+    // Mark the issued scratch card revealed as well. Staff redemption
+    // (RedemptionService.redeemScratchCard) only accepts cards in 'revealed'
+    // status, and this route used to update the participation alone — the
+    // card stayed 'generated', so every redemption at the counter failed and
+    // limited reward stock could never go down. Uses the card id stored on the
+    // participation, never the one in the request body. Done before the
+    // participation save so a retry after a partial failure still converges
+    // (the 'generated' filter makes this a no-op the second time).
+    //
+    // While there's no cashier (STOCK_TAKEN_AT_REVEAL), the reveal IS the
+    // redemption, so a quantity-limited reward loses one unit here — in the
+    // same all-or-nothing step as the card claim. Only the request that wins
+    // the 'generated' → 'revealed' claim takes stock, so a double tap or a
+    // retry can never take two units for one card.
+    if (participation.scratch_card_id) {
+      try {
+        await runAllOrNothing(async ({ session, onRollback }) => {
+          const claimed = await ScratchCardRecord.findOneAndUpdate(
+            { _id: participation.scratch_card_id, status: "generated" },
+            {
+              $set: {
+                status: "revealed",
+                revealed_at: revealedAt,
+                ...(STOCK_TAKEN_AT_REVEAL ? { stock_stage: "reveal" } : {}),
+              },
+            },
+            { new: true, session },
+          );
+          if (!claimed) return; // already revealed by an earlier attempt
+          onRollback(() =>
+            ScratchCardRecord.updateOne(
+              { _id: claimed._id, status: "revealed" },
+              { $set: { status: "generated", revealed_at: null, stock_stage: null } },
+            ),
+          );
+
+          if (STOCK_TAKEN_AT_REVEAL && claimed.reward_id) {
+            const stock = await takeRewardStock({
+              rangeId: claimed.range_id,
+              rewardId: claimed.reward_id,
+              session,
+            });
+            if (stock.tracked) {
+              onRollback(() =>
+                returnRewardStock({
+                  rangeId: claimed.range_id,
+                  rewardId: claimed.reward_id,
+                  reactivate: stock.deactivated,
+                }),
+              );
+            }
+          }
+        });
+      } catch (err) {
+        // The last unit went to someone else between this customer being
+        // issued the reward and scratching it (stock is never reserved).
+        // Retire the attempt so a fresh scan picks an available reward
+        // instead of resuming this one.
+        if (err?.code === "OUT_OF_STOCK") {
+          participation.status = "expired";
+          await participation.save();
+          await ScratchCardRecord.updateOne(
+            { _id: participation.scratch_card_id, status: "generated" },
+            { $set: { status: "expired", is_expired: true } },
+          );
+          return NextResponse.json(
+            {
+              success: false,
+              error: `${REWARD_MESSAGES.OUT_OF_STOCK} Please scan the QR code again.`,
+              expired: true,
+              data: { code: "OUT_OF_STOCK" },
+            },
+            { status: 410 },
+          );
+        }
+        throw err;
+      }
+    }
+
     // Update participation status to revealed; set reward claim expiry (5 min from now)
     participation.status = "revealed";
-    participation.revealed_at = new Date();
+    participation.revealed_at = revealedAt;
     participation.reward_claim_expires_at = new Date(Date.now() + 5 * 60 * 1000);
     await participation.save();
 

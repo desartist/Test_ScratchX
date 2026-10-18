@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/connectDB";
 import { requireAuth } from "@/lib/auth";
 import CustomerParticipation from "@/models/customerParticipationModel";
 import ScratchCardRecord from "@/models/scratchCardRecordModel";
+import { displayStatus } from "@/lib/redemptionStatus";
 
 const STORE_TEAM_ROLES = ["Store_Manager", "Store_Staff"];
 
@@ -51,7 +52,7 @@ export async function GET(request, { params }) {
             _id: p._id,
             name: p.customer_name,
             mobile: p.customer_mobile,
-            status: p.status,
+            status: displayStatus(p.status),
             reward: reward
               ? {
                   type: reward.reward_type,

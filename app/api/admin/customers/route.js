@@ -4,6 +4,7 @@ import CustomerParticipation from "@/models/customerParticipationModel";
 import Campaign from "@/models/campaignModel";
 import Store from "@/models/storeModel";
 import { maskName, maskMobile } from "@/lib/maskPII";
+import { REDEEMED_MATCH, displayStatus, statusFilter } from "@/lib/redemptionStatus";
 
 function superAdminOnly(account) {
   if (account.role !== "Super_Admin") {
@@ -30,7 +31,7 @@ export async function GET(request) {
   const skip = (page - 1) * limit;
 
   const query = {};
-  if (status && status !== "all") query.status = status;
+  if (status && status !== "all") query.status = statusFilter(status);
 
   const now = new Date();
   const startOf30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -50,7 +51,7 @@ export async function GET(request) {
         { $group: { _id: "$customer_mobile" } },
       ]),
       CustomerParticipation.countDocuments({ is_repeat_customer: true }),
-      CustomerParticipation.countDocuments({ status: "redeemed" }),
+      CustomerParticipation.countDocuments({ status: REDEEMED_MATCH }),
       CustomerParticipation.countDocuments({}),
     ]);
 
@@ -69,7 +70,7 @@ export async function GET(request) {
     maskedMobile: maskMobile(r.customer_mobile),
     campaignName: campaignMap[String(r.campaign_id)] || "—",
     storeName: storeMap[String(r.store_id)] || "—",
-    status: r.status,
+    status: displayStatus(r.status),
     isRepeatCustomer: !!r.is_repeat_customer,
     date: r.createdAt,
   }));

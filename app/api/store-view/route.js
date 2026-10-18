@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import Store from "@/models/storeModel";
 import Campaign from "@/models/campaignModel";
 import CustomerParticipation from "@/models/customerParticipationModel";
+import { REDEEMED_STATUSES } from "@/lib/redemptionStatus";
 
 const STORE_TEAM_ROLES = ["Store_Manager", "Store_Staff"];
 
@@ -70,7 +71,7 @@ export async function GET() {
         $group: {
           _id: null,
           scans: { $sum: 1 },
-          conversions: { $sum: { $cond: [{ $eq: ["$status", "redeemed"] }, 1, 0] } },
+          conversions: { $sum: { $cond: [{ $in: ["$status", REDEEMED_STATUSES] }, 1, 0] } },
           mobiles: { $addToSet: "$customer_mobile" },
         },
       },

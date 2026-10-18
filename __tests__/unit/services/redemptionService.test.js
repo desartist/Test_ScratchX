@@ -5,6 +5,29 @@ const Store = require('@/models/storeModel').default;
 const Account = require('@/models/accountModel').default;
 const ScratchCardTransaction = require('@/models/scratchCardTransactionModel').default;
 const { ValidationError, NotFoundError } = require('@/lib/errors');
+const ScratchCardRecord = require('@/models/scratchCardRecordModel').default;
+const CustomerParticipation = require('@/models/customerParticipationModel').default;
+
+/**
+ * Issue a real, revealed scratch card. redeemScratchCard validates against
+ * the issued card record (campaign, store and reward all come from it), so
+ * redemptions need a real card — these tests used to pass made-up ids like
+ * 'CARD123', which the old counter-only implementation never checked.
+ */
+async function issueCard(campaign, store, merchant) {
+  const participationId = global.generateTestId();
+  const cardId = global.generateTestId();
+  await CustomerParticipation.collection.insertOne({
+    _id: participationId, campaign_id: campaign._id, store_id: store._id,
+    customer_mobile: '9876543210', status: 'revealed',
+  });
+  await ScratchCardRecord.collection.insertOne({
+    _id: cardId, campaign_id: campaign._id, merchant_id: merchant._id, store_id: store._id,
+    range_id: global.generateTestId(), customer_participation_id: participationId, reward_id: null,
+    status: 'revealed', expires_at: new Date(Date.now() + 5 * 60 * 1000), redeemed_at: null,
+  });
+  return cardId.toString();
+}
 
 describe('RedemptionService', () => {
   let merchantId;
@@ -96,7 +119,7 @@ describe('RedemptionService', () => {
       ...mappingData
     });
 
-    const scratchCardId = `CARD${Date.now().toString().slice(-8)}`;
+    const scratchCardId = await issueCard(campaign, store, merchant);
 
     // Execute: Redeem scratch card
     const result = await RedemptionService.redeemScratchCard(
@@ -137,16 +160,18 @@ describe('RedemptionService', () => {
       ...mappingData
     });
 
+    const cardId = await issueCard(campaign, store, merchant);
+
     // Execute & Assert: Should throw ValidationError
     await expect(
       RedemptionService.redeemScratchCard(
         merchant._id.toString(),
         campaign._id.toString(),
         store._id.toString(),
-        'CARD123',
+        cardId,
         userId.toString()
       )
-    ).rejects.toThrow(ValidationError);
+    ).rejects.toThrow('Campaign is draft, redemption not allowed');
   });
 
   /**
@@ -172,13 +197,15 @@ describe('RedemptionService', () => {
       ...mappingData
     });
 
+    const cardId = await issueCard(campaign, store, merchant);
+
     // Execute & Assert: Should throw ValidationError
     await expect(
       RedemptionService.redeemScratchCard(
         merchant._id.toString(),
         campaign._id.toString(),
         store._id.toString(),
-        'CARD123',
+        cardId,
         userId.toString()
       )
     ).rejects.toThrow(ValidationError);
@@ -188,7 +215,7 @@ describe('RedemptionService', () => {
         merchant._id.toString(),
         campaign._id.toString(),
         store._id.toString(),
-        'CARD123',
+        cardId,
         userId.toString()
       )
     ).rejects.toThrow('Campaign has ended');
@@ -203,13 +230,15 @@ describe('RedemptionService', () => {
     const store = await Store.create({ merchant_id: merchant._id, ...storeData });
     const campaign = await Campaign.create(campaignData);
 
+    const cardId = await issueCard(campaign, store, merchant);
+
     // Execute & Assert: Should throw NotFoundError
     await expect(
       RedemptionService.redeemScratchCard(
         merchant._id.toString(),
         campaign._id.toString(),
         store._id.toString(),
-        'CARD123',
+        cardId,
         userId.toString()
       )
     ).rejects.toThrow(NotFoundError);
@@ -219,7 +248,7 @@ describe('RedemptionService', () => {
         merchant._id.toString(),
         campaign._id.toString(),
         store._id.toString(),
-        'CARD123',
+        cardId,
         userId.toString()
       )
     ).rejects.toThrow('Campaign not allocated to this store');
@@ -245,13 +274,15 @@ describe('RedemptionService', () => {
       status: 'active'
     });
 
+    const cardId = await issueCard(campaign, store, merchant);
+
     // Execute & Assert: Should throw ValidationError
     await expect(
       RedemptionService.redeemScratchCard(
         merchant._id.toString(),
         campaign._id.toString(),
         store._id.toString(),
-        'CARD123',
+        cardId,
         userId.toString()
       )
     ).rejects.toThrow(ValidationError);
@@ -261,7 +292,7 @@ describe('RedemptionService', () => {
         merchant._id.toString(),
         campaign._id.toString(),
         store._id.toString(),
-        'CARD123',
+        cardId,
         userId.toString()
       )
     ).rejects.toThrow('No scratch cards available');
@@ -287,21 +318,27 @@ describe('RedemptionService', () => {
       status: 'active'
     });
 
+    const [c1, c2, c3] = [
+      await issueCard(campaign, store, merchant),
+      await issueCard(campaign, store, merchant),
+      await issueCard(campaign, store, merchant),
+    ];
+
     const redemptions = [
       {
         campaignId: campaign._id.toString(),
         storeId: store._id.toString(),
-        scratchCardId: 'CARD001'
+        scratchCardId: c1
       },
       {
         campaignId: campaign._id.toString(),
         storeId: store._id.toString(),
-        scratchCardId: 'CARD002'
+        scratchCardId: c2
       },
       {
         campaignId: campaign._id.toString(),
         storeId: store._id.toString(),
-        scratchCardId: 'CARD003'
+        scratchCardId: c3
       }
     ];
 
@@ -340,21 +377,27 @@ describe('RedemptionService', () => {
       status: 'active'
     });
 
+    const [c1, c2, c3] = [
+      await issueCard(campaign, store, merchant),
+      await issueCard(campaign, store, merchant),
+      await issueCard(campaign, store, merchant),
+    ];
+
     const redemptions = [
       {
         campaignId: campaign._id.toString(),
         storeId: store._id.toString(),
-        scratchCardId: 'CARD001'
+        scratchCardId: c1
       },
       {
         campaignId: global.generateTestId().toString(), // Non-existent campaign
         storeId: store._id.toString(),
-        scratchCardId: 'CARD002'
+        scratchCardId: c2
       },
       {
         campaignId: campaign._id.toString(),
         storeId: store._id.toString(),
-        scratchCardId: 'CARD003'
+        scratchCardId: c3
       }
     ];
 

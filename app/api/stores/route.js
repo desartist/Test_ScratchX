@@ -13,6 +13,7 @@ import mainStoreService from '@/lib/mainStoreService';
 import Account from '@/models/accountModel';
 import Store from '@/models/storeModel';
 import { requireAuth } from '@/lib/auth';
+import { REDEEMED_STATUSES } from '@/lib/redemptionStatus';
 
 function toObjId(id) {
   if (mongoose.Types.ObjectId.isValid(id) && !(id instanceof mongoose.Types.ObjectId)) {
@@ -75,7 +76,7 @@ async function enrichStoresWithLiveData(stores) {
         _id: '$store_id',
         qr_scans: { $sum: 1 },
         conversions: {
-          $sum: { $cond: [{ $eq: ['$status', 'redeemed'] }, 1, 0] },
+          $sum: { $cond: [{ $in: ['$status', REDEEMED_STATUSES] }, 1, 0] },
         },
       },
     },

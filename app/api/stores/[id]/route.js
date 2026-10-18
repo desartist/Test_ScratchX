@@ -8,6 +8,7 @@ import CustomerParticipation from "@/models/customerParticipationModel";
 import { hasPermission } from "@/lib/permissions";
 import { ValidationError, NotFoundError } from "@/lib/errors";
 import { requireAuth } from "@/lib/auth";
+import { REDEEMED_STATUSES } from "@/lib/redemptionStatus";
 
 /**
  * Cast a value to a mongoose ObjectId when it is a valid id string.
@@ -95,7 +96,8 @@ async function deriveAssignedCampaigns(merchantId, storeId) {
 /**
  * Per-store engagement metrics derived from CustomerParticipation (which carries
  * store_id). scans = total participation events at the store; customers = distinct
- * mobiles; conversions = participations that reached the "redeemed" status.
+ * mobiles; conversions = participations that count as redeemed (REDEEMED_STATUSES —
+ * scratched coupons too while there is no cashier).
  */
 async function computeStoreMetrics(storeId) {
   const storeObjId = toObjId(storeId);
@@ -106,7 +108,7 @@ async function computeStoreMetrics(storeId) {
         _id: null,
         scans: { $sum: 1 },
         conversions: {
-          $sum: { $cond: [{ $eq: ["$status", "redeemed"] }, 1, 0] },
+          $sum: { $cond: [{ $in: ["$status", REDEEMED_STATUSES] }, 1, 0] },
         },
         mobiles: { $addToSet: "$customer_mobile" },
       },

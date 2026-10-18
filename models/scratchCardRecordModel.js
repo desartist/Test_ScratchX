@@ -26,6 +26,24 @@ const scratchCardRecordSchema = new mongoose.Schema(
       ref: 'Range',
       required: [true, 'Range ID is required']
     },
+    // Which reward in range.rewards this card was issued from (its
+    // `rewardId`). Redemption decrements THAT reward's stock — taken from
+    // this server-side record, never from anything the client sends. Null
+    // for cards issued before rewards had ids: those are treated as
+    // unlimited, exactly as they were.
+    reward_id: {
+      type: String,
+      default: null
+    },
+    // When this card counted against its reward's stock: 'reveal' while the
+    // cashier flow is off (lib/featureFlags.js), so a later counter
+    // redemption — or its reversal — doesn't move stock a second time.
+    // Null: stock moves at redemption (the cashier flow), as before.
+    stock_stage: {
+      type: String,
+      enum: ['reveal', null],
+      default: null
+    },
     customer_participation_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'CustomerParticipation',

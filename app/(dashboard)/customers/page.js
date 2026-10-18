@@ -10,6 +10,7 @@ import { useSubscription } from '@/components/subscription/SubscriptionContext';
 import SkeletonTableRows from '@/components/ui/SkeletonTableRows';
 import styles from './customers.module.css';
 import { SkeletonCardList } from "@/components/ui/SkeletonCard";
+import { visibleStatuses } from '@/lib/redemptionStatus';
 
 // Matches the seed data's canUseWhatsAppIntegration flag (Smart-only feature)
 const WHATSAPP_ENABLED_PLAN_TYPES = ['SMART'];
@@ -27,13 +28,15 @@ const PAGE_SIZE = 20;
 // Status filter tabs — same pattern as the Super Admin customers page. Only
 // the statuses the live scan flow actually produces get a tab; anything else
 // still shows under "All".
-const STATUS_TABS = [
+// "Revealed" is folded into "Claimed" while there's no cashier — a scratched
+// coupon counts as claimed (lib/redemptionStatus.js).
+const STATUS_TABS = visibleStatuses([
   { value: 'all', label: 'All' },
   { value: 'verified', label: 'Verified' },
   { value: 'revealed', label: 'Revealed' },
   { value: 'redeemed', label: 'Claimed' },
   { value: 'expired', label: 'Expired' },
-];
+]);
 
 const STATUS_LABELS = {
   initiated: 'Initiated',
