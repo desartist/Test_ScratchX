@@ -168,7 +168,9 @@
       "Bash(lsof -nP -iTCP:3000 -sTCP:LISTEN)",
       "Bash(awk '{print $1,$2}')",
       "Bash(awk '{print $2}' /private/tmp/claude-501/suites_after.txt)",
-      "Bash(node -e \"const l=require\\('lucide-react'\\); console.log\\(['CalendarClock','CirclePause','PauseCircle','Hourglass','SearchX','WifiOff','Store','RefreshCw','CalendarDays'].map\\(n=>n+':'+\\(typeof l[n]!=='undefined'\\)\\).join\\(' '\\)\\)\")"
+      "Bash(node -e \"const l=require\\('lucide-react'\\); console.log\\(['CalendarClock','CirclePause','PauseCircle','Hourglass','SearchX','WifiOff','Store','RefreshCw','CalendarDays'].map\\(n=>n+':'+\\(typeof l[n]!=='undefined'\\)\\).join\\(' '\\)\\)\")",
+      "Bash(git log *)",
+      "Bash(grep -rn \"/api/stores/\\\\${\\\\|/api/stores/' +\\\\|api/stores/\\\\`\" app components hooks)"
     ]
   }
 }

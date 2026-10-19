@@ -7,6 +7,11 @@ import { useStoreDetailQuery, useInvalidateStoreDetail } from '@/hooks/queries/u
 import StoreForm from '@/components/stores/StoreForm';
 import styles from './page.module.css';
 
+const STORE_FORM_FIELDS = [
+  'store_name', 'address', 'city', 'state', 'pincode',
+  'contact_person', 'contact_number', 'latitude', 'longitude', 'location_accuracy',
+];
+
 export default function EditStorePage() {
   const router = useRouter();
   const params = useParams();
@@ -53,7 +58,13 @@ export default function EditStorePage() {
           'x-user-id': account.id,
           'x-user-role': account.role
         },
-        body: JSON.stringify(formData)
+        // Only the editable fields — not the whole loaded store (its derived
+        // campaign list, counters, ids) that the form was seeded from.
+        body: JSON.stringify(
+          Object.fromEntries(
+            STORE_FORM_FIELDS.filter((f) => formData[f] !== undefined).map((f) => [f, formData[f]]),
+          ),
+        )
       });
 
       if (!response.ok) {
