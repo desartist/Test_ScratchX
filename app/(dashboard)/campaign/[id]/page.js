@@ -32,6 +32,7 @@ import ScratchAllocationModal from "@/components/campaign/ScratchAllocationModal
 import CampaignQrStudio from "@/components/campaign/CampaignQrStudio";
 import StatusBadge from "./components/StatusBadge";
 import CampaignStatusActions from "./components/CampaignStatusActions";
+import { campaignDisplayStatus } from "@/lib/campaignDisplayStatus";
 
 // Map campaign status -> Badge variant
 function statusToVariant(status) {
@@ -40,6 +41,8 @@ function statusToVariant(status) {
       return "success";
     case "paused":
       return "warning";
+    case "scheduled":
+      return "info";
     case "ended":
       return "danger";
     case "draft":
@@ -270,27 +273,8 @@ export default function CampaignDetailsPage({ params }) {
   // ---- Derived display values (campaign is guaranteed non-null below) ----
   const campaignName = campaign.name || campaign.campaignName || "Campaign";
 
-  // Calculate status based on dates
-  const getCalculatedStatus = () => {
-    const now = new Date();
-    const startDate = new Date(campaign.startDate);
-    const endDate = new Date(campaign.endDate);
-
-    // If end date has passed, campaign is ended
-    if (endDate < now) {
-      return "ended";
-    }
-
-    // If start date hasn't arrived yet, campaign is draft
-    if (startDate > now) {
-      return "draft";
-    }
-
-    // Otherwise use the stored status (active, paused, etc.)
-    return campaign.status || "active";
-  };
-
-  const status = getCalculatedStatus();
+  // Launched but not started yet → "scheduled", not "draft" (lib/campaignDisplayStatus.js).
+  const status = campaignDisplayStatus(campaign);
 
   // Plan type + store limit (Core => 1 store, Smart => 5 stores).
   // Prefer a real maxStores value from the subscription payload if present.

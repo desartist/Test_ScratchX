@@ -15,6 +15,7 @@ import {
 import styles from "./campaign.module.css";
 import { SkeletonCardList } from "@/components/ui/SkeletonCard";
 import Snackbar from "@/components/ui/Snackbar";
+import { campaignDisplayStatus } from "@/lib/campaignDisplayStatus";
 
 // Low-scratch threshold: allocated > 0 AND remaining/allocated <= 10%.
 const LOW_SCRATCH_RATIO = 0.1;
@@ -25,32 +26,8 @@ function getAllocated(campaign) {
   );
 }
 
-// Calculate campaign status based on dates
-function getCalculatedStatus(campaign) {
-  const now = new Date();
-  const startDate = new Date(campaign.startDate);
-  const endDate = new Date(campaign.endDate);
-
-  // A real draft (never activated by the merchant) stays a draft regardless
-  // of its dates — this must be checked before the date-based overrides below.
-  if (campaign.status === "draft") {
-    return "draft";
-  }
-
-  // If end date has passed, campaign is ended
-  if (endDate < now) {
-    return "ended";
-  }
-
-  // Already activated but its start date hasn't arrived yet — scheduled,
-  // not draft (the merchant already published it; it just hasn't gone live).
-  if (startDate > now) {
-    return "scheduled";
-  }
-
-  // Otherwise use the stored status (active, paused, etc.)
-  return campaign.status || "active";
-}
+// Shown status (draft / ended / scheduled / stored) — lib/campaignDisplayStatus.js
+const getCalculatedStatus = (campaign) => campaignDisplayStatus(campaign);
 
 function getRemaining(campaign) {
   const allocated = getAllocated(campaign);

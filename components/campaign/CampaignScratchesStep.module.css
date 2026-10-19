@@ -1,0 +1,608 @@
+/*
+ * CampaignScratchesStep — "Set Campaign Scratches" / "Campaign Scratches
+ * Ready", shared by the launch wizard and the campaign page's Allocate
+ * Scratches popup.
+ */
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8, 16px);
+  padding: var(--spacing-14, 28px);
+}
+
+.stepHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 36px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-2xl, 24px);
+  font-weight: 700;
+  color: var(--color-navy, #010f44);
+}
+
+/* Scratch balance card */
+
+
+
+/* Allocation input */
+/* ── Set Campaign Scratches (not every coupon has a quantity) ── */
+.stepSub {
+  margin: 0;
+  font-size: var(--font-size-base, 14px);
+  line-height: 1.45;
+  color: #3d4f8a;
+}
+
+.balanceCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f3f6fd;
+}
+
+.balanceIcon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #fff1df;
+  color: #ef9e1b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.balanceIconInfinite {
+  background: #e7edfc;
+  color: #2b55d6;
+}
+
+.balanceLabel {
+  font-size: 12px;
+  color: var(--color-muted, #637080);
+}
+
+.balanceValue {
+  font-size: var(--font-size-md, 16px);
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+}
+
+/* .input.inputError (two classes) so it beats .input:focus, defined later. */
+.input.inputError,
+.input.inputError:focus {
+  border-color: #e5484d;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.12);
+}
+
+.lowError {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff1f1;
+  border: 1px solid #f7c4c5;
+  color: #b42318;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.lowError svg { flex-shrink: 0; margin-top: 1px; }
+
+.lowError strong { display: block; font-weight: 700; }
+
+.chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--color-border, rgba(0, 0, 0, 0.15));
+}
+
+.capacityCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f3f6fd;
+}
+
+.capacityHeading {
+  font-size: var(--font-size-base, 14px);
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+}
+
+.capacityBody {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.capacityIcon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #e7edfc;
+  color: #2b55d6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.capacityTitle {
+  font-size: var(--font-size-md, 16px);
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+}
+
+.capacityText {
+  font-size: 13px;
+  color: var(--color-muted, #637080);
+}
+
+.splitList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.splitRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.splitRow + .splitRow {
+  border-top: 1px solid #eef0f6;
+}
+
+.splitIcon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splitIconReserved { background: #ffe9e4; color: #e5484d; }
+
+.splitIconShared { background: #e7edfc; color: #2b55d6; }
+
+.splitIconTotal { background: transparent; color: var(--color-navy, #010f44); }
+
+.splitValue {
+  font-size: var(--font-size-md, 16px);
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+}
+
+.splitText {
+  font-size: 13px;
+  color: var(--color-muted, #637080);
+}
+
+.allocAvail {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-muted, #637080);
+}
+
+.infoNote {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eef3fe;
+  border: 1px solid #d3defb;
+  color: #2a3d78;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.infoNote svg { flex-shrink: 0; margin-top: 2px; color: #2b55d6; }
+
+/* "Preparing campaign allocation…" while the step's data loads. */
+.preparing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 28px 44px;
+  text-align: center;
+}
+
+.gears {
+  position: relative;
+  width: 112px;
+  height: 92px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 55%, #eaf0fd 0 55%, transparent 56%);
+}
+
+.gearBig {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  color: #1f3fa8;
+  animation: gearSpin 3s linear infinite;
+}
+
+.gearSmall {
+  position: absolute;
+  bottom: 6px;
+  left: 14px;
+  color: #ef9e1b;
+  animation: gearSpin 2s linear infinite reverse;
+}
+
+@keyframes gearSpin { to { transform: rotate(360deg); } }
+
+.preparingTitle {
+  margin: 0;
+  font-size: var(--font-size-xl, 22px);
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+}
+
+.preparingText {
+  margin: 0;
+  max-width: 260px;
+  font-size: var(--font-size-base, 14px);
+  line-height: 1.45;
+  color: var(--color-muted, #637080);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gearBig, .gearSmall { animation: none; }
+}
+
+/* ── Fixed allocation summary (every coupon has a set quantity) ── */
+.readyHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 0 28px;
+}
+
+.readyIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #22a06b;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(34, 160, 107, 0.3);
+  margin-bottom: 4px;
+}
+
+.readyTitle {
+  margin: 0;
+  font-size: var(--font-size-xl, 22px);
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+}
+
+.readySub {
+  margin: 0;
+  font-size: var(--font-size-base, 14px);
+  line-height: 1.45;
+  color: #3d4f8a;
+}
+
+.readyTotal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #f6d9a8;
+  background: #fff8ec;
+}
+
+.readyTotalLabel {
+  font-size: var(--font-size-base, 14px);
+  font-weight: 700;
+  color: var(--color-navy, #010f44);
+}
+
+.readyTotalValue {
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+}
+
+.alloc {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.allocHeading {
+  margin: 0;
+  font-size: var(--font-size-md, 16px);
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+}
+
+.allocGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.allocRange {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-muted, #637080);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.allocList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #e6e9f2;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.allocRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--color-white, #fff);
+}
+
+.allocRow + .allocRow {
+  border-top: 1px solid #eef0f6;
+}
+
+.allocThumb {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #fff1df;
+  color: #ef9e1b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.allocThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.allocName {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-base, 14px);
+  font-weight: 600;
+  color: var(--color-navy, #010f44);
+}
+
+.allocTag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef0f6;
+  color: var(--color-muted, #637080);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.allocQty {
+  font-size: var(--font-size-md, 16px);
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+}
+
+.allocTotal {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 14px 0;
+  font-size: var(--font-size-md, 16px);
+  font-weight: 800;
+  color: var(--color-navy, #010f44);
+}
+
+.readyNote,
+.readyWarn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: var(--font-size-base, 14px);
+  font-weight: 600;
+}
+
+.readyNote {
+  background: #ecfdf3;
+  border: 1px solid #b7ebc9;
+  color: #1d6b40;
+}
+
+.readyNote svg { color: #22a06b; flex-shrink: 0; }
+
+.readyWarn {
+  background: #fff8ec;
+  border: 1px solid #f6d9a8;
+  color: #7a5a1c;
+}
+
+.readyWarn svg { flex-shrink: 0; }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: var(--font-size-base, 14px);
+  font-weight: 600;
+  color: var(--color-navy, #010f44);
+}
+
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.15));
+  border-radius: var(--radius-input, 8px);
+  font-size: var(--font-size-md, 16px);
+  color: var(--color-navy, #010f44);
+  background: var(--color-white, #fff);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary, #ef9e1b);
+}
+
+/* Quick-select chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.15));
+  border-radius: 999px;
+  background: var(--color-white, #fff);
+  font-size: var(--font-size-base, 14px);
+  font-weight: 600;
+  color: var(--color-navy, #010f44);
+  cursor: pointer;
+  transition: var(--transition-fast, 0.15s ease-in-out);
+}
+
+.chip:hover {
+  border-color: var(--color-primary, #ef9e1b);
+}
+
+.chipActive {
+  border-color: var(--color-growth, #0a8905);
+  background: rgba(10, 137, 5, 0.08);
+  color: var(--color-growth, #0a8905);
+}
+
+.chipCheck {
+  color: var(--color-growth, #0a8905);
+}
+
+/* Buttons + actions */
+/* Confirm on top, Cancel / Review Rewards below — full width, as designed. */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.actions .secondaryBtn {
+  font-size: var(--font-size-md, 16px);
+  font-weight: 700;
+}
+
+.primaryBtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 18px;
+  border: 1px solid var(--color-primary, #ef9e1b);
+  border-radius: var(--radius-button, 8px);
+  background: var(--color-primary, #ef9e1b);
+  color: #fff;
+  font-family: var(--font-afacad);
+  font-size: var(--font-size-md, 16px);
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-fast, 0.15s ease-in-out);
+}
+
+.primaryBtn:hover:not(:disabled) {
+  background: var(--color-primary-hover, #d98e14);
+  border-color: var(--color-primary-hover, #d98e14);
+}
+
+.primaryBtn:disabled {
+  background: var(--color-primary-disabled, #ffcc80);
+  border-color: var(--color-primary-disabled, #ffcc80);
+  cursor: not-allowed;
+}
+
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 18px;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.15));
+  border-radius: var(--radius-button, 8px);
+  background: var(--color-white, #fff);
+  color: var(--color-navy, #010f44);
+  font-family: var(--font-afacad);
+  font-size: var(--font-size-base, 14px);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition-fast, 0.15s ease-in-out);
+}
+
+.secondaryBtn:hover {
+  background: var(--color-gray-light, #f5f5f5);
+}
+
+.errorBox {
+  font-size: var(--font-size-base, 14px);
+  color: var(--color-error, #ff6b6b);
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: var(--radius-input, 6px);
+  padding: 10px 12px;
+}
+
+/* Existing campaign: what it has today (the popup sets a new total). */
+.currentLine {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-muted, #637080);
+}
+.unchangedHint {
+  margin: -4px 0 0;
+  font-size: 13px;
+  color: var(--color-muted, #637080);
+  text-align: center;
+}

@@ -1,5 +1,7 @@
 import { connectDB } from '@/lib/connectDB';
 import Campaign from '@/models/campaignModel';
+import Range from '@/models/rangeModel';
+import { couponQuantityPlan, minimumAllocation, requiredAllocation } from '@/lib/couponQuantityPlan';
 import subscriptionValidationService from '@/lib/services/subscriptionValidationService';
 import scratchEntitlementService from '@/lib/scratchEntitlementService';
 import { requireAuth } from '@/lib/auth';
@@ -92,6 +94,25 @@ export async function POST(request, { params }) {
     const newTotal = isSetMode ? requested : previousAllocation + requested;
     const amountToAdd = newTotal - previousAllocation;
 
+    // Every coupon has a set quantity → the campaign can only hand out their
+    // total, so that's the only allocation allowed (never below what's
+    // already used). See lib/couponQuantityPlan.js. One unlimited coupon and
+    // allocation is free as before.
+    const ranges = await Range.find({ campaignId: campaign._id }).select('rewards').lean();
+    const plan = couponQuantityPlan(ranges);
+    const fixedTotal = requiredAllocation(plan, used);
+    if (fixedTotal !== null && newTotal !== fixedTotal) {
+      return Response.json(
+        {
+          success: false,
+          error: `All coupons in this campaign have a set quantity, so it gets exactly ${fixedTotal.toLocaleString()} scratches (the total coupon quantity).`,
+          code: 'FIXED_COUPON_QUANTITY',
+          details: { required: fixedTotal, couponTotal: plan.total, requested: newTotal },
+        },
+        { status: 400 }
+      );
+    }
+
     // Scratches customers have already used can't be taken back.
     if (newTotal < used) {
       return Response.json(
@@ -99,6 +120,22 @@ export async function POST(request, { params }) {
           success: false,
           error: `${used.toLocaleString()} scratches have already been used on this campaign, so the allocation can't go below ${used.toLocaleString()}.`,
           details: { used, requested: newTotal },
+        },
+        { status: 400 }
+      );
+    }
+
+    // Some coupons have a quantity, others don't: the limited ones need their
+    // scratches; the unlimited ones share whatever is left. So the campaign
+    // can't be given fewer than the limited quantities add up to.
+    const reservedMin = minimumAllocation(plan, used);
+    if (fixedTotal === null && plan.reserved > 0 && newTotal < reservedMin) {
+      return Response.json(
+        {
+          success: false,
+          error: `Campaign scratches are too low. You've already assigned ${plan.reserved.toLocaleString()} fixed rewards. Set at least ${reservedMin.toLocaleString()} scratches.`,
+          code: 'BELOW_RESERVED',
+          details: { minimum: reservedMin, reserved: plan.reserved, requested: newTotal },
         },
         { status: 400 }
       );

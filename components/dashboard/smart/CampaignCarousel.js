@@ -3,6 +3,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Skeleton from "@/components/ui/Skeleton";
 import styles from "./CampaignCarousel.module.css";
+import { campaignDisplayStatus } from "@/lib/campaignDisplayStatus";
 
 function formatDate(val) {
   if (!val) return "—";
@@ -79,24 +80,8 @@ function CampaignCard({ campaign, storeCount, onClick }) {
   } = campaign;
 
   // Calculate status based on dates
-  const getCalculatedStatus = () => {
-    const now = new Date();
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    // If end date has passed, campaign is ended
-    if (end < now) {
-      return "ended";
-    }
-
-    // If start date hasn't arrived yet, campaign is draft
-    if (start > now) {
-      return "draft";
-    }
-
-    // Otherwise use the stored status (active, paused, etc.)
-    return (status || "active").toLowerCase();
-  };
+  // Launched but not started yet → "scheduled" (lib/campaignDisplayStatus.js).
+  const getCalculatedStatus = () => campaignDisplayStatus({ status, startDate, endDate });
 
   const daysLeft = Math.max(0, Math.ceil((new Date(endDate) - Date.now()) / 86400000));
   const used = num(allocatedCards) - num(remainingCards);

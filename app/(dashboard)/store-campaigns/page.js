@@ -8,21 +8,15 @@ import SearchBar from "@/components/dashboard/SearchBar";
 import { useStoreCampaignsQuery } from "@/hooks/queries/useStoreCampaignsQuery";
 import styles from "./store-campaigns.module.css";
 import { SkeletonCardList } from "@/components/ui/SkeletonCard";
+import { campaignDisplayStatus } from "@/lib/campaignDisplayStatus";
 
 // Same low-scratch threshold and status-calculation logic as the merchant's
 // own Campaigns page (app/(dashboard)/campaign/page.js), kept in sync so a
 // campaign shows the same status/badge everywhere.
 const LOW_SCRATCH_RATIO = 0.1;
 
-function getCalculatedStatus(campaign) {
-  const now = new Date();
-  const startDate = new Date(campaign.startDate);
-  const endDate = new Date(campaign.endDate);
-  if (campaign.status === "draft") return "draft";
-  if (endDate < now) return "ended";
-  if (startDate > now) return "scheduled";
-  return campaign.status || "active";
-}
+// Shown status (draft / ended / scheduled / stored) — lib/campaignDisplayStatus.js
+const getCalculatedStatus = (campaign) => campaignDisplayStatus(campaign);
 
 function isLowScratch(campaign) {
   const allocated = Number(campaign.allocatedScratchCards || 0);

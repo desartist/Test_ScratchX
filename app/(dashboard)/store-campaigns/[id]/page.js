@@ -18,6 +18,7 @@ import { useAuthContext } from "@/components/auth/AuthContext";
 import Badge from "@/components/dashboard/Badge";
 import CampaignQrStudio from "@/components/campaign/CampaignQrStudio";
 import styles from "./campaign-detail.module.css";
+import { campaignDisplayStatus } from "@/lib/campaignDisplayStatus";
 
 const STATUS_COLORS = {
   initiated: "#6b7280",
@@ -59,6 +60,8 @@ function statusToVariant(status) {
       return "success";
     case "paused":
       return "warning";
+    case "scheduled":
+      return "info";
     case "ended":
       return "danger";
     default:
@@ -87,14 +90,8 @@ function calculateDaysLeft(endDate) {
   return Math.max(0, daysLeft);
 }
 
-function getCalculatedStatus(campaign) {
-  const now = new Date();
-  const startDate = new Date(campaign.startDate);
-  const endDate = new Date(campaign.endDate);
-  if (endDate < now) return "ended";
-  if (startDate > now) return "draft";
-  return campaign.status || "active";
-}
+// Shown status (draft / ended / scheduled / stored) — lib/campaignDisplayStatus.js
+const getCalculatedStatus = (campaign) => campaignDisplayStatus(campaign);
 
 export default function StoreCampaignDetailPage() {
   const { id } = useParams();

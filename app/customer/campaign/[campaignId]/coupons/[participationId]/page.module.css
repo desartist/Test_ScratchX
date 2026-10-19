@@ -461,7 +461,7 @@
   gap: clamp(10px, 1.8dvh, 16px);
   padding: clamp(8px, 2dvh, 20px) 0 clamp(12px, 2.4dvh, 24px);
 }
-.revealBody > :first-child { margin-top: 60px; }
+.revealBody > :first-child { margin-top: auto; }
 .revealBody > :last-child { margin-bottom: auto; }
 
 .celebBlock {

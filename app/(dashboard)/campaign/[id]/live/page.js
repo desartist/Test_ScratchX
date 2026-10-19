@@ -7,6 +7,7 @@ import { useCampaignQuery } from "@/hooks/queries/useCampaignQuery";
 import Badge from "@/components/dashboard/Badge";
 import CampaignQrStudio from "@/components/campaign/CampaignQrStudio";
 import styles from "./page.module.css";
+import { campaignDisplayStatus } from "@/lib/campaignDisplayStatus";
 
 // Map campaign status -> Badge variant
 function statusToVariant(status) {
@@ -15,6 +16,8 @@ function statusToVariant(status) {
       return "success";
     case "paused":
       return "warning";
+    case "scheduled":
+      return "info";
     case "ended":
       return "danger";
     case "draft":
@@ -93,27 +96,8 @@ export default function CampaignLiveViewPage() {
 
   const campaignName = campaign.campaignName || campaign.name || "Campaign";
 
-  // Calculate status based on dates
-  const getCalculatedStatus = () => {
-    const now = new Date();
-    const startDate = new Date(campaign.startDate);
-    const endDate = new Date(campaign.endDate);
-
-    // If end date has passed, campaign is ended
-    if (endDate < now) {
-      return "ended";
-    }
-
-    // If start date hasn't arrived yet, campaign is draft
-    if (startDate > now) {
-      return "draft";
-    }
-
-    // Otherwise use the stored status (active, paused, etc.)
-    return (campaign.status || "active").toLowerCase();
-  };
-
-  const status = getCalculatedStatus();
+  // Launched but not started yet → "scheduled" (lib/campaignDisplayStatus.js).
+  const status = campaignDisplayStatus(campaign);
   const activeStores = (campaign.assignedStores || []).filter(
     (s) => s.status === "active",
   );

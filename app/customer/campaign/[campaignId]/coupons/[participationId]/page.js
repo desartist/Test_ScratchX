@@ -575,7 +575,7 @@ export default function CouponPage() {
 
               <p className={`${styles.scratchHint} ${scratching ? styles.scratchHintDone : ""}`}>
                 <span className={styles.scratchHintIcon} aria-hidden="true">👆</span>
-                Use your finger to scratch
+                Use your finger or mouse to scratch
               </p>
             </div>
           </div>
@@ -680,7 +680,6 @@ function GiftSvg() {
     </svg>
   );
 }
-
 
 function RevealGiftSvg() {
   return (

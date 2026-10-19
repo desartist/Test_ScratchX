@@ -12,6 +12,8 @@ export default function StatusBadge({ status }) {
         return styles.statusDraft;
       case 'paused':
         return styles.statusPaused;
+      case 'scheduled':
+        return styles.statusScheduled;
       case 'ended':
         return styles.statusEnded;
       default:
@@ -27,6 +29,8 @@ export default function StatusBadge({ status }) {
         return '◯'; // Empty dot for draft
       case 'paused':
         return '⏸'; // Pause symbol
+      case 'scheduled':
+        return '◷'; // Clock: launched, starts on its start date
       case 'ended':
         return '◼'; // Square for ended
       default:

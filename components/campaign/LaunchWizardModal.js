@@ -8,38 +8,19 @@ import {
   MapPin,
   Download,
   Copy,
-  ArrowRight,
 } from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthContext";
 import { useCampaignQuery, useInvalidateCampaignCluster } from "@/hooks/queries/useCampaignQuery";
 import { useStoresQuery } from "@/hooks/queries/useStoresQuery";
-import { useSubscriptionStatusQuery } from "@/hooks/queries/useSubscriptionQuery";
+import CampaignScratchesStep from "./CampaignScratchesStep";
 import styles from "./LaunchWizardModal.module.css";
-
-// Quick-select chip presets. "No Cap" is intentionally NOT a real "infinite"
-// value: the allocate-scratch API requires a positive number per campaign, so
-// "No Cap" = an effectively-unlimited cap. This sentinel is only safe to
-// submit as-is while the merchant's unlimited-scratches grant is active,
-// since the server skips the balance check entirely in that case — for a
-// pack-based merchant, handleSelectChip swaps it for their real remaining
-// balance instead (see there), so this stays 1,000,000 only as the chip's
-// nominal value / active-state key, not necessarily what gets submitted.
-const NO_CAP_AMOUNT = 1000000;
-const CHIPS = [
-  { label: "1,000", value: 1000 },
-  { label: "2,000", value: 2000 },
-  { label: "4,000", value: 4000 },
-  { label: "5,000", value: 5000 },
-  { label: "No Cap", value: NO_CAP_AMOUNT },
-];
-
-const DEFAULT_ALLOCATION = 2000;
 
 /**
  * LaunchWizardModal
  *
  * Multi-step launch flow surfaced from the ranges page. Three steps:
- *   1. 'allocate' — allocate scratches to this campaign (POST allocate-scratch)
+ *   1. 'allocate' — set the campaign's scratches (CampaignScratchesStep —
+ *                   shared with the campaign page's Allocate Scratches popup)
  *   2. 'stores'   — assign one or more stores (POST assign) then generate QR
  *   3. 'qr'       — show the generated QR with download/copy actions
  *
@@ -62,14 +43,6 @@ export default function LaunchWizardModal({
 
   const [step, setStep] = useState("allocate");
 
-  // Allocate step state.
-  const [allocation, setAllocation] = useState(DEFAULT_ALLOCATION);
-  const [allocating, setAllocating] = useState(false);
-  // Tracks the "No Cap" chip separately from `allocation` itself, since the
-  // number actually submitted for it varies by entitlement — see
-  // handleSelectChip.
-  const [isNoCapSelected, setIsNoCapSelected] = useState(false);
-
   // Stores step state.
   const [selected, setSelected] = useState([]);
   const [launching, setLaunching] = useState(false);
@@ -89,9 +62,8 @@ export default function LaunchWizardModal({
     [userId, userRole],
   );
 
-  // Shares the same cached responses as campaign/[id]/page.js (campaign),
-  // stores/page.js and StoreAssignment.js (stores), and stores/page.js /
-  // campaign/[id]/page.js (subscription status) — only enabled while open.
+  // Shares the same cached responses as campaign/[id]/page.js (campaign) and
+  // stores/page.js / StoreAssignment.js (stores) — only enabled while open.
   const { data: campaignJson, isPending: campaignLoading } = useCampaignQuery(campaignId, { enabled: open });
   const campaignName = campaignJson?.data?.campaignName || "";
   const assignedIds = useMemo(() => {
@@ -104,18 +76,14 @@ export default function LaunchWizardModal({
   const { data: storesJson, isPending: storesLoading } = useStoresQuery({ enabled: open });
   const stores = useMemo(() => storesJson?.data || [], [storesJson]);
 
-  const { data: subscription, isPending: subLoading } = useSubscriptionStatusQuery({ enabled: open });
-
   const invalidateCluster = useInvalidateCampaignCluster();
-  const loading = campaignLoading || storesLoading || subLoading;
+  const loading = campaignLoading || storesLoading;
 
   // Reset transient wizard state whenever the modal opens.
   useEffect(() => {
     if (!open) return;
     setStep(initialStep || "allocate");
     setError(null);
-    setAllocation(DEFAULT_ALLOCATION);
-    setIsNoCapSelected(false);
     setSelected([]);
     setQrCodeUrl("");
     setCopied(false);
@@ -135,22 +103,6 @@ export default function LaunchWizardModal({
     }
   }, [loading, stores, assignedIds]);
 
-  const handleSelectChip = useCallback((value) => {
-    if (value === NO_CAP_AMOUNT) {
-      setIsNoCapSelected(true);
-      // See the NO_CAP_AMOUNT comment above — a pack-based merchant gets
-      // their real remaining balance instead of the raw sentinel, so the
-      // request doesn't get rejected as "insufficient scratches".
-      const remaining = subscription?.scratchRemaining;
-      const isUnlimitedEntitlement =
-        subscription?.unlimitedScratches === true || remaining === "UNLIMITED";
-      setAllocation(isUnlimitedEntitlement ? NO_CAP_AMOUNT : Number(remaining) || 0);
-      return;
-    }
-    setIsNoCapSelected(false);
-    setAllocation(value);
-  }, [subscription]);
-
   const handleToggleStore = useCallback((storeId) => {
     setSelected((prev) =>
       prev.includes(storeId)
@@ -158,41 +110,6 @@ export default function LaunchWizardModal({
         : [...prev, storeId],
     );
   }, []);
-
-  // Step 1 -> Step 2: allocate scratches.
-  const handleAllocate = useCallback(async () => {
-    setError(null);
-    const amount = Number(allocation);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      setError("Enter a scratch amount greater than 0.");
-      return;
-    }
-    setAllocating(true);
-    try {
-      const res = await fetch(
-        `/api/campaigns/${campaignId}/allocate-scratch`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: writeHeaders,
-          body: JSON.stringify({ allocationAmount: amount }),
-        },
-      );
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data?.success) {
-        invalidateCluster(campaignId);
-        setStep("stores");
-      } else {
-        setError(
-          data?.error || data?.message || "Failed to allocate scratches.",
-        );
-      }
-    } catch {
-      setError("Failed to allocate scratches.");
-    } finally {
-      setAllocating(false);
-    }
-  }, [allocation, campaignId, writeHeaders, invalidateCluster]);
 
   // Step 2 -> Step 3: assign stores then generate QR.
   const handleLaunch = useCallback(async () => {
@@ -290,94 +207,16 @@ export default function LaunchWizardModal({
           <X size={20} />
         </button>
 
-        {loading ? (
+        {step === "allocate" ? (
+          <CampaignScratchesStep
+            campaignId={campaignId}
+            enabled={open}
+            onAllocated={() => setStep("stores")}
+            onCancel={onClose}
+            onReview={onClose}
+          />
+        ) : loading ? (
           <div className={styles.stateMsg}>Loading…</div>
-        ) : step === "allocate" ? (
-          <div className={styles.stepBody}>
-            <header className={styles.stepHeader}>
-              <h2 className={styles.title}>Allocate Scratches</h2>
-            </header>
-
-            {/* Always shows the merchant's real purchased-pack balance —
-                even while the unlimited-scratches grant is active — rather
-                than an "Unlimited" placeholder. Same direction as the
-                allocation cap: real numbers, not unlimited framing, in the
-                merchant-facing UI. See scratchPacksRemaining in
-                app/api/subscription/status/route.js. */}
-            <div className={styles.scratchCard}>
-              <span className={styles.scratchCardTitle}>Scratches</span>
-              <span className={styles.scratchCardMeta}>
-                {subscription?.plan
-                  ? `${subscription.plan} plan`
-                  : "No active plan"}{" "}
-                ·{" "}
-                {(Number(subscription?.scratchPacksRemaining) || 0).toLocaleString()} remaining
-              </span>
-            </div>
-
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="lw-allocation">
-                Scratches for this Campaign
-              </label>
-              <input
-                id="lw-allocation"
-                type="number"
-                min="1"
-                className={styles.input}
-                value={allocation}
-                onChange={(e) => {
-                  setIsNoCapSelected(false);
-                  setAllocation(e.target.value);
-                }}
-              />
-            </div>
-
-            <div className={styles.chips}>
-              {CHIPS.map((chip) => {
-                const isActive =
-                  chip.value === NO_CAP_AMOUNT
-                    ? isNoCapSelected
-                    : !isNoCapSelected && Number(allocation) === chip.value;
-                return (
-                  <button
-                    key={chip.label}
-                    type="button"
-                    className={
-                      isActive
-                        ? `${styles.chip} ${styles.chipActive}`
-                        : styles.chip
-                    }
-                    onClick={() => handleSelectChip(chip.value)}
-                  >
-                    {isActive && <Check size={14} className={styles.chipCheck} />}
-                    {chip.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {error && <div className={styles.errorBox}>{error}</div>}
-
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.secondaryBtn}
-                onClick={onClose}
-                disabled={allocating}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className={styles.primaryBtn}
-                onClick={handleAllocate}
-                disabled={allocating}
-              >
-                {allocating ? "Allocating…" : "Allocate and move to the next"}
-                {!allocating && <ArrowRight size={16} />}
-              </button>
-            </div>
-          </div>
         ) : step === "stores" ? (
           <div className={styles.stepBody}>
             <header className={styles.stepHeader}>

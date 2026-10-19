@@ -70,91 +70,9 @@
   font-size: var(--font-size-base, 14px);
   color: var(--color-muted, #637080);
 }
-
-/* Scratch balance card */
-.scratchCard {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 18px;
-  border-radius: 16px;
-  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.12));
-  background: var(--color-gray-light, #f7f8fa);
-}
-
-.scratchCardTitle {
+.readyActions .secondaryBtn {
   font-size: var(--font-size-md, 16px);
   font-weight: 700;
-  color: var(--color-navy, #010f44);
-}
-
-.scratchCardMeta {
-  font-size: var(--font-size-base, 14px);
-  color: var(--color-muted, #637080);
-}
-
-/* Allocation input */
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.label {
-  font-size: var(--font-size-base, 14px);
-  font-weight: 600;
-  color: var(--color-navy, #010f44);
-}
-
-.input {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.15));
-  border-radius: var(--radius-input, 8px);
-  font-size: var(--font-size-md, 16px);
-  color: var(--color-navy, #010f44);
-  background: var(--color-white, #fff);
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--color-primary, #ef9e1b);
-}
-
-/* Quick-select chips */
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.15));
-  border-radius: 999px;
-  background: var(--color-white, #fff);
-  font-size: var(--font-size-base, 14px);
-  font-weight: 600;
-  color: var(--color-navy, #010f44);
-  cursor: pointer;
-  transition: var(--transition-fast, 0.15s ease-in-out);
-}
-
-.chip:hover {
-  border-color: var(--color-primary, #ef9e1b);
-}
-
-.chipActive {
-  border-color: var(--color-growth, #0a8905);
-  background: rgba(10, 137, 5, 0.08);
-  color: var(--color-growth, #0a8905);
-}
-
-.chipCheck {
-  color: var(--color-growth, #0a8905);
 }
 
 /* Store assignment */

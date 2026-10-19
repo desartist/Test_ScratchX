@@ -1,0 +1,153 @@
+/* "Campaign not available" — what a customer sees when the scanned QR can't
+   be played right now (not started, paused, not live, not found, error). */
+.page {
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 28px 20px 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-afacad, 'Afacad', sans-serif);
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255, 153, 7, 0.12), transparent 70%),
+    #fff;
+}
+
+.logo {
+  margin: 4px 0 auto;
+  padding-bottom: 28px;
+}
+.logo img {
+  width: 140px;
+  height: auto;
+}
+
+.card {
+  --tone: #0d21a1;
+  --tone-soft: #eef1fd;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 22px 26px;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid #edf0f7;
+  box-shadow: 0 18px 40px -18px rgba(13, 33, 161, 0.28);
+  text-align: center;
+  animation: rise 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+}
+.soon { --tone: #e88a00; --tone-soft: #fff4e2; }
+.paused { --tone: #0d21a1; --tone-soft: #eef1fd; }
+.missing { --tone: #d93636; --tone-soft: #fdeeee; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+}
+
+.iconRing {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tone);
+  background: var(--tone-soft);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--tone-soft) 55%, transparent);
+  margin-bottom: 6px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #010f44;
+}
+
+.chip {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #f4f6fb;
+  color: #37425f;
+  font-size: 13px;
+  font-weight: 600;
+}
+.chip svg { color: var(--tone); flex-shrink: 0; }
+.dot { color: #a3abc2; }
+
+.dateBox {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--tone-soft);
+  border: 1px dashed color-mix(in srgb, var(--tone) 45%, transparent);
+}
+.dateLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+.dateValue {
+  font-size: 19px;
+  font-weight: 800;
+  color: #010f44;
+}
+.dateSub {
+  font-size: 12px;
+  color: #637080;
+}
+
+.message {
+  margin: 4px 0 0;
+  max-width: 320px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #4b5574;
+}
+
+.retryBtn {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 12px;
+  background: #ef9e1b;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.retryBtn:hover { background: #d98e14; }
+
+.footer {
+  margin: auto 0 0;
+  padding-top: 28px;
+  font-size: 12px;
+  color: #a3abc2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+}

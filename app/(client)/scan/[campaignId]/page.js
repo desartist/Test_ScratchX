@@ -4,6 +4,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import confetti from "canvas-confetti";
 import { sanitizeNameInput } from "@/lib/nameInput";
+import CampaignUnavailable from "./CampaignUnavailable";
 import styles from "./page.module.css";
 
 export default function ScanClientPage() {
@@ -25,6 +26,9 @@ export default function ScanClientPage() {
   const [ranges, setRanges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Why the campaign can't be played: { code, campaign } from the campaign
+  // API (NOT_STARTED / PAUSED / NOT_LIVE / NOT_FOUND) or ERROR.
+  const [unavailable, setUnavailable] = useState(null);
   const [matchedStore, setMatchedStore] = useState(null);
 
   // Step State: FORM, PICK, REVEAL
@@ -66,8 +70,8 @@ export default function ScanClientPage() {
     localStorage.clear();
     sessionStorage.clear();
 
-    // Clear form data
-    setFormData({ customerName: "", customerMobile: "", selectedRange: "" });
+    // Clear form data (a campaign with one bill range keeps it selected)
+    setFormData({ customerName: "", customerMobile: "", selectedRange: ranges.length === 1 ? ranges[0]._id : "" });
     setAssignedReward(null);
     setParticipationId(null);
     setScratchCardId(null);
@@ -86,7 +90,10 @@ export default function ScanClientPage() {
         const result = await response.json();
 
         if (!result.success) {
-          setError(result.message || "Failed to load campaign");
+          setUnavailable({
+            code: result.code || (response.status === 404 ? "NOT_FOUND" : "ERROR"),
+            campaign: result.data?.campaign || null,
+          });
           return;
         }
 
@@ -100,7 +107,12 @@ export default function ScanClientPage() {
         }
 
         setCampaign(campaignData);
-        setRanges(result.data.ranges || []);
+        const loadedRanges = result.data.ranges || [];
+        setRanges(loadedRanges);
+        // Only one bill range → nothing to choose; select it for the customer.
+        if (loadedRanges.length === 1) {
+          setFormData((prev) => ({ ...prev, selectedRange: loadedRanges[0]._id }));
+        }
 
         // ===== FRESH FLOW: Always show FORM on page load =====
         // Participation check (cooldown) only happens at form submission
@@ -140,7 +152,7 @@ export default function ScanClientPage() {
           setCoupons(couponsArray);
         }
       } catch (err) {
-        setError("Error loading campaign: " + err.message);
+        setUnavailable({ code: "ERROR", campaign: null });
         console.error(err);
       } finally {
         setLoading(false);
@@ -586,26 +598,14 @@ export default function ScanClientPage() {
     );
   }
 
-  // ===== RENDER ERROR STATE =====
-  if (error && !campaign) {
+  // ===== CAMPAIGN NOT AVAILABLE (not started / paused / not live / not found / error) =====
+  if (unavailable || !campaign) {
     return (
-      <div className={styles.container}>
-        <div className={styles.errorBox}>
-          <h2>❌ Campaign Not Available</h2>
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!campaign) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.errorBox}>
-          <h2>Campaign Not Found</h2>
-          <p>The campaign you're looking for doesn't exist.</p>
-        </div>
-      </div>
+      <CampaignUnavailable
+        code={unavailable?.code || "NOT_FOUND"}
+        campaign={unavailable?.campaign}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 

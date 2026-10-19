@@ -23,6 +23,12 @@
 }
 
 
+.statusScheduled {
+  background: #0369a1;
+  color: #ffffff;
+  width: max-content;
+}
+
 .statusActive {
   background: #059669;
   color: #ffffff;

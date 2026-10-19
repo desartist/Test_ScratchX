@@ -149,7 +149,26 @@
       "Bash(python3 - app/customer/campaign/[campaignId]/coupons/[participationId]/page.module.css)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/__coupons.html)",
       "Bash(awk '/\\\\/\\\\* ── SCRATCH PHASE ── \\\\*\\\\//{p=1} p' app/customer/campaign/[campaignId]/coupons/[participationId]/page.module.css)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/__scratch.html)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/__scratch.html)",
+      "Bash(grep -v \"^$\")",
+      "Bash(git show *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{time_total}s\\\\n\" --max-time 60 \"http://localhost:3000/customer/campaign/6ad4950d3f68d75e4b5ae875/scratch/6ad4a2223f68d75e4b5ae88c\")",
+      "Bash(lsof -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(git diff *)",
+      "Bash(awk '/^\\\\.\\(selectedAmount|selectedLabel|selectedValue|deltaHint|label|section\\)[ {]/,/^}/' components/campaign/ScratchAllocationModal.module.css)",
+      "Bash(awk '/^\\\\.\\(scratchCard|scratchCardTitle|scratchCardMeta|field|label|input\\)[ {]/,/^}/' components/campaign/LaunchWizardModal.module.css)",
+      "Bash(lsof -nP -iTCP -sTCP:LISTEN)",
+      "Bash(awk 'NR>1{print $1, $2, $9}')",
+      "Bash(ps -axo pid=,command=)",
+      "Bash(awk '/^\\\\.\\(modal|stepBody|stepHeader|title|actions|primaryBtn|secondaryBtn|errorBox\\)[ {:]/,/^}/' components/campaign/LaunchWizardModal.module.css)",
+      "Bash(awk '/^\\\\.\\(chips|chip|chipActive|chipCheck|stateMsg\\)[ {:]/,/^}/' components/campaign/LaunchWizardModal.module.css)",
+      "Bash(grep -E \"^\\(jest-environment-jsdom|jsdom|happy-dom|react-test-renderer\\)$\")",
+      "Bash(awk '/^\\\\.\\(overlay|modal|closeBtn\\)[ {:]/,/^}/' components/campaign/ScratchAllocationModal.module.css)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 20 http://localhost:3000/)",
+      "Bash(lsof -nP -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(awk '{print $1,$2}')",
+      "Bash(awk '{print $2}' /private/tmp/claude-501/suites_after.txt)",
+      "Bash(node -e \"const l=require\\('lucide-react'\\); console.log\\(['CalendarClock','CirclePause','PauseCircle','Hourglass','SearchX','WifiOff','Store','RefreshCw','CalendarDays'].map\\(n=>n+':'+\\(typeof l[n]!=='undefined'\\)\\).join\\(' '\\)\\)\")"
     ]
   }
 }
