@@ -56,7 +56,7 @@ describe.each([
     for (const n of [1, 2, 3, 4]) expect(html).toContain(`Coupon ${n}`);
     expect(html).not.toMatch(/₹34|₹40/);
     expect(html).toContain(`<img src="${GIFT_IMG}"`);
-    expect(html).toContain('No extra allocation needed.');
+    expect(html).not.toMatch(/No extra allocation needed|We calculated your campaign scratches/);
     expect(html).toContain('Confirm &amp; Continue');
     expect(html).toContain('Review Rewards');
     expect(html).not.toMatch(/No Cap|Scratch Balance/);
@@ -129,23 +129,24 @@ describe('campaign page popup — existing allocation', () => {
     expect(html).toMatch(/<button type="button" class="primaryBtn" disabled="">Confirm &amp; Continue/);
   });
 
-  test('fixed total already in place → no change', () => {
+  test('fixed total already in place → Confirm disabled, no extra lines', () => {
     setup({
       ranges: [{ rewards: [coupon(34, 5), coupon(40, 5)] }],
       campaign: { allocated_scratch_cards: 10, used_scratch_cards: 0, redeemed_scratch_cards: 0 },
     });
     const html = render(ScratchAllocationModal);
     expect(html).toMatch(/readyTotalValue">10</);
-    expect(html).toContain('Same as the current allocation — no change.');
+    expect(html).toMatch(/<button type="button" class="primaryBtn" disabled="">Confirm &amp; Continue/);
+    expect(html).not.toMatch(/Same as the current allocation|Currently 10 allocated/);
   });
 
-  test('fixed total differs from today → shows what it is now, Confirm enabled', () => {
+  test('fixed total differs from today → Confirm enabled, no "Currently" line', () => {
     setup({
       ranges: [{ rewards: [coupon(34, 5), coupon(40, 5)] }],
       campaign: { allocated_scratch_cards: 2000, used_scratch_cards: 0, redeemed_scratch_cards: 0 },
     });
     const html = render(ScratchAllocationModal);
-    expect(html).toContain('Currently 2,000 allocated');
+    expect(html).not.toContain('Currently 2,000 allocated');
     expect(html).toMatch(/<button type="button" class="primaryBtn">Confirm &amp; Continue/);
   });
 });

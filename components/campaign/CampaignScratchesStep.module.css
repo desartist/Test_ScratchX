@@ -298,12 +298,6 @@
   color: var(--color-navy, #010f44);
 }
 
-.readySub {
-  margin: 0;
-  font-size: var(--font-size-base, 14px);
-  line-height: 1.45;
-  color: #3d4f8a;
-}
 
 .readyTotal {
   display: flex;
@@ -431,7 +425,6 @@
   color: var(--color-navy, #010f44);
 }
 
-.readyNote,
 .readyWarn {
   display: flex;
   align-items: center;
@@ -442,13 +435,7 @@
   font-weight: 600;
 }
 
-.readyNote {
-  background: #ecfdf3;
-  border: 1px solid #b7ebc9;
-  color: #1d6b40;
-}
 
-.readyNote svg { color: #22a06b; flex-shrink: 0; }
 
 .readyWarn {
   background: #fff8ec;

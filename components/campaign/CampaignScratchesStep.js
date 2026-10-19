@@ -222,10 +222,6 @@ export default function CampaignScratchesStep({ campaignId, enabled = true, onAl
             <Check size={22} strokeWidth={3} />
           </span>
           <h2 className={styles.readyTitle}>Campaign Scratches Ready</h2>
-          <p className={styles.readySub}>
-            We calculated your campaign scratches from the reward quantities you set.
-          </p>
-          {currentLine}
         </header>
 
         <div className={styles.readyTotal}>
@@ -258,21 +254,16 @@ export default function CampaignScratchesStep({ campaignId, enabled = true, onAl
           </div>
         </section>
 
-        {fixedTotal > plan.total ? (
+        {/* Only when customers already used more than the coupons add up to. */}
+        {fixedTotal > plan.total && (
           <div className={styles.readyWarn}>
             <Info size={16} aria-hidden="true" />
             <span>
               {fmt(usedScratches)} scratches are already used, so the campaign keeps {fmt(fixedTotal)}.
             </span>
           </div>
-        ) : (
-          <div className={styles.readyNote}>
-            <Info size={16} aria-hidden="true" />
-            <span>No extra allocation needed.</span>
-          </div>
         )}
 
-        {unchangedHint}
         {errorBox}
 
         <div className={styles.actions}>
