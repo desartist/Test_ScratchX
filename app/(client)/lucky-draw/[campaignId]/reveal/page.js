@@ -214,7 +214,7 @@ function RevealStage() {
           <h1 className={styles.title}>{view.name}</h1>
           {view.status === "not_started" && (
             <>
-              <p className={styles.sub}>Winners are revealed on {formatDayTime(view.revealDate)}. Keep this page open.</p>
+              <p className={styles.sub}>{formatDayTime(view.revealDate)}</p>
               <Countdown left={left} />
             </>
           )}
@@ -223,7 +223,7 @@ function RevealStage() {
               <p className={styles.sub}>
                 {view.status === "live"
                   ? `${view.revealedCount} of ${view.totalCategories} prizes revealed${nextUp ? ` · Next: ${nextUp.name}` : ""}`
-                  : "Every prize has been revealed. Congratulations to the winners!"}
+                  : "All prizes revealed. Congratulations to the winners!"}
               </p>
               <span className={styles.meter} aria-hidden="true"><i style={{ transform: `scaleX(${progress})` }} /></span>
             </div>
@@ -231,7 +231,7 @@ function RevealStage() {
         </div>
 
         <div className={styles.stage}>
-          <nav ref={ladderRef} className={styles.ladder} aria-label="Prizes, Third Prize first">
+          <nav ref={ladderRef} className={styles.ladder} aria-label="Prizes, smallest prize first">
             {ladder.map((c) => {
               const isNext = view.status === "live" && nextUp?.rank === c.rank;
               const grand = c.rank === grandRank;
@@ -287,7 +287,6 @@ function RevealStage() {
                 <div className={`${styles.locked} ${view.status === "live" && nextUp?.rank === category.rank ? styles.lockedNext : ""}`}>
                   <span className={styles.lockRing}><Lock size={26} aria-hidden="true" /></span>
                   <b>{view.status === "not_started" ? "Not revealed yet" : nextUp?.rank === category.rank ? "Up next" : "Revealed later"}</b>
-                  <span>The Third Prize is revealed first, then the Second Prize, and the Grand Prize last. Stay on this page.</span>
                 </div>
               )}
             </section>
@@ -295,7 +294,7 @@ function RevealStage() {
         </div>
 
         <p className={styles.srOnly} aria-live="polite">{announcement}</p>
-        <p className={styles.foot}>{view.drawType === "physical" ? "Winners were drawn in the store. Each customer can win only once." : "Winners are picked at random by ScratchX from every entry. Each customer can win only once."}</p>
+        <p className={styles.foot}>{view.drawType === "physical" ? "Drawn in the store. One win per customer." : "Picked at random from every entry. One win per customer."}</p>
       </div>
     </div>
   );

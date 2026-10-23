@@ -8,16 +8,15 @@ import FlagGate from "@/components/luckyDraw/FlagGate";
 import AddEntryModal from "@/components/luckyDraw/AddEntryModal";
 import ConfirmModal from "@/components/luckyDraw/ConfirmModal";
 import { api, formatDateTime, istInputToIso, pluralEntries, toISTInputValue } from "@/lib/luckyDraw/clientApi";
-import { DATE_CHANGE_NOTICE, STAFF_ENTRY_DRAW_TYPES } from "@/lib/luckyDraw/constants";
+import { STAFF_ENTRY_DRAW_TYPES } from "@/lib/luckyDraw/constants";
 import { formatINR, formatNumber } from "@/lib/luckyDraw/calculator";
-import { prizeTotals, revealOrder } from "@/lib/luckyDraw/prizeCategories";
-import { DRAW_TYPE_LABEL, PRIZE_LEVEL_LABEL, daysUntil, describeMinBill, drawStage, formatDay, formatDayTime, pluralDays, timelinePosition } from "@/lib/luckyDraw/display";
+import { prizeTotals } from "@/lib/luckyDraw/prizeCategories";
+import { DRAW_TYPE_LABEL, prizeLevelLabel, daysUntil, describeMinBill, drawStage, formatDay, formatDayTime, pluralDays, timelinePosition } from "@/lib/luckyDraw/display";
 import styles from "../luckyDraws.module.css";
 
 const DRAW_ICON = { physical: Store, live_online: Radio, digital: QrCode };
 const DAY_MS = 24 * 60 * 60 * 1000;
 const HISTORY_LABEL = { entries_close: "Entries close moved", reveal: "Draw date moved", draw: "Draw date changed" };
-const REVEAL_POSITION = ["Revealed first", "Revealed second", "Revealed last"];
 const maskPhone = (phone) => (phone ? `XXXXXX${String(phone).slice(-4)}` : "");
 const winnerStatus = (w) => (w.status === "redeemed" ? "claimed" : w.status === "expired" ? "expired" : "pending");
 const WINNER_LABEL = { claimed: "Claimed", pending: "Not claimed", expired: "Expired" };
@@ -75,7 +74,7 @@ function ExtendPanel({ campaign, openDraw, onClose, onSaved }) {
             <button type="button" role="radio" aria-checked={target === "reveal"} className={`${styles.segButton} ${target === "reveal" ? styles.segOn : ""}`} onClick={() => { setTarget("reveal"); setDays(3); setCustom(""); }}>Draw date</button>
           </div>
         </div>
-        {entriesClosed && <p className={styles.hint}>Entries have already closed, so only the draw date can move.</p>}
+        {entriesClosed && <p className={styles.hint}>Entries have closed; only the draw date can move.</p>}
         <div className={styles.extRow}>
           <span className={styles.label}>Now</span>
           <span className={styles.modeTag}><Clock size={16} aria-hidden="true" /><b style={{ color: "#010f44" }}>{formatDayTime(current)}</b> · {pluralDays(daysUntil(current))} left</span>
@@ -96,17 +95,16 @@ function ExtendPanel({ campaign, openDraw, onClose, onSaved }) {
           </div>
         </div>
         {revealMoves && (
-          <div className={styles.warn}><AlertTriangle size={18} aria-hidden="true" /><span><strong>The draw date moves too, to {formatDayTime(movedReveal)}.</strong> The draw can only happen after entries close, so the same gap is kept.</span></div>
+          <div className={styles.warn}><AlertTriangle size={18} aria-hidden="true" /><span>The draw date moves too, to <strong>{formatDayTime(movedReveal)}</strong>.</span></div>
         )}
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="extend-reason">Reason (optional, kept in the history)</label>
+          <label className={styles.label} htmlFor="extend-reason">Reason <span className={styles.labelHint}>(optional)</span></label>
           <input id="extend-reason" className={styles.input} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} placeholder="e.g. Festival week sales are strong" />
         </div>
         <label className={styles.checkRow}>
           <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
-          <span>Tell the {openDraw?.customerCount ?? 0} customer{openDraw?.customerCount === 1 ? "" : "s"} who already entered by SMS</span>
+          <span>SMS the {openDraw?.customerCount ?? 0} customer{openDraw?.customerCount === 1 ? "" : "s"} who entered</span>
         </label>
-        <p className={styles.hint}>Dates can only move later. The change is saved in the draw&rsquo;s history.</p>
       </div>
       <div className={styles.panelFoot}>
         <button type="button" className={styles.secondaryButton} onClick={onClose}>Cancel</button>
@@ -276,7 +274,6 @@ function LuckyDrawDetail() {
   const reveal = new Date(openDraw?.drawDate || campaign.revealDate || pastDraws[0]?.executedAt || campaign.endDate);
   const pos = timelinePosition({ start: campaign.startDate, close: campaign.endDate, reveal, now: today });
   const totals = prizeTotals(campaign.prizeTiers);
-  const order = revealOrder(campaign.prizeTiers);
   const prizes = [...campaign.prizeTiers].sort((a, b) => a.rank - b.rank);
   const canExtend = campaign.status !== "ended" && !openDraw?.reveal?.startedAt && (openDraw || campaign.status === "draft");
   const entriesClosed = new Date(campaign.endDate) <= today;
@@ -307,8 +304,8 @@ function LuckyDrawDetail() {
       setShowRun(false);
       const unawarded = totals.totalWinners - result.winners.length;
       setNotice(
-        `Draw complete: ${result.winners.length} winner${result.winners.length === 1 ? "" : "s"} picked, ${result.notified.sent} told by SMS.` +
-          (unawarded > 0 ? ` ${unawarded} prize${unawarded === 1 ? "" : "s"} could not be given out because not enough customers entered.` : ""),
+        `Done: ${result.winners.length} winner${result.winners.length === 1 ? "" : "s"} picked, ${result.notified.sent} texted.` +
+          (unawarded > 0 ? ` ${unawarded} prize${unawarded === 1 ? "" : "s"} not given out (too few entries).` : ""),
       );
       await load();
     } catch (err) {
@@ -346,18 +343,16 @@ function LuckyDrawDetail() {
         <div className={styles.okBox} role="status">
           <CheckCircle2 size={18} aria-hidden="true" />
           <span>
-            <strong>Your lucky draw is published.</strong>{" "}
-            {drawType === "physical"
-              ? `Staff can add entries at the counter from ${formatDayTime(campaign.startDate)}. Hold the draw in your shop on ${formatDayTime(reveal)}.`
-              : `Put the QR code at your counters so customers can enter from ${formatDayTime(campaign.startDate)}. Winners are drawn on ${formatDayTime(reveal)}.`}
+            <strong>Published.</strong> Entries open {formatDayTime(campaign.startDate)} · draw {formatDayTime(reveal)}.
+            {drawType !== "physical" && " Put the QR code at your counters."}
           </span>
         </div>
       )}
       {arrival?.kind === "picked" && (
-        <div className={styles.okBox} role="status"><CheckCircle2 size={18} aria-hidden="true" /><span><strong>Winners saved.</strong> Each winner has an SMS with their claim code. Mark prizes as claimed below when winners collect them.</span></div>
+        <div className={styles.okBox} role="status"><CheckCircle2 size={18} aria-hidden="true" /><span><strong>Winners saved.</strong> Each one got an SMS with a claim code.</span></div>
       )}
       {arrival?.kind === "draft" && (
-        <p className={styles.notice} role="status"><strong>Saved as a draft.</strong> It could not be published yet: {arrival.message}</p>
+        <p className={styles.notice} role="status"><strong>Saved as a draft.</strong> Not published: {arrival.message}</p>
       )}
       {error && <p className={styles.submitError} role="alert">{error}</p>}
       {notice && <p className={styles.success} role="status">{notice}</p>}
@@ -369,8 +364,8 @@ function LuckyDrawDetail() {
           onClose={() => setShowExtend(false)}
           onSaved={async (result) => {
             setShowExtend(false);
-            const moved = result.revealMoved ? ` The draw is now on ${formatDayTime(result.draw?.drawDate || result.campaign.revealDate)}.` : "";
-            setNotice(`Dates updated. Entries close on ${formatDayTime(result.campaign.endDate)}.${moved}${result.notifiedCount ? ` ${result.notifiedCount} customers were told by SMS.` : ""}`);
+            const moved = result.revealMoved ? ` Draw ${formatDayTime(result.draw?.drawDate || result.campaign.revealDate)}.` : "";
+            setNotice(`Dates updated. Entries close ${formatDayTime(result.campaign.endDate)}.${moved}${result.notifiedCount ? ` ${result.notifiedCount} customers texted.` : ""}`);
             await load();
           }}
         />
@@ -381,7 +376,7 @@ function LuckyDrawDetail() {
           <h2 className={styles.sectionTitle}>Customer QR code</h2>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className={styles.qr} src={qr.dataUrl} alt="QR code for the lucky draw entry page" />
-          <p className={styles.muted}>Customers scan this in the store. Link: <span className={styles.mono}>{qr.url}</span></p>
+          <p className={styles.mono}>{qr.url}</p>
           <div><a className={styles.secondaryButton} href={qr.dataUrl} download={`lucky-draw-${id}.png`}>Download PNG</a></div>
         </section>
       )}
@@ -420,17 +415,15 @@ function LuckyDrawDetail() {
               <h2 className={styles.sectionTitle}>{stage.key === "completed" ? "Draw" : "Draw day"}</h2>
               {drawType === "physical" && openDraw && (
                 <>
-                  <p className={styles.muted}>Hold the draw in your shop on {formatDayTime(openDraw.drawDate)}. Then pick each winner here from the entry list. Each winner gets an SMS with a claim code.</p>
                   {entriesClosed ? (
                     <div><Link href={`/lucky-draws/${id}/pick`} className={styles.primaryButton}><Trophy size={16} aria-hidden="true" />Pick winners</Link></div>
                   ) : (
-                    <p className={styles.notice}>You can pick the winners once entries close on {formatDayTime(campaign.endDate)}.</p>
+                    <p className={styles.notice}>Pick winners after entries close, {formatDayTime(campaign.endDate)}.</p>
                   )}
                 </>
               )}
               {drawType === "live_online" && (
                 <>
-                  <p className={styles.muted}>On the draw date you start the reveal. ScratchX picks the winners at random from every entry, and you reveal the Third Prize, then the Second Prize, then the Grand Prize while customers watch the results page.</p>
                   <div className={styles.actions}>
                     <Link href={`/lucky-draws/${id}/live`} className={styles.primaryButton}><Radio size={16} aria-hidden="true" />{latestDraw?.reveal?.completedAt ? "See the reveal" : "Go to live reveal"}</Link>
                   </div>
@@ -438,17 +431,15 @@ function LuckyDrawDetail() {
               )}
               {drawType === "digital" && openDraw && (
                 <>
-                  <p className={styles.muted}>Nothing happens by itself. Press Run draw when you are ready{openDraw.isDue ? ". The draw is due." : "."}</p>
                   {entriesStarted ? (
                     <div><button type="button" className={styles.primaryButton} onClick={() => { setRunError(""); setShowRun(true); }} disabled={busy !== ""}><Trophy size={16} aria-hidden="true" />Run draw</button></div>
                   ) : (
-                    <p className={styles.notice}>You can run the draw once entries open on {formatDayTime(campaign.startDate)}.</p>
+                    <p className={styles.notice}>Run the draw once entries open, {formatDayTime(campaign.startDate)}.</p>
                   )}
                 </>
               )}
-              {openDraw && <p className={styles.notice}><strong>What customers are told:</strong> {DATE_CHANGE_NOTICE}</p>}
               {stage.key === "completed" && latestDraw && (
-                <p className={styles.muted}>Finished {formatDayTime(latestDraw.executedAt)} · {formatNumber(latestDraw.winnerCount)} winners from {pluralEntries(latestDraw.entryCount)}.</p>
+                <p className={styles.muted}>{formatDayTime(latestDraw.executedAt)} · {formatNumber(latestDraw.winnerCount)} winners from {pluralEntries(latestDraw.entryCount)}</p>
               )}
             </section>
           )}
@@ -463,7 +454,7 @@ function LuckyDrawDetail() {
               <Link href="/lucky-draws/redeem" className={styles.ghostButton}><Ticket size={16} aria-hidden="true" />Redeem a claim code</Link>
             </div>
             {winners.length === 0 ? (
-              <p className={styles.muted} style={{ padding: "18px 22px" }}>No winners yet. They appear here after the draw.</p>
+              <p className={styles.muted} style={{ padding: "18px 22px" }}>No winners yet.</p>
             ) : (
               <>
                 <div className={styles.tabs} role="tablist" aria-label="Filter winners">
@@ -482,7 +473,7 @@ function LuckyDrawDetail() {
                         return (
                           <tr key={w._id}>
                             <td><strong>{w.customerName}</strong><span className={styles.cellSub}>{maskPhone(w.customerPhone)}</span></td>
-                            <td><strong>{PRIZE_LEVEL_LABEL[w.rank]}</strong><span className={styles.cellSub}>{w.prizeDescription}</span></td>
+                            <td><strong>{prizeLevelLabel(w.rank)}</strong><span className={styles.cellSub}>{w.prizeDescription}</span></td>
                             <td className={styles.num}>{w.prizeValue ? formatINR(w.prizeValue) : "—"}</td>
                             <td className={styles.mono}>{w.claimCode}</td>
                             <td><span className={`${styles.pill} ${styles[`pill_${st}`]}`}>{WINNER_LABEL[st]}</span></td>
@@ -502,7 +493,7 @@ function LuckyDrawDetail() {
                           <strong>{w.customerName}</strong>
                           <span className={`${styles.pill} ${styles[`pill_${st}`]}`}>{WINNER_LABEL[st]}</span>
                         </div>
-                        <div>{PRIZE_LEVEL_LABEL[w.rank]} · {w.prizeDescription}{w.prizeValue ? ` · ${formatINR(w.prizeValue)}` : ""}</div>
+                        <div>{prizeLevelLabel(w.rank)} · {w.prizeDescription}{w.prizeValue ? ` · ${formatINR(w.prizeValue)}` : ""}</div>
                         <div className={styles.muted}>Claim code <span className={styles.mono}>{w.claimCode}</span></div>
                         {st === "pending" && <ClaimButton winner={w} onClaimed={load} />}
                       </div>
@@ -516,7 +507,7 @@ function LuckyDrawDetail() {
 
         <div className={styles.stack}>
           <div className={styles.panel}>
-            <div className={styles.panelHead}><h2 className={styles.sectionTitle}>Prizes</h2><span className={styles.cellSub}>{formatNumber(totals.totalWinners)} winners</span></div>
+            <div className={styles.panelHead}><h2 className={styles.sectionTitle}>Prizes</h2><span className={styles.cellSub}>{formatNumber(totals.totalWinners)} winners{drawType === "live_online" ? " · smallest revealed first" : ""}</span></div>
             <ul className={styles.sideList}>
               {prizes.map((prize) => (
                 <li key={prize.rank}>
@@ -526,9 +517,8 @@ function LuckyDrawDetail() {
                   ) : (
                     <span className={styles.prizeThumb}><Gift size={18} aria-hidden="true" /></span>
                   )}
-                  <b>{PRIZE_LEVEL_LABEL[prize.rank]} · {prize.prizeDescription}</b>
+                  <b>{prizeLevelLabel(prize.rank)} · {prize.prizeDescription}</b>
                   <span className={styles.amount}>{formatNumber(prize.quantity || 1)} × {formatINR(prize.prizeValue || 0)}</span>
-                  {drawType === "live_online" && <small>{REVEAL_POSITION[order.indexOf(prize.rank)] || ""}</small>}
                 </li>
               ))}
             </ul>
@@ -567,8 +557,7 @@ function LuckyDrawDetail() {
         onClose={() => setShowRun(false)}
       >
         <p className={styles.muted} style={{ margin: 0 }}>
-          ScratchX picks {formatNumber(totals.totalWinners)} winner{totals.totalWinners === 1 ? "" : "s"} at random from {pluralEntries(openDraw?.entryCount ?? 0)} and texts each one a claim code. This closes the lucky draw.
-          {!entriesClosed ? " Entries close now, so nobody else can enter." : ""}
+          Picks {formatNumber(totals.totalWinners)} winner{totals.totalWinners === 1 ? "" : "s"} at random from {pluralEntries(openDraw?.entryCount ?? 0)} and texts each a claim code. This ends the draw{!entriesClosed ? " and closes entries now" : ""}.
         </p>
       </ConfirmModal>
 

@@ -6,7 +6,7 @@ import {
   timelinePosition,
   formatDay,
   DRAW_TYPE_LABEL,
-  PRIZE_LEVEL_LABEL,
+  prizeLevelLabel,
   describeMinBill,
 } from '@/lib/luckyDraw/display';
 
@@ -95,8 +95,11 @@ describe('dates', () => {
 
 describe('draw type and prize level wording', () => {
   it('names the three draw types and prize levels', () => {
-    expect(DRAW_TYPE_LABEL).toEqual({ physical: 'Physical draw', live_online: 'Live online draw', digital: 'Digital draw' });
-    expect(PRIZE_LEVEL_LABEL).toEqual({ 1: 'Grand Prize', 2: 'Second Prize', 3: 'Third Prize' });
+    // Display names only: live_online is shown as "Digital draw" and digital as "Live online draw".
+    expect(DRAW_TYPE_LABEL).toEqual({ physical: 'Physical draw', live_online: 'Digital draw', digital: 'Live online draw' });
+    expect([1, 2, 3, 4, 5, 11, 12, 13, 20, 21, 22].map(prizeLevelLabel)).toEqual([
+      'Grand Prize', 'Second Prize', 'Third Prize', '4th Prize', '5th Prize', '11th Prize', '12th Prize', '13th Prize', '20th Prize', '21st Prize', '22nd Prize',
+    ]);
   });
 
   it('describes the minimum bill', () => {

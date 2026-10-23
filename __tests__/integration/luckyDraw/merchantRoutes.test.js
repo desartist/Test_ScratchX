@@ -62,6 +62,7 @@ const newCampaignBody = () => ({
   prizes: [
     { rank: 1, prizeDescription: 'Smart TV', prizeValue: 30000, quantity: 1 },
     { rank: 2, prizeDescription: 'Mixer', prizeValue: 2000, quantity: 1 },
+    { rank: 3, prizeDescription: 'Voucher', prizeValue: 500, quantity: 2 },
   ],
 });
 

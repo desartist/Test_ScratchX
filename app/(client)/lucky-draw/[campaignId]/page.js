@@ -7,19 +7,27 @@ import Link from "next/link";
 import { Gift } from "lucide-react";
 import { api, formatDateTime } from "@/lib/luckyDraw/clientApi";
 import { formatINR } from "@/lib/luckyDraw/calculator";
-import { PRIZE_LEVEL_LABEL, describeMinBill, formatDayTime } from "@/lib/luckyDraw/display";
+import { prizeLevelLabel, describeMinBill, formatDayTime } from "@/lib/luckyDraw/display";
 import styles from "./page.module.css";
+
+// Demo only: NEXT_PUBLIC_LUCKY_DRAW_DEMO_LOCATION="lat,lng" is used when the browser can't give a location
+// (e.g. a desktop with no location fix). Leave it unset everywhere else.
+const DEMO_LOCATION = (() => {
+  const [latitude, longitude] = String(process.env.NEXT_PUBLIC_LUCKY_DRAW_DEMO_LOCATION || "").split(",").map(Number);
+  return Number.isFinite(latitude) && Number.isFinite(longitude) && process.env.NEXT_PUBLIC_LUCKY_DRAW_DEMO_LOCATION ? { latitude, longitude } : null;
+})();
 
 function getPosition() {
   return new Promise((resolve, reject) => {
+    const fail = (message) => (DEMO_LOCATION ? resolve(DEMO_LOCATION) : reject(new Error(message)));
     if (!navigator.geolocation) {
-      reject(new Error("Your browser cannot share its location, which this draw needs."));
+      fail("Your browser cannot share its location, which this draw needs.");
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (position) => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
-      () => reject(new Error("Allow location access so we can confirm you are at the store, then try again.")),
-      { enableHighAccuracy: true, timeout: 15000 },
+      () => fail("Allow location access so we can confirm you are at the store, then try again."),
+      { enableHighAccuracy: true, timeout: DEMO_LOCATION ? 5000 : 15000 },
     );
   });
 }
@@ -100,7 +108,7 @@ function EntryPage() {
           <div className={styles.panel}>
             <h1 className={styles.title}>We couldn&rsquo;t open this Lucky Draw</h1>
             <p className={styles.error} role="alert">{loadError}</p>
-            <p className={styles.muted}>Please scan the QR code at the store again, or ask a member of staff for help.</p>
+            <p className={styles.muted}>Scan the store&rsquo;s QR code again, or ask the staff.</p>
           </div>
         </div>
       </div>
@@ -156,16 +164,10 @@ function EntryPage() {
             <li><span>{live ? "Winners revealed live" : "Draw date"}</span><b>{formatDayTime(campaign.revealDate || campaign.drawDate)}</b></li>
           </ul>
           <h2 className={styles.heading}>How to enter</h2>
-          <ul className={styles.list}>
-            <li>{describeMinBill(campaign.minBillAmount)}.</li>
-            <li>
-              {!takesQr
-                ? "Ask the staff at the counter to add your entry when you pay, and keep the slip with your entry number."
-                : live
-                  ? "Scan the QR code at the store with your bill, or ask the staff to add your entry."
-                  : "Scan the QR code at the store with your bill."}
-            </li>
-          </ul>
+          <p className={styles.muted}>
+            {describeMinBill(campaign.minBillAmount)}.{" "}
+            {!takesQr ? "Ask the staff to add it when you pay." : live ? "Scan the store’s QR code, or ask the staff." : "Scan the store’s QR code."}
+          </p>
           <Link className={styles.linkButton} href={`/lucky-draw/${campaignId}/reveal`}>
             {live ? "Watch the live reveal" : "See the winners"}
           </Link>
@@ -175,14 +177,13 @@ function EntryPage() {
           <div className={styles.panel} role="status">
             <p className={styles.success}>
               <span className={styles.big}>You&rsquo;re in!</span><br />
-              Your entry number is <strong>#{entered.entryNumber}</strong>. You now hold {entered.totalEntries} {entered.totalEntries === 1 ? "entry" : "entries"} in this draw.
+              Entry <strong>#{entered.entryNumber}</strong> · {entered.totalEntries} {entered.totalEntries === 1 ? "entry" : "entries"} in total
             </p>
             <DrawDate drawDate={entered.drawDate} live={live} />
-            <p className={styles.notice}>{entered.notice}</p>
-            {entered.confirmationSent && <p className={styles.muted}>We sent you an SMS with these details.</p>}
+            {entered.confirmationSent && <p className={styles.muted}>We sent you an SMS.</p>}
           </div>
         ) : !takesQr ? (
-          <div className={styles.panel}><p className={styles.notice}>Entries are taken at the store counter. Ask the staff to add your entry when you pay.</p></div>
+          <div className={styles.panel}><p className={styles.notice}>Entries are added at the counter when you pay.</p></div>
         ) : campaign.isOpen ? (
           <form id="enter" className={`${styles.panel} ${styles.form} ${styles.anchor}`} onSubmit={submit}>
             <h2 className={styles.heading}>Enter the draw</h2>
@@ -198,17 +199,16 @@ function EntryPage() {
             <div className={styles.field}>
               <label className={styles.label} htmlFor="ld-bill">Bill amount (₹)</label>
               <input id="ld-bill" className={styles.input} type="number" inputMode="decimal" min={campaign.minBillAmount || 0} step="any" value={form.billAmount} onChange={(e) => setForm({ ...form, billAmount: e.target.value })} required />
-              <p className={styles.muted}>{describeMinBill(campaign.minBillAmount)}.</p>
             </div>
             <label className={styles.check}>
               <input type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} required />
-              <span>I agree to be contacted by SMS about this draw and to my details being used to run it.</span>
+              <span>I agree to SMS about this draw and to my details being used to run it.</span>
             </label>
             <button type="submit" className={styles.button} disabled={busy}>{busy ? "Entering…" : "Enter the draw"}</button>
-            {campaign.requiresLocation && <p className={styles.muted}>We will ask for your location to check you are at a participating store.</p>}
+            {campaign.requiresLocation && <p className={styles.muted}>We&rsquo;ll check your location to confirm you&rsquo;re at the store.</p>}
           </form>
         ) : (
-          <div className={styles.panel}><p className={styles.muted}>This Lucky Draw is not open for entries right now.</p></div>
+          <div className={styles.panel}><p className={styles.muted}>Entries aren&rsquo;t open right now.</p></div>
         )}
 
         <div className={styles.panel}>
@@ -227,10 +227,9 @@ function EntryPage() {
               <DrawDate drawDate={status.drawDate} previousDrawDate={status.previousDrawDate} live={live} />
               {status.wins.map((win, i) => (
                 <p key={i} className={styles.win}>
-                  You won the {PRIZE_LEVEL_LABEL[win.rank].toLowerCase()}: {win.prizeDescription}. {win.status === "redeemed" ? "Already collected." : win.status === "expired" ? "The claim period has ended." : `Show the code we texted you at the store before ${formatDateTime(win.expiresAt)}.`}
+                  You won the {prizeLevelLabel(win.rank).toLowerCase()}: {win.prizeDescription}. {win.status === "redeemed" ? "Collected." : win.status === "expired" ? "Claim period ended." : `Show your SMS code at the store by ${formatDateTime(win.expiresAt)}.`}
                 </p>
               ))}
-              <p className={styles.notice}>{status.notice}</p>
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@
  *
  *   node scripts/seed-lucky-draw-demo.js                      # Andheri West at its real location
  *   node scripts/seed-lucky-draw-demo.js --lat=19.13 --lng=72.83   # Andheri West at your location
+ *   node scripts/seed-lucky-draw-demo.js --clear              # remove every draw: the list shows its empty state
  *
  * Safe to rerun: it deletes the six demo draws (by name, for the demo merchant) and recreates
  * them with dates relative to "now", so "entries closed 1 hour ago" is true again after a rerun.
@@ -10,13 +11,15 @@
  * What it sets up for test-merchant@scratchx.local:
  *  - subscription on the Smart plan (features.canUseLuckyDraw = true)
  *  - three active stores with locations: Andheri West, Bandra, Thane
- *  - six Lucky Draws, one per draw type and stage:
+ *  - six Lucky Draws, one per draw type and stage (type keys; the screens show live_online as
+ *    "Digital draw" and digital as "Live online draw"):
  *      Diwali     digital,     entries open
- *      Navratri   live online, entries closed 1h ago, ready to reveal (QR + staff entries)
- *      Ganesh     physical,    entries closed 1h ago, ready to pick winners (staff entries)
+ *      Navratri   live_online, entries closed 1h ago, ready to reveal, 5 prize levels (QR + staff entries)
+ *      Ganesh     physical,    entries closed 1h ago, ready to pick winners, 4 prize levels (staff entries)
  *      Monsoon    digital,     completed, claim codes printed
  *      Weekend    physical,    entries open (staff add entries at the counter)
- *      New Year   live online, draft
+ *      New Year   live_online, draft
+ *  With --clear it keeps the account, plan and stores but removes every draw of the merchant.
  *
  * Refuses to run against a non-local MongoDB.
  */
@@ -515,6 +518,11 @@ async function main() {
     await LuckyDrawCampaign.deleteMany({ _id: { $in: ids } });
     console.log(`✓ Removed ${old.length} older demo draw(s)`);
   }
+  if (process.argv.includes('--clear')) {
+    console.log(`\nNo lucky draws left for ${MERCHANT_EMAIL}: ${BASE_URL}/lucky-draws shows the empty state.`);
+    console.log('Rerun without --clear to bring the demo draws back.');
+    return;
+  }
 
   const created = {};
   const base = (data) => ({ merchantId: merchant._id, description: '', entryCounter: 0, ...data });
@@ -583,6 +591,8 @@ async function main() {
           prize(1, 'Gold coin', 10000, 1, 'goldCoin'),
           prize(2, 'Silver coin', 2000, 3, 'silverCoin'),
           prize(3, 'Gift voucher', 500, 6, 'voucherPink'),
+          prize(4, 'Movie tickets for two', 300, 8, 'movieTicket'),
+          prize(5, 'Sweets box', 150, 10, 'giftBox'),
         ],
         createdAt: istDayAt(-15, '12:40', now), updatedAt: istDayAt(-1, '20:15', now),
       }),
@@ -615,6 +625,7 @@ async function main() {
           prize(1, 'Gold hamper', 8000, 1, 'trophyGold'),
           prize(2, 'Silver hamper', 2000, 3, 'trophySilver'),
           prize(3, 'Bronze hamper', 1000, 6, 'trophyBronze'),
+          prize(4, 'Gift voucher', 250, 8, 'voucherBlue'),
         ],
         createdAt: istDayAt(-22, '15:10', now), updatedAt: istDayAt(-2, '19:30', now),
       }),
@@ -708,7 +719,11 @@ async function main() {
         drawType: 'physical', minBillAmount: 1000,
         assignedStores: [snapshot(stores.andheri), snapshot(stores.bandra)],
         startDate, endDate, revealDate, status: 'active',
-        prizeTiers: [prize(1, 'Movie tickets for two', 1000, 1, 'movieTicket'), prize(2, 'Popcorn combo voucher', 300, 4, 'voucherPink')],
+        prizeTiers: [
+          prize(1, 'Movie tickets for two', 1000, 1, 'movieTicket'),
+          prize(2, 'Popcorn combo voucher', 300, 4, 'voucherPink'),
+          prize(3, 'Cold drink voucher', 100, 6, 'voucherBlue'),
+        ],
         createdAt, updatedAt: createdAt,
       }),
     ]);
@@ -737,7 +752,11 @@ async function main() {
         assignedStores: [snapshot(stores.andheri), snapshot(stores.bandra), snapshot(stores.thane)],
         startDate: ist(year, 12, 24, 10, 0), endDate: ist(year + 1, 1, 2, 21, 0), revealDate: ist(year + 1, 1, 4, 19, 0),
         status: 'draft',
-        prizeTiers: [prize(1, 'Smartwatch', 6000, 1, 'giftBox'), prize(2, 'Gift voucher', 1500, 5, 'voucherBlue')],
+        prizeTiers: [
+          prize(1, 'Smartwatch', 6000, 1, 'giftBox'),
+          prize(2, 'Gift voucher', 1500, 5, 'voucherBlue'),
+          prize(3, 'Party hamper', 800, 8, 'voucherPink'),
+        ],
         createdAt, updatedAt: createdAt,
       }),
     ]);
@@ -746,12 +765,12 @@ async function main() {
 
   // ── summary ────────────────────────────────────────────────────────────────
   const rows = [
-    ['diwali', 'Digital · entries open', null],
-    ['navratri', 'Live online · ready to reveal', 'live'],
-    ['ganesh', 'Physical · ready to pick winners', 'pick'],
-    ['monsoon', 'Digital · completed', null],
-    ['weekend', 'Physical · entries open (Add entry)', null],
-    ['newYear', 'Live online · draft', null],
+    ['diwali', 'Live online draw · entries open', null],
+    ['navratri', 'Digital draw · ready to reveal live, 5 prize levels', 'live'],
+    ['ganesh', 'Physical draw · ready to pick winners, 4 prize levels', 'pick'],
+    ['monsoon', 'Live online draw · completed', null],
+    ['weekend', 'Physical draw · entries open (Add entry)', null],
+    ['newYear', 'Digital draw · draft', null],
   ];
   console.log('\nDemo draws:');
   for (const [key, stage, action] of rows) {

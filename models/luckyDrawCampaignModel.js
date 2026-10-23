@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
-import { CAMPAIGN_STATUSES, DRAW_TYPES } from '../lib/luckyDraw/constants.js';
+import { CAMPAIGN_STATUSES, DRAW_TYPES, MAX_PRIZE_CATEGORIES } from '../lib/luckyDraw/constants.js';
 
 const prizeTierSchema = new mongoose.Schema(
   {
-    // 1 = grand prize (always one winner), 2 = 2nd prize, 3 = 3rd prize (optional).
-    rank: { type: Number, required: true, min: 1, max: 3 },
+    // 1 = grand prize (always one winner), 2 = 2nd prize, 3 = 3rd prize, then optional 4th, 5th, … prizes.
+    rank: { type: Number, required: true, min: 1, max: MAX_PRIZE_CATEGORIES },
     prizeDescription: { type: String, required: true, trim: true, maxlength: 200 },
     prizeValue: { type: Number, default: 0, min: 0 },
     // How many winners get this prize (e.g. 2 x ₹5,000).
@@ -72,9 +72,11 @@ luckyDrawCampaignSchema.pre('validate', function () {
 
   const prizes = this.prizeTiers || [];
   if (prizes.length) {
-    const ranks = prizes.map((p) => p.rank).sort((a, b) => a - b).join(',');
-    if (ranks !== '1,2' && ranks !== '1,2,3') {
-      this.invalidate('prizeTiers', 'A draw has a grand prize and a 2nd prize, and optionally a 3rd prize');
+    // Ranks run 1, 2, 3, … with no gaps. New draws need at least three levels (checked by the API);
+    // two are still accepted here so draws saved before the Third Prize became required keep saving.
+    const ranks = prizes.map((p) => p.rank).sort((a, b) => a - b);
+    if (ranks.length < 2 || !ranks.every((rank, i) => rank === i + 1)) {
+      this.invalidate('prizeTiers', 'A draw has a grand prize, a 2nd prize and a 3rd prize, then any smaller prizes in order');
     }
     const grand = prizes.find((p) => p.rank === 1);
     if (grand && grand.quantity !== 1) this.invalidate('prizeTiers', 'The grand prize has exactly 1 winner');

@@ -5,6 +5,10 @@
 @media (max-width: 640px) { .container { padding: 20px 14px 48px; } }
 
 .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+/* List page: title on the left, the calculator as a quiet text link and the main action on the right. */
+.listHeader { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; }
+.listHeader > .title { flex: 1; min-width: 0; }
+@media (max-width: 640px) { .listHeaderCta { flex-basis: 100%; } }
 .title { margin: 0; font-size: 1.85rem; font-weight: 800; color: #010f44; line-height: 1.2; }
 .subtitle { margin: 6px 0 0; font-size: 0.9rem; color: #637080; max-width: 60ch; }
 .metaRow { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
@@ -26,6 +30,8 @@
 .secondaryButton:hover:not(:disabled) { background: #f0f2ff; border-color: #c5cbfa; color: #010f44; }
 .dangerButton { background: #fff; color: #a4262c; border-color: #e3b5b8; }
 .primaryButton:disabled, .secondaryButton:disabled, .dangerButton:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform: none; }
+/* Figma disabled main action ("Save & Continue"): solid grey with white text, at full opacity. */
+.primaryButton:disabled { opacity: 1; background: #c4c4c4; color: #fff; border-color: #c4c4c4; }
 .primaryButton:focus-visible, .secondaryButton:focus-visible, .dangerButton:focus-visible, .input:focus-visible, .link:focus-visible { outline: 2px solid #01188e; outline-offset: 2px; }
 
 .list { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 4px; }
@@ -55,12 +61,26 @@
 .error { background: #fde8e8; color: #7d1d22; padding: 10px 14px; border-radius: 10px; margin: 0; }
 .success { background: #e2f3e3; color: #14501a; padding: 10px 14px; border-radius: 10px; margin: 0; }
 .notice { background: #fff8e8; border: 1px solid #f3d99b; color: #5c4200; padding: 12px 14px; border-radius: 10px; font-size: 0.9rem; margin: 0; }
-.empty { border: 1px dashed #c9d1e3; border-radius: 12px; padding: 36px 24px; text-align: center; color: #637080; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.empty { padding: 36px 24px; text-align: center; color: #637080; display: flex; flex-direction: column; align-items: center; gap: 14px; }
 
 .form { display: flex; flex-direction: column; gap: 20px; }
-.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.label { font-size: 0.78rem; font-weight: 700; color: #010f44; text-transform: uppercase; letter-spacing: 0.5px; }
+.field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+/* Figma form labels: sentence case, regular weight, label sits 8px above its input. */
+.label { font-size: 1rem; font-weight: 500; color: #010f44; padding: 0; }
 .required { color: #e74c3c; margin-left: 2px; }
+/* Flat, single-column form (Figma "Create Your Campaign"): no boxes, space does the grouping. */
+.flatForm { display: flex; flex-direction: column; gap: 24px; }
+.fieldGroup { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.fieldGroup > legend { margin-bottom: 8px; }
+.fieldPair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fieldPair .field { gap: 4px; }
+/* Date-and-time inputs need ~200px; below that the pair stacks rather than truncating. */
+@media (max-width: 520px) { .fieldPair { grid-template-columns: 1fr; } }
+.subLabel { font-size: 0.85rem; color: #4a5568; }
+.metaLine { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 0.9rem; color: #637080; }
+.metaLine svg { flex: none; margin-top: 2px; color: #8a95a8; }
+.metaLineError { color: #c0392b; }
+.cardNote { margin-top: 10px; padding: 0 4px; font-size: 0.85rem; }
 .hint { color: #637080; font-size: 0.85rem; margin: 0; }
 .input { font: inherit; font-family: var(--font-afacad), system-ui, sans-serif; font-size: 0.95rem; padding: 13px 16px; border: 1.5px solid #e0e4ff; border-radius: 12px; background: #fafbff; min-width: 0; width: 100%; box-sizing: border-box; color: #010f44; outline: none; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; }
 .input::placeholder { color: #b0bac8; }
@@ -167,18 +187,31 @@
   .listCard:nth-child(odd):nth-last-child(2) { border-bottom: 0; }
 }
 
-.emptyArt { width: 80px; height: 80px; border-radius: 22px; background: #fff3e0; color: #8a5300; display: grid; place-items: center; }
-.howSteps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; max-width: 760px; text-align: left; border-top: 1px solid #eef1f6; padding-top: 16px; }
-.howSteps li { display: flex; flex-direction: column; gap: 4px; }
-.howSteps b { display: flex; align-items: center; gap: 8px; color: #010f44; }
-.howNum { width: 24px; height: 24px; border-radius: 50%; background: #010f44; color: #fff; display: grid; place-items: center; font-size: 0.8rem; }
-@media (max-width: 720px) { .howSteps { grid-template-columns: 1fr; } }
+.emptyIllustration { width: 100%; max-width: 280px; height: auto; }
+.emptyTitle { margin: 0; font-size: 1.6rem; font-weight: 800; color: #010f44; line-height: 1.25; letter-spacing: -0.3px; }
+.emptyActions { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 360px; margin-top: 10px; }
+.emptyCta { width: 100%; min-height: 52px; font-size: 1rem; }
+.textLink { color: #010f44; font-size: 0.95rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; padding: 6px 8px; border-radius: 6px; }
+.textLink:hover { color: #01188e; }
+.textLink:focus-visible { outline: 2px solid #01188e; outline-offset: 2px; }
+/* Phones: the empty state's actions are pinned to the bottom of the screen. */
+@media (max-width: 560px) {
+  /* The illustration sits in the middle of the free space, nearly edge to edge (20px from each side). */
+  .empty:has(.emptyActions) { min-height: calc(100dvh - 250px); justify-content: center; padding: 0 6px 88px; gap: 20px; }
+  .empty:has(.emptyActions) .emptyIllustration { max-width: none; }
+  .emptyActions {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: none; margin: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: #fff; border-top: 1px solid #eef1f6; box-shadow: 0 -8px 24px rgba(1, 15, 68, 0.08);
+  }
+}
+@media (max-width: 640px) { .emptyIllustration { max-width: 220px; } .emptyTitle { font-size: 1.35rem; } }
 
 /* Wizard */
 /* The wizard is a focused, single-column task: centre it in whatever space the page has. */
 .containerCentered { margin-inline: auto; width: 100%; box-sizing: border-box; }
-.wizard { max-width: 780px; width: 100%; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
-.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
+.wizard { max-width: 640px; width: 100%; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+.steps { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
 .step { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; text-align: center; }
 .step::before { content: ""; position: absolute; top: 19px; left: calc(-50% + 24px); right: calc(50% + 24px); height: 2px; background: #e0e4ff; }
 .step:first-child::before { display: none; }
@@ -190,16 +223,30 @@
 .stepNow .stepName { color: #010f44; }
 .wizardFoot { display: flex; justify-content: space-between; gap: 12px; padding-top: 18px; border-top: 1px solid #eef1f6; flex-wrap: wrap; }
 .wizardFoot > :last-child { margin-left: auto; }
-/* Phones: buttons share the width; on Review, Publish sits full width above Back and Save as draft. */
+/* Phones: the actions are pinned to the bottom of the screen (as in the Figma). Back/Cancel takes a third,
+   the main action two thirds; on Review, Publish runs full width above Back and Save as draft. */
 @media (max-width: 560px) {
-  .wizardFoot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .wizard { padding-bottom: 150px; }
+  .wizard:has(.reviewPage) { padding-bottom: 200px; }
+  .wizardFoot {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 10px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: #fff; border-top: 1px solid #eef1f6; box-shadow: 0 -8px 24px rgba(1, 15, 68, 0.08);
+  }
+  .wizardFoot:has(.actions) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .wizardFoot > :last-child { margin-left: 0; }
   .wizardFoot .actions { display: contents; }
-  .wizardFoot button { justify-content: center; width: 100%; padding-left: 10px; padding-right: 10px; }
+  .wizardFoot button { justify-content: center; width: 100%; min-height: 48px; padding-left: 10px; padding-right: 10px; }
+  .wizardFoot .primaryButton { font-size: 1rem; }
   .wizardFoot .actions .primaryButton { order: -1; grid-column: 1 / -1; }
+  /* A lone main action spans the whole bar. */
+  .wizardFoot > .primaryButton:only-child { grid-column: 1 / -1; }
 }
-.wizardHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.wizardClose { flex: none; margin-top: 2px; }
+/* Title centred over the step bar; Cancel (desktop only) sits in the right column. */
+.wizardHead { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; }
+.wizardTitle { grid-column: 2; text-align: center; }
+.wizardClose { grid-column: 3; justify-self: end; flex: none; }
 .mobileOnly { display: none; }
 @media (max-width: 640px) {
   .wizardClose { display: none; }
@@ -209,32 +256,7 @@
 .inlineLink:hover { color: #010f44; }
 .inlineLink:focus-visible { outline: 2px solid #01188e; outline-offset: 2px; border-radius: 4px; }
 
-.modeGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.modeGridTwo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (max-width: 900px) { .modeGrid, .modeGridTwo { grid-template-columns: 1fr; } }
-.modeCard { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: 14px; border: 1.5px solid #e0e4ff; background: #fff; cursor: pointer; transition: border-color 0.18s, box-shadow 0.18s; }
-.modeCard:hover { border-color: #cfd5ef; }
-.modeCard:has(input:checked) { border-color: #010f44; box-shadow: 0 0 0 1px #010f44 inset, 0 8px 24px rgba(1, 15, 68, 0.1); }
-.modeCard:has(input:focus-visible) { outline: 2px solid #01188e; outline-offset: 3px; }
-.modeCard input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.modeIcon { width: 42px; height: 42px; border-radius: 12px; background: #f3f5ff; color: #010f44; display: grid; place-items: center; }
-.modeCard:has(input:checked) .modeIcon { background: #010f44; color: #fff; }
-.modeTitle { font-size: 1.1rem; font-weight: 700; color: #010f44; }
-.modeList { list-style: none; margin: 0; padding: 10px 0 0; border-top: 1px solid #eef1f6; display: flex; flex-direction: column; gap: 6px; font-size: 0.88rem; }
-.modeList li { display: flex; gap: 8px; align-items: flex-start; }
-.modeList svg { color: #0b7a34; flex: none; margin-top: 3px; }
 
-.dateGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-/* Phones: entries open and close side by side, the draw date on its own row below. */
-@media (max-width: 720px) {
-  .dateGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .dateGrid > :last-child { grid-column: 1 / -1; }
-  .dateGrid .input { padding: 11px 10px; font-size: 0.88rem; }
-  .wizardTimeline .tlLegend { display: none; }
-}
-.dateCard { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.dateCardHead { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; color: #010f44; text-transform: uppercase; letter-spacing: 0.5px; }
-.dateNum { width: 20px; height: 20px; flex: none; letter-spacing: 0; border-radius: 50%; background: #010f44; color: #fff; font-size: 0.75rem; display: grid; place-items: center; }
 .fieldError { display: flex; align-items: center; gap: 5px; margin: 5px 0 0; font-size: 0.78rem; font-weight: 600; color: #e03e3e; line-height: 1.3; }
 .inputError { border-color: #e03e3e !important; background: #fff8f8 !important; box-shadow: 0 0 0 3px rgba(224, 62, 62, 0.08) !important; }
 .submitError { display: flex; align-items: center; gap: 10px; padding: 13px 16px; background: #fff0f0; border: 1.5px solid #ffc5c5; border-radius: 12px; color: #c0392b; font-size: 0.9rem; font-weight: 600; margin: 0; }
@@ -297,6 +319,16 @@
 .warn svg { color: #8a5300; flex: none; margin-top: 2px; }
 .info { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; background: #f3f5ff; color: #1c2340; font-size: 0.9rem; margin: 0; }
 .info svg { color: #3446c9; flex: none; margin-top: 2px; }
+/* Background detail kept one click away, so the screen leads with what to do. */
+.disclosure { border-radius: 10px; background: #f3f5ff; color: #1c2340; font-size: 0.9rem; }
+.disclosure summary { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-weight: 700; cursor: pointer; list-style: none; border-radius: 10px; }
+.disclosure summary::-webkit-details-marker { display: none; }
+.disclosureChevron { margin-left: auto; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+.disclosure[open] .disclosureChevron { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .disclosureChevron { transition: none; } }
+.disclosure summary svg { color: #3446c9; flex: none; }
+.disclosure summary:focus-visible { outline: 2px solid #01188e; outline-offset: 2px; }
+.disclosure p { margin: 0; padding: 0 14px 14px 37px; line-height: 1.5; }
 .okBox { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; background: #e6f5eb; color: #1c2340; font-size: 0.9rem; margin: 0; }
 .okBox svg { color: #0b7a34; flex: none; margin-top: 2px; }
 .panelFoot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid #eef1f6; background: #fcfdff; border-radius: 0 0 14px 14px; flex-wrap: wrap; }
@@ -353,11 +385,7 @@
 
 /* Client-flow additions (draw types, prize levels, entries, picks) */
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.plainFieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
-.plainFieldset:focus, .storeBox:focus, .checkBox:focus, .slotBody:focus { outline: none; }
-.modeGridError .modeCard { border-color: #e03e3e; background: #fff8f8; }
-.storeBox { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #e0e4ff; background: #fafbff; font-size: 0.9rem; color: #1c2340; }
-.storeBox svg { color: #3446c9; flex: none; margin-top: 2px; }
+.checkBox:focus, .slotBody:focus, .metaLine:focus { outline: none; }
 .checkBox { padding: 12px 14px; border: 1.5px solid #e0e4ff; border-radius: 12px; background: #fff; }
 .addLevel { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border: 1.5px dashed #c5cbfa; border-radius: 14px; background: #fafbff; color: #010f44; font: inherit; font-weight: 700; cursor: pointer; }
 .addLevel:hover { border-color: #ef9e1b; background: #fff8ec; }
@@ -387,14 +415,34 @@
 .prizeCardIcon { width: 34px; height: 34px; border-radius: 10px; background: #fff5e6; color: #ef9e1b; display: grid; place-items: center; flex: none; }
 .prizeCardTitle { margin: 0; font-size: 1.05rem; font-weight: 800; color: #010f44; }
 .prizeCardTag { font-size: 0.75rem; font-weight: 700; color: #637080; background: #eef1fa; border-radius: 999px; padding: 3px 10px; }
-.prizeCardRemove { margin-left: auto; }
+/* Icon-only remove: a grey bin that turns red on hover, no background, with a full-size tap area. */
+.prizeCardRemove { margin-left: auto; width: 40px; height: 40px; margin-right: -10px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: #8a95a8; cursor: pointer; transition: color 0.15s; }
+.prizeCardRemove:hover:not(:disabled), .prizeCardRemove:focus-visible { color: #e03e3e; }
+.prizeCardRemove:focus-visible { outline: 2px solid #e03e3e; outline-offset: 2px; }
+.prizeCardRemove:disabled { opacity: 0.4; cursor: not-allowed; }
 .prizeCardHead .prizeCardTag:last-child { margin-left: auto; }
 .prizeCardBody { display: flex; flex-direction: column; gap: 14px; padding: 16px 18px 18px; }
 .prizeRowSingle { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 /* Winners and value stay side by side even on phones: two short inputs don't need a row each. */
 .prizeRowPair { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 12px; }
-.labelHint { font-weight: 600; text-transform: none; letter-spacing: 0; color: #8a95a8; }
+.labelHint { font-weight: 400; color: #8a95a8; }
 .hiddenFile { display: none; }
+/* SelectMenu: a page-drawn dropdown with full-size options on every screen. */
+.select { position: relative; }
+.selectButton { display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer; }
+.selectButton > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.selectPlaceholder { color: #8a95a8; }
+.selectIcon { color: #ef9e1b; flex: none; }
+.selectChevron { color: #637080; flex: none; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+.selectChevronOpen { transform: rotate(180deg); }
+.selectMenu { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; margin: 0; padding: 6px; list-style: none; background: #fff; border: 1.5px solid #e0e4ff; border-radius: 14px; box-shadow: 0 12px 32px rgba(1, 15, 68, 0.14); outline: none; animation: selectIn 0.16s cubic-bezier(0.16, 1, 0.3, 1); }
+.selectOption { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 8px 12px; border-radius: 10px; font-size: 1rem; font-weight: 600; color: #010f44; cursor: pointer; }
+.selectOptionActive { background: #f3f5ff; }
+.selectOption[aria-selected="true"] { background: #fff5e6; }
+.selectOptionIcon { width: 34px; height: 34px; border-radius: 10px; background: #fff5e6; color: #ef9e1b; display: grid; place-items: center; flex: none; }
+.selectCheck { margin-left: auto; color: #ef9e1b; flex: none; }
+@keyframes selectIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .selectMenu { animation: none; } .selectChevron { transition: none; } }
 .uploadButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px 14px; border: 1.5px dashed #f3c47a; border-radius: 12px; background: rgba(239, 158, 27, 0.06); color: #d98e14; font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
 .uploadButton:hover:not(:disabled) { background: rgba(239, 158, 27, 0.12); border-color: #ef9e1b; }
 .uploadButton:disabled { opacity: 0.6; cursor: wait; }
@@ -403,53 +451,42 @@
 .prizePictureRemove { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(1, 15, 68, 0.75); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .prizeCardTotal { margin: 0; padding-top: 12px; border-top: 1px dashed #e0e4ff; text-align: right; font-weight: 700; color: #010f44; font-variant-numeric: tabular-nums; }
 
-/* Review step */
-.reviewHero { background: #fff; border: 1.5px solid #e0e4ff; border-radius: 16px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; }
-.reviewHeroTop { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.reviewName { margin: 0; font-size: 1.45rem; font-weight: 800; color: #010f44; overflow-wrap: anywhere; }
-.reviewDesc { margin: 0; color: #4a5568; font-size: 0.95rem; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
-.reviewDescClamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .linkButton { border: 0; background: none; padding: 0; margin-top: 4px; font: inherit; font-size: 0.85rem; font-weight: 700; color: #01188e; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.reviewHeroNote { margin: 0; font-size: 0.88rem; color: #637080; background: #f6f7fb; border-radius: 10px; padding: 10px 12px; }
-.reviewStats { margin: 4px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.reviewStats div { background: #fafbff; border: 1.5px solid #e0e4ff; border-radius: 12px; padding: 10px 14px; }
-.reviewStats dt { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #637080; }
-.reviewStats dd { margin: 2px 0 0; font-size: 1.15rem; font-weight: 800; color: #010f44; font-variant-numeric: tabular-nums; }
-@media (max-width: 560px) {
-  .reviewHero { padding: 16px; }
-  .reviewName { font-size: 1.25rem; }
-  .reviewStats { gap: 6px; }
-  .reviewStats div { padding: 8px 10px; border-radius: 10px; }
-  .reviewStats dt { font-size: 0.64rem; letter-spacing: 0.3px; }
-  .reviewStats dd { font-size: 0.98rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-}
-.reviewGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-@media (max-width: 720px) { .reviewGrid { grid-template-columns: 1fr; } }
-.reviewCard { background: #fff; border: 1.5px solid #e0e4ff; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.reviewCardHead { display: flex; align-items: center; gap: 10px; }
-.reviewCardHead h3 { margin: 0; font-size: 1rem; font-weight: 800; color: #010f44; }
-.reviewCardIcon { width: 30px; height: 30px; border-radius: 9px; background: #fff5e6; color: #ef9e1b; display: grid; place-items: center; flex: none; }
-.reviewEdit { margin-left: auto; font-size: 0.85rem; padding: 6px 10px; }
-.reviewItem { display: flex; flex-direction: column; gap: 6px; }
-.reviewItem > span { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #637080; }
-.reviewItem > strong { color: #010f44; font-size: 0.98rem; }
-.reviewChips { display: flex; flex-wrap: wrap; gap: 6px; }
-.reviewChip { background: #f0f2ff; color: #010f44; border-radius: 999px; padding: 4px 12px; font-size: 0.85rem; font-weight: 600; }
-.reviewDates { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.reviewDates li { position: relative; display: flex; justify-content: space-between; gap: 12px; padding: 8px 0 8px 22px; flex-wrap: wrap; }
-.reviewDates li::before { content: ""; position: absolute; left: 4px; top: 14px; width: 9px; height: 9px; border-radius: 50%; background: #ef9e1b; }
-.reviewDates li:not(:last-child)::after { content: ""; position: absolute; left: 8px; top: 24px; bottom: -8px; width: 1.5px; background: #f3c47a; }
-.reviewDates li:last-child::before { background: #010f44; }
-.reviewDates span { color: #637080; font-size: 0.9rem; }
-.reviewDates strong { color: #010f44; font-size: 0.95rem; }
-.reviewPrizeList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.reviewPrizeList li { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eef1f6; }
-.reviewPrizeThumb { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; background: #f3f5ff; color: #8a95a8; display: grid; place-items: center; }
-.reviewPrizeText { display: flex; flex-direction: column; min-width: 0; }
-.reviewPrizeText strong { color: #010f44; overflow-wrap: anywhere; }
-.reviewPrizeLevel { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #d98e14; }
-.reviewPrizeTotal { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #fff5e6; border-radius: 10px; padding: 10px 14px; color: #010f44; }
-.reviewPrizeTotal strong { font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+
+/* Review step, after the Figma "Campaign Details" screen: one summary card, then a titled list card. */
+.reviewPage { display: flex; flex-direction: column; gap: 28px; }
+.summaryCard { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 18px; background: #fff; border: 1px solid #e6e9f2; border-radius: 16px; box-shadow: 0 2px 10px rgba(1, 15, 68, 0.05); }
+.summaryTitle { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.summaryName { margin: 0; font-size: 1.3rem; font-weight: 800; line-height: 1.25; color: #010f44; overflow-wrap: anywhere; }
+.typeChip { display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 4px 10px; border-radius: 999px; background: #eef1ff; color: #2b3a8f; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+.typeChipLock { margin-left: 2px; opacity: 0.75; }
+/* Key facts as label-over-value cells, two per row, like the Figma campaign card. */
+.factGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; margin: 0; padding-top: 14px; border-top: 1px solid #eef1f6; }
+.factGrid div { min-width: 0; }
+.factGrid dt { font-size: 0.82rem; color: #637080; }
+.factGrid dd { margin: 2px 0 0; font-size: 0.98rem; font-weight: 700; color: #010f44; font-variant-numeric: tabular-nums; }
+.summaryDesc { margin: 0; font-size: 0.95rem; line-height: 1.5; color: #4a5568; white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.summaryPool { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 2px 12px; padding: 14px 16px; border-radius: 12px; background: #f6f7fc; color: #4a5568; font-size: 0.92rem; }
+.summaryPool strong { font-size: 1.35rem; font-weight: 800; color: #010f44; font-variant-numeric: tabular-nums; }
+.summaryPoolSub { grid-column: 2; justify-self: end; color: #637080; }
+.poolAfterList { margin-top: 12px; }
+.listHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.listTitle { margin: 0; font-size: 1.15rem; font-weight: 700; color: #010f44; }
+.listHead .textLink { border: 0; background: none; font-family: inherit; cursor: pointer; }
+.rowList { list-style: none; margin: 0; padding: 0 16px; background: #fff; border: 1px solid #e6e9f2; border-radius: 16px; }
+.row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 0; }
+.row + .row { border-top: 1px solid #eef1f6; }
+.rowIcon { width: 44px; height: 44px; border-radius: 12px; background: #fff5e6; color: #ef9e1b; display: grid; place-items: center; object-fit: cover; }
+.rowMain, .rowSide { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rowMain strong { color: #010f44; font-weight: 700; overflow-wrap: anywhere; }
+.rowMain span, .rowSide span { color: #637080; font-size: 0.85rem; }
+.rowSide { align-items: flex-end; text-align: right; font-variant-numeric: tabular-nums; }
+.rowSide strong { color: #010f44; font-weight: 800; white-space: nowrap; }
+.plainCheck { display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 1rem; color: #010f44; cursor: pointer; }
+.plainCheck:focus { outline: none; }
+.plainCheck input { width: 20px; height: 20px; flex: none; margin: 0; accent-color: #ef9e1b; }
+.plainCheckError { color: #c0392b; }
+.publishCheck { display: flex; flex-direction: column; gap: 6px; }
 
 /* Draws list: an unfinished new draw kept on this device */
 .draftBanner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-radius: 12px; background: #fff5e6; border: 1.5px solid #f3c47a; }
@@ -457,11 +494,6 @@
 
 /* Wizard step 1 on phones: compact draw-type cards (icon, name, one line), no bullet list */
 @media (max-width: 720px) {
-  .modeCard { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 12px; row-gap: 2px; padding: 14px; align-items: start; }
-  .modeCard .modeIcon { grid-row: span 2; width: 40px; height: 40px; }
-  .modeCard .modeTitle { grid-column: 2; font-size: 1rem; }
-  .modeCard .muted { grid-column: 2; font-size: 0.86rem; line-height: 1.4; }
-  .modeCard .modeList { display: none; }
 }
 
 /* Phones: entries as a compact list instead of the wide table. */

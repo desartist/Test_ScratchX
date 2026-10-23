@@ -89,27 +89,35 @@ describe('validatePrizeLevels', () => {
   const second = { rank: 2, prizeDescription: 'Gold coin', prizeValue: 5000, quantity: 2 };
   const third = { rank: 3, prizeDescription: 'Voucher', prizeValue: 2000, quantity: 5 };
 
-  it('accepts Grand + 2nd, and Grand + 2nd + 3rd', () => {
-    expect(validatePrizeLevels([grand, second])).toBeNull();
+  const smaller = (rank) => ({ rank, prizeDescription: `Gift ${rank}`, prizeValue: 100, quantity: 3 });
+
+  it('accepts Grand + 2nd + 3rd, and any smaller prizes after them in order', () => {
     expect(validatePrizeLevels([third, grand, second])).toBeNull();
+    expect(validatePrizeLevels([grand, second, third, smaller(5), smaller(4)])).toBeNull();
+    const twenty = [grand, second, third, ...Array.from({ length: 17 }, (_, i) => smaller(i + 4))];
+    expect(validatePrizeLevels(twenty)).toBeNull();
+    expect(validatePrizeLevels([...twenty, smaller(21)])).toBe('Add at most 20 prize categories');
   });
 
-  it('needs the grand prize and the 2nd prize, and nothing beyond the 3rd', () => {
-    const message = 'Add the Grand Prize and the Second Prize (the Third Prize is optional)';
+  it('needs the grand, 2nd and 3rd prizes, with no gaps or repeats after them', () => {
+    const message = 'Add the Grand Prize, the Second Prize and the Third Prize (smaller prizes are optional)';
     expect(validatePrizeLevels([grand])).toBe(message);
+    expect(validatePrizeLevels([grand, second])).toBe(message);
     expect(validatePrizeLevels([second, third])).toBe(message);
-    expect(validatePrizeLevels([grand, second, { ...third, rank: 4 }])).toBe(message);
-    expect(validatePrizeLevels([grand, second, { ...second }])).toBe(message);
+    expect(validatePrizeLevels([grand, second, smaller(4)])).toBe(message);
+    expect(validatePrizeLevels([grand, second, third, smaller(5)])).toBe(message);
+    expect(validatePrizeLevels([grand, second, third, { ...third }])).toBe(message);
     expect(validatePrizeLevels(null)).toBe(message);
   });
 
   it('keeps the grand prize to exactly one winner', () => {
-    expect(validatePrizeLevels([{ ...grand, quantity: 2 }, second])).toBe('The Grand Prize has exactly 1 winner');
+    expect(validatePrizeLevels([{ ...grand, quantity: 2 }, second, third])).toBe('The Grand Prize has exactly 1 winner');
   });
 
   it('still checks names, values and winners of every level', () => {
-    expect(validatePrizeLevels([grand, { ...second, prizeValue: 0 }])).toBe('Enter a value in rupees for Gold coin');
-    expect(validatePrizeLevels([grand, { ...second, quantity: 0 }])).toBe('Enter how many winners get Gold coin (1 or more)');
+    expect(validatePrizeLevels([grand, { ...second, prizeValue: 0 }, third])).toBe('Enter a value in rupees for Gold coin');
+    expect(validatePrizeLevels([grand, { ...second, quantity: 0 }, third])).toBe('Enter how many winners get Gold coin (1 or more)');
+    expect(validatePrizeLevels([grand, second, third, { ...smaller(4), prizeDescription: ' ' }])).toBe('Give every prize a name');
   });
 });
 

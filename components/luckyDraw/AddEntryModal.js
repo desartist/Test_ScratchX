@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
-import Modal from "@/components/common/Modal";
+import Sheet from "@/components/luckyDraw/Sheet";
 import FieldError from "@/components/luckyDraw/FieldError";
 import { focusFirstError } from "@/components/luckyDraw/focusFirstError";
 import { api } from "@/lib/luckyDraw/clientApi";
@@ -70,7 +70,7 @@ export default function AddEntryModal({ isOpen, draw, onClose, onSaved }) {
   }
 
   return (
-    <Modal
+    <Sheet
       isOpen={isOpen}
       title={`Add entry · ${draw.name}`}
       onClose={onClose}
@@ -86,9 +86,8 @@ export default function AddEntryModal({ isOpen, draw, onClose, onSaved }) {
           <div className={styles.okBox} role="status">
             <CheckCircle2 size={18} aria-hidden="true" />
             <span>
-              Entry <strong className={styles.bigNumber}>#{last.entryNumber}</strong> saved for {last.customerName}
-              {last.storeName ? ` at ${last.storeName}` : ""}. Write <strong>{last.entryNumber}</strong> on the slip.
-              {last.confirmationSent ? " The customer got an SMS." : ""}
+              Entry <strong className={styles.bigNumber}>#{last.entryNumber}</strong> for {last.customerName}. Write it on the slip.
+              {last.confirmationSent ? " SMS sent." : ""}
             </span>
           </div>
         )}
@@ -126,11 +125,11 @@ export default function AddEntryModal({ isOpen, draw, onClose, onSaved }) {
         <div id={entryFieldId("consent")} tabIndex={-1} className={`${styles.checkBox} ${errors.consent ? styles.inputError : ""}`}>
           <label className={styles.checkRow}>
             <input type="checkbox" checked={form.consent} onChange={(e) => set("consent", e.target.checked)} />
-            <span>The customer agreed to get SMS about this draw.</span>
+            <span>Customer agreed to SMS about this draw.</span>
           </label>
         </div>
         <FieldError message={errors.consent} />
       </form>
-    </Modal>
+    </Sheet>
   );
 }

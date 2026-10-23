@@ -21,6 +21,7 @@ jest.mock('@/app/(dashboard)/lucky-draws/luckyDraws.module.css', () => new Proxy
 jest.mock('@/app/(client)/lucky-draw/[campaignId]/page.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
 jest.mock('@/app/(client)/lucky-draw/[campaignId]/reveal/reveal.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
 jest.mock('@/components/common/Modal.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
+jest.mock('@/components/luckyDraw/Sheet.module.css', () => new Proxy({}, { get: (_target, key) => String(key) }));
 
 const React = require('react');
 const { renderToString } = require('react-dom/server');
@@ -33,7 +34,7 @@ const pages = [
   ['public reveal', '@/app/(client)/lucky-draw/[campaignId]/reveal/page', 'Loading'],
   ['campaign detail', '@/app/(dashboard)/lucky-draws/[id]/page', 'Loading'],
   ['pick winners', '@/app/(dashboard)/lucky-draws/[id]/pick/page', 'Loading'],
-  ['redeem', '@/app/(dashboard)/lucky-draws/redeem/page', 'Redeem a Lucky Draw prize'],
+  ['redeem', '@/app/(dashboard)/lucky-draws/redeem/page', 'Redeem a prize'],
   ['staff entries', '@/app/(dashboard)/lucky-draws/entries/page', 'Lucky Draw entries'],
   ['customer entry', '@/app/(client)/lucky-draw/[campaignId]/page', 'Loading'],
 ];

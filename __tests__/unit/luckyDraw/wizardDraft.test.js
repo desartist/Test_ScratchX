@@ -1,5 +1,5 @@
-import { WIZARD_DRAFT_KEY, clearWizardDraft, hasProgress, readWizardDraft, writeWizardDraft } from '@/lib/luckyDraw/wizardDraft';
-import { blankWizardForm } from '@/lib/luckyDraw/wizardValidation';
+import { WIZARD_DRAFT_KEY, WIZARD_STEP_COUNT, clearWizardDraft, hasProgress, readWizardDraft, writeWizardDraft } from '@/lib/luckyDraw/wizardDraft';
+import { blankLevel, blankWizardForm } from '@/lib/luckyDraw/wizardValidation';
 
 function memoryStorage(initial = {}) {
   const data = { ...initial };
@@ -56,8 +56,28 @@ describe('write, read and clear', () => {
     const draft = readWizardDraft(storage);
     expect(draft.form.second).toEqual(blankWizardForm().second);
     expect(draft.form.grand).toEqual({ prizeDescription: 'TV', prizeValue: '', imageUrl: '' });
-    expect(draft.form.third).toBeNull();
+    // The 3rd prize is required now, so a draft from when it was optional gets an empty one.
+    expect(draft.form.third).toEqual(blankWizardForm().third);
+    expect(draft.form.smaller).toEqual([]);
     expect(draft.form.minBillAmount).toBe('');
+  });
+
+  it('keeps smaller prizes, fills their missing fields and drops any beyond the limit', () => {
+    const smaller = [{ prizeDescription: 'Mug' }, ...Array.from({ length: 20 }, () => ({ prizeDescription: 'Pen', prizeValue: '50', quantity: '5', imageUrl: '' }))];
+    const storage = memoryStorage({ [WIZARD_DRAFT_KEY]: JSON.stringify({ step: 3, form: { ...blankWizardForm(), name: 'Big draw', smaller } }) });
+    const draft = readWizardDraft(storage);
+    expect(draft.form.smaller).toHaveLength(17);
+    expect(draft.form.smaller[0]).toEqual({ prizeDescription: 'Mug', prizeValue: '', quantity: '1', imageUrl: '' });
+  });
+
+  it('counts an added smaller prize as progress worth keeping', () => {
+    expect(hasProgress({ ...blankWizardForm(), smaller: [blankLevel(true)] })).toBe(true);
+  });
+
+  it('opens a draft from the old four-step wizard at the matching step', () => {
+    const old = (step) => readWizardDraft(memoryStorage({ [WIZARD_DRAFT_KEY]: JSON.stringify({ step, form: started() }) })).step;
+    expect([1, 2, 3, 4].map(old)).toEqual([1, 1, 2, 3]);
+    expect(WIZARD_STEP_COUNT).toBe(3);
   });
 
   it('ignores broken or empty drafts', () => {

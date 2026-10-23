@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { ArrowLeft, Info } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { CALCULATOR_DEFAULTS, billIncrease, formatINR, formatNumber, parseAmount, planBudget, planEntries, prizePoolSummary } from "@/lib/luckyDraw/calculator";
-import { PRIZE_LEVEL_LABEL } from "@/lib/luckyDraw/display";
+import { prizeLevelLabel } from "@/lib/luckyDraw/display";
 import styles from "../luckyDraws.module.css";
 
 /** Keeps what the owner typed but shows digits grouped the Indian way once they leave the field. */
@@ -46,7 +46,6 @@ function Calculator() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Prize calculator</h1>
-          <p className={styles.subtitle}>Plan a lucky draw before you create one: expected entries, extra sales, budget and prizes. Nothing here is saved.</p>
         </div>
       </div>
 
@@ -74,7 +73,7 @@ function Calculator() {
                   <span>₹</span>
                   <input id="calc-campaign" className={`${styles.input} ${campaignBillLow ? styles.inputError : ""}`} inputMode="numeric" value={plan.campaignBill} onChange={(e) => set("campaignBill", e.target.value)} onBlur={() => set("campaignBill", tidy(plan.campaignBill))} aria-invalid={campaignBillLow} />
                 </div>
-                {campaignBillLow && <p className={styles.fieldError}>The campaign bill should be higher than the normal bill.</p>}
+                {campaignBillLow && <p className={styles.fieldError}>Should be higher than the normal bill.</p>}
               </div>
             </div>
             <Working>
@@ -84,17 +83,14 @@ function Calculator() {
 
           <section className={styles.section} aria-labelledby="calc-budget-title">
             <h2 className={styles.sectionTitle} id="calc-budget-title">3. Budget</h2>
-            <NumberField id="calc-spend" label="Spend per entry" prefix="₹" value={plan.spendPerEntry} onChange={(v) => set("spendPerEntry", v)} hint="How much you want to spend on prizes for each person who enters." />
+            <NumberField id="calc-spend" label="Spend per entry" prefix="₹" value={plan.spendPerEntry} onChange={(v) => set("spendPerEntry", v)} hint="Prize spend per person who enters." />
             <Working>
               {formatNumber(entries.entries)} entries × {formatINR(budget.spendPerEntry)} = <strong>{formatINR(budget.budget)} budget</strong>
             </Working>
           </section>
 
           <section className={styles.section} aria-labelledby="calc-pool-title">
-            <div>
-              <h2 className={styles.sectionTitle} id="calc-pool-title">4. Prize pool</h2>
-              <p className={styles.hint}>One hero prize, a few mid-tier prizes and many smaller prizes. The Third Prize is optional.</p>
-            </div>
+            <h2 className={styles.sectionTitle} id="calc-pool-title">4. Prize pool</h2>
             <div className={styles.calcPool}>
               <table className={styles.table}>
                 <thead><tr><th>Prize</th><th className={styles.num}>Winners</th><th className={styles.num}>Value each</th><th className={styles.num}>Total</th></tr></thead>
@@ -103,16 +99,16 @@ function Calculator() {
                     const row = pool.levels[i];
                     return (
                       <tr key={level}>
-                        <td className={styles.calcPrize}><strong>{PRIZE_LEVEL_LABEL[row.rank]}</strong></td>
+                        <td className={styles.calcPrize}><strong>{prizeLevelLabel(row.rank)}</strong></td>
                         <td className={styles.num} data-label="Winners">
                           {level === "grand" ? "1" : (
-                            <input aria-label={`${PRIZE_LEVEL_LABEL[row.rank]} winners`} className={styles.input} style={{ maxWidth: 90 }} inputMode="numeric" value={plan[level].quantity} onChange={(e) => setLevel(level, "quantity", e.target.value)} />
+                            <input aria-label={`${prizeLevelLabel(row.rank)} winners`} className={styles.input} style={{ maxWidth: 90 }} inputMode="numeric" value={plan[level].quantity} onChange={(e) => setLevel(level, "quantity", e.target.value)} />
                           )}
                         </td>
                         <td className={styles.num} data-label="Value each">
                           <div className={styles.moneyInput} style={{ maxWidth: 160, marginLeft: "auto" }}>
                             <span>₹</span>
-                            <input aria-label={`${PRIZE_LEVEL_LABEL[row.rank]} value each`} className={styles.input} inputMode="numeric" value={plan[level].prizeValue} onChange={(e) => setLevel(level, "prizeValue", e.target.value)} onBlur={() => setLevel(level, "prizeValue", tidy(plan[level].prizeValue))} />
+                            <input aria-label={`${prizeLevelLabel(row.rank)} value each`} className={styles.input} inputMode="numeric" value={plan[level].prizeValue} onChange={(e) => setLevel(level, "prizeValue", e.target.value)} onBlur={() => setLevel(level, "prizeValue", tidy(plan[level].prizeValue))} />
                           </div>
                         </td>
                         <td className={styles.num} data-label="Total"><span className={styles.amount}>{row.total ? formatINR(row.total) : "—"}</span></td>

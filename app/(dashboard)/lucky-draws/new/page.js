@@ -2,37 +2,28 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowLeft, ArrowRight, Award, CalendarDays, Check, Gift, ImagePlus, Info, Medal, Pencil, Plus, QrCode, Radio, Receipt, Send, Store, Trophy, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Award, Check, CirclePlus, Gift, ImagePlus, Lock, Medal, QrCode, Radio, Send, Store, Trash2, Trophy, X } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
-import Modal from "@/components/common/Modal";
+import Sheet from "@/components/luckyDraw/Sheet";
+import ConfirmModal from "@/components/luckyDraw/ConfirmModal";
+import SelectMenu from "@/components/luckyDraw/SelectMenu";
 import FieldError from "@/components/luckyDraw/FieldError";
 import { focusFirstError } from "@/components/luckyDraw/focusFirstError";
 import { api, istInputToIso, toISTInputValue } from "@/lib/luckyDraw/clientApi";
-import { blankLevel, blankWizardForm, buildCampaignBody, errorFieldId, stepErrors } from "@/lib/luckyDraw/wizardValidation";
+import { DRAW_TYPES } from "@/lib/luckyDraw/constants";
+import { MAX_SMALLER_PRIZES, blankLevel, blankWizardForm, buildCampaignBody, errorFieldId, smallerIndex, smallerKey, stepErrors } from "@/lib/luckyDraw/wizardValidation";
 import { storeHasLocation } from "@/lib/luckyDraw/storeRules";
 import { formatINR, formatNumber, parseAmount } from "@/lib/luckyDraw/calculator";
-import { DRAW_TYPE_DESCRIPTION, DRAW_TYPE_LABEL, PRIZE_LEVEL_LABEL, describeMinBill, formatDayTime, pluralDays } from "@/lib/luckyDraw/display";
+import { DRAW_TYPE_LABEL, prizeLevelLabel, formatDay, formatDayTime } from "@/lib/luckyDraw/display";
 import { compressPrizeImage } from "@/lib/luckyDraw/imageCompress";
 import { clearWizardDraft, hasProgress, readWizardDraft, writeWizardDraft } from "@/lib/luckyDraw/wizardDraft";
 import styles from "../luckyDraws.module.css";
 
-const STEPS = ["Draw type", "Details & entry", "Prizes", "Review"];
-const HEADINGS = [
-  ["New lucky draw", "How will this draw run? Choose the way that fits your shop."],
-  ["Details and entry", "Name the draw, set its dates and the smallest bill that gets an entry."],
-  ["Prizes", "One Grand Prize, your Second Prizes and, if you like, Third Prizes."],
-  ["Review and publish", "Check everything once more. The draw type cannot change after publishing."],
-];
+const STEPS = ["Details & entry", "Prizes", "Review"];
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DRAW_OPTIONS = [
-  { key: "physical", icon: Store, points: ["Staff type in each customer's entry at the counter", "You hold the draw in your shop", "You pick each winner from the entry list here"] },
-  { key: "live_online", icon: Radio, points: ["Customers scan your QR, or staff add them", "ScratchX picks the winners at random", "You reveal them live: Third, then Second, then the Grand Prize"] },
-  { key: "digital", icon: QrCode, points: ["Customers scan your QR code with their bill", "You press Run draw when you are ready", "ScratchX picks and texts every winner at once"] },
-];
-const PLACEHOLDER = { grand: "e.g. 43-inch Smart TV", second: "e.g. Gold coin", third: "e.g. Gift voucher" };
-const RANK = { grand: 1, second: 2, third: 3 };
+const PLACEHOLDER = { 1: "e.g. 43-inch Smart TV", 2: "e.g. Gold coin", 3: "e.g. Gift voucher" };
 const DRAW_ICON = { physical: Store, live_online: Radio, digital: QrCode };
-const VALUE_PLACEHOLDER = { grand: "20,000", second: "5,000", third: "2,000" };
+const VALUE_PLACEHOLDER = { 1: "20,000", 2: "5,000", 3: "2,000" };
 
 /** localStorage, or null where the browser blocks it (private mode, disabled storage). */
 function browserStorage() {
@@ -62,19 +53,20 @@ function Steps({ step }) {
   );
 }
 
-const LEVEL_ICON = { grand: Trophy, second: Medal, third: Award };
+const LEVEL_ICON = { 1: Trophy, 2: Medal, 3: Award };
+
+const levelHasInput = (level) => !!(level.prizeDescription.trim() || level.prizeValue.trim() || level.imageUrl);
 
 /** One prize level as a form card, in the style of the Scratch reward cards. */
-function LevelCard({ levelKey, level, errors, onChange, onTidy, onPickImage, imageBusy, onRemove }) {
-  const rank = RANK[levelKey];
-  const Icon = LEVEL_ICON[levelKey];
+function LevelCard({ levelKey, rank, level, errors, onChange, onTidy, onPickImage, imageBusy, onRemove, removeDisabled }) {
+  const Icon = LEVEL_ICON[rank] || Gift;
   const fileInput = useRef(null);
   const key = (field) => `${levelKey}.${field}`;
   const id = (field) => errorFieldId(key(field));
   const cls = (field) => `${styles.input} ${errors[key(field)] ? styles.inputError : ""}`;
   const quantity = rank === 1 ? 1 : parseAmount(level.quantity);
   const value = parseAmount(level.prizeValue);
-  const label = PRIZE_LEVEL_LABEL[rank];
+  const label = prizeLevelLabel(rank);
 
   return (
     <section className={styles.prizeCard} aria-labelledby={id("title")}>
@@ -82,10 +74,9 @@ function LevelCard({ levelKey, level, errors, onChange, onTidy, onPickImage, ima
         <span className={styles.prizeCardIcon}><Icon size={18} aria-hidden="true" /></span>
         <h2 className={styles.prizeCardTitle} id={id("title")}>{label}</h2>
         {rank === 1 && <span className={styles.prizeCardTag}>1 winner</span>}
-        {rank === 3 && <span className={styles.prizeCardTag}>Optional</span>}
         {onRemove && (
-          <button type="button" className={`${styles.ghostButton} ${styles.prizeCardRemove}`} onClick={onRemove}>
-            <X size={16} aria-hidden="true" />Remove
+          <button type="button" className={styles.prizeCardRemove} onClick={onRemove} disabled={removeDisabled} aria-label={`Remove ${label}`} title="Remove">
+            <Trash2 size={18} aria-hidden="true" />
           </button>
         )}
       </header>
@@ -93,7 +84,7 @@ function LevelCard({ levelKey, level, errors, onChange, onTidy, onPickImage, ima
       <div className={styles.prizeCardBody}>
         <div className={styles.field}>
           <label className={styles.label} htmlFor={id("prizeDescription")}>Prize name<Req /></label>
-          <input id={id("prizeDescription")} className={cls("prizeDescription")} value={level.prizeDescription} onChange={(e) => onChange("prizeDescription", e.target.value)} placeholder={PLACEHOLDER[levelKey]} maxLength={200} aria-invalid={!!errors[key("prizeDescription")]} />
+          <input id={id("prizeDescription")} className={cls("prizeDescription")} value={level.prizeDescription} onChange={(e) => onChange("prizeDescription", e.target.value)} placeholder={PLACEHOLDER[rank] || "e.g. Gift hamper"} maxLength={200} aria-invalid={!!errors[key("prizeDescription")]} />
           <FieldError message={errors[key("prizeDescription")]} />
         </div>
 
@@ -109,7 +100,7 @@ function LevelCard({ levelKey, level, errors, onChange, onTidy, onPickImage, ima
             <label className={styles.label} htmlFor={id("prizeValue")}>{rank === 1 ? "Prize value (₹)" : "Value per winner (₹)"}<Req /></label>
             <div className={styles.moneyInput}>
               <span>₹</span>
-              <input id={id("prizeValue")} className={cls("prizeValue")} inputMode="numeric" placeholder={VALUE_PLACEHOLDER[levelKey]} value={level.prizeValue} onChange={(e) => onChange("prizeValue", e.target.value)} onBlur={() => onTidy("prizeValue")} aria-invalid={!!errors[key("prizeValue")]} />
+              <input id={id("prizeValue")} className={cls("prizeValue")} inputMode="numeric" placeholder={VALUE_PLACEHOLDER[rank] || "1,000"} value={level.prizeValue} onChange={(e) => onChange("prizeValue", e.target.value)} onBlur={() => onTidy("prizeValue")} aria-invalid={!!errors[key("prizeValue")]} />
             </div>
             <FieldError message={errors[key("prizeValue")]} />
           </div>
@@ -165,7 +156,8 @@ function NewLuckyDrawForm() {
   const [saving, setSaving] = useState("");
   const [imageBusy, setImageBusy] = useState(null);
   const [leaving, setLeaving] = useState(false);
-  const [showFullDescription, setShowFullDescription] = useState(false);
+  // The smaller prize (index into form.smaller) waiting for "Remove this prize?" to be answered.
+  const [removing, setRemoving] = useState(null);
   // A draft found on this device, while the owner decides whether to continue it.
   const [resume, setResume] = useState(null);
   // The form once defaults were filled in; anything different is unsaved work.
@@ -232,21 +224,50 @@ function NewLuckyDrawForm() {
     setForm((f) => ({ ...f, [key]: value }));
     clearError(key);
   };
+  // grand/second/third live on the form itself; smaller prizes ('p4', 'p5', …) in form.smaller.
+  const levelOf = (f, levelKey) => {
+    const i = smallerIndex(levelKey);
+    return i < 0 ? f[levelKey] : f.smaller[i];
+  };
+  const updateLevel = (f, levelKey, patch) => {
+    const level = levelOf(f, levelKey);
+    if (!level) return f;
+    const i = smallerIndex(levelKey);
+    const next = { ...level, ...patch };
+    return i < 0 ? { ...f, [levelKey]: next } : { ...f, smaller: f.smaller.map((l, j) => (j === i ? next : l)) };
+  };
   const setLevel = (levelKey, key, value) => {
-    setForm((f) => (f[levelKey] ? { ...f, [levelKey]: { ...f[levelKey], [key]: value } } : f));
+    setForm((f) => updateLevel(f, levelKey, { [key]: value }));
     clearError(`${levelKey}.${key}`);
   };
   // Groups the digits once the owner leaves a value field, without hiding an error that is still true.
   const tidyLevel = (levelKey, key) =>
     setForm((f) => {
-      if (!f[levelKey]) return f;
-      const amount = parseAmount(f[levelKey][key]);
-      return amount ? { ...f, [levelKey]: { ...f[levelKey], [key]: formatNumber(amount) } } : f;
+      const amount = parseAmount(levelOf(f, levelKey)?.[key]);
+      return amount ? updateLevel(f, levelKey, { [key]: formatNumber(amount) }) : f;
     });
-  const removeThird = () => {
-    setForm((f) => ({ ...f, third: null }));
-    setErrors((e) => Object.fromEntries(Object.entries(e).filter(([k]) => !k.startsWith("third."))));
+  const addSmaller = () => {
+    const key = smallerKey(form.smaller.length);
+    setForm((f) => (f.smaller.length < MAX_SMALLER_PRIZES ? { ...f, smaller: [...f.smaller, blankLevel(true)] } : f));
+    window.requestAnimationFrame(() => document.getElementById(errorFieldId(`${key}.prizeDescription`))?.focus());
   };
+  // The prizes after the removed one move up a place, and so do their errors.
+  const removeSmaller = (index) => {
+    setForm((f) => ({ ...f, smaller: f.smaller.filter((_, i) => i !== index) }));
+    setErrors((e) => {
+      const next = {};
+      for (const [k, message] of Object.entries(e)) {
+        const dot = k.indexOf(".");
+        const i = dot < 0 ? -1 : smallerIndex(k.slice(0, dot));
+        if (i === index) continue;
+        next[i > index ? `${smallerKey(i - 1)}${k.slice(dot)}` : k] = message;
+      }
+      return next;
+    });
+    setRemoving(null);
+  };
+  // Guard: a prize with anything filled in is only removed once the owner confirms.
+  const requestRemoveSmaller = (index) => (levelHasInput(form.smaller[index]) ? setRemoving(index) : removeSmaller(index));
 
   const showErrors = (found) => {
     setErrors(found);
@@ -283,7 +304,7 @@ function NewLuckyDrawForm() {
   async function save(publish) {
     setSubmitError("");
     if (publish) {
-      const found = stepErrors(4, form);
+      const found = stepErrors(3, form);
       if (Object.keys(found).length) {
         showErrors(found);
         return;
@@ -323,22 +344,18 @@ function NewLuckyDrawForm() {
   const start = istInputToIso(form.startDate);
   const end = istInputToIso(form.endDate);
   const reveal = istInputToIso(form.revealDate);
-  const datesOk = start && end && reveal && new Date(end) > new Date(start) && new Date(reveal) >= new Date(end);
-  const entryDays = datesOk ? Math.max(1, Math.round((new Date(end) - new Date(start)) / DAY_MS)) : null;
-  const gapDays = datesOk ? Math.round((new Date(reveal) - new Date(end)) / DAY_MS) : null;
   const minBillText = form.minBillAmount.trim();
   const minBillValid = /^[\d,]+$/.test(minBillText);
 
   const levels = [
     { key: "grand", rank: 1, level: form.grand, quantity: 1 },
     { key: "second", rank: 2, level: form.second, quantity: parseAmount(form.second.quantity) },
-    ...(form.third ? [{ key: "third", rank: 3, level: form.third, quantity: parseAmount(form.third.quantity) }] : []),
+    { key: "third", rank: 3, level: form.third, quantity: parseAmount(form.third.quantity) },
+    ...form.smaller.map((level, i) => ({ key: smallerKey(i), rank: i + 4, index: i, level, quantity: parseAmount(level.quantity) })),
   ];
+  const removingLevel = removing === null ? null : levels.find((l) => l.index === removing);
   const totalValue = levels.reduce((sum, l) => sum + parseAmount(l.level.prizeValue) * l.quantity, 0);
   const totalWinners = levels.reduce((sum, l) => sum + l.quantity, 0);
-  const editButton = (n, label = "Edit") => (
-    <button type="button" className={`${styles.ghostButton} ${styles.reviewEdit}`} onClick={() => goTo(n)}><Pencil size={14} aria-hidden="true" />{label}</button>
-  );
   const description = form.description.trim();
   const DrawIcon = DRAW_ICON[form.drawType] || Store;
 
@@ -346,10 +363,8 @@ function NewLuckyDrawForm() {
     <div className={`${styles.container} ${styles.containerCentered}`}>
       <div className={styles.wizard}>
         <div className={styles.wizardHead}>
-          <div>
-            <h1 className={styles.title}>{HEADINGS[step - 1][0]}</h1>
-            <p className={styles.subtitle}>{HEADINGS[step - 1][1]}</p>
-          </div>
+          {/* One title for every step; the step bar below says where you are. */}
+          <h1 className={`${styles.title} ${styles.wizardTitle}`}>New lucky draw</h1>
           {/* Leaving the wizard is a close action, not "back"; on phones it lives in the footer instead. */}
           <button type="button" className={`${styles.secondaryButton} ${styles.wizardClose}`} onClick={requestLeave}><X size={16} aria-hidden="true" />Cancel</button>
         </div>
@@ -358,113 +373,101 @@ function NewLuckyDrawForm() {
         {submitError && <p className={styles.submitError} role="alert"><AlertCircle size={16} aria-hidden="true" />{submitError}</p>}
 
         {step === 1 && (
-          <>
-            <fieldset id={errorFieldId("drawType")} tabIndex={-1} className={styles.plainFieldset}>
-              <legend className={styles.srOnly}>How this draw will run</legend>
-              <div className={`${styles.modeGrid} ${errors.drawType ? styles.modeGridError : ""}`}>
-                {DRAW_OPTIONS.map(({ key, icon: Icon, points }) => (
-                  <label key={key} className={styles.modeCard}>
-                    <input type="radio" name="drawType" value={key} checked={form.drawType === key} onChange={() => set("drawType", key)} />
-                    <span className={styles.modeIcon}><Icon size={20} aria-hidden="true" /></span>
-                    <span className={styles.modeTitle}>{DRAW_TYPE_LABEL[key]}</span>
-                    <span className={styles.muted}>{DRAW_TYPE_DESCRIPTION[key]}</span>
-                    <ul className={styles.modeList}>
-                      {points.map((p) => <li key={p}><Check size={15} aria-hidden="true" />{p}</li>)}
-                    </ul>
-                  </label>
-                ))}
-              </div>
+          <div className={styles.flatForm}>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor={errorFieldId("drawType")}>Draw type<Req /></label>
+              <SelectMenu
+                id={errorFieldId("drawType")}
+                value={form.drawType}
+                options={DRAW_TYPES.map((key) => ({ value: key, label: DRAW_TYPE_LABEL[key], icon: DRAW_ICON[key] }))}
+                placeholder="Choose a draw type"
+                onChange={(key) => set("drawType", key)}
+                invalid={!!errors.drawType}
+              />
               <FieldError message={errors.drawType} />
-            </fieldset>
-            <p className={styles.info}><Info size={16} aria-hidden="true" /><span>You can&rsquo;t change the draw type after the draw is published.</span></p>
-          </>
-        )}
+            </div>
 
-        {step === 2 && (
-          <>
-            <section className={styles.section}>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor={errorFieldId("name")}>Draw name<Req /></label>
-                <input id={errorFieldId("name")} className={cls("name")} value={form.name} onChange={(e) => set("name", e.target.value)} maxLength={120} placeholder="e.g. Diwali Dhamaka Lucky Draw" aria-invalid={!!errors.name} />
-                {errors.name ? <FieldError message={errors.name} /> : <p className={styles.hint}>Customers see this on the entry page and the results.</p>}
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="ld-description">Description</label>
-                <textarea id="ld-description" className={styles.input} rows={2} value={form.description} onChange={(e) => set("description", e.target.value)} maxLength={1000} placeholder="Optionally say what customers can win and why" />
-              </div>
-            </section>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor={errorFieldId("name")}>Draw name<Req /></label>
+              <input id={errorFieldId("name")} className={cls("name")} value={form.name} onChange={(e) => set("name", e.target.value)} maxLength={120} placeholder="e.g. Diwali Dhamaka" aria-invalid={!!errors.name} />
+              <FieldError message={errors.name} />
+            </div>
 
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>Dates <span className={styles.labelHint}>(IST)</span><Req /></h2>
-              <div className={styles.dateGrid}>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="ld-description">Description <span className={styles.labelHint}>(optional)</span></label>
+              <textarea id="ld-description" className={styles.input} rows={2} value={form.description} onChange={(e) => set("description", e.target.value)} maxLength={1000} placeholder="What customers can win" />
+            </div>
+
+            <fieldset className={styles.fieldGroup}>
+              <legend className={styles.label}>Entry period <span className={styles.labelHint}>(IST)</span><Req /></legend>
+              <div className={styles.fieldPair}>
                 {[
-                  ["startDate", 1, "Entries open"],
-                  ["endDate", 2, "Entries close"],
-                  ["revealDate", 3, "Draw date"],
-                ].map(([key, n, label]) => (
-                  <div key={key} className={styles.dateCard}>
-                    <label className={styles.dateCardHead} htmlFor={errorFieldId(key)}><span className={styles.dateNum}>{n}</span>{label}</label>
+                  ["startDate", "Opens"],
+                  ["endDate", "Closes"],
+                ].map(([key, label]) => (
+                  <div key={key} className={styles.field}>
+                    <label className={styles.subLabel} htmlFor={errorFieldId(key)}>{label}</label>
                     <input id={errorFieldId(key)} type="datetime-local" className={cls(key)} value={form[key]} onChange={(e) => set(key, e.target.value)} aria-invalid={!!errors[key]} />
                     <FieldError message={errors[key]} />
                   </div>
                 ))}
               </div>
-              {datesOk && (
-                <div className={`${styles.timeline} ${styles.wizardTimeline}`} aria-label="Date preview" style={{ paddingTop: 6 }}>
-                  <div className={styles.tlTrack}>
-                    <span className={styles.tlFill} style={{ width: `${(entryDays / (entryDays + Math.max(gapDays, 0.5))) * 100}%` }} />
-                    <span className={styles.tlNode} style={{ left: 0 }} />
-                    <span className={styles.tlNode} style={{ left: `${(entryDays / (entryDays + Math.max(gapDays, 0.5))) * 100}%` }} />
-                    <span className={`${styles.tlNode} ${styles.tlReveal}`} style={{ left: "100%" }} />
-                  </div>
-                  <div className={styles.tlLegend}>
-                    <div><small>Entries open</small><b>{formatDayTime(start)}</b></div>
-                    <div><small>{pluralDays(entryDays)} of entries · close</small><b>{formatDayTime(end)}</b></div>
-                    <div><small>{gapDays > 0 ? `${pluralDays(gapDays)} later · draw` : "Draw"}</small><b>{formatDayTime(reveal)}</b></div>
-                  </div>
-                </div>
-              )}
-            </section>
+            </fieldset>
 
-            <section className={styles.section}>
-              <div className={styles.field} style={{ maxWidth: 320 }}>
-                <label className={styles.label} htmlFor={errorFieldId("minBillAmount")}>Minimum bill amount<Req /></label>
-                <div className={styles.moneyInput}>
-                  <span>₹</span>
-                  <input id={errorFieldId("minBillAmount")} className={cls("minBillAmount")} inputMode="numeric" value={form.minBillAmount} onChange={(e) => set("minBillAmount", e.target.value)} onBlur={() => minBillValid && set("minBillAmount", formatNumber(parseAmount(minBillText)))} placeholder="1,000" aria-invalid={!!errors.minBillAmount} />
-                </div>
-                {errors.minBillAmount ? (
-                  <FieldError message={errors.minBillAmount} />
-                ) : (
-                  <p className={styles.hint}>{minBillValid ? `${describeMinBill(parseAmount(minBillText))}.` : "Every bill of this amount or more gets 1 entry."}</p>
-                )}
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor={errorFieldId("revealDate")}>Draw date <span className={styles.labelHint}>(IST)</span><Req /></label>
+              <input id={errorFieldId("revealDate")} type="datetime-local" className={cls("revealDate")} value={form.revealDate} onChange={(e) => set("revealDate", e.target.value)} aria-invalid={!!errors.revealDate} />
+              <FieldError message={errors.revealDate} />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor={errorFieldId("minBillAmount")}>Minimum bill amount<Req /></label>
+              <div className={styles.moneyInput}>
+                <span>₹</span>
+                <input id={errorFieldId("minBillAmount")} className={cls("minBillAmount")} inputMode="numeric" value={form.minBillAmount} onChange={(e) => set("minBillAmount", e.target.value)} onBlur={() => minBillValid && set("minBillAmount", formatNumber(parseAmount(minBillText)))} placeholder="1,000" aria-invalid={!!errors.minBillAmount} />
               </div>
-              <div id={errorFieldId("stores")} tabIndex={-1} className={`${styles.storeBox} ${errors.stores ? styles.inputError : ""}`}>
+              <FieldError message={errors.minBillAmount} />
+            </div>
+
+            <div className={styles.field}>
+              <p id={errorFieldId("stores")} tabIndex={-1} className={`${styles.metaLine} ${errors.stores ? styles.metaLineError : ""}`}>
                 <Store size={16} aria-hidden="true" />
-                <span>
-                  {stores === null ? "Loading your stores…" : storeList.length ? <>Runs at all your active stores ({storeList.length}): <strong>{storeNames.join(", ")}</strong>.</> : "You have no active stores."}
-                </span>
-              </div>
+                <span>{stores === null ? "Loading your stores…" : storeList.length ? storeNames.join(", ") : "You have no active stores."}</span>
+              </p>
               <FieldError message={errors.stores} />
               {form.drawType !== "physical" && unlocated.length > 0 && !errors.stores && (
                 <p className={styles.notice} role="note">
-                  QR entries won&rsquo;t work at {unlocated.join(", ")} until {unlocated.length === 1 ? "it has" : "they have"} a location
-                  {form.drawType === "live_online" ? "; staff can still add entries there" : ""}.
+                  No location set for {unlocated.join(", ")}, so QR entries won&rsquo;t work there{form.drawType === "live_online" ? " (staff entries will)" : ""}.
                 </p>
               )}
-            </section>
-          </>
+            </div>
+          </div>
         )}
 
-        {step === 3 && (
+        {step === 2 && (
           <div className={styles.stack}>
-            {["grand", "second"].map((levelKey) => (
-              <LevelCard key={levelKey} levelKey={levelKey} level={form[levelKey]} errors={errors} onChange={(k, v) => setLevel(levelKey, k, v)} onTidy={(k) => tidyLevel(levelKey, k)} onPickImage={(file) => pickImage(levelKey, file)} imageBusy={imageBusy === levelKey} />
+            {levels.map(({ key: levelKey, rank, level, index }) => (
+              <LevelCard
+                key={levelKey}
+                levelKey={levelKey}
+                rank={rank}
+                level={level}
+                errors={errors}
+                onChange={(k, v) => setLevel(levelKey, k, v)}
+                onTidy={(k) => tidyLevel(levelKey, k)}
+                onPickImage={(file) => pickImage(levelKey, file)}
+                imageBusy={imageBusy === levelKey}
+                onRemove={index === undefined ? undefined : () => requestRemoveSmaller(index)}
+                // Removing renumbers the prizes after it, so wait for a picture that is still being added.
+                removeDisabled={imageBusy !== null}
+              />
             ))}
-            {form.third ? (
-              <LevelCard levelKey="third" level={form.third} errors={errors} onChange={(k, v) => setLevel("third", k, v)} onTidy={(k) => tidyLevel("third", k)} onPickImage={(file) => pickImage("third", file)} imageBusy={imageBusy === "third"} onRemove={removeThird} />
+            {form.smaller.length < MAX_SMALLER_PRIZES ? (
+              <button type="button" className={styles.addLevel} onClick={addSmaller}>
+                <CirclePlus size={18} aria-hidden="true" />Add More Prizes
+              </button>
             ) : (
-              <button type="button" className={styles.addLevel} onClick={() => setForm((f) => ({ ...f, third: blankLevel(true) }))}><Plus size={16} aria-hidden="true" />Add Third Prize</button>
+              <p className={styles.hint}>A draw can have up to {MAX_SMALLER_PRIZES + 3} prize levels.</p>
             )}
             {totalValue > 0 && (
               <div className={styles.alloc}>
@@ -474,112 +477,82 @@ function NewLuckyDrawForm() {
                 </div>
               </div>
             )}
-            {form.drawType === "live_online" && (
-              <p className={styles.info}><Radio size={16} aria-hidden="true" /><span>On draw day you reveal the Third Prize first, then the Second Prize, and the Grand Prize last. A customer can win only once.</span></p>
-            )}
           </div>
         )}
 
-        {step === 4 && (
-          <>
-            <section className={styles.reviewHero} aria-labelledby="ld-review-name">
-              <div className={styles.reviewHeroTop}>
-                <span className={styles.modeTag}><DrawIcon size={15} aria-hidden="true" />{DRAW_TYPE_LABEL[form.drawType]}</span>
-                {editButton(1, "Change type")}
+        {step === 3 && (
+          <div className={styles.reviewPage}>
+            {/* Each part has a title with an Edit link above its card. Details: as the Figma "Campaign Details" card. */}
+            <section aria-labelledby="ld-review-details">
+              <div className={styles.listHead}>
+                <h2 className={styles.listTitle} id="ld-review-details">Details</h2>
+                <button type="button" className={styles.textLink} onClick={() => goTo(1)}>Edit</button>
               </div>
-              <h2 className={styles.reviewName} id="ld-review-name">{form.name.trim()}</h2>
-              {description && (
-                <div>
-                  <p className={`${styles.reviewDesc} ${showFullDescription ? "" : styles.reviewDescClamped}`}>{description}</p>
-                  {description.length > 180 && (
-                    <button type="button" className={styles.linkButton} onClick={() => setShowFullDescription((v) => !v)}>
-                      {showFullDescription ? "Show less" : "Show full description"}
-                    </button>
-                  )}
-                </div>
-              )}
-              <p className={styles.reviewHeroNote}>{DRAW_TYPE_DESCRIPTION[form.drawType]}</p>
-              <dl className={styles.reviewStats}>
-                <div><dt>Prize pool</dt><dd>{formatINR(totalValue)}</dd></div>
-                <div><dt>Winners</dt><dd>{formatNumber(totalWinners)}</dd></div>
+              <section className={styles.summaryCard} aria-labelledby="ld-review-name">
+              <div className={styles.summaryTitle}>
+                <h3 className={styles.summaryName} id="ld-review-name">{form.name.trim()}</h3>
+                {/* The lock says the type is fixed once published; the full sentence is in the tooltip and for screen readers. */}
+                <span className={styles.typeChip} title="Can’t be changed after publishing">
+                  <DrawIcon size={14} aria-hidden="true" />{DRAW_TYPE_LABEL[form.drawType]}<Lock size={12} aria-hidden="true" className={styles.typeChipLock} />
+                  <span className={styles.srOnly}>, can&rsquo;t be changed after publishing</span>
+                </span>
+              </div>
+              {description && <p className={styles.summaryDesc}>{description}</p>}
+              <dl className={styles.factGrid}>
+                <div><dt>Entries</dt><dd>{formatDay(start)} – {formatDay(end)}</dd></div>
+                <div><dt>Draw</dt><dd>{formatDayTime(reveal).replace(/^\w+, /, "")}</dd></div>
+                <div><dt>Stores</dt><dd>{storeNames.length}</dd></div>
                 <div><dt>Min. bill</dt><dd>₹{formatNumber(parseAmount(form.minBillAmount))}</dd></div>
               </dl>
             </section>
+            <p className={`${styles.metaLine} ${styles.cardNote}`}><Lock size={14} aria-hidden="true" />The draw type can&rsquo;t be changed after publishing.</p>
+          </section>
 
-            <div className={styles.reviewGrid}>
-              <section className={styles.reviewCard}>
-                <header className={styles.reviewCardHead}>
-                  <span className={styles.reviewCardIcon}><Receipt size={16} aria-hidden="true" /></span>
-                  <h3>Entry and stores</h3>
-                  {editButton(2)}
-                </header>
-                <div className={styles.reviewItem}>
-                  <span>Who gets an entry</span>
-                  <strong>{describeMinBill(parseAmount(form.minBillAmount))}</strong>
-                </div>
-                <div className={styles.reviewItem}>
-                  <span>Stores ({storeNames.length})</span>
-                  <div className={styles.reviewChips}>
-                    {storeNames.length ? storeNames.map((name) => <span key={name} className={styles.reviewChip}>{name}</span>) : "—"}
-                  </div>
-                </div>
-              </section>
-
-              <section className={styles.reviewCard}>
-                <header className={styles.reviewCardHead}>
-                  <span className={styles.reviewCardIcon}><CalendarDays size={16} aria-hidden="true" /></span>
-                  <h3>Dates</h3>
-                  {editButton(2)}
-                </header>
-                <ol className={styles.reviewDates}>
-                  <li><span>Entries open</span><strong>{formatDayTime(start)}</strong></li>
-                  <li><span>Entries close</span><strong>{formatDayTime(end)}</strong></li>
-                  <li><span>Draw date</span><strong>{formatDayTime(reveal)}</strong></li>
-                </ol>
-              </section>
-            </div>
-
-            <section className={styles.reviewCard}>
-              <header className={styles.reviewCardHead}>
-                <span className={styles.reviewCardIcon}><Trophy size={16} aria-hidden="true" /></span>
-                <h3>Prizes</h3>
-                {editButton(3)}
-              </header>
-              <ul className={styles.reviewPrizeList}>
+            <section aria-labelledby="ld-review-prizes">
+              <div className={styles.listHead}>
+                <h2 className={styles.listTitle} id="ld-review-prizes">Prizes</h2>
+                <button type="button" className={styles.textLink} onClick={() => goTo(2)}>Edit</button>
+              </div>
+              {/* Rows as the Figma "Reward Distribution" list: icon or picture, name over level, total on the right. */}
+              <ul className={styles.rowList}>
                 {levels.map((l) => {
                   const value = parseAmount(l.level.prizeValue);
+                  const Icon = LEVEL_ICON[l.rank] || Gift;
                   return (
-                    <li key={l.key}>
+                    <li key={l.key} className={styles.row}>
                       {l.level.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img className={styles.reviewPrizeThumb} src={l.level.imageUrl} alt="" />
+                        <img className={styles.rowIcon} src={l.level.imageUrl} alt="" />
                       ) : (
-                        <span className={styles.reviewPrizeThumb}><Gift size={18} aria-hidden="true" /></span>
+                        <span className={styles.rowIcon}><Icon size={20} aria-hidden="true" /></span>
                       )}
-                      <div className={styles.reviewPrizeText}>
-                        <span className={styles.reviewPrizeLevel}>{PRIZE_LEVEL_LABEL[l.rank]}</span>
+                      <span className={styles.rowMain}>
                         <strong>{l.level.prizeDescription.trim()}</strong>
-                        <span className={styles.cellSub}>{formatNumber(l.quantity)} winner{l.quantity === 1 ? "" : "s"} × {formatINR(value)}</span>
-                      </div>
-                      <span className={styles.amount}>{formatINR(value * l.quantity)}</span>
+                        <span>{prizeLevelLabel(l.rank)}</span>
+                      </span>
+                      <span className={styles.rowSide}>
+                        <strong>{formatINR(value * l.quantity)}</strong>
+                        <span>{formatNumber(l.quantity)} × {formatINR(value)}</span>
+                      </span>
                     </li>
                   );
                 })}
               </ul>
-              <div className={styles.reviewPrizeTotal}>
-                <span>Total for {formatNumber(totalWinners)} winner{totalWinners === 1 ? "" : "s"}</span>
+              <div className={`${styles.summaryPool} ${styles.poolAfterList}`}>
+                <span>Prize pool</span>
                 <strong>{formatINR(totalValue)}</strong>
+                <span className={styles.summaryPoolSub}>{formatNumber(totalWinners)} winner{totalWinners === 1 ? "" : "s"}</span>
               </div>
             </section>
 
-            <div id={errorFieldId("confirmed")} tabIndex={-1} className={`${styles.checkBox} ${errors.confirmed ? styles.inputError : ""}`}>
-              <label className={styles.checkRow}>
-                <input type="checkbox" checked={form.confirmed} onChange={(e) => set("confirmed", e.target.checked)} />
-                <span>I confirm my store will give these prizes to the winners.</span>
+            <div className={styles.publishCheck}>
+              <label id={errorFieldId("confirmed")} tabIndex={-1} className={`${styles.plainCheck} ${errors.confirmed ? styles.plainCheckError : ""}`}>
+                <input type="checkbox" checked={form.confirmed} onChange={(e) => set("confirmed", e.target.checked)} aria-invalid={!!errors.confirmed} />
+                <span>I&rsquo;ll give these prizes to the winners.</span>
               </label>
+              <FieldError message={errors.confirmed} />
             </div>
-            <FieldError message={errors.confirmed} />
-          </>
+          </div>
         )}
 
         <div className={styles.wizardFoot}>
@@ -588,12 +561,12 @@ function NewLuckyDrawForm() {
           ) : (
             <button type="button" className={styles.secondaryButton} onClick={() => goTo(step - 1)}><ArrowLeft size={16} aria-hidden="true" />Back</button>
           )}
-          {step < 4 ? (
-            <button type="button" className={styles.primaryButton} onClick={() => goTo(step + 1)} disabled={step === 2 && stores === null}>Continue<ArrowRight size={16} aria-hidden="true" /></button>
+          {step < STEPS.length ? (
+            <button type="button" className={styles.primaryButton} onClick={() => goTo(step + 1)} disabled={step === 1 && stores === null}>Continue<ArrowRight size={16} aria-hidden="true" /></button>
           ) : (
             <div className={styles.actions}>
               <button type="button" className={styles.secondaryButton} disabled={saving !== ""} onClick={() => save(false)}>{saving === "draft" ? "Saving…" : "Save as draft"}</button>
-              <button type="button" className={styles.primaryButton} disabled={saving !== ""} onClick={() => save(true)}>
+              <button type="button" className={styles.primaryButton} disabled={saving !== "" || !form.confirmed} onClick={() => save(true)}>
                 <Send size={16} aria-hidden="true" />{saving === "publish" ? "Publishing…" : "Publish lucky draw"}
               </button>
             </div>
@@ -601,7 +574,7 @@ function NewLuckyDrawForm() {
         </div>
       </div>
 
-      <Modal
+      <Sheet
         isOpen={leaving}
         title="Leave for now?"
         onClose={() => setLeaving(false)}
@@ -617,15 +590,32 @@ function NewLuckyDrawForm() {
             >
               Discard draft
             </button>
-            <button type="button" className={styles.secondaryButton} onClick={() => setLeaving(false)}>Keep editing</button>
-            <button type="button" className={styles.primaryButton} onClick={() => router.push("/lucky-draws")}>Leave</button>
+            {/* Staying is the safe choice, so it's the main action; on a phone sheet it comes first. */}
+            <button type="button" className={styles.secondaryButton} onClick={() => router.push("/lucky-draws")}>Leave</button>
+            <button type="button" className={styles.primaryButton} onClick={() => setLeaving(false)}>Keep editing</button>
           </div>
         }
       >
-        <p className={styles.muted} style={{ margin: 0 }}>Your progress is kept on this device. Next time you start a new lucky draw you can continue where you left off.</p>
-      </Modal>
+        <p className={styles.muted} style={{ margin: 0 }}>Your progress is saved on this device.</p>
+      </Sheet>
 
-      <Modal
+      <ConfirmModal
+        isOpen={!!removingLevel}
+        title="Remove this prize?"
+        confirmLabel="Remove prize"
+        danger
+        onConfirm={() => removeSmaller(removing)}
+        onClose={() => setRemoving(null)}
+      >
+        {removingLevel && (
+          <p className={styles.muted} style={{ margin: 0 }}>
+            <strong>{prizeLevelLabel(removingLevel.rank)}{removingLevel.level.prizeDescription.trim() ? ` (${removingLevel.level.prizeDescription.trim()})` : ""}</strong> will be removed.
+            {removingLevel.index < form.smaller.length - 1 ? " Later prizes move up one place." : ""}
+          </p>
+        )}
+      </ConfirmModal>
+
+      <Sheet
         isOpen={!!resume}
         title="Continue where you left off?"
         onClose={continueDraft}
@@ -638,11 +628,11 @@ function NewLuckyDrawForm() {
       >
         {resume && (
           <p className={styles.muted} style={{ margin: 0 }}>
-            You have an unfinished lucky draw{resume.form.name.trim() ? <> <strong>&ldquo;{resume.form.name.trim()}&rdquo;</strong></> : ""}
-            {resume.savedAt ? `, saved ${formatDayTime(resume.savedAt)}` : ""}. Continue at step {resume.step}: {STEPS[resume.step - 1]}.
+            {resume.form.name.trim() ? <strong>{resume.form.name.trim()}</strong> : "Unfinished lucky draw"}
+            {resume.savedAt ? ` · saved ${formatDayTime(resume.savedAt)}` : ""} · step {resume.step} of {STEPS.length}
           </p>
         )}
-      </Modal>
+      </Sheet>
     </div>
   );
 }

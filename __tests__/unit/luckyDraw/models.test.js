@@ -21,15 +21,20 @@ describe('LuckyDrawCampaign', () => {
     await expect(LuckyDrawCampaign.create(campaignData({ minBillAmount: -1 }))).rejects.toThrow();
   });
 
-  it('needs a grand prize and a 2nd prize, an optional 3rd, and one grand prize winner', async () => {
+  it('keeps prize ranks in order with no gaps, and one grand prize winner', async () => {
     const grand = { rank: 1, prizeDescription: 'TV', prizeValue: 20000, quantity: 1 };
     const second = { rank: 2, prizeDescription: 'Coin', prizeValue: 5000, quantity: 2 };
     const third = { rank: 3, prizeDescription: 'Voucher', prizeValue: 2000, quantity: 5 };
+    const fourth = { rank: 4, prizeDescription: 'Mug', prizeValue: 200, quantity: 10 };
     await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [grand, second, third] }))).resolves.toBeDefined();
-    await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [grand] }))).rejects.toThrow(/grand prize and a 2nd prize/);
+    await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [grand, second, third, fourth] }))).resolves.toBeDefined();
+    // Draws saved before the 3rd prize became required still save.
+    await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [grand, second] }))).resolves.toBeDefined();
+    await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [grand] }))).rejects.toThrow(/grand prize, a 2nd prize and a 3rd prize/);
     await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [] }))).rejects.toThrow(/prize/i);
-    await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [{ ...grand, quantity: 2 }, second] }))).rejects.toThrow(/exactly 1 winner/);
-    await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [grand, second, { ...third, rank: 4 }] }))).rejects.toThrow();
+    await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [{ ...grand, quantity: 2 }, second, third] }))).rejects.toThrow(/exactly 1 winner/);
+    await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [grand, second, fourth] }))).rejects.toThrow(/in order/);
+    await expect(LuckyDrawCampaign.create(campaignData({ prizeTiers: [grand, second, third, { ...fourth, rank: 21 }] }))).rejects.toThrow();
   });
 
   it('keeps a store snapshot without a location', async () => {

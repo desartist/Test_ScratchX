@@ -3,7 +3,7 @@
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Check, Copy, Crown, ExternalLink, Info, Lock, Play, Radio, Smartphone } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Copy, Crown, ExternalLink, Lock, Play, Radio, Smartphone } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api } from "@/lib/luckyDraw/clientApi";
 import { formatINR, formatNumber } from "@/lib/luckyDraw/calculator";
@@ -74,7 +74,6 @@ function LiveReveal() {
   const entryCount = openDraw?.entryCount ?? 0;
   const started = view.status !== "not_started";
   const done = view.status === "done";
-  const next = view.categories[view.revealedCount];
   const entriesOpen = new Date(campaign.endDate) > new Date();
   const link = `${origin}/lucky-draw/${id}/reveal`;
 
@@ -99,7 +98,7 @@ function LiveReveal() {
           </h1>
           <p className={styles.subtitle}>
             {formatDayTime(view.revealDate)}
-            {draw ? ` · ${formatNumber(draw.entryCount)} entries in the draw` : openDraw ? ` · ${formatNumber(entryCount)} ${entryCount === 1 ? "entry" : "entries"} so far` : ""}
+            {draw ? ` · ${formatNumber(draw.entryCount)} entries` : openDraw ? ` · ${formatNumber(entryCount)} ${entryCount === 1 ? "entry" : "entries"} so far` : ""}
           </p>
         </div>
         <div className={styles.actions}>
@@ -115,11 +114,8 @@ function LiveReveal() {
           {!started && isLive && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Ready when you are</h2>
-              <p className={styles.muted}>
-                Share the watch link with your customers, then start. ScratchX picks the winners at random from all {formatNumber(entryCount)} {entryCount === 1 ? "entry" : "entries"}. Nothing is shown until you reveal each prize, and each winner gets an SMS when their prize is revealed.
-              </p>
-              {entriesOpen && <p className={styles.notice}>Entries are open until {formatDayTime(campaign.endDate)}. You can start the reveal after that.</p>}
-              {!entriesOpen && entryCount === 0 && <p className={styles.notice}>Nobody entered this draw, so there are no winners to reveal.</p>}
+              {entriesOpen && <p className={styles.notice}>Start after entries close, {formatDayTime(campaign.endDate)}.</p>}
+              {!entriesOpen && entryCount === 0 && <p className={styles.notice}>Nobody entered, so there are no winners to reveal.</p>}
               <div>
                 <button type="button" className={styles.primaryButton} disabled={busy !== "" || entriesOpen || entryCount === 0 || !openDraw} onClick={() => act("start", `/api/lucky-draws/draws/${openDraw._id}/reveal/start`)}>
                   <Play size={16} aria-hidden="true" />{busy === "start" ? "Picking winners…" : "Start live reveal"}
@@ -129,11 +125,11 @@ function LiveReveal() {
           )}
 
           {!isLive && !started && (
-            <p className={styles.notice}>This draw is not revealed live. Its winners are shown on the draw page.</p>
+            <p className={styles.notice}>This draw isn&rsquo;t revealed live. See winners on the draw page.</p>
           )}
 
           <div className={styles.panel}>
-            <div className={styles.panelHead}><h2 className={styles.sectionTitle}>Prizes</h2><span className={styles.cellSub}>Third Prize first</span></div>
+            <div className={styles.panelHead}><h2 className={styles.sectionTitle}>Prizes</h2><span className={styles.cellSub}>Smallest prize first</span></div>
             <ol className={styles.catSteps}>
               {view.categories.map((cat, i) => {
                 const isNext = started && !done && i === view.revealedCount;
@@ -145,7 +141,7 @@ function LiveReveal() {
                     </span>
                     <div>
                       <b>{cat.level} · {cat.name} · {cat.quantity} × {formatINR(cat.value)}</b>
-                      <div className={styles.cellSub}>{cat.revealed ? `${cat.winners.length} winner${cat.winners.length === 1 ? "" : "s"} revealed` : isNext ? "Up next" : "Not revealed yet"}</div>
+                      <div className={styles.cellSub}>{cat.revealed ? `${cat.winners.length} winner${cat.winners.length === 1 ? "" : "s"}` : isNext ? "Up next" : "Hidden"}</div>
                       {cat.revealed && cat.winners.length > 0 && (
                         <div className={styles.winnerChips}>{cat.winners.map((w, j) => <span key={j} className={styles.winnerChip}>{w.label}</span>)}</div>
                       )}
@@ -163,11 +159,11 @@ function LiveReveal() {
             </ol>
           </div>
 
-          {done && <p className={styles.okBox}><Check size={16} aria-hidden="true" />Every prize has been revealed and every winner has an SMS with their claim code. Redeem the code at the store when they collect their prize.</p>}
-          {next && started && !done && (
-            <p className={styles.info}><Info size={16} aria-hidden="true" />Customers on the reveal page see each prize as you reveal it. Take your time and build up to the Grand Prize.</p>
-          )}
-          <p className={styles.info}><Lock size={16} aria-hidden="true" /><span><strong>How winners are picked.</strong> Winners are picked at random by ScratchX once, when the reveal starts, from every entry (QR scans and entries added by staff). Every bill at or above the minimum is one entry, and each customer can win only once.</span></p>
+          {done && <p className={styles.okBox}><Check size={16} aria-hidden="true" />All prizes revealed. Every winner got an SMS with a claim code.</p>}
+          <details className={styles.disclosure}>
+            <summary><Lock size={15} aria-hidden="true" />How winners are picked<ChevronDown size={16} className={styles.disclosureChevron} aria-hidden="true" /></summary>
+            <p>ScratchX picks them at random once, when you start, from every entry (QR and staff). One entry per qualifying bill; one win per customer. Customers on the watch page see each prize as you reveal it.</p>
+          </details>
         </div>
 
         {showPreview && (

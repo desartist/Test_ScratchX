@@ -1,15 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Gift, Plus, QrCode, Radio, Store, Ticket, Trophy } from "lucide-react";
+import { ChevronRight, Plus, QrCode, Radio, Store, Ticket, Trophy } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api } from "@/lib/luckyDraw/clientApi";
 import { formatINR, formatNumber } from "@/lib/luckyDraw/calculator";
 import { prizeTotals } from "@/lib/luckyDraw/prizeCategories";
 import { DRAW_TYPE_LABEL, drawStage, formatDayTime, listGroup, nextStep } from "@/lib/luckyDraw/display";
-import { readWizardDraft } from "@/lib/luckyDraw/wizardDraft";
+import { WIZARD_STEP_COUNT, readWizardDraft } from "@/lib/luckyDraw/wizardDraft";
 import styles from "./luckyDraws.module.css";
 
 const DRAW_ICON = { physical: Store, live_online: Radio, digital: QrCode };
@@ -35,19 +36,12 @@ const entriesLabel = (c) => `${formatNumber(c.entryCount || 0)} ${c.entryCount =
 function FirstTime() {
   return (
     <div className={styles.empty}>
-      <span className={styles.emptyArt}><Gift size={38} aria-hidden="true" /></span>
-      <h2 className={styles.sectionTitle}>Run your first lucky draw</h2>
-      <p className={styles.muted}>
-        Customers enter when they shop with you: by QR code, at the counter, or both. On the draw date the winners are picked and you hand over the prizes at your store.
-      </p>
-      <ol className={styles.howSteps}>
-        <li><b><span className={styles.howNum}>1</span>Choose how it runs</b><span className={styles.muted}>Physical, live online or digital.</span></li>
-        <li><b><span className={styles.howNum}>2</span>Set dates and the minimum bill</b><span className={styles.muted}>Every bill of at least that amount gets 1 entry.</span></li>
-        <li><b><span className={styles.howNum}>3</span>Set the prizes</b><span className={styles.muted}>A Grand Prize, Second Prizes and, if you like, Third Prizes.</span></li>
-      </ol>
-      <div className={styles.actions}>
-        <Link href="/lucky-draws/calculator" className={styles.secondaryButton}>Prize calculator</Link>
-        <Link href="/lucky-draws/new" className={styles.primaryButton}><Plus size={16} aria-hidden="true" />New lucky draw</Link>
+      {/* The empty-state illustration from the ScratchX design, as on Analytics and the plan screens. */}
+      <Image className={styles.emptyIllustration} src="/ScratchXCampaign.svg" alt="" width={320} height={280} priority />
+      <h2 className={styles.emptyTitle}>Run your first lucky draw</h2>
+      {/* As in the Figma empty states: one full-width main action. */}
+      <div className={styles.emptyActions}>
+        <Link href="/lucky-draws/new" className={`${styles.primaryButton} ${styles.emptyCta}`}>New lucky draw</Link>
       </div>
     </div>
   );
@@ -106,10 +100,10 @@ function LuckyDrawList() {
       <div className={styles.container}>
         <div>
           <h1 className={styles.title}>Lucky draws</h1>
-          <p className={styles.subtitle}>Only the store owner can create and manage lucky draws.</p>
+          <p className={styles.subtitle}>Only the store owner can manage lucky draws.</p>
         </div>
         <div className={styles.empty}>
-          <p>If you work at the counter, you can add customers&rsquo; entries or redeem a winner&rsquo;s claim code.</p>
+          <p>At the counter you can add entries or redeem a claim code.</p>
           <div className={styles.actions}>
             <Link href="/lucky-draws/entries" className={styles.primaryButton}><Plus size={16} aria-hidden="true" />Add entries</Link>
             <Link href="/lucky-draws/redeem" className={styles.secondaryButton}><Ticket size={16} aria-hidden="true" />Redeem a prize</Link>
@@ -121,17 +115,12 @@ function LuckyDrawList() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Lucky draws</h1>
-          <p className={styles.subtitle}>Run prize draws for customers who shop at your stores. Plan the cost first, then set the dates and prizes.</p>
-        </div>
-        {/* With no draws yet the empty state below carries these buttons, so they aren't shown twice. */}
+      <div className={styles.listHeader}>
+        <h1 className={styles.title}>Lucky draws</h1>
+        <Link href="/lucky-draws/calculator" className={styles.textLink}>Prize calculator</Link>
+        {/* With no draws yet the empty state carries the main action, so it isn't shown twice. */}
         {campaigns?.length > 0 && (
-          <div className={styles.actions}>
-            <Link href="/lucky-draws/calculator" className={styles.secondaryButton}>Prize calculator</Link>
-            <Link href="/lucky-draws/new" className={styles.primaryButton}><Plus size={16} aria-hidden="true" />New lucky draw</Link>
-          </div>
+          <Link href="/lucky-draws/new" className={`${styles.primaryButton} ${styles.listHeaderCta}`}><Plus size={16} aria-hidden="true" />New lucky draw</Link>
         )}
       </div>
 
@@ -139,7 +128,7 @@ function LuckyDrawList() {
         <div className={styles.draftBanner} role="status">
           <span>
             <strong>Unfinished lucky draw{draft.form.name.trim() ? `: ${draft.form.name.trim()}` : ""}</strong>
-            <span className={styles.cellSub}>Saved {formatDayTime(draft.savedAt)} · step {draft.step} of 4</span>
+            <span className={styles.cellSub}>Saved {formatDayTime(draft.savedAt)} · step {draft.step} of {WIZARD_STEP_COUNT}</span>
           </span>
           <Link href="/lucky-draws/new" className={styles.primaryButton}>Continue</Link>
         </div>

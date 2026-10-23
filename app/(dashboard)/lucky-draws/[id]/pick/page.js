@@ -10,7 +10,7 @@ import FieldError from "@/components/luckyDraw/FieldError";
 import { focusFirstError } from "@/components/luckyDraw/focusFirstError";
 import { api } from "@/lib/luckyDraw/clientApi";
 import { formatINR, formatNumber } from "@/lib/luckyDraw/calculator";
-import { PRIZE_LEVEL_LABEL, formatDayTime } from "@/lib/luckyDraw/display";
+import { prizeLevelLabel, formatDayTime } from "@/lib/luckyDraw/display";
 import styles from "../../luckyDraws.module.css";
 
 const maskPhone = (phone) => (phone ? `XXXXXX${String(phone).slice(-4)}` : "");
@@ -173,21 +173,21 @@ function PickWinners() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Pick winners</h1>
-          <p className={styles.subtitle}>You held the draw in your shop. Now pick each winner from the {formatNumber(openDraw.entryCount)} entries. A customer can win only once.</p>
+          <p className={styles.subtitle}>{formatNumber(openDraw.entryCount)} entries · one win per customer</p>
         </div>
       </div>
 
-      {required === 0 && <p className={styles.notice}>Nobody entered this draw, so there is no one to pick.</p>}
+      {required === 0 && <p className={styles.notice}>Nobody entered, so there&rsquo;s no one to pick.</p>}
       {required > 0 && required < slots.length && (
         <p className={styles.notice}>
-          Only {people} customer{people === 1 ? "" : "s"} entered, so pick {required} winner{required === 1 ? "" : "s"}, starting with the Grand Prize. The other prizes are not given out.
+          Only {people} customer{people === 1 ? "" : "s"} entered: pick {required} winner{required === 1 ? "" : "s"} from the Grand Prize down.
         </p>
       )}
 
       {prizes.map((prize) => (
         <section key={prize.rank} className={styles.section}>
           <h2 className={styles.sectionTitle}>
-            {PRIZE_LEVEL_LABEL[prize.rank]} · {prize.prizeDescription}{" "}
+            {prizeLevelLabel(prize.rank)} · {prize.prizeDescription}{" "}
             <span className={styles.cellSub}>{formatNumber(prize.quantity || 1)} × {formatINR(prize.prizeValue || 0)}</span>
           </h2>
           <ul className={styles.slotList}>
@@ -199,7 +199,7 @@ function PickWinners() {
                   <span className={styles.slotLabel}>{(prize.quantity || 1) > 1 ? `Winner ${slot.n}` : "Winner"}</span>
                   <div id={slotId(slot.key)} tabIndex={-1} className={`${styles.slotBody} ${errors[slot.key] ? styles.inputError : ""}`}>
                     {!usable ? (
-                      <span className={styles.cellSub}>Not given out (not enough customers)</span>
+                      <span className={styles.cellSub}>Not given out</span>
                     ) : picked ? (
                       <span>
                         <span className={styles.mono}>#{picked.entryNumber}</span> <strong>{picked.customerName}</strong>{" "}
@@ -245,10 +245,10 @@ function PickWinners() {
         onConfirm={saveWinners}
         onClose={() => setConfirm(false)}
       >
-        <p className={styles.muted} style={{ marginTop: 0 }}>Each winner gets an SMS with a claim code. You can&rsquo;t change the winners after this.</p>
+        <p className={styles.muted} style={{ marginTop: 0 }}>Each winner gets an SMS with a claim code. This can&rsquo;t be undone.</p>
         <ul className={styles.list}>
           {slots.slice(0, required).map((slot) => (
-            <li key={slot.key}><strong>{PRIZE_LEVEL_LABEL[slot.rank]}</strong>: #{picks[slot.key]?.entryNumber} {picks[slot.key]?.customerName}</li>
+            <li key={slot.key}><strong>{prizeLevelLabel(slot.rank)}</strong>: #{picks[slot.key]?.entryNumber} {picks[slot.key]?.customerName}</li>
           ))}
         </ul>
       </ConfirmModal>

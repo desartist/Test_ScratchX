@@ -18,7 +18,9 @@
     "migrate:store-soft-delete": "node scripts/migrations/backfillStoreSoftDelete.js",
     "seed:distributor-data": "node lib/seeds/seedDistributorData.mjs",
     "seed:plans": "node scripts/seed-subscription-plans.js",
-    "seed:accounts": "node scripts/seed-test-accounts.js"
+    "seed:accounts": "node scripts/seed-test-accounts.js",
+    "seed:lucky-draw-demo": "node scripts/seed-lucky-draw-demo.js",
+    "seed:lucky-draw-demo:clear": "node scripts/seed-lucky-draw-demo.js --clear"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",

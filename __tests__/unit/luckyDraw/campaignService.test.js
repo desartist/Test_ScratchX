@@ -39,6 +39,7 @@ const baseInput = (overrides = {}) => ({
   prizes: [
     { rank: 1, prizeDescription: 'Smart TV', prizeValue: 30000, quantity: 1 },
     { rank: 2, prizeDescription: 'Mixer', prizeValue: 2000, quantity: 3 },
+    { rank: 3, prizeDescription: 'Voucher', prizeValue: 500, quantity: 5 },
   ],
   ...overrides,
 });
@@ -66,9 +67,10 @@ describe('createCampaign', () => {
     expect(campaign.prizeTiers.map((p) => [p.rank, p.prizeDescription])).toEqual([
       [1, 'Smart TV'],
       [2, 'Mixer'],
+      [3, 'Voucher'],
     ]);
     expect(campaign).toMatchObject({ drawType: 'digital', minBillAmount: 1000, entryCounter: 0 });
-    expect(campaign.prizeTiers.map((p) => [p.rank, p.quantity])).toEqual([[1, 1], [2, 3]]);
+    expect(campaign.prizeTiers.map((p) => [p.rank, p.quantity])).toEqual([[1, 1], [2, 3], [3, 5]]);
   });
 
   it('refuses when the plan does not include Lucky Draw', async () => {
@@ -248,10 +250,25 @@ describe('createCampaign: client flow rules', () => {
     await expect(createCampaign(String(merchantId), baseInput({ minBillAmount: undefined }))).rejects.toThrow('Enter the minimum bill amount in whole rupees');
   });
 
-  it('needs the grand prize and the 2nd prize', async () => {
+  it('needs the grand prize, the 2nd prize and the 3rd prize', async () => {
     const merchantId = newId();
     await seedStore(merchantId);
-    await expect(createCampaign(String(merchantId), baseInput({ prizes: [{ rank: 1, prizeDescription: 'TV', prizeValue: 1000 }] }))).rejects.toThrow(/Grand Prize and the Second Prize/);
+    const levels = /Grand Prize, the Second Prize and the Third Prize/;
+    await expect(createCampaign(String(merchantId), baseInput({ prizes: [{ rank: 1, prizeDescription: 'TV', prizeValue: 1000 }] }))).rejects.toThrow(levels);
+    await expect(createCampaign(String(merchantId), baseInput({ prizes: baseInput().prizes.slice(0, 2) }))).rejects.toThrow(levels);
+  });
+
+  it('keeps smaller prizes after the 3rd, in order', async () => {
+    const merchantId = newId();
+    await seedStore(merchantId);
+    const prizes = [
+      ...baseInput().prizes,
+      { rank: 5, prizeDescription: 'Pen', prizeValue: 50, quantity: 20 },
+      { rank: 4, prizeDescription: 'Mug', prizeValue: 200, quantity: 10 },
+    ];
+    const created = await createCampaign(String(merchantId), baseInput({ prizes }));
+    expect(created.prizeTiers.map((p) => [p.rank, p.prizeDescription])).toEqual([[1, 'Smart TV'], [2, 'Mixer'], [3, 'Voucher'], [4, 'Mug'], [5, 'Pen']]);
+    await expect(createCampaign(String(merchantId), baseInput({ prizes: [...baseInput().prizes, { ...prizes[3] }] }))).rejects.toThrow(/Third Prize/);
   });
 
   it('ignores the old settings if a client still sends them', async () => {

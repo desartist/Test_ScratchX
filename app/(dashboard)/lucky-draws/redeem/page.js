@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import { api, formatDateTime } from "@/lib/luckyDraw/clientApi";
+import { prizeLevelLabel } from "@/lib/luckyDraw/display";
 import styles from "../luckyDraws.module.css";
 
 function RedeemForm() {
@@ -33,8 +34,7 @@ function RedeemForm() {
       <Link href="/lucky-draws" className={styles.backLink}><ArrowLeft size={16} aria-hidden="true" />All lucky draws</Link>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Redeem a Lucky Draw prize</h1>
-          <p className={styles.subtitle}>Ask the winner for the claim code they received by SMS, then enter it here before handing over the prize.</p>
+          <h1 className={styles.title}>Redeem a prize</h1>
         </div>
       </div>
 
@@ -50,8 +50,8 @@ function RedeemForm() {
       {result && (
         <section className={styles.section} role="status">
           <h2 className={styles.sectionTitle}>Prize redeemed</h2>
-          <p><strong>#{result.rank} {result.prizeDescription}</strong> for {result.customerName}</p>
-          <p className={styles.muted}>Redeemed {formatDateTime(result.redeemedAt)}. Hand the prize over now.</p>
+          <p><strong>{prizeLevelLabel(result.rank)} · {result.prizeDescription}</strong> for {result.customerName}</p>
+          <p className={styles.muted}>{formatDateTime(result.redeemedAt)} · hand it over now.</p>
         </section>
       )}
     </div>
