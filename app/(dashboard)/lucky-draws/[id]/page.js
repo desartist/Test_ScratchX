@@ -3,12 +3,13 @@
 import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { AlertCircle, AlertTriangle, CalendarClock, CalendarPlus, CheckCircle2, Eye, Pause, Play, Plus, QrCode, Radio, Send, Ticket, Trophy } from "lucide-react";
+import { AlertCircle, AlertTriangle, CalendarClock, CalendarPlus, CheckCircle2, Eye, Pause, Play, Plus, QrCode, Radio, Send, Store, Ticket, Trophy } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import ActionRow from "@/components/luckyDraw/ActionRow";
 import AddEntryModal from "@/components/luckyDraw/AddEntryModal";
 import ConfirmModal from "@/components/luckyDraw/ConfirmModal";
 import PageHead from "@/components/luckyDraw/PageHead";
+import SelectMenu from "@/components/luckyDraw/SelectMenu";
 import Sheet from "@/components/luckyDraw/Sheet";
 import StepBar from "@/components/luckyDraw/StepBar";
 import { drawIcon, levelIcon } from "@/components/luckyDraw/icons";
@@ -246,6 +247,8 @@ function LuckyDrawDetail() {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState("");
   const [qr, setQr] = useState(null);
+  // The store whose QR code the sheet shows: each store gets its own (?store=), as in the scratch campaign QR studio.
+  const [qrStoreId, setQrStoreId] = useState("");
   const [showExtend, setShowExtend] = useState(false);
   const [showRun, setShowRun] = useState(false);
   const [runError, setRunError] = useState("");
@@ -347,17 +350,22 @@ function LuckyDrawDetail() {
 
   const setStatus = (status) =>
     perform("status", () => api(`/api/lucky-draws/campaigns/${id}/status`, { method: "PATCH", body: { status } }), status === "paused" ? "Entries paused." : status === "active" && !isDraft ? "Entries open again." : "");
-  async function openQr() {
+  const qrStores = entryDraw.stores;
+  const qrStore = qrStores.find((s) => String(s.storeId) === String(qrStoreId)) || qrStores[0] || null;
+  async function openQr(storeId = qrStore?.storeId) {
     setBusy("qr");
     setError("");
     try {
-      setQr(await api(`/api/lucky-draws/campaigns/${id}/qr`));
+      const query = storeId ? `?store=${encodeURIComponent(String(storeId))}` : "";
+      setQr(await api(`/api/lucky-draws/campaigns/${id}/qr${query}`));
+      setQrStoreId(storeId ? String(storeId) : "");
     } catch (err) {
       showError(err.message);
     } finally {
       setBusy("");
     }
   }
+  const qrFileName = `lucky-draw-${id}${qrStore ? `-${qrStore.storeName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}` : ""}.png`;
   const openRun = () => {
     setRunError("");
     setShowRun(true);
@@ -395,11 +403,11 @@ function LuckyDrawDetail() {
     else primary = { label: "Run draw", icon: Trophy, onClick: openRun, disabled: busy !== "" };
   } else if (campaign.status === "paused") primary = { label: busy === "status" ? "Opening…" : "Resume entries", icon: Play, onClick: () => setStatus("active"), disabled: busy === "status" };
   else if (canAddEntries) primary = { label: "Add entry", icon: Plus, onClick: () => setShowAddEntry(true) };
-  else if (takesQr) primary = { label: busy === "qr" ? "Loading…" : "QR code", icon: QrCode, onClick: openQr, disabled: busy === "qr" };
+  else if (takesQr) primary = { label: busy === "qr" ? "Loading…" : "QR code", icon: QrCode, onClick: () => openQr(), disabled: busy === "qr" };
 
   // Everything else the owner can do here, as rows (the review step's list style).
   const actions = [];
-  if (takesQr && !isDraft && !ended && primary?.icon !== QrCode) actions.push({ key: "qr", icon: QrCode, label: "QR code", onClick: openQr, disabled: busy === "qr" });
+  if (takesQr && !isDraft && !ended && primary?.icon !== QrCode) actions.push({ key: "qr", icon: QrCode, label: "QR code", onClick: () => openQr(), disabled: busy === "qr" });
   if (canAddEntries && primary?.icon !== Plus) actions.push({ key: "add", icon: Plus, label: "Add entry", onClick: () => setShowAddEntry(true) });
   if (drawType === "live_online" && !isDraft && primary?.href !== livePath) actions.push({ key: "live", icon: Radio, label: "Live reveal", sub: `Reveal ${formatDayTime(reveal)}`, href: livePath });
   if (drawType === "digital" && openDraw && campaign.status === "active" && entriesStarted && !entriesClosed) {
@@ -610,15 +618,25 @@ function LuckyDrawDetail() {
         footer={
           <div className={styles.actions}>
             <button type="button" className={styles.secondaryButton} onClick={() => setQr(null)}>Close</button>
-            {qr && <a className={styles.primaryButton} href={qr.dataUrl} download={`lucky-draw-${id}.png`}>Download PNG</a>}
+            {qr && <a className={styles.primaryButton} href={qr.dataUrl} download={qrFileName}>Download PNG</a>}
           </div>
         }
       >
         {qr && (
           <div className={styles.qrSheet}>
+            {qrStores.length > 1 && (
+              <div className={`${styles.field} ${styles.qrStoreField}`}>
+                <label className={styles.label} htmlFor="ld-qr-store">Store</label>
+                <SelectMenu
+                  id="ld-qr-store"
+                  value={String(qrStore?.storeId || "")}
+                  options={qrStores.map((s) => ({ value: String(s.storeId), label: s.storeName, icon: Store }))}
+                  onChange={(storeId) => openQr(storeId)}
+                />
+              </div>
+            )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className={styles.qr} src={qr.dataUrl} alt="QR code for the lucky draw entry page" />
-            <p className={styles.mono}>{qr.url}</p>
+            <img className={styles.qr} src={qr.dataUrl} alt={`QR code for the lucky draw entry page${qrStore ? `, ${qrStore.storeName}` : ""}`} style={busy === "qr" ? { opacity: 0.4 } : undefined} />
           </div>
         )}
       </Sheet>

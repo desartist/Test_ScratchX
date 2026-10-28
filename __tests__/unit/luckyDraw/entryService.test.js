@@ -2,6 +2,7 @@ import LuckyDrawCampaign from '@/models/luckyDrawCampaignModel';
 import LuckyDraw from '@/models/luckyDrawModel';
 import LuckyDrawEntry from '@/models/luckyDrawEntryModel';
 import LuckyDrawWinner from '@/models/luckyDrawWinnerModel';
+import Store from '@/models/storeModel';
 import { findNearestStore } from '@/lib/services/luckyDraw/locationCheck';
 import {
   createEntry,
@@ -70,9 +71,9 @@ describe('createEntry', () => {
     expect(await LuckyDrawEntry.countDocuments({ campaignId: campaign._id })).toBe(2);
   });
 
-  it('rejects a customer who is not near a participating store', async () => {
+  it('rejects a customer who is not near a participating store, saying how far they are', async () => {
     const campaign = await createCampaign();
-    await expect(createEntry(submit(campaign, FAR))).rejects.toThrow(/not valid at your current location/);
+    await expect(createEntry(submit(campaign, FAR))).rejects.toThrow(/^It looks like you're about \d+m away from the store\. Head a little closer — you need to be within 250m to enter\.$/);
     expect(await LuckyDrawEntry.countDocuments()).toBe(0);
   });
 
@@ -175,6 +176,72 @@ describe('createEntry', () => {
     );
     const result = await createEntry(submit(data));
     expect(result.storeName).toBe('Main Store');
+  });
+});
+
+// A point `meters` due north of the fixture store (19.076, 72.8777).
+const north = (meters) => ({ latitude: 19.076 + meters / 111320, longitude: 72.8777 });
+const PUNE = { latitude: 18.5204, longitude: 73.8567 };
+const store = (storeName, { latitude, longitude }) => ({ storeId: newId(), storeName, city: 'X', latitude, longitude, status: 'active' });
+
+describe('createEntry: geofence like the scratch campaign flow', () => {
+  it('allows 250 m, plus the phone\'s GPS accuracy capped at 200 m', async () => {
+    const campaign = await createCampaign();
+    await expect(createEntry(submit(campaign, north(350)))).rejects.toThrow(/about 350m away .* within 250m to enter/);
+
+    const widened = await createEntry(submit(campaign, { ...north(350), accuracy: 150, customerMobile: '9876500010' }));
+    expect(widened.entry.distanceMeters).toBe(350);
+
+    await expect(createEntry(submit(campaign, { ...north(500), accuracy: 5000, customerMobile: '9876500011' }))).rejects.toThrow(/about 4\d\dm away .* within 450m to enter/);
+    await expect(createEntry(submit(campaign, { ...north(240), accuracy: -30, customerMobile: '9876500012' }))).resolves.toBeDefined();
+  });
+
+  it('checks a retail customer against the store\'s current location, not the one saved at publishing', async () => {
+    const campaign = await createCampaign();
+    const { storeId } = campaign.assignedStores[0];
+    const moved = { latitude: 19.1, longitude: 72.9 };
+    await Store.collection.insertOne({ _id: storeId, ...moved });
+
+    await expect(createEntry(submit(campaign, north(20)))).rejects.toThrow(/away from the store/);
+    const result = await createEntry(submit(campaign, { ...moved, customerMobile: '9876500020' }));
+    expect(result.entry.distanceMeters).toBe(0);
+  });
+
+  it('falls back to the saved location when the store has no current one', async () => {
+    const campaign = await createCampaign();
+    await Store.collection.insertOne({ _id: campaign.assignedStores[0].storeId, latitude: null, longitude: null });
+    await expect(createEntry(submit(campaign, north(20)))).resolves.toBeDefined();
+  });
+
+  it('says the QR is not valid here when no store of the draw has a location', async () => {
+    const campaign = await createCampaign({ assignedStores: [store('No GPS', { latitude: null, longitude: null })] });
+    await expect(createEntry(submit(campaign))).rejects.toThrow(/not valid at your current location/);
+  });
+
+  it('pins a store\'s own QR to that store, for retail and wholesale alike', async () => {
+    const mumbai = store('Mumbai', { latitude: 19.076, longitude: 72.8777 });
+    const pune = store('Pune', PUNE);
+    const campaign = await createCampaign({ assignedStores: [mumbai, pune] });
+
+    // Retail: near Mumbai but holding Pune's QR is out of range of Pune.
+    await expect(createEntry(submit(campaign, { storeId: String(pune.storeId) }))).rejects.toThrow(/away from the store/);
+    const atMumbai = await createEntry(submit(campaign, { storeId: String(mumbai.storeId), customerMobile: '9876500030' }));
+    expect(String(atMumbai.entry.storeId)).toBe(String(mumbai.storeId));
+    // Without a store QR, the nearest store wins.
+    const atPune = await createEntry(submit(campaign, { ...PUNE, customerMobile: '9876500031' }));
+    expect(String(atPune.entry.storeId)).toBe(String(pune.storeId));
+    // A store that is not in the draw.
+    await expect(createEntry(submit(campaign, { storeId: String(newId()), customerMobile: '9876500032' }))).rejects.toThrow('This QR code is not for a store in this draw.');
+
+    // Wholesale: no distance check, the QR's store or else the first store.
+    const wholesale = (o) => submit(campaign, { ...FAR, skipLocationCheck: true, ...o });
+    const pinned = await createEntry(wholesale({ storeId: String(pune.storeId), customerMobile: '9876500033' }));
+    expect(String(pinned.entry.storeId)).toBe(String(pune.storeId));
+    expect(pinned.entry.distanceMeters).toBeNull();
+    expect(pinned.entry.customerLatitude).toBe(FAR.latitude);
+    const first = await createEntry(wholesale({ customerMobile: '9876500034' }));
+    expect(String(first.entry.storeId)).toBe(String(mumbai.storeId));
+    await expect(createEntry(wholesale({ storeId: String(newId()), customerMobile: '9876500035' }))).rejects.toThrow('This QR code is not for a store in this draw.');
   });
 });
 

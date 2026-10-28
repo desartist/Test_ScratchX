@@ -608,7 +608,7 @@
 /* QR code sheet. */
 .qrSheet { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
 .qrSheet .qr { width: min(240px, 70vw); height: auto; aspect-ratio: 1; }
-.qrSheet .mono { font-size: 0.8rem; font-weight: 600; color: #637080; }
+.qrStoreField { width: 100%; text-align: left; }
 
 /* Big result numbers (entry number after saving, redeemed prize). */
 .resultCard { align-items: center; text-align: center; }

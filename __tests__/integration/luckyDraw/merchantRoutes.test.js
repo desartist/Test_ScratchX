@@ -153,6 +153,21 @@ describe('campaigns', () => {
     expect(res.status).toBe(200);
     expect(data.url).toBe(`http://localhost/lucky-draw/${campaign._id}`);
     expect(data.dataUrl).toMatch(/^data:image\/png;base64,/);
+    expect(data.storeId).toBeNull();
+  });
+
+  it('returns a store\'s own QR with ?store=, and 404 for a store outside the draw', async () => {
+    const campaign = await makeCampaign();
+    as('Merchant', campaign.merchantId);
+    const storeId = String(campaign.assignedStores[0].storeId);
+    const res = await getQr(req('GET', `/api/lucky-draws/campaigns/${campaign._id}/qr?store=${storeId}`), params({ id: String(campaign._id) }));
+    const { data } = await res.json();
+    expect(res.status).toBe(200);
+    expect(data).toMatchObject({ url: `http://localhost/lucky-draw/${campaign._id}?store=${storeId}`, storeId });
+
+    const other = await getQr(req('GET', `/api/lucky-draws/campaigns/${campaign._id}/qr?store=${newId()}`), params({ id: String(campaign._id) }));
+    expect(other.status).toBe(404);
+    expect((await other.json()).error).toBe('Store not found in this draw');
   });
 });
 

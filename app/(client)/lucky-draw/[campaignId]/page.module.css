@@ -17,3 +17,9 @@
 .resultLine strong { color: #010f44; }
 .win { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 12px 14px; border-radius: 12px; background: #fff5e6; color: #5c3b00; font-weight: 600; }
 .win svg { flex: none; margin-top: 2px; color: #ef9e1b; }
+.storeLine { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 0.92rem; font-weight: 600; color: #4a5568; }
+.storeLine svg { flex: none; color: #ef9e1b; }
+.locationError { align-items: flex-start; }
+.locationError svg { margin-top: 2px; }
+.locationError > span { display: flex; flex-direction: column; gap: 4px; }
+.locationError > span > span { font-weight: 500; color: #7d1d22; }

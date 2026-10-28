@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, AlertTriangle, CalendarClock, CheckCircle2, Radio, Trophy } from "lucide-react";
+import { AlertCircle, AlertTriangle, CalendarClock, CheckCircle2, MapPin, Radio, Trophy } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import FieldError from "@/components/luckyDraw/FieldError";
 import { focusFirstError } from "@/components/luckyDraw/focusFirstError";
@@ -22,17 +22,34 @@ const DEMO_LOCATION = (() => {
   return Number.isFinite(latitude) && Number.isFinite(longitude) && process.env.NEXT_PUBLIC_LUCKY_DRAW_DEMO_LOCATION ? { latitude, longitude } : null;
 })();
 
+// Same wording as the scratch campaign scan page (app/(client)/scan/[campaignId]/page.js).
+const LOCATION_ERRORS = {
+  denied: { title: "Location permission needed", body: "We need your location to make sure you're at the store.", tip: "Tap 'Allow' when your browser asks, or enable it in your phone settings." },
+  timeout: { title: "GPS is taking a moment", body: "We couldn't get your location in time — this sometimes happens indoors.", tip: "Try stepping outside briefly, then tap Enter the draw again." },
+  unsupported: { title: "Location not available", body: "Your browser doesn't support location services.", tip: "Try opening this page in Chrome or Safari." },
+  unavailable: { title: "Can't detect your location", body: "Your GPS seems to be off or unavailable right now.", tip: "Enable location / GPS on your device and try again." },
+};
+
+/** Resolves { latitude, longitude, accuracy }; rejects with error.location = one of LOCATION_ERRORS. */
 function getPosition() {
   return new Promise((resolve, reject) => {
-    const fail = (message) => (DEMO_LOCATION ? resolve(DEMO_LOCATION) : reject(new Error(message)));
+    const fail = (code) => {
+      if (DEMO_LOCATION) {
+        resolve(DEMO_LOCATION);
+        return;
+      }
+      const error = new Error(LOCATION_ERRORS[code].title);
+      error.location = LOCATION_ERRORS[code];
+      reject(error);
+    };
     if (!navigator.geolocation) {
-      fail("Your browser cannot share its location, which this draw needs.");
+      fail("unsupported");
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (position) => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
-      () => fail("Allow location access so we can confirm you are at the store, then try again."),
-      { enableHighAccuracy: true, timeout: DEMO_LOCATION ? 5000 : 15000 },
+      (position) => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy }),
+      (err) => fail(err.code === 1 ? "denied" : err.code === 3 ? "timeout" : "unavailable"),
+      { enableHighAccuracy: true, timeout: DEMO_LOCATION ? 5000 : 20000 },
     );
   });
 }
@@ -66,6 +83,10 @@ function EntryPage() {
   const [form, setForm] = useState(blankQrEntryForm);
   const [errors, setErrors] = useState({});
   const [error, setError] = useState("");
+  // A location failure: { title, body, tip }, shown in the error banner.
+  const [locationError, setLocationError] = useState(null);
+  // The store from a per-store QR code (?store=), when it is one of this draw's stores.
+  const [storeParam, setStoreParam] = useState(null);
   const [busy, setBusy] = useState(false);
   const [entered, setEntered] = useState(null);
   const [statusMobile, setStatusMobile] = useState("");
@@ -84,6 +105,11 @@ function EntryPage() {
     };
   }, [campaignId]);
 
+  useEffect(() => {
+    setStoreParam(new URLSearchParams(window.location.search).get("store"));
+  }, []);
+  const qrStore = (storeParam && campaign?.stores?.find((s) => String(s.storeId) === String(storeParam))) || null;
+
   const set = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => {
@@ -98,6 +124,7 @@ function EntryPage() {
   async function submit(event) {
     event.preventDefault();
     setError("");
+    setLocationError(null);
     const found = qrEntryFormErrors(form);
     setErrors(found);
     if (Object.keys(found).length) {
@@ -115,6 +142,7 @@ function EntryPage() {
           customerMobile: form.customerMobile,
           customerEmail: form.customerEmail.trim(),
           consent: form.consent,
+          ...(qrStore ? { storeId: qrStore.storeId } : {}),
           ...position,
         },
       });
@@ -122,7 +150,8 @@ function EntryPage() {
       setStatusMobile(form.customerMobile);
       window.scrollTo?.({ top: 0, behavior: "smooth" });
     } catch (err) {
-      setError(err.message);
+      if (err.location) setLocationError(err.location);
+      else setError(err.message);
     } finally {
       setBusy(false);
     }
@@ -183,6 +212,9 @@ function EntryPage() {
             <h1 className={styles.title} id="ld-draw-name">{campaign.name}</h1>
             <span className={ui.typeChip}><TypeIcon size={14} aria-hidden="true" />{DRAW_TYPE_LABEL[campaign.drawType]}</span>
           </div>
+          {qrStore && (
+            <p className={styles.storeLine}><MapPin size={16} aria-hidden="true" /><span>{qrStore.storeName}{qrStore.city ? `, ${qrStore.city}` : ""}</span></p>
+          )}
           {campaign.description && <p className={styles.description}>{campaign.description}</p>}
           <DrawDate drawDate={campaign.drawDate} previousDrawDate={campaign.previousDrawDate} live={live} />
           {!entered && campaign.drawDate && <p className={styles.dateNote}>{campaign.notice}</p>}
@@ -203,6 +235,16 @@ function EntryPage() {
           <form id="enter" className={`${ui.summaryCard} ${styles.anchor}`} onSubmit={submit} noValidate aria-labelledby="ld-enter-title">
             <h2 className={ui.listTitle} id="ld-enter-title">Enter the draw</h2>
             {error && <p className={ui.submitError} role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p>}
+            {locationError && (
+              <div className={`${ui.submitError} ${styles.locationError}`} role="alert">
+                <AlertCircle size={16} aria-hidden="true" />
+                <span>
+                  <strong>{locationError.title}</strong>
+                  <span>{locationError.body}</span>
+                  <span>{locationError.tip}</span>
+                </span>
+              </div>
+            )}
             <div className={ui.field}>
               <label className={ui.label} htmlFor={qrFieldId("customerName")}>Full name<Req /></label>
               <input id={qrFieldId("customerName")} className={fieldClass("customerName")} value={form.customerName} onChange={(e) => set("customerName", e.target.value)} maxLength={80} autoComplete="name" aria-invalid={!!errors.customerName} />

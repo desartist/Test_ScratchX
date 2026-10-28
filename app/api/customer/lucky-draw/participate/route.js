@@ -25,6 +25,10 @@ export async function POST(request) {
       consent: body.consent,
       latitude: body.latitude,
       longitude: body.longitude,
+      // The phone's GPS accuracy widens the geofence (capped), as in the scratch campaign flow.
+      accuracy: body.accuracy,
+      // A store's own QR (?store=) pins the entry to that store.
+      storeId: body.storeId || null,
       source: 'qr',
       skipLocationCheck: !campaign.requiresLocation,
     });

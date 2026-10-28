@@ -95,7 +95,7 @@ function LiveReveal() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Copy did not work. Select the link and copy it.");
+      setError("Couldn't copy the link. Open the reveal page and share it from your browser.");
     }
   };
 

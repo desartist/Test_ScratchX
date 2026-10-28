@@ -7,6 +7,7 @@ jest.mock('@/lib/services/luckyDraw/notifier', () => {
 
 import Account from '@/models/accountModel';
 import LuckyDraw from '@/models/luckyDrawModel';
+import LuckyDrawEntry from '@/models/luckyDrawEntryModel';
 import LuckyDrawWinner from '@/models/luckyDrawWinnerModel';
 import { sendSms } from '@/lib/services/luckyDraw/notifier';
 import { DATE_CHANGE_NOTICE } from '@/lib/luckyDraw/constants';
@@ -51,12 +52,12 @@ describe('GET /api/customer/lucky-draw/campaigns/:id', () => {
         { rank: 1, prizeDescription: 'Smart TV' },
         { rank: 2, prizeDescription: 'Mixer Grinder' },
       ],
-      stores: [{ storeName: 'Main Store', city: 'Mumbai' }],
+      // The store id is public: a store's own QR carries it as ?store=.
+      stores: [{ storeId: String(campaign.assignedStores[0].storeId), storeName: 'Main Store', city: 'Mumbai' }],
     });
     expect(data.drawDate).toBeTruthy();
     const text = JSON.stringify(data);
     expect(text).not.toContain(String(campaign.merchantId));
-    expect(text).not.toContain(String(campaign.assignedStores[0].storeId));
   });
 
   it('says how the draw runs, the minimum bill and the prize levels', async () => {
@@ -161,6 +162,25 @@ describe('POST /api/customer/lucky-draw/participate', () => {
     expect((await participate(post('/x', entryBody(paused)))).status).toBe(409);
 
     expect((await participate(post('/x', entryBody({ _id: newId() })))).status).toBe(404);
+  });
+
+  it('passes the store QR and the GPS accuracy through to the geofence', async () => {
+    const pune = { storeId: newId(), storeName: 'Pune', city: 'Pune', latitude: 18.5204, longitude: 73.8567, status: 'active' };
+    const campaign = await createCampaign({ assignedStores: [{ storeId: newId(), storeName: 'Mumbai', city: 'Mumbai', latitude: 19.076, longitude: 72.8777, status: 'active' }, pune] });
+    const at350m = { latitude: 18.5204 + 350 / 111320, longitude: 73.8567 };
+
+    const tooFar = await participate(post('/x', entryBody(campaign, { ...at350m, storeId: String(pune.storeId) })));
+    expect(tooFar.status).toBe(400);
+    expect((await tooFar.json()).error).toMatch(/about 350m away .* within 250m/);
+
+    const widened = await participate(post('/x', entryBody(campaign, { ...at350m, accuracy: 120, storeId: String(pune.storeId), customerMobile: '9876511111' })));
+    expect(widened.status).toBe(201);
+    const entry = await LuckyDrawEntry.findOne({ customerPhone: '9876511111' }).lean();
+    expect(String(entry.storeId)).toBe(String(pune.storeId));
+
+    const wrongStore = await participate(post('/x', entryBody(campaign, { storeId: String(newId()), customerMobile: '9876522222' })));
+    expect(wrongStore.status).toBe(400);
+    expect((await wrongStore.json()).error).toBe('This QR code is not for a store in this draw.');
   });
 
   it('answers 409 for a QR entry into a physical draw', async () => {

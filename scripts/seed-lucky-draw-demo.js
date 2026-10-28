@@ -377,7 +377,8 @@ function makeEntries({ count, from, to, stores: storeList, minBill, campaignId, 
       createdAt: at,
     };
     if (source === 'staff') return base;
-    const meters = Math.round(between(15, 1500));
+    // Inside the 250 m QR geofence (lib/luckyDraw/constants.js).
+    const meters = Math.round(between(15, 240));
     const spot = nearby(store.latitude, store.longitude, meters);
     return { ...base, distanceMeters: meters, customerLatitude: spot.lat, customerLongitude: spot.lng };
   });
