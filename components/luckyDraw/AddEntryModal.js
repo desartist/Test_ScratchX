@@ -12,6 +12,13 @@ import styles from "@/app/(dashboard)/lucky-draws/luckyDraws.module.css";
 
 const Req = () => <span className={styles.required} aria-hidden="true">*</span>;
 
+/** " SMS and email sent." / " SMS sent." / " Email sent." / "" */
+function sentLine({ confirmationSent, emailSent }) {
+  if (confirmationSent && emailSent) return " SMS and email sent.";
+  if (confirmationSent) return " SMS sent.";
+  return emailSent ? " Email sent." : "";
+}
+
 /**
  * Staff type in a customer's entry at the counter. Stays open after saving so the next customer can be
  * added straight away. draw: { _id, name, minBillAmount, stores: [{ storeId, storeName }] }.
@@ -87,7 +94,7 @@ export default function AddEntryModal({ isOpen, draw, onClose, onSaved }) {
             <CheckCircle2 size={18} aria-hidden="true" />
             <span>
               Entry <strong className={styles.bigNumber}>#{last.entryNumber}</strong> for {last.customerName}. Write it on the slip.
-              {last.confirmationSent ? " SMS sent." : ""}
+              {sentLine(last)}
             </span>
           </div>
         )}
@@ -95,14 +102,19 @@ export default function AddEntryModal({ isOpen, draw, onClose, onSaved }) {
         <p className={styles.hint}>{describeMinBill(draw.minBillAmount)}.</p>
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor={entryFieldId("customerName")}>Customer name<Req /></label>
+          <label className={styles.label} htmlFor={entryFieldId("customerName")}>Full name<Req /></label>
           <input id={entryFieldId("customerName")} className={fieldClass("customerName")} value={form.customerName} onChange={(e) => set("customerName", e.target.value)} maxLength={80} autoComplete="off" aria-invalid={!!errors.customerName} />
           <FieldError message={errors.customerName} />
         </div>
         <div className={styles.field}>
-          <label className={styles.label} htmlFor={entryFieldId("customerMobile")}>Mobile number<Req /></label>
-          <input id={entryFieldId("customerMobile")} className={fieldClass("customerMobile")} inputMode="numeric" maxLength={10} placeholder="10 digits" value={form.customerMobile} onChange={(e) => set("customerMobile", e.target.value.replace(/\D/g, ""))} aria-invalid={!!errors.customerMobile} />
+          <label className={styles.label} htmlFor={entryFieldId("customerMobile")}>WhatsApp number<Req /></label>
+          <input id={entryFieldId("customerMobile")} className={fieldClass("customerMobile")} type="tel" inputMode="numeric" maxLength={10} placeholder="10 digits" value={form.customerMobile} onChange={(e) => set("customerMobile", e.target.value.replace(/\D/g, ""))} aria-invalid={!!errors.customerMobile} />
           <FieldError message={errors.customerMobile} />
+        </div>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor={entryFieldId("customerEmail")}>Email<Req /></label>
+          <input id={entryFieldId("customerEmail")} className={fieldClass("customerEmail")} type="email" inputMode="email" autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={254} placeholder="name@example.com" value={form.customerEmail} onChange={(e) => set("customerEmail", e.target.value)} aria-invalid={!!errors.customerEmail} />
+          <FieldError message={errors.customerEmail} />
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor={entryFieldId("billAmount")}>Bill amount<Req /></label>
@@ -125,7 +137,7 @@ export default function AddEntryModal({ isOpen, draw, onClose, onSaved }) {
         <div id={entryFieldId("consent")} tabIndex={-1} className={`${styles.checkBox} ${errors.consent ? styles.inputError : ""}`}>
           <label className={styles.checkRow}>
             <input type="checkbox" checked={form.consent} onChange={(e) => set("consent", e.target.checked)} />
-            <span>Customer agreed to SMS about this draw.</span>
+            <span>Customer agreed to get SMS and email about this draw.</span>
           </label>
         </div>
         <FieldError message={errors.consent} />

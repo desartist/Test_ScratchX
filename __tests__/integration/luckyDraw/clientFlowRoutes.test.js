@@ -21,7 +21,7 @@ const as = (account) => requireAuth.mockResolvedValue({ account, error: null });
 const req = (method, url, body) =>
   new Request(`http://localhost${url}`, { method, headers: { 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
 const params = (p) => ({ params: Promise.resolve(p) });
-const body = { customerName: 'Ravi Kumar', customerMobile: '9811111111', billAmount: 1500, consent: true };
+const body = { customerName: 'Ravi Kumar', customerMobile: '9811111111', customerEmail: 'ravi@example.com', billAmount: 1500, consent: true };
 
 describe('staff entries', () => {
   it('lets the merchant add an entry, texts the customer and lists it', async () => {

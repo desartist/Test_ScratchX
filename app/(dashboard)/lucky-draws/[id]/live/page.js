@@ -1,14 +1,20 @@
 "use client";
 
-import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Check, ChevronDown, Copy, Crown, ExternalLink, Lock, Play, Radio, Smartphone } from "lucide-react";
+import { AlertCircle, AlertTriangle, Check, ChevronDown, Copy, Crown, ExternalLink, Lock, Play, Radio, Smartphone } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
+import ActionRow from "@/components/luckyDraw/ActionRow";
+import PageHead from "@/components/luckyDraw/PageHead";
 import { api } from "@/lib/luckyDraw/clientApi";
 import { formatINR, formatNumber } from "@/lib/luckyDraw/calculator";
 import { formatDayTime } from "@/lib/luckyDraw/display";
 import styles from "../../luckyDraws.module.css";
+
+/** The reveal's next step: in the head on wider screens, pinned to the bottom on phones. */
+function PrimaryButton({ icon: Icon, label, disabled, onClick }) {
+  return <button type="button" className={styles.primaryButton} disabled={disabled} onClick={onClick}><Icon size={16} aria-hidden="true" />{label}</button>;
+}
 
 function LiveReveal() {
   const { id } = useParams();
@@ -60,10 +66,15 @@ function LiveReveal() {
     }
   }
 
+  const back = { href: `/lucky-draws/${id}`, label: "Back to the draw" };
+
   if (!detail || !view) {
     return (
-      <div className={styles.container}>
-        {error ? <p className={styles.error} role="alert">{error}</p> : <p className={styles.muted}>Loading…</p>}
+      <div className={`${styles.container} ${styles.containerCentered}`}>
+        <div className={styles.column}>
+          <PageHead title="Live reveal" back={back} />
+          {error ? <p className={styles.submitError} role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p> : <p className={styles.loading}>Loading…</p>}
+        </div>
       </div>
     );
   }
@@ -76,6 +87,7 @@ function LiveReveal() {
   const done = view.status === "done";
   const entriesOpen = new Date(campaign.endDate) > new Date();
   const link = `${origin}/lucky-draw/${id}/reveal`;
+  const nextCategory = started && !done ? view.categories[view.revealedCount] : null;
 
   const copy = async () => {
     try {
@@ -87,93 +99,96 @@ function LiveReveal() {
     }
   };
 
+  // The next step of the reveal, pinned at the bottom like the wizard's Continue.
+  let primary = null;
+  if (isLive && !started && openDraw) {
+    primary = {
+      label: busy === "start" ? "Picking winners…" : "Start live reveal",
+      icon: Play,
+      disabled: busy !== "" || entriesOpen || entryCount === 0,
+      onClick: () => act("start", `/api/lucky-draws/draws/${openDraw._id}/reveal/start`),
+    };
+  } else if (isLive && nextCategory && draw) {
+    primary = {
+      label: busy === "next" ? "Revealing…" : `Reveal ${nextCategory.level.toLowerCase()}`,
+      icon: Radio,
+      disabled: busy !== "",
+      onClick: () => act("next", `/api/lucky-draws/draws/${draw._id}/reveal/next`),
+    };
+  }
+
   return (
-    <div className={styles.container}>
-      <Link href={`/lucky-draws/${id}`} className={styles.backLink}><ArrowLeft size={16} aria-hidden="true" />{campaign.name}</Link>
-      <div className={styles.header}>
-        <div>
-          <h1 className={`${styles.title} ${styles.titleRow}`}>
-            Live reveal
-            <span className={`${styles.pill} ${styles[done ? "pill_done" : started ? "pill_live" : "pill_scheduled"]}`}>{done ? "Finished" : started ? "Live" : "Not started"}</span>
-          </h1>
-          <p className={styles.subtitle}>
+    <div className={`${styles.container} ${styles.containerCentered}`}>
+      <div className={styles.column}>
+        <PageHead title="Live reveal" back={back} aside={primary && <PrimaryButton {...primary} />}>
+          <span className={`${styles.pill} ${styles[done ? "pill_done" : started ? "pill_live" : "pill_scheduled"]}`}>{done ? "Finished" : started ? "Live" : "Not started"}</span>
+          <span className={styles.listCount}>
             {formatDayTime(view.revealDate)}
-            {draw ? ` · ${formatNumber(draw.entryCount)} entries` : openDraw ? ` · ${formatNumber(entryCount)} ${entryCount === 1 ? "entry" : "entries"} so far` : ""}
-          </p>
-        </div>
-        <div className={styles.actions}>
-          <button type="button" className={styles.secondaryButton} onClick={copy}>{copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}{copied ? "Copied" : "Copy watch link"}</button>
-          <a className={styles.secondaryButton} href={`/lucky-draw/${id}/reveal`} target="_blank" rel="noreferrer"><ExternalLink size={16} aria-hidden="true" />Open reveal page</a>
-        </div>
-      </div>
+            {draw ? ` · ${formatNumber(draw.entryCount)} entries` : openDraw ? ` · ${formatNumber(entryCount)} ${entryCount === 1 ? "entry" : "entries"}` : ""}
+          </span>
+        </PageHead>
 
-      {error && <p className={styles.error} role="alert">{error}</p>}
+        {error && <p className={styles.submitError} role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p>}
+        {!isLive && !started && <p className={styles.notice}><AlertTriangle size={16} aria-hidden="true" /><span>This draw isn&rsquo;t revealed live. See winners on the draw page.</span></p>}
+        {isLive && !started && entriesOpen && <p className={styles.notice}><AlertTriangle size={16} aria-hidden="true" /><span>Start after entries close, {formatDayTime(campaign.endDate)}.</span></p>}
+        {isLive && !started && !entriesOpen && entryCount === 0 && <p className={styles.notice}><AlertTriangle size={16} aria-hidden="true" /><span>Nobody entered, so there are no winners to reveal.</span></p>}
+        {done && <p className={styles.okBox}><Check size={16} aria-hidden="true" />All prizes revealed. Winners get their claim codes by SMS and email.</p>}
 
-      <div className={styles.liveGrid}>
-        <div className={styles.stack}>
-          {!started && isLive && (
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>Ready when you are</h2>
-              {entriesOpen && <p className={styles.notice}>Start after entries close, {formatDayTime(campaign.endDate)}.</p>}
-              {!entriesOpen && entryCount === 0 && <p className={styles.notice}>Nobody entered, so there are no winners to reveal.</p>}
-              <div>
-                <button type="button" className={styles.primaryButton} disabled={busy !== "" || entriesOpen || entryCount === 0 || !openDraw} onClick={() => act("start", `/api/lucky-draws/draws/${openDraw._id}/reveal/start`)}>
-                  <Play size={16} aria-hidden="true" />{busy === "start" ? "Picking winners…" : "Start live reveal"}
-                </button>
-              </div>
-            </section>
-          )}
-
-          {!isLive && !started && (
-            <p className={styles.notice}>This draw isn&rsquo;t revealed live. See winners on the draw page.</p>
-          )}
-
-          <div className={styles.panel}>
-            <div className={styles.panelHead}><h2 className={styles.sectionTitle}>Prizes</h2><span className={styles.cellSub}>Smallest prize first</span></div>
-            <ol className={styles.catSteps}>
-              {view.categories.map((cat, i) => {
-                const isNext = started && !done && i === view.revealedCount;
-                const isLast = i === view.categories.length - 1;
-                return (
-                  <li key={cat.rank}>
-                    <span className={`${styles.catDot} ${cat.revealed ? styles.catDone : isNext ? styles.catNow : ""}`}>
-                      {cat.revealed ? <Check size={18} aria-hidden="true" /> : isLast ? <Crown size={18} aria-hidden="true" /> : isNext ? <Radio size={18} aria-hidden="true" /> : <Lock size={16} aria-hidden="true" />}
-                    </span>
-                    <div>
-                      <b>{cat.level} · {cat.name} · {cat.quantity} × {formatINR(cat.value)}</b>
-                      <div className={styles.cellSub}>{cat.revealed ? `${cat.winners.length} winner${cat.winners.length === 1 ? "" : "s"}` : isNext ? "Up next" : "Hidden"}</div>
-                      {cat.revealed && cat.winners.length > 0 && (
-                        <div className={styles.winnerChips}>{cat.winners.map((w, j) => <span key={j} className={styles.winnerChip}>{w.label}</span>)}</div>
-                      )}
-                    </div>
-                    <span>
-                      {isNext && isLive && (
-                        <button type="button" className={`${styles.primaryButton} ${styles.smallButton}`} disabled={busy !== ""} onClick={() => act("next", `/api/lucky-draws/draws/${draw._id}/reveal/next`)}>
-                          {busy === "next" ? "Revealing…" : `Reveal ${cat.level.toLowerCase()}`}
-                        </button>
-                      )}
-                    </span>
-                  </li>
-                );
-              })}
-            </ol>
+        <section aria-labelledby="ld-live-prizes">
+          <div className={styles.listHead}>
+            <h2 className={styles.listTitle} id="ld-live-prizes">Prizes</h2>
+            <span className={styles.listCount}>{view.revealedCount} of {view.totalCategories} revealed</span>
           </div>
+          <ol className={styles.rowList}>
+            {view.categories.map((cat, i) => {
+              const isNext = started && !done && i === view.revealedCount;
+              const isLast = i === view.categories.length - 1;
+              const Icon = cat.revealed ? Check : isNext ? Radio : isLast ? Crown : Lock;
+              const tone = cat.revealed ? styles.rowIconGreen : isNext ? "" : styles.rowIconMuted;
+              return (
+                <li key={cat.rank} className={styles.row} aria-current={isNext ? "step" : undefined}>
+                  <span className={`${styles.rowIcon} ${tone}`}><Icon size={20} aria-hidden="true" /></span>
+                  <span className={styles.rowMain}>
+                    <strong>{cat.level}</strong>
+                    <span>{cat.name} · {cat.quantity} × {formatINR(cat.value)}</span>
+                  </span>
+                  <span className={styles.rowSide}>
+                    <span>{cat.revealed ? `${cat.winners.length} winner${cat.winners.length === 1 ? "" : "s"}` : isNext ? "Up next" : "Hidden"}</span>
+                  </span>
+                  {cat.revealed && cat.winners.length > 0 && (
+                    <span className={styles.rowFoot}>
+                      <span className={styles.winnerChips}>{cat.winners.map((w, j) => <span key={j} className={styles.winnerChip}>{w.label}</span>)}</span>
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </section>
 
-          {done && <p className={styles.okBox}><Check size={16} aria-hidden="true" />All prizes revealed. Every winner got an SMS with a claim code.</p>}
-          <details className={styles.disclosure}>
-            <summary><Lock size={15} aria-hidden="true" />How winners are picked<ChevronDown size={16} className={styles.disclosureChevron} aria-hidden="true" /></summary>
-            <p>ScratchX picks them at random once, when you start, from every entry (QR and staff). One entry per qualifying bill; one win per customer. Customers on the watch page see each prize as you reveal it.</p>
-          </details>
-        </div>
+        <section aria-labelledby="ld-live-share">
+          <div className={styles.listHead}><h2 className={styles.listTitle} id="ld-live-share">Watch page</h2></div>
+          <div className={styles.rowList}>
+            <ActionRow icon={copied ? Check : Copy} label={copied ? "Copied" : "Copy watch link"} onClick={copy} tone={copied ? styles.rowIconGreen : styles.rowIconNavy} />
+            <ActionRow icon={ExternalLink} label="Open reveal page" href={`/lucky-draw/${id}/reveal`} external tone={styles.rowIconNavy} />
+          </div>
+        </section>
+
+        <details className={styles.disclosure}>
+          <summary><Lock size={15} aria-hidden="true" />How winners are picked<ChevronDown size={16} className={styles.disclosureChevron} aria-hidden="true" /></summary>
+          <p>ScratchX picks them at random once, when you start, from every entry (QR and staff). One entry per qualifying bill; one win per customer. Customers on the watch page see each prize as you reveal it.</p>
+        </details>
 
         {showPreview && (
-          <div className={styles.previewCol}>
+          <section className={styles.previewCol} aria-label="What customers see">
             <span className={styles.modeTag}><Smartphone size={16} aria-hidden="true" />What customers see</span>
             <div className={styles.phoneFrame}>
               <iframe key={frameKey} className={styles.phoneScreen} title="Customer reveal page preview" src={`/lucky-draw/${id}/reveal`} loading="lazy" />
             </div>
-          </div>
+          </section>
         )}
+
+        {primary && <div className={`${styles.wizardFoot} ${styles.phoneFoot}`}><PrimaryButton {...primary} /></div>}
       </div>
     </div>
   );

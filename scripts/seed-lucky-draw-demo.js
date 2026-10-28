@@ -315,7 +315,8 @@ function customer() {
   do phone = `${pick(['98', '99', '97', '96', '93', '90', '88', '87', '82', '81', '79', '70', '62'])}${String(intBetween(0, 99999999)).padStart(8, '0')}`;
   while (usedPhones.has(phone));
   usedPhones.add(phone);
-  return { name, phone };
+  const email = `${name.toLowerCase().replace(/[^a-z]+/g, '.').replace(/^\.|\.$/g, '')}@example.com`;
+  return { name, phone, email };
 }
 /** A point `meters` away from (lat, lng) in a random direction. */
 function nearby(lat, lng, meters) {
@@ -370,7 +371,7 @@ function makeEntries({ count, from, to, stores: storeList, minBill, campaignId, 
     const base = {
       _id: idAt(at),
       campaignId, drawId, storeId: store._id,
-      customerName: who.name, customerPhone: who.phone, consent: true,
+      customerName: who.name, customerPhone: who.phone, customerEmail: who.email, consent: true,
       billAmount: billAbove(minBill), entriesGranted: 1, source,
       addedByAccountId: source === 'staff' ? addedBy : null,
       createdAt: at,
@@ -694,7 +695,7 @@ async function main() {
       const redeemedAt = redeemed ? shopTimeBetween(new Date(executedAt.getTime() + 12 * HOUR), new Date(now.getTime() - DAY)) : undefined;
       return {
         drawId, campaignId: campaign._id, merchantId: merchant._id, rank: tier.rank,
-        entryId: entry._id, customerName: entry.customerName, customerPhone: entry.customerPhone,
+        entryId: entry._id, customerName: entry.customerName, customerPhone: entry.customerPhone, customerEmail: entry.customerEmail,
         prizeDescription: tier.prizeDescription, prizeValue: tier.prizeValue, claimCode: codes[i],
         status: redeemed ? 'redeemed' : 'notified', notifiedAt, expiresAt,
         ...(redeemed ? { redeemedAt, redeemedByAccountId: merchant._id, redeemedAtStoreId: entry.storeId } : {}),

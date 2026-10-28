@@ -21,6 +21,7 @@ const started = () => ({
   drawType: 'physical',
   name: 'Diwali Draw',
   grand: { prizeDescription: 'TV', prizeValue: '20,000', imageUrl: '' },
+  typeAcknowledged: true,
   confirmed: true,
 });
 
@@ -36,7 +37,7 @@ describe('hasProgress', () => {
 });
 
 describe('write, read and clear', () => {
-  it('round-trips the form and step, never keeping the confirmation tick', () => {
+  it('round-trips the form and step, never keeping the review ticks', () => {
     const storage = memoryStorage();
     expect(writeWizardDraft(storage, { form: started(), step: 3 }, NOW)).toBe(true);
 
@@ -46,6 +47,8 @@ describe('write, read and clear', () => {
     expect(draft.form.name).toBe('Diwali Draw');
     expect(draft.form.grand.prizeDescription).toBe('TV');
     expect(draft.form.confirmed).toBe(false);
+    expect(draft.form.typeAcknowledged).toBe(false);
+    expect(JSON.parse(storage.getItem(WIZARD_DRAFT_KEY)).form.typeAcknowledged).toBe(false);
 
     clearWizardDraft(storage);
     expect(readWizardDraft(storage)).toBeNull();

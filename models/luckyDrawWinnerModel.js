@@ -10,6 +10,7 @@ const luckyDrawWinnerSchema = new mongoose.Schema(
     entryId: { type: mongoose.Schema.Types.ObjectId, ref: 'LuckyDrawEntry', required: true },
     customerName: { type: String, required: true, trim: true },
     customerPhone: { type: String, required: true },
+    customerEmail: { type: String, trim: true, lowercase: true, default: null },
     prizeDescription: { type: String, required: true, trim: true },
     prizeValue: { type: Number, default: 0, min: 0 },
     claimCode: { type: String, required: true, unique: true, uppercase: true, trim: true },

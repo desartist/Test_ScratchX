@@ -23,6 +23,7 @@ const submit = (campaign, overrides = {}) => ({
   campaignId: String(campaign._id),
   customerName: 'Asha Verma',
   customerMobile: '9876543210',
+  customerEmail: 'asha@example.com',
   billAmount: 1200,
   consent: true,
   ...NEAR,
@@ -177,6 +178,49 @@ describe('createEntry', () => {
   });
 });
 
+describe('createEntry: email and bill', () => {
+  it('stores the email in lower case and needs a valid one', async () => {
+    const campaign = await createCampaign();
+    const result = await createEntry(submit(campaign, { customerEmail: ' Asha.Verma@Example.COM ' }));
+    expect(result.entry.customerEmail).toBe('asha.verma@example.com');
+    await expect(createEntry(submit(campaign, { customerEmail: undefined, customerMobile: '9876500001' }))).rejects.toThrow(/valid email/);
+    await expect(createEntry(submit(campaign, { customerEmail: 'asha@', customerMobile: '9876500002' }))).rejects.toThrow(ValidationError);
+  });
+
+  it('takes a QR entry without a bill, and still refuses one that is given under the minimum', async () => {
+    const campaign = await createCampaign({ minBillAmount: 1000 });
+    const result = await createEntry(submit(campaign, { billAmount: undefined }));
+    expect(result.entry.billAmount).toBeNull();
+    await expect(createEntry(submit(campaign, { billAmount: 999, customerMobile: '9876500003' }))).rejects.toThrow(/₹1,000 or more/);
+  });
+
+  it('treats a second bill-less QR entry from the same number within a minute as a double submit', async () => {
+    const campaign = await createCampaign();
+    await createEntry(submit(campaign, { billAmount: undefined }));
+    await expect(createEntry(submit(campaign, { billAmount: undefined }))).rejects.toThrow(/just submitted/);
+    await expect(createEntry(submit(campaign, { billAmount: undefined }), new Date(Date.now() + 61 * 1000))).resolves.toBeDefined();
+  });
+
+  it('needs the bill on a staff entry', async () => {
+    const campaign = await createCampaign({ drawType: 'physical' });
+    const staff = { source: 'staff', storeId: String(campaign.assignedStores[0].storeId), latitude: undefined, longitude: undefined };
+    await expect(createEntry(submit(campaign, { ...staff, billAmount: undefined }))).rejects.toThrow(/bill amount/i);
+    await expect(createEntry(submit(campaign, { ...staff, customerEmail: '' }))).rejects.toThrow(/email address/);
+  });
+});
+
+describe('confirmEntry', () => {
+  it('reports the SMS and the email separately, once per number in 10 minutes', async () => {
+    const { confirmEntry } = require('@/lib/services/luckyDraw/entryService');
+    const campaign = await createCampaign();
+    const first = await createEntry(submit(campaign));
+    const args = { drawId: first.drawId, customerPhone: '9876543210', customerEmail: 'asha@example.com', campaignName: campaign.name, entryNumber: 1, drawDate: first.drawDate };
+    expect(await confirmEntry(args)).toEqual({ smsSent: true, emailSent: true });
+    await createEntry(submit(campaign, { billAmount: 1300 }));
+    expect(await confirmEntry(args)).toEqual({ smsSent: false, emailSent: false });
+  });
+});
+
 describe('sendEntryConfirmation', () => {
   it('texts the first entry only and never throws', async () => {
     const { sendEntryConfirmation } = require('@/lib/services/luckyDraw/entryService');
@@ -235,6 +279,7 @@ describe('getEntryStatus', () => {
     expect(new Date(status.drawDate)).toEqual(draw.drawDate);
     expect(new Date(status.previousDrawDate)).toEqual(previous);
     expect(status.totalEntries).toBe(1);
+    expect(status.revealInProgress).toBe(false);
     expect(status.notice).toBe(DATE_CHANGE_NOTICE);
     expect(status.wins).toEqual([]);
   });
@@ -295,5 +340,21 @@ describe('getEntryStatus', () => {
     const campaign = await createCampaign();
     await expect(getEntryStatus({ campaignId: String(campaign._id), customerMobile: '123' })).rejects.toThrow(ValidationError);
     await expect(getEntryStatus({ campaignId: String(newId()), customerMobile: '9876543210' })).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe('getEntryStatus after the draw', () => {
+  it('still counts the entries once the draw has finished, and says when a live reveal is under way', async () => {
+    const campaign = await createCampaign();
+    const entry = await createEntry(submit(campaign));
+    await LuckyDraw.updateOne({ _id: entry.drawId }, { $set: { status: 'completed', reveal: { revealedCount: 0, startedAt: new Date() } } });
+    await LuckyDrawCampaign.updateOne({ _id: campaign._id }, { $set: { status: 'ended' } });
+
+    const during = await getEntryStatus({ campaignId: String(campaign._id), customerMobile: '9876543210' });
+    expect(during).toMatchObject({ campaignStatus: 'ended', drawStatus: null, totalEntries: 1, revealInProgress: true, wins: [] });
+
+    await LuckyDraw.updateOne({ _id: entry.drawId }, { $set: { 'reveal.completedAt': new Date() } });
+    const after = await getEntryStatus({ campaignId: String(campaign._id), customerMobile: '9876543210' });
+    expect(after).toMatchObject({ totalEntries: 1, revealInProgress: false });
   });
 });

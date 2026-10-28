@@ -25,6 +25,7 @@ const entryBody = (campaign, overrides = {}) => ({
   campaignId: String(campaign._id),
   customerName: 'Asha Verma',
   customerMobile: '9876543210',
+  customerEmail: 'asha@example.com',
   billAmount: 1200,
   consent: true,
   latitude: 19.0772,

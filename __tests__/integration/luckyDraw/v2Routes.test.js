@@ -142,6 +142,7 @@ describe('public pages', () => {
         campaignId: String(campaign._id),
         customerName: 'Asha',
         customerMobile: '9876543210',
+        customerEmail: 'asha@example.com',
         billAmount: 5000,
         consent: true,
         latitude: 19.0772,

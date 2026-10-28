@@ -12,7 +12,7 @@ const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select
  * Same props as components/common/Modal: { isOpen, title, onClose, footer, children }.
  * Escape and the backdrop close it, Tab stays inside, and focus returns to where it was on close.
  */
-export default function Sheet({ isOpen, title, onClose, footer, children }) {
+export default function Sheet({ isOpen, title, onClose, footer, children, focusField = true }) {
   const panel = useRef(null);
   const titleId = useId();
   // The latest onClose, for the key handler set up once per opening.
@@ -30,7 +30,8 @@ export default function Sheet({ isOpen, title, onClose, footer, children }) {
     const items = () => [...(panel.current?.querySelectorAll(FOCUSABLE) || [])];
     // Start on the first form field; with none, on the dialog itself, so Enter never fires an action
     // (like "Start over" or "Remove prize") the owner hasn't chosen yet.
-    const field = panel.current?.querySelector("[data-sheet-body] :is(input, select, textarea):not([disabled])");
+    // focusField false: open on the dialog itself, for sheets whose first field is optional (no keyboard pop-up).
+    const field = focusField ? panel.current?.querySelector("[data-sheet-body] :is(input, select, textarea):not([disabled])") : null;
     (field || panel.current)?.focus();
 
     const onKey = (e) => {
@@ -57,7 +58,7 @@ export default function Sheet({ isOpen, title, onClose, footer, children }) {
       document.body.style.overflow = previousOverflow;
       if (opener instanceof HTMLElement && document.contains(opener)) opener.focus();
     };
-  }, [isOpen]);
+  }, [isOpen, focusField]);
 
   if (!isOpen) return null;
 

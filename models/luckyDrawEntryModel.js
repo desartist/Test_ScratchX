@@ -9,12 +9,15 @@ const luckyDrawEntrySchema = new mongoose.Schema(
     storeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
     customerName: { type: String, required: true, trim: true, maxlength: 80 },
     customerPhone: { type: String, required: true, match: /^[0-9]{10}$/ },
+    // Required for new entries (checked by entryService); null on entries made before email was asked for.
+    customerEmail: { type: String, trim: true, lowercase: true, maxlength: 254, default: null },
     consent: {
       type: Boolean,
       required: true,
       validate: { validator: (value) => value === true, message: 'Consent is required' },
     },
-    billAmount: { type: Number, required: true, min: 0 },
+    // Staff type the bill in at the counter; QR entries don't ask for it, so theirs is null.
+    billAmount: { type: Number, min: 0, default: null },
     entriesGranted: { type: Number, required: true, min: 1 },
     // Shown to the customer and written on the paper slip; unique within the campaign.
     entryNumber: { type: Number, required: true, min: 1 },

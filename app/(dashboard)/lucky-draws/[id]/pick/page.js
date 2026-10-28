@@ -3,17 +3,17 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Search, Trophy, X } from "lucide-react";
+import { AlertCircle, AlertTriangle, Search, Trophy, X } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import ConfirmModal from "@/components/luckyDraw/ConfirmModal";
 import FieldError from "@/components/luckyDraw/FieldError";
+import PageHead from "@/components/luckyDraw/PageHead";
 import { focusFirstError } from "@/components/luckyDraw/focusFirstError";
+import { levelIcon } from "@/components/luckyDraw/icons";
 import { api } from "@/lib/luckyDraw/clientApi";
 import { formatINR, formatNumber } from "@/lib/luckyDraw/calculator";
-import { prizeLevelLabel, formatDayTime } from "@/lib/luckyDraw/display";
+import { prizeLevelLabel, formatDayTime, maskPhone } from "@/lib/luckyDraw/display";
 import styles from "../../luckyDraws.module.css";
-
-const maskPhone = (phone) => (phone ? `XXXXXX${String(phone).slice(-4)}` : "");
 const slotId = (key) => `ld-slot-${key}`;
 
 /** One slot per winner, grand prize first: [{ key: '1-0', rank: 1, n: 1 }, { key: '2-0', rank: 2, n: 1 }, …]. */
@@ -54,7 +54,7 @@ function EntrySearch({ campaignId, takenPhones, onPick, onCancel }) {
         <input className={styles.input} autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Entry number, name or phone" aria-label="Search entries" />
         <button type="button" className={styles.ghostButton} onClick={onCancel} aria-label="Close search"><X size={16} aria-hidden="true" /></button>
       </div>
-      {error && <p className={styles.fieldError}>{error}</p>}
+      {error && <p className={styles.fieldError} role="alert"><AlertCircle size={13} aria-hidden="true" />{error}</p>}
       {results && results.length === 0 && <p className={styles.hint}>No entries match.</p>}
       {results && results.length > 0 && (
         <ul className={styles.results}>
@@ -94,22 +94,21 @@ function PickWinners() {
     api(`/api/lucky-draws/campaigns/${id}`).then(setDetail).catch((err) => setLoadError(err.message));
   }, [id]);
 
-  if (!detail) {
-    return (
-      <div className={styles.container}>
-        {loadError ? <p className={styles.submitError} role="alert">{loadError}</p> : <p className={styles.muted}>Loading…</p>}
+  const shell = (content, head = <PageHead title="Pick winners" back={{ href: `/lucky-draws/${id}`, label: "Back to the draw" }} />) => (
+    <div className={`${styles.container} ${styles.containerCentered}`}>
+      <div className={styles.column}>
+        {head}
+        {content}
       </div>
-    );
+    </div>
+  );
+
+  if (!detail) {
+    return shell(loadError ? <p className={styles.submitError} role="alert"><AlertCircle size={16} aria-hidden="true" />{loadError}</p> : <p className={styles.loading}>Loading…</p>);
   }
 
   const { campaign, openDraw } = detail;
-  const back = <Link href={`/lucky-draws/${id}`} className={styles.backLink}><ArrowLeft size={16} aria-hidden="true" />{campaign.name}</Link>;
-  const stop = (message) => (
-    <div className={styles.container}>
-      {back}
-      <p className={styles.notice}>{message}</p>
-    </div>
-  );
+  const stop = (message) => shell(<p className={styles.notice}><AlertTriangle size={16} aria-hidden="true" /><span>{message}</span></p>);
   if (campaign.drawType !== "physical") return stop("Only physical draws have their winners picked by hand.");
   if (!openDraw) return stop("The winners of this draw are already saved.");
   if (new Date(campaign.endDate) > new Date()) return stop(`You can pick the winners once entries close on ${formatDayTime(campaign.endDate)}.`);
@@ -167,29 +166,27 @@ function PickWinners() {
     }
   }
 
-  return (
-    <div className={styles.container}>
-      {back}
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Pick winners</h1>
-          <p className={styles.subtitle}>{formatNumber(openDraw.entryCount)} entries · one win per customer</p>
-        </div>
-      </div>
-
-      {required === 0 && <p className={styles.notice}>Nobody entered, so there&rsquo;s no one to pick.</p>}
+  return shell(
+    <>
+      {required === 0 && <p className={styles.notice}><AlertTriangle size={16} aria-hidden="true" /><span>Nobody entered, so there&rsquo;s no one to pick.</span></p>}
       {required > 0 && required < slots.length && (
         <p className={styles.notice}>
-          Only {people} customer{people === 1 ? "" : "s"} entered: pick {required} winner{required === 1 ? "" : "s"} from the Grand Prize down.
+          <AlertTriangle size={16} aria-hidden="true" />
+          <span>Only {people} customer{people === 1 ? "" : "s"} entered: pick {required} winner{required === 1 ? "" : "s"} from the Grand Prize down.</span>
         </p>
       )}
 
-      {prizes.map((prize) => (
-        <section key={prize.rank} className={styles.section}>
-          <h2 className={styles.sectionTitle}>
-            {prizeLevelLabel(prize.rank)} · {prize.prizeDescription}{" "}
-            <span className={styles.cellSub}>{formatNumber(prize.quantity || 1)} × {formatINR(prize.prizeValue || 0)}</span>
-          </h2>
+      {prizes.map((prize) => {
+        const Icon = levelIcon(prize.rank);
+        return (
+        <section key={prize.rank} className={styles.prizeCard} aria-labelledby={`ld-pick-${prize.rank}`}>
+          <header className={styles.prizeCardHead}>
+            <span className={styles.prizeCardIcon}><Icon size={18} aria-hidden="true" /></span>
+            <h2 className={styles.prizeCardTitle} id={`ld-pick-${prize.rank}`}>{prizeLevelLabel(prize.rank)}</h2>
+            <span className={styles.prizeCardTag}>{formatNumber(prize.quantity || 1)} × {formatINR(prize.prizeValue || 0)}</span>
+          </header>
+          <div className={styles.prizeCardBody}>
+          <p className={styles.prizeCardName}>{prize.prizeDescription}</p>
           <ul className={styles.slotList}>
             {slots.filter((slot) => slot.rank === prize.rank).map((slot) => {
               const usable = slots.indexOf(slot) < required;
@@ -225,8 +222,10 @@ function PickWinners() {
               );
             })}
           </ul>
+          </div>
         </section>
-      ))}
+        );
+      })}
 
       {required > 0 && (
         <div className={styles.wizardFoot}>
@@ -252,7 +251,10 @@ function PickWinners() {
           ))}
         </ul>
       </ConfirmModal>
-    </div>
+    </>,
+    <PageHead title="Pick winners" back={{ href: `/lucky-draws/${id}`, label: "Back to the draw" }}>
+      <span className={styles.listCount}>{campaign.name} · {formatNumber(openDraw.entryCount)} entries · one win per customer</span>
+    </PageHead>,
   );
 }
 

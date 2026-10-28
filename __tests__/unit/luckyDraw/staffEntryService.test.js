@@ -32,7 +32,7 @@ async function staffOf(merchantId, role, storeId = null) {
   return { _id, role, parentId: merchantId, storeId };
 }
 
-const entry = (overrides = {}) => ({ customerName: 'Ravi Kumar', customerMobile: '9811111111', billAmount: 1500, consent: true, ...overrides });
+const entry = (overrides = {}) => ({ customerName: 'Ravi Kumar', customerMobile: '9811111111', customerEmail: 'ravi@example.com', billAmount: 1500, consent: true, ...overrides });
 
 async function physicalDraw(overrides = {}) {
   const andheri = store('Andheri');

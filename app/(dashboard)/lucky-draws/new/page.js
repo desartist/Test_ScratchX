@@ -2,12 +2,13 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowLeft, ArrowRight, Award, Check, CirclePlus, Gift, ImagePlus, Lock, Medal, QrCode, Radio, Send, Store, Trash2, Trophy, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Award, CirclePlus, Gift, ImagePlus, Medal, QrCode, Radio, Send, Store, Trash2, Trophy, X } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
 import Sheet from "@/components/luckyDraw/Sheet";
 import ConfirmModal from "@/components/luckyDraw/ConfirmModal";
 import SelectMenu from "@/components/luckyDraw/SelectMenu";
 import FieldError from "@/components/luckyDraw/FieldError";
+import StepBar from "@/components/luckyDraw/StepBar";
 import { focusFirstError } from "@/components/luckyDraw/focusFirstError";
 import { api, istInputToIso, toISTInputValue } from "@/lib/luckyDraw/clientApi";
 import { DRAW_TYPES } from "@/lib/luckyDraw/constants";
@@ -19,7 +20,7 @@ import { compressPrizeImage } from "@/lib/luckyDraw/imageCompress";
 import { clearWizardDraft, hasProgress, readWizardDraft, writeWizardDraft } from "@/lib/luckyDraw/wizardDraft";
 import styles from "../luckyDraws.module.css";
 
-const STEPS = ["Details & entry", "Prizes", "Review"];
+const STEPS = [{ name: "Details & entry" }, { name: "Prizes" }, { name: "Review" }];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PLACEHOLDER = { 1: "e.g. 43-inch Smart TV", 2: "e.g. Gold coin", 3: "e.g. Gift voucher" };
 const DRAW_ICON = { physical: Store, live_online: Radio, digital: QrCode };
@@ -35,23 +36,6 @@ function browserStorage() {
 }
 
 const Req = () => <span className={styles.required} aria-hidden="true">*</span>;
-
-function Steps({ step }) {
-  return (
-    <ol className={styles.steps} aria-label="Steps">
-      {STEPS.map((name, i) => {
-        const n = i + 1;
-        const state = n < step ? styles.stepDone : n === step ? styles.stepNow : "";
-        return (
-          <li key={name} className={`${styles.step} ${state}`} aria-current={n === step ? "step" : undefined}>
-            <span className={styles.stepDot}>{n < step ? <Check size={16} aria-hidden="true" /> : n}</span>
-            <span className={styles.stepName}>{name}</span>
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
 
 const LEVEL_ICON = { 1: Trophy, 2: Medal, 3: Award };
 
@@ -368,7 +352,7 @@ function NewLuckyDrawForm() {
           {/* Leaving the wizard is a close action, not "back"; on phones it lives in the footer instead. */}
           <button type="button" className={`${styles.secondaryButton} ${styles.wizardClose}`} onClick={requestLeave}><X size={16} aria-hidden="true" />Cancel</button>
         </div>
-        <Steps step={step} />
+        <StepBar steps={STEPS} done={step - 1} current={step - 1} />
 
         {submitError && <p className={styles.submitError} role="alert"><AlertCircle size={16} aria-hidden="true" />{submitError}</p>}
 
@@ -482,6 +466,22 @@ function NewLuckyDrawForm() {
 
         {step === 3 && (
           <div className={styles.reviewPage}>
+            {/* The draw type can't change once published, so it leads the review on its own card, with the tick that confirms it. */}
+            <div className={styles.publishCheck}>
+              <section id={errorFieldId("typeAcknowledged")} tabIndex={-1} className={`${styles.typeCard} ${errors.typeAcknowledged ? styles.typeCardError : ""}`} aria-labelledby="ld-review-type">
+                <div className={styles.typeCardHead}>
+                  <span className={styles.typeCardIcon}><DrawIcon size={24} aria-hidden="true" /></span>
+                  <h2 className={styles.typeCardName} id="ld-review-type">{DRAW_TYPE_LABEL[form.drawType]}</h2>
+                  <button type="button" className={styles.textLink} onClick={() => goTo(1)}>Change</button>
+                </div>
+                <label className={`${styles.plainCheck} ${errors.typeAcknowledged ? styles.plainCheckError : ""}`}>
+                  <input type="checkbox" checked={form.typeAcknowledged} onChange={(e) => set("typeAcknowledged", e.target.checked)} aria-invalid={!!errors.typeAcknowledged} />
+                  <span>The draw type can&rsquo;t be changed after publishing.</span>
+                </label>
+              </section>
+              <FieldError message={errors.typeAcknowledged} />
+            </div>
+
             {/* Each part has a title with an Edit link above its card. Details: as the Figma "Campaign Details" card. */}
             <section aria-labelledby="ld-review-details">
               <div className={styles.listHead}>
@@ -491,11 +491,6 @@ function NewLuckyDrawForm() {
               <section className={styles.summaryCard} aria-labelledby="ld-review-name">
               <div className={styles.summaryTitle}>
                 <h3 className={styles.summaryName} id="ld-review-name">{form.name.trim()}</h3>
-                {/* The lock says the type is fixed once published; the full sentence is in the tooltip and for screen readers. */}
-                <span className={styles.typeChip} title="Can’t be changed after publishing">
-                  <DrawIcon size={14} aria-hidden="true" />{DRAW_TYPE_LABEL[form.drawType]}<Lock size={12} aria-hidden="true" className={styles.typeChipLock} />
-                  <span className={styles.srOnly}>, can&rsquo;t be changed after publishing</span>
-                </span>
               </div>
               {description && <p className={styles.summaryDesc}>{description}</p>}
               <dl className={styles.factGrid}>
@@ -505,7 +500,6 @@ function NewLuckyDrawForm() {
                 <div><dt>Min. bill</dt><dd>₹{formatNumber(parseAmount(form.minBillAmount))}</dd></div>
               </dl>
             </section>
-            <p className={`${styles.metaLine} ${styles.cardNote}`}><Lock size={14} aria-hidden="true" />The draw type can&rsquo;t be changed after publishing.</p>
           </section>
 
             <section aria-labelledby="ld-review-prizes">
@@ -566,7 +560,7 @@ function NewLuckyDrawForm() {
           ) : (
             <div className={styles.actions}>
               <button type="button" className={styles.secondaryButton} disabled={saving !== ""} onClick={() => save(false)}>{saving === "draft" ? "Saving…" : "Save as draft"}</button>
-              <button type="button" className={styles.primaryButton} disabled={saving !== "" || !form.confirmed} onClick={() => save(true)}>
+              <button type="button" className={styles.primaryButton} disabled={saving !== "" || !form.typeAcknowledged || !form.confirmed} onClick={() => save(true)}>
                 <Send size={16} aria-hidden="true" />{saving === "publish" ? "Publishing…" : "Publish lucky draw"}
               </button>
             </div>

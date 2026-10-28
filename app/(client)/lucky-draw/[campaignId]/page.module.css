@@ -1,37 +1,19 @@
-/* Public Lucky Draw entry page (mobile first). Colours follow the app's tokens: primary #ef9e1b, navy #010f44. */
-.page { min-height: 100vh; min-height: 100dvh; background: #f5f6fa; padding: 20px 14px 48px; font-family: var(--font-afacad), system-ui, sans-serif; color: #010f44; }
-.card { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
-.panel { background: #fff; border: 1px solid #e3e7ef; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-.title { margin: 0; font-size: 1.5rem; font-weight: 800; color: #010f44; line-height: 1.25; }
-.muted { color: #637080; margin: 0; }
-.heading { margin: 0; font-size: 1rem; font-weight: 700; color: #010f44; }
-.list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
-.drawDate { font-size: 1.1rem; font-weight: 800; color: #010f44; }
-.wasDate { color: #637080; font-size: 0.9rem; text-decoration: line-through; }
-.notice { background: #fff8e8; border: 1px solid #f3d99b; color: #5c4200; border-radius: 10px; padding: 12px 14px; font-size: 0.9rem; margin: 0; }
-.form { display: flex; flex-direction: column; gap: 14px; }
-.field { display: flex; flex-direction: column; gap: 6px; }
-.label { font-weight: 600; font-size: 0.9rem; }
-.input { font: inherit; padding: 12px; border: 1px solid #d5dae6; border-radius: 10px; background: #fff; width: 100%; box-sizing: border-box; color: #010f44; }
-.input:focus { border-color: #01188e; }
-.input:focus-visible, .button:focus-visible { outline: 2px solid #01188e; outline-offset: 2px; }
-.check { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9rem; }
-.check { cursor: pointer; padding: 4px 0; }
-.check input { margin-top: 2px; accent-color: #ef9e1b; width: 20px; height: 20px; flex: none; }
-.button { font: inherit; font-weight: 700; padding: 13px 16px; border-radius: 10px; border: 0; background: #ef9e1b; color: #fff; cursor: pointer; text-align: center; text-decoration: none; }
+/* Public Lucky Draw entry page, mobile first. Fields, cards and rows come from the dashboard's
+   luckyDraws.module.css (the create wizard's look); this file only frames the page. */
+.page { min-height: 100vh; min-height: 100dvh; background: #f6f7fc; padding: 20px 16px 48px; font-family: var(--font-afacad), system-ui, sans-serif; color: #010f44; box-sizing: border-box; }
+.card { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.title { margin: 0; font-size: 1.6rem; font-weight: 800; line-height: 1.2; color: #010f44; text-wrap: balance; overflow-wrap: anywhere; }
+.description { margin: 0; font-size: 1rem; line-height: 1.5; color: #4a5568; overflow-wrap: anywhere; }
+.drawDate { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding-top: 14px; border-top: 1px solid #eef1f6; font-size: 0.98rem; color: #4a5568; }
+.drawDate svg { flex: none; margin-top: 2px; color: #ef9e1b; }
+.drawDate strong { color: #010f44; font-weight: 800; }
+.wasDate { display: block; margin-top: 2px; color: #8a95a8; font-size: 0.88rem; text-decoration: line-through; }
+.dateNote { margin: 0; font-size: 0.85rem; color: #8a95a8; }
 .anchor { scroll-margin-top: 16px; }
-.button:hover:not(:disabled) { background: #d98e14; }
-.button:disabled { opacity: 0.6; cursor: not-allowed; }
-.error { background: #fde8e8; color: #7d1d22; padding: 10px 14px; border-radius: 10px; margin: 0; }
-.success { background: #e2f3e3; color: #14501a; padding: 14px; border-radius: 12px; margin: 0; }
-.big { font-size: 1.6rem; font-weight: 800; }
-.win { background: #e0e4ff; color: #01188e; padding: 10px 14px; border-radius: 10px; margin: 0; }
-.result { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-.prizeGrid { display: flex; flex-direction: column; gap: 10px; }
-.prizeCard { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; padding: 10px; border: 1px solid #eef1f6; border-radius: 12px; }
-.prizeImg { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: #fff3e0; display: grid; place-items: center; font-size: 1.6rem; }
-.dates { list-style: none; margin: 0; padding: 12px 0 0; border-top: 1px solid #eef1f6; display: flex; flex-direction: column; gap: 6px; }
-.dates li { display: flex; justify-content: space-between; gap: 12px; font-size: 0.92rem; }
-.dates span { color: #637080; }
-.linkButton { display: inline-flex; justify-content: center; font-weight: 700; padding: 12px 16px; border-radius: 10px; border: 1.5px solid #010f44; color: #010f44; text-decoration: none; }
-.linkButton:hover { background: #f3f5ff; }
+.block { width: 100%; min-height: 50px; font-size: 1rem; box-sizing: border-box; }
+.howTo { margin: 0; color: #4a5568; font-size: 0.95rem; line-height: 1.5; }
+.result { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid #eef1f6; }
+.resultLine { margin: 0; color: #4a5568; }
+.resultLine strong { color: #010f44; }
+.win { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 12px 14px; border-radius: 12px; background: #fff5e6; color: #5c3b00; font-weight: 600; }
+.win svg { flex: none; margin-top: 2px; color: #ef9e1b; }

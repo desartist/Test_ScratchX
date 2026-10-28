@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import React, { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { AlertCircle, CheckCircle2, Ticket } from "lucide-react";
 import FlagGate from "@/components/luckyDraw/FlagGate";
+import PageHead from "@/components/luckyDraw/PageHead";
+import { levelIcon } from "@/components/luckyDraw/icons";
 import { api, formatDateTime } from "@/lib/luckyDraw/clientApi";
+import { formatINR } from "@/lib/luckyDraw/calculator";
 import { prizeLevelLabel } from "@/lib/luckyDraw/display";
 import styles from "../luckyDraws.module.css";
 
@@ -29,31 +31,55 @@ function RedeemForm() {
     }
   }
 
-  return (
-    <div className={styles.container}>
-      <Link href="/lucky-draws" className={styles.backLink}><ArrowLeft size={16} aria-hidden="true" />All lucky draws</Link>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Redeem a prize</h1>
-        </div>
-      </div>
+  const PrizeIcon = result ? levelIcon(result.rank) : Ticket;
 
-      <form className={styles.section} onSubmit={submit}>
+  return (
+    <div className={`${styles.container} ${styles.containerCentered}`}>
+      <form className={styles.column} onSubmit={submit} noValidate>
+        <PageHead title="Redeem a prize" back={{ href: "/lucky-draws", label: "Lucky draws" }} />
+
+        {error && <p className={styles.submitError} role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p>}
+        {result && (
+          <section className={`${styles.summaryCard} ${styles.resultCard}`} role="status" aria-labelledby="ld-redeemed">
+            <span className={styles.resultIcon}><CheckCircle2 size={28} aria-hidden="true" /></span>
+            <h2 className={styles.summaryName} id="ld-redeemed">Prize redeemed</h2>
+            <ul className={styles.rowList} style={{ width: "100%", textAlign: "left" }}>
+              <li className={styles.row}>
+                <span className={styles.rowIcon}><PrizeIcon size={20} aria-hidden="true" /></span>
+                <span className={styles.rowMain}>
+                  <strong>{result.prizeDescription}</strong>
+                  <span>{prizeLevelLabel(result.rank)} · {result.customerName}</span>
+                </span>
+                <span className={styles.rowSide}>
+                  {result.prizeValue ? <strong>{formatINR(result.prizeValue)}</strong> : null}
+                  <span>{formatDateTime(result.redeemedAt)}</span>
+                </span>
+              </li>
+            </ul>
+          </section>
+        )}
+
         <div className={styles.field}>
           <label className={styles.label} htmlFor="claim-code">Claim code</label>
-          <input id="claim-code" className={`${styles.input} ${styles.mono}`} value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} autoComplete="off" autoCapitalize="characters" spellCheck={false} enterKeyHint="go" maxLength={12} required />
+          <input
+            id="claim-code"
+            className={`${styles.input} ${styles.codeInput}`}
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            placeholder="ABCD2345"
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            enterKeyHint="go"
+            maxLength={12}
+            aria-invalid={!!error}
+          />
         </div>
-        <div><button type="submit" className={`${styles.primaryButton} ${styles.blockOnMobile}`} disabled={busy || code.trim() === ""}>{busy ? "Checking…" : "Redeem prize"}</button></div>
-      </form>
 
-      {error && <p className={styles.error} role="alert">{error}</p>}
-      {result && (
-        <section className={styles.section} role="status">
-          <h2 className={styles.sectionTitle}>Prize redeemed</h2>
-          <p><strong>{prizeLevelLabel(result.rank)} · {result.prizeDescription}</strong> for {result.customerName}</p>
-          <p className={styles.muted}>{formatDateTime(result.redeemedAt)} · hand it over now.</p>
-        </section>
-      )}
+        <div className={styles.wizardFoot}>
+          <button type="submit" className={styles.primaryButton} disabled={busy || code.trim() === ""}><Ticket size={16} aria-hidden="true" />{busy ? "Checking…" : "Redeem prize"}</button>
+        </div>
+      </form>
     </div>
   );
 }

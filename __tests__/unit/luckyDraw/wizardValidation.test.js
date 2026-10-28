@@ -17,6 +17,7 @@ const filled = () => ({
   second: { prizeDescription: 'Gold coin', prizeValue: '5,000', quantity: '2', imageUrl: '' },
   third: { prizeDescription: 'Voucher', prizeValue: '2,000', quantity: '5', imageUrl: '' },
   smaller: [],
+  typeAcknowledged: true,
   confirmed: true,
 });
 
@@ -129,6 +130,15 @@ describe('step 3: review', () => {
   it('needs the confirmation ticked', () => {
     expect(stepErrors(3, { ...filled(), confirmed: false }, ctx)).toEqual({ confirmed: 'Tick this box to confirm you will hand over the prizes.' });
     expect(stepErrors(3, filled(), ctx)).toEqual({});
+  });
+
+  it('needs the owner to tick that the draw type is fixed, before the prizes tick', () => {
+    const errors = stepErrors(3, { ...filled(), typeAcknowledged: false, confirmed: false }, ctx);
+    expect(errors).toEqual({
+      typeAcknowledged: "Tick this box to confirm the draw type can't change.",
+      confirmed: 'Tick this box to confirm you will hand over the prizes.',
+    });
+    expect(Object.keys(errors)[0]).toBe('typeAcknowledged');
   });
 });
 
