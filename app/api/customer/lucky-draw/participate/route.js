@@ -1,0 +1,61 @@
+import { connectDB } from '@/lib/connectDB';
+import { luckyDrawDisabledResponse } from '@/lib/luckyDraw/guard';
+import { ok, errorResponse, readJson } from '@/lib/luckyDraw/response';
+import { DATE_CHANGE_NOTICE } from '@/lib/luckyDraw/constants';
+import { getPublicCampaign } from '@/lib/services/luckyDraw/publicService';
+import { createEntry, confirmEntry } from '@/lib/services/luckyDraw/entryService';
+
+// Public: no session. Abuse limits live in createEntry (duplicate guard, geofence, minimum bill)
+// and in confirmEntry (at most one confirmation SMS and email per number per 10 minutes).
+export async function POST(request) {
+  const disabled = luckyDrawDisabledResponse();
+  if (disabled) return disabled;
+  try {
+    await connectDB();
+    const body = await readJson(request);
+    const campaign = await getPublicCampaign(body.campaignId);
+
+    const result = await createEntry({
+      campaignId: body.campaignId,
+      customerName: body.customerName,
+      customerMobile: body.customerMobile,
+      customerEmail: body.customerEmail,
+      // The QR form no longer asks for the bill; older clients may still send it.
+      billAmount: body.billAmount ?? null,
+      consent: body.consent,
+      latitude: body.latitude,
+      longitude: body.longitude,
+      // The phone's GPS accuracy widens the geofence (capped), as in the scratch campaign flow.
+      accuracy: body.accuracy,
+      // A store's own QR (?store=) pins the entry to that store.
+      storeId: body.storeId || null,
+      source: 'qr',
+      skipLocationCheck: !campaign.requiresLocation,
+    });
+
+    const { smsSent: confirmationSent, emailSent } = await confirmEntry({
+      drawId: result.drawId,
+      customerPhone: body.customerMobile,
+      customerEmail: result.entry.customerEmail,
+      campaignName: result.campaignName,
+      entryNumber: result.entryNumber,
+      drawDate: result.drawDate,
+    });
+
+    return ok(
+      {
+        entryNumber: result.entryNumber,
+        entriesGranted: result.entriesGranted,
+        totalEntries: result.totalEntries,
+        drawDate: result.drawDate,
+        campaignName: result.campaignName,
+        notice: DATE_CHANGE_NOTICE,
+        confirmationSent,
+        emailSent,
+      },
+      201,
+    );
+  } catch (err) {
+    return errorResponse(err);
+  }
+}

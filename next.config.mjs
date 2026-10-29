@@ -24,6 +24,7 @@ const nextConfig = {
     // directory (e.g. from a git worktree's lockfile under .claude/).
     root: projectRoot,
   },
+  devIndicators: false,
   async redirects() {
     return [
       { source: "/login", destination: "/auth/login", permanent: false },

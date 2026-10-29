@@ -1,0 +1,25 @@
+/* Public Lucky Draw entry page, mobile first. Fields, cards and rows come from the dashboard's
+   luckyDraws.module.css (the create wizard's look); this file only frames the page. */
+.page { min-height: 100vh; min-height: 100dvh; background: #f6f7fc; padding: 20px 16px 48px; font-family: var(--font-afacad), system-ui, sans-serif; color: #010f44; box-sizing: border-box; }
+.card { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.title { margin: 0; font-size: 1.6rem; font-weight: 800; line-height: 1.2; color: #010f44; text-wrap: balance; overflow-wrap: anywhere; }
+.description { margin: 0; font-size: 1rem; line-height: 1.5; color: #4a5568; overflow-wrap: anywhere; }
+.drawDate { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding-top: 14px; border-top: 1px solid #eef1f6; font-size: 0.98rem; color: #4a5568; }
+.drawDate svg { flex: none; margin-top: 2px; color: #ef9e1b; }
+.drawDate strong { color: #010f44; font-weight: 800; }
+.wasDate { display: block; margin-top: 2px; color: #8a95a8; font-size: 0.88rem; text-decoration: line-through; }
+.dateNote { margin: 0; font-size: 0.85rem; color: #8a95a8; }
+.anchor { scroll-margin-top: 16px; }
+.block { width: 100%; min-height: 50px; font-size: 1rem; box-sizing: border-box; }
+.howTo { margin: 0; color: #4a5568; font-size: 0.95rem; line-height: 1.5; }
+.result { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid #eef1f6; }
+.resultLine { margin: 0; color: #4a5568; }
+.resultLine strong { color: #010f44; }
+.win { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 12px 14px; border-radius: 12px; background: #fff5e6; color: #5c3b00; font-weight: 600; }
+.win svg { flex: none; margin-top: 2px; color: #ef9e1b; }
+.storeLine { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 0.92rem; font-weight: 600; color: #4a5568; }
+.storeLine svg { flex: none; color: #ef9e1b; }
+.locationError { align-items: flex-start; }
+.locationError svg { margin-top: 2px; }
+.locationError > span { display: flex; flex-direction: column; gap: 4px; }
+.locationError > span > span { font-weight: 500; color: #7d1d22; }
