@@ -8,8 +8,8 @@ import { createHmac } from 'crypto';
 import { ROLE_HOME } from '@/lib/permissions';
 import { createSession, enforceDeviceLimit } from '@/lib/services/sessionManagementService';
 import { getLocationFromIP } from '@/lib/services/geolocationService';
+import { authCookieOptions } from '@/lib/authCookieOptions';
 
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 export async function GET(request) {
   try {
@@ -126,30 +126,21 @@ export async function GET(request) {
 
     const response = NextResponse.redirect(dashboardUrl);
 
-    // In development, use 'lax' sameSite for easier testing. In production use 'strict'
-    const sameSiteValue = process.env.NODE_ENV === 'production' ? 'strict' : 'lax';
+    // sameSite 'lax' (lib/authCookieOptions.js): this response is the
+    // redirect back from Google, so with 'strict' the browser withheld the
+    // cookies on the very next request and the user landed on the login page.
 
     // Set session cookie (httpOnly — carries the actual session proof)
-    response.cookies.set('authToken', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: sameSiteValue,
-      maxAge: COOKIE_MAX_AGE,
-      path: '/',
-    });
+    response.cookies.set('authToken', sessionToken, authCookieOptions());
 
-    console.log('[GOOGLE-LOGIN] authToken cookie set (sameSite:', sameSiteValue, ')');
+    // The middleware verifies authToken AGAINST sessionId (HMAC of it), so
+    // without this cookie a Google sign-in was never recognised as logged in.
+    response.cookies.set('sessionId', session._id.toString(), authCookieOptions());
 
     // Set role cookie (NOT httpOnly — readable by middleware for role-based routing)
-    response.cookies.set('accountRole', account.role, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: sameSiteValue,
-      maxAge: COOKIE_MAX_AGE,
-      path: '/',
-    });
+    response.cookies.set('accountRole', account.role, authCookieOptions({ httpOnly: false }));
 
-    console.log('[GOOGLE-LOGIN] accountRole cookie set');
+    console.log('[GOOGLE-LOGIN] auth cookies set (authToken, sessionId, accountRole)');
 
     // Clear OAuth state cookie
     response.cookies.delete('oauth_state');

@@ -171,7 +171,11 @@
       "Bash(node -e \"const l=require\\('lucide-react'\\); console.log\\(['CalendarClock','CirclePause','PauseCircle','Hourglass','SearchX','WifiOff','Store','RefreshCw','CalendarDays'].map\\(n=>n+':'+\\(typeof l[n]!=='undefined'\\)\\).join\\(' '\\)\\)\")",
       "Bash(git log *)",
       "Bash(grep -rn \"/api/stores/\\\\${\\\\|/api/stores/' +\\\\|api/stores/\\\\`\" app components hooks)",
-      "Bash(awk '/^\\\\.readyWarn \\\\{/,/^}/' components/campaign/CampaignScratchesStep.module.css)"
+      "Bash(awk '/^\\\\.readyWarn \\\\{/,/^}/' components/campaign/CampaignScratchesStep.module.css)",
+      "Bash(node -e \"const s=require\\('sharp'\\); console.log\\('sharp', s.versions?.sharp || 'ok'\\)\")",
+      "Bash(curl -s -o /dev/null -w \"start_url / -> %{http_code}\\\\n\" --max-time 90 http://localhost:3000/)",
+      "Bash(sips -g pixelWidth -g pixelHeight -g hasAlpha /private/tmp/claude-501/-Users-abhishekpratapsingh-Desktop-coupon-campaigns/8dd81ca1-2be6-4bfc-b6f2-7ad5d310c0ce/images/37.png)",
+      "Bash(node /private/tmp/claude-501/-Users-abhishekpratapsingh-Desktop-coupon-campaigns/8dd81ca1-2be6-4bfc-b6f2-7ad5d310c0ce/scratchpad/make-icons.cjs)"
     ]
   }
 }

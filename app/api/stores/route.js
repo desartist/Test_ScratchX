@@ -14,6 +14,7 @@ import Account from '@/models/accountModel';
 import Store from '@/models/storeModel';
 import { requireAuth } from '@/lib/auth';
 import { REDEEMED_STATUSES } from '@/lib/redemptionStatus';
+import { authCookieOptions } from '@/lib/authCookieOptions';
 
 function toObjId(id) {
   if (mongoose.Types.ObjectId.isValid(id) && !(id instanceof mongoose.Types.ObjectId)) {
@@ -330,14 +331,7 @@ export async function POST(request) {
     // Mark that this merchant now has at least one store (used by middleware gate)
     try {
       const cookieStore = await cookies();
-      const sameSiteValue = process.env.NODE_ENV === 'production' ? 'strict' : 'lax';
-      cookieStore.set('merchantHasStore', '1', {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: sameSiteValue,
-        maxAge: 60 * 60 * 24 * 7,
-        path: '/',
-      });
+      cookieStore.set('merchantHasStore', '1', authCookieOptions({ httpOnly: false }));
     } catch (_) {}
 
     return NextResponse.json(
