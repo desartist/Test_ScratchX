@@ -10,6 +10,7 @@ import mockPaymentService from "@/lib/mockPaymentService";
 import { getEffectiveDefaultCommissionRate } from "@/lib/services/platformSettingsService";
 import { createHmac } from "crypto";
 import { cookies } from "next/headers";
+import { authCookieOptions } from '@/lib/authCookieOptions';
 
 /**
  * POST /api/payment/verify
@@ -169,13 +170,7 @@ export async function POST(request) {
     // Update merchantHasSub cookie so middleware immediately allows access
     try {
       const cookieStore = await cookies();
-      cookieStore.set('merchantHasSub', '1', {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-        path: '/',
-      });
+      cookieStore.set('merchantHasSub', '1', authCookieOptions({ httpOnly: false }));
     } catch (_) {}
 
     return Response.json(

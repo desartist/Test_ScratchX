@@ -17,6 +17,7 @@ import {
   pickEligibleReward,
   MESSAGES as REWARD_MESSAGES,
 } from "@/lib/services/rewardInventoryService";
+import { CUSTOMER_LOCATION_VALIDATION_ENABLED } from "@/lib/featureFlags";
 
 /**
  * POST /api/customer/participate
@@ -139,6 +140,11 @@ export async function POST(request) {
       .lean();
     const isWholesale =
       merchantForLocationCheck?.profile?.businessModel === "Wholesale";
+    // The customer's location is required for every non-wholesale campaign
+    // (validated + recorded below). Whether being too far from the store
+    // turns them away is a separate switch — off for now
+    // (lib/featureFlags.js CUSTOMER_LOCATION_VALIDATION_ENABLED).
+    const enforceStoreDistance = !isWholesale && CUSTOMER_LOCATION_VALIDATION_ENABLED;
 
     if (!isWholesale) {
       if (
@@ -195,12 +201,12 @@ export async function POST(request) {
       );
     }
 
-    // Validate verified store — wholesale campaigns only need a store
-    // identified, not GPS-matched, since there's no proximity requirement.
+    // Validate verified store — wholesale campaigns (and every campaign while
+    // the distance check is off) only need a store identified, not GPS-matched.
     if (
       !verifiedStore ||
       !verifiedStore.storeId ||
-      (!isWholesale &&
+      (enforceStoreDistance &&
         (verifiedStore.latitude === undefined ||
           verifiedStore.longitude === undefined))
     ) {
@@ -277,7 +283,9 @@ export async function POST(request) {
       );
     }
 
-    // ===== RE-VALIDATE LOCATION (skipped entirely for wholesale merchants) =====
+    // ===== RE-VALIDATE LOCATION =====
+    // Wholesale: skipped entirely. Otherwise the distance is always worked
+    // out and recorded; it only REJECTS when the store-distance check is on.
     let distanceFromStore = null;
 
     if (!isWholesale) {
@@ -302,13 +310,6 @@ export async function POST(request) {
       const storeLat = liveStore?.latitude ?? verifiedStore.latitude;
       const storeLon = liveStore?.longitude ?? verifiedStore.longitude;
 
-      console.log("🔍 Re-validating location with verified store:", {
-        customerLat: customerLatitude,
-        customerLon: customerLongitude,
-        storeLat,
-        storeLon,
-      });
-
       try {
         if (typeof storeLat !== "number" || typeof storeLon !== "number") {
           throw new Error(
@@ -326,23 +327,27 @@ export async function POST(request) {
         );
       } catch (err) {
         console.error("❌ Distance calculation error:", err.message);
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Location validation failed: " + err.message,
-            data: null,
-          },
-          { status: 400 },
-        );
+        // Only a blocker when the distance check is enforced; otherwise the
+        // participation just goes without a recorded distance.
+        if (enforceStoreDistance) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Location validation failed: " + err.message,
+              data: null,
+            },
+            { status: 400 },
+          );
+        }
       }
 
       console.log("📏 Distance calculated:", {
         distance: distanceFromStore,
         allowedRadius: effectiveRadiusMeters,
-        isValid: distanceFromStore <= effectiveRadiusMeters,
+        enforced: enforceStoreDistance,
       });
 
-      if (distanceFromStore > effectiveRadiusMeters) {
+      if (enforceStoreDistance && distanceFromStore > effectiveRadiusMeters) {
         return NextResponse.json(
           {
             success: false,

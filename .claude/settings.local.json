@@ -171,7 +171,10 @@
       "Bash(node -e \"const l=require\\('lucide-react'\\); console.log\\(['CalendarClock','CirclePause','PauseCircle','Hourglass','SearchX','WifiOff','Store','RefreshCw','CalendarDays'].map\\(n=>n+':'+\\(typeof l[n]!=='undefined'\\)\\).join\\(' '\\)\\)\")",
       "Bash(git log *)",
       "Bash(grep -rn \"/api/stores/\\\\${\\\\|/api/stores/' +\\\\|api/stores/\\\\`\" app components hooks)",
-      "Bash(awk '/^\\\\.readyWarn \\\\{/,/^}/' components/campaign/CampaignScratchesStep.module.css)"
+      "Bash(awk '/^\\\\.readyWarn \\\\{/,/^}/' components/campaign/CampaignScratchesStep.module.css)",
+      "Bash(git cherry-pick *)",
+      "Bash(git apply *)",
+      "Bash(grep -rn \"customer/campaign/\\\\${[^}]*}/scan\\\\b\\\\|customer/campaign/\\\\${[^}]*}/participate\\\\b\\\\|/participate\\\\`\\\\|/scan\\\\`\" app components lib hooks)"
     ]
   }
 }

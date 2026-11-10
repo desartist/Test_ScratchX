@@ -5,6 +5,11 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { SubscriptionProvider } from "@/components/subscription/SubscriptionContext";
 import QueryProvider from "@/components/providers/QueryProvider";
 
+// Browser bar / installed-app title bar colour (matches app/manifest.js).
+export const viewport = {
+  themeColor: "#010f44",
+};
+
 export const metadata = {
   title: "ScratchX | Premium Digital Rewards & Customer Engagement Platform",
   description:
@@ -37,7 +42,13 @@ export const metadata = {
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
-    apple: "/favicon.ico",
+    apple: "/icons/apple-touch-icon.png",
+  },
+  // Home-screen install (manifest: app/manifest.js).
+  appleWebApp: {
+    capable: true,
+    title: "ScratchX",
+    statusBarStyle: "default",
   },
   keywords: [
     "scratch card campaigns",

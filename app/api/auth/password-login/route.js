@@ -9,6 +9,7 @@ import { ROLE_HOME } from '@/lib/permissions';
 import { createSession, enforceDeviceLimit } from '@/lib/services/sessionManagementService';
 import { getLocationFromIP } from '@/lib/services/geolocationService';
 import { cookies } from 'next/headers';
+import { authCookieOptions } from '@/lib/authCookieOptions';
 
 export async function POST(req) {
   try {
@@ -141,14 +142,7 @@ export async function POST(req) {
         }).lean(),
       ]);
       const cookieStore = await cookies();
-      const sameSiteValue = process.env.NODE_ENV === 'production' ? 'strict' : 'lax';
-      const cookieOpts = {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: sameSiteValue,
-        maxAge: 60 * 60 * 24 * 7,
-        path: '/',
-      };
+      const cookieOpts = authCookieOptions({ httpOnly: false });
       cookieStore.set('merchantHasStore', storeCount > 0 ? '1' : '0', cookieOpts);
       cookieStore.set('merchantHasSub', subscription ? '1' : '0', cookieOpts);
     }

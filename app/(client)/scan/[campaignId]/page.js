@@ -5,6 +5,8 @@ import Image from "next/image";
 import confetti from "canvas-confetti";
 import { sanitizeNameInput } from "@/lib/nameInput";
 import CampaignUnavailable from "./CampaignUnavailable";
+import { CUSTOMER_LOCATION_VALIDATION_ENABLED } from "@/lib/featureFlags";
+import { findNearestStore } from "@/lib/utils/distanceCalculator";
 import styles from "./page.module.css";
 
 export default function ScanClientPage() {
@@ -214,7 +216,8 @@ export default function ScanClientPage() {
   };
 
   // ===== SINGLE CTA: SHOW MY COUPONS =====
-  // Validates → captures GPS silently → verifies with store → submits
+  // Validates → captures GPS (required) → verifies with store (unless the
+  // check is switched off, see CUSTOMER_LOCATION_VALIDATION_ENABLED) → submits
   const handleShowCoupons = async (e) => {
     e.preventDefault();
     setLocationError(null);
@@ -291,6 +294,19 @@ export default function ScanClientPage() {
     if (!storesList?.length) {
       setLocationError({ title: "Store not found", body: "No stores are assigned to this campaign. Contact the merchant." });
       setLocationVerifying(false);
+      return;
+    }
+
+    // Store-distance check switched off (lib/featureFlags.js): the location
+    // above is still required and is recorded with the participation, but
+    // nobody is turned away for being too far. Credit the nearest assigned
+    // store (or the staff member's store from a staff QR).
+    if (!CUSTOMER_LOCATION_VALIDATION_ENABLED) {
+      const verifiedStoreData = findNearestStore(lat, lng, storesList)?.store || storesList[0];
+      setMatchedStore(verifiedStoreData);
+      setLocationVerified(true);
+      setLocationVerifying(false);
+      submitParticipation(verifiedStoreData, lat, lng, acc);
       return;
     }
 
