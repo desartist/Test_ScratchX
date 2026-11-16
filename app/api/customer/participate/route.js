@@ -17,7 +17,8 @@ import {
   pickEligibleReward,
   MESSAGES as REWARD_MESSAGES,
 } from "@/lib/services/rewardInventoryService";
-import { CUSTOMER_LOCATION_VALIDATION_ENABLED } from "@/lib/featureFlags";
+import { CUSTOMER_GPS_REQUIRED, CUSTOMER_LOCATION_VALIDATION_ENABLED } from "@/lib/featureFlags";
+import { ipLocationFromRequest, ipLocationLabel } from "@/lib/ipGeolocation";
 
 /**
  * POST /api/customer/participate
@@ -140,44 +141,29 @@ export async function POST(request) {
       .lean();
     const isWholesale =
       merchantForLocationCheck?.profile?.businessModel === "Wholesale";
-    // The customer's location is required for every non-wholesale campaign
-    // (validated + recorded below). Whether being too far from the store
-    // turns them away is a separate switch — off for now
-    // (lib/featureFlags.js CUSTOMER_LOCATION_VALIDATION_ENABLED).
+    // Whether being too far from the store turns the customer away — off
+    // for now (lib/featureFlags.js CUSTOMER_LOCATION_VALIDATION_ENABLED).
     const enforceStoreDistance = !isWholesale && CUSTOMER_LOCATION_VALIDATION_ENABLED;
 
-    if (!isWholesale) {
-      if (
-        customerLatitude === undefined ||
-        customerLatitude === null ||
-        typeof customerLatitude !== "number"
-      ) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "customerLatitude is required and must be a number",
-            data: null,
-          },
-          { status: 400 },
-        );
-      }
+    // ===== CUSTOMER LOCATION =====
+    // GPS from the scan page when it sent one; otherwise (the GPS popup is
+    // switched off — CUSTOMER_GPS_PROMPT_ENABLED) an approximate, city-level
+    // location from the request's IP, so a location is still recorded
+    // without asking the customer anything.
+    let custLat = null;
+    let custLng = null;
+    let locationSource = null;
+    let locationCity = null;
+    const sentGps =
+      customerLatitude !== undefined && customerLatitude !== null &&
+      customerLongitude !== undefined && customerLongitude !== null;
 
+    if (sentGps) {
       if (
-        customerLongitude === undefined ||
-        customerLongitude === null ||
-        typeof customerLongitude !== "number"
+        typeof customerLatitude !== "number" ||
+        typeof customerLongitude !== "number" ||
+        !validateCoordinates(customerLatitude, customerLongitude)
       ) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "customerLongitude is required and must be a number",
-            data: null,
-          },
-          { status: 400 },
-        );
-      }
-
-      if (!validateCoordinates(customerLatitude, customerLongitude)) {
         return NextResponse.json(
           {
             success: false,
@@ -187,6 +173,27 @@ export async function POST(request) {
           },
           { status: 400 },
         );
+      }
+      custLat = customerLatitude;
+      custLng = customerLongitude;
+      locationSource = "gps";
+    } else if (!isWholesale && CUSTOMER_GPS_REQUIRED) {
+      // A precise position is needed (distance check / GPS prompt on).
+      return NextResponse.json(
+        {
+          success: false,
+          error: "customerLatitude is required and must be a number",
+          data: null,
+        },
+        { status: 400 },
+      );
+    } else {
+      const ipLoc = ipLocationFromRequest(request);
+      if (ipLoc) {
+        custLat = ipLoc.latitude;
+        custLng = ipLoc.longitude;
+        locationSource = "ip";
+        locationCity = ipLocationLabel(ipLoc);
       }
     }
 
@@ -288,7 +295,9 @@ export async function POST(request) {
     // out and recorded; it only REJECTS when the store-distance check is on.
     let distanceFromStore = null;
 
-    if (!isWholesale) {
+    // Only from real GPS — a distance worked out from an IP estimate would be
+    // kilometres off and misleading in reports.
+    if (!isWholesale && locationSource === "gps") {
       const ALLOWED_RADIUS_METERS = 250;
       // Same accuracy-aware widening as /api/customer/location-verify — a
       // customer's own GPS uncertainty is added to the base radius (capped),
@@ -319,8 +328,8 @@ export async function POST(request) {
 
         distanceFromStore = Math.round(
           calculateDistance(
-            customerLatitude,
-            customerLongitude,
+            custLat,
+            custLng,
             storeLat,
             storeLon,
           ),
@@ -357,7 +366,7 @@ export async function POST(request) {
           { status: 400 },
         );
       }
-    } else {
+    } else if (isWholesale) {
       console.log("🏬 Wholesale merchant — skipping customer location validation entirely");
     }
 
@@ -574,6 +583,7 @@ export async function POST(request) {
       store_id: matchedStoreId,
       matched_store_id: matchedStoreId,
       matched_store_name: matchedStoreName,
+      // null when there's no GPS position to measure from
       distance_from_store: distanceFromStore,
       range_id: rangeId,
       customer_name: customerName,
@@ -581,8 +591,10 @@ export async function POST(request) {
       customer_email: customerEmail || "",
       customer_consent: customerConsent,
       bill_amount: billAmount,
-      customer_latitude: customerLatitude,
-      customer_longitude: customerLongitude,
+      customer_latitude: custLat,
+      customer_longitude: custLng,
+      location_source: locationSource,
+      location_city: locationCity,
       is_repeat_customer: isRepeatCustomer,
       handled_by_staff_id: handledByStaffId,
       status: "verified",

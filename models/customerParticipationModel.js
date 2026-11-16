@@ -102,6 +102,19 @@ const customerParticipationSchema = new mongoose.Schema(
       min: [-180, 'Longitude must be between -180 and 180'],
       max: [180, 'Longitude must be between -180 and 180']
     },
+    // Where customer_latitude/longitude came from: 'gps' (the browser, with
+    // permission) or 'ip' (approximate, city-level, from the request's IP —
+    // used while the GPS popup is switched off, lib/featureFlags.js).
+    location_source: {
+      type: String,
+      enum: ['gps', 'ip', null],
+      default: null
+    },
+    // e.g. "Gurugram, HR, IN" for an IP-based location.
+    location_city: {
+      type: String,
+      default: null
+    },
     distance_from_store_meters: {
       type: Number,
       default: 0,

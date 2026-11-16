@@ -5,7 +5,7 @@ import Image from "next/image";
 import confetti from "canvas-confetti";
 import { sanitizeNameInput } from "@/lib/nameInput";
 import CampaignUnavailable from "./CampaignUnavailable";
-import { CUSTOMER_LOCATION_VALIDATION_ENABLED } from "@/lib/featureFlags";
+import { CUSTOMER_GPS_REQUIRED, CUSTOMER_LOCATION_VALIDATION_ENABLED } from "@/lib/featureFlags";
 import { findNearestStore } from "@/lib/utils/distanceCalculator";
 import styles from "./page.module.css";
 
@@ -216,14 +216,34 @@ export default function ScanClientPage() {
   };
 
   // ===== SINGLE CTA: SHOW MY COUPONS =====
-  // Validates → captures GPS (required) → verifies with store (unless the
-  // check is switched off, see CUSTOMER_LOCATION_VALIDATION_ENABLED) → submits
+  // Validates → (GPS only when CUSTOMER_GPS_REQUIRED; otherwise straight on —
+  // the server records an IP-based location) → verifies with store (unless
+  // CUSTOMER_LOCATION_VALIDATION_ENABLED is off) → submits
   const handleShowCoupons = async (e) => {
     e.preventDefault();
     setLocationError(null);
     setError(null);
 
     if (!validateForm()) return;
+
+    // GPS popup switched off (lib/featureFlags.js CUSTOMER_GPS_PROMPT_ENABLED):
+    // never ask the browser for location — the server records an approximate
+    // location from the customer's connection instead. Credit the staff
+    // member's store (staff QR) or the campaign's first store.
+    if (!CUSTOMER_GPS_REQUIRED) {
+      const storesList = staffStoreId
+        ? (campaign?.assignedStores || []).filter((s) => String(s.storeId) === String(staffStoreId))
+        : campaign?.assignedStores;
+      if (!storesList?.length) {
+        setLocationError({ title: "Store not found", body: "No stores are assigned to this campaign. Contact the merchant." });
+        return;
+      }
+      const verifiedStoreData = storesList[0];
+      setMatchedStore(verifiedStoreData);
+      setLocationVerified(true);
+      submitParticipation(verifiedStoreData, null, null, null);
+      return;
+    }
 
     // Wholesale merchants sell in bulk to other businesses rather than
     // walk-in customers, so there's no "is the customer at the store"
